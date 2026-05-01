@@ -388,8 +388,7 @@ window.SubscriptionsManager = (function () {
     );
     const selected = new Set((Array.isArray(years) ? years : []).map((year) => normalizeText(year)));
     const out = allowed.filter((year) => selected.has(year));
-    if (out.length) return out;
-    return allowed.length ? [allowed[0]] : [];
+    return out;
   };
 
   const renderConferenceChoiceButtons = () => {
@@ -1184,7 +1183,6 @@ window.SubscriptionsManager = (function () {
         if (!isConferenceYearSelectable(selectedConference, year)) return;
         const current = new Set(selectedConferenceYears);
         if (current.has(year)) {
-          if (current.size <= 1) return;
           current.delete(year);
         } else {
           current.add(year);
