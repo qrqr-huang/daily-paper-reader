@@ -17,6 +17,8 @@ const {
   __setQuickRunConferenceBtn,
   __setUnsavedChanges,
   __setRunSelectionState,
+  __initializeConferenceChoices,
+  __getSelectedConferenceYearPairs,
   runSelectedQuickFetch,
 } = global.window.SubscriptionsManager.__test;
 
@@ -160,6 +162,13 @@ function testConferenceCurrentYearDisabledForPendingSources() {
   assert.equal(isConferenceYearSelectable('ICML', previousYear), true);
 }
 
+function testConferenceDefaultYearOnlySelects2025() {
+  __setRunSelectionState({ conferencePairs: [] });
+  __initializeConferenceChoices();
+  const pairs = __getSelectedConferenceYearPairs().sort();
+  assert.deepEqual(pairs, ['ICML:2025', 'NeurIPS:2025']);
+}
+
 function testQuickRunUnsavedMessageClearsAfterSave() {
   const msgEl = {
     textContent: '',
@@ -278,6 +287,7 @@ async function testQuickFetchIncludesAnySelectedProfile() {
   testNormalizeSubscriptionsConvertsChineseTagToEnglishFallback();
   await testRunProfileQuickFetchPassesProfileTagToWorkflow();
   testConferenceCurrentYearDisabledForPendingSources();
+  testConferenceDefaultYearOnlySelects2025();
   testQuickRunUnsavedMessageClearsAfterSave();
   testConferenceRunDisabledWhenUnsaved();
   await testQuickFetchIncludesAnySelectedProfile();

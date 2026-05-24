@@ -452,12 +452,11 @@ window.SubscriptionsManager = (function () {
 
   const initializeConferenceChoices = () => {
     if (!selectedConferenceYearPairs.size) {
+      const defaultYear = '2025';
       QUICK_RUN_CONFERENCES.forEach((conference) => {
-        getConferenceYearOptions().forEach((year) => {
-          if (isConferenceYearSelectable(conference, year)) {
-            selectedConferenceYearPairs.add(`${conference}:${year}`);
-          }
-        });
+        if (isConferenceYearSelectable(conference, defaultYear)) {
+          selectedConferenceYearPairs.add(`${conference}:${defaultYear}`);
+        }
       });
     }
   };
@@ -1709,6 +1708,8 @@ window.SubscriptionsManager = (function () {
           if (text) selectedConferenceYearPairs.add(text);
         });
       },
+      __initializeConferenceChoices: () => initializeConferenceChoices(),
+      __getSelectedConferenceYearPairs: () => Array.from(selectedConferenceYearPairs),
       runSelectedQuickFetch,
       refreshQuickRunButtons,
       clearQuickRunUnsavedMessage,
