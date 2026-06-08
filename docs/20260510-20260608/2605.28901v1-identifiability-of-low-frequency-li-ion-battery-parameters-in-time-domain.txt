@@ -1,0 +1,1692 @@
+Title: Identifiability of Low Frequency Li-ion Battery Parameters in Time Domain
+
+URL Source: https://arxiv.org/pdf/2605.28901v1
+
+Published Time: Fri, 29 May 2026 00:05:31 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+# Identifiability of Low Frequency Li-ion Battery Parameters in Time Domain 
+
+Vladimir Sovljanski a,* , Mario Paolone a
+
+vladimir.sovljanski@epfl.ch, mario.paolone@epfl.ch 
+
+> a
+
+Distributed Electrical Systems Laboratory ´Ecole Polytechnique F´ ed´ erale de Lausanne Lausanne, Switzerland 
+
+> *
+
+Corresponding author EPFL STI IEM DESL Bˆ atiment ELL Station 11 CH-1015 Lausanne 
+
+May 29, 2026 
+
+> arXiv:2605.28901v1 [eess.SY] 27 May 2026
+
+Abstract 
+
+This paper investigates the identification of observable low-frequency (LF) param-eters of battery cell’s equivalent circuit models (ECMs) using time-domain voltage and current measurements sampled at low frequency by built-in battery management sys-tems (BMS) during operation. Accurate estimation of such parameters is challenging due to measurement resolution available in practical settings. To address this, a modeling and identification framework is proposed in which fractional constant phase element (CPE), commonly used to model LF diffusion phe-nomena of battery cells, is approximated in the time domain using a high-order RC network with a recursive definition. The parameter estimation problem is formulated as a constrained, non-convex least-squares problem in a discretized state-space repre-sentation. To improve robustness, parameter initialization strategies, bounds, and a procedure for selecting the number of RC branches are rigorously derived. The method is evaluated in a numerical study based on a power system appli-cation where the battery under the study provides primary frequency control to the grid. Under noise levels representative of typical BMS measurements, the proposed ap-proach achieves, from time-domain measurements, accurate LF parameter estimation (including the CPE), with average errors below 1%. 
+
+11 Introduction 
+
+During operation, the built-in battery management system (BMS) present in any battery system typically monitors pack and module voltage, current and temperature, estimates the state of charge (SOC) and state of health (SOH). In addition, the BMS performs several critical functions, including cell balancing and various protection mechanisms. However, obtaining more detailed parameters for battery equivalent circuit models (ECMs) generally requires performing additional measurements, such as electrochemical impedance spectroscopy (EIS) [1]. Since current commercial BMSs lack the instrumentation needed to perform such tests, EIS measurements typically require disassembling the battery pack or modules and connecting them to specialized equipment. As a result, EIS is usually conducted under laboratory conditions when the battery is not in operation, although onboard EIS is emerging as a promising feature for future advanced BMS technologies [2]. Commercial built-in BMS in EVs often operate with low sampling frequencies for monitoring cell voltages and currents, which can be as low as 1 Hz [3]. In [4], sampling rates of 100 Hz for current and 10 Hz for voltage are reported as typical requirements for BMS algorithms. Measurements of voltage, current, and temperature may have higher sampling frequencies in case they are used for safety/protection purposes. Although strict requirements are not explicitly defined, [5] suggests that establishing minimum sampling frequency standards would improve the performance of BMS algorithms as demonstrated experimentally in [6]. Low sampling frequencies clearly impact the observability of ECM parameters [7]. In this paper, we consider the estimation of observable ECM parameters using LF sampled data from the BMS. The authors of [8] summarize ECM representations across different frequency regions reported in the literature. As noted, the LF behavior, when included in the model, is typically represented by the Warburg impedance or, more gen-erally, by a constant phase element (CPE). As a fractional-order circuit component, the CPE is well suited for frequency-domain analysis. However, in the time domain, it leads to circuit equations involving derivatives and integrals of non-integer order. As known, an exact ECM representation of CPE in time domain would require an infinite number of RC branches. Nevertheless, over a limited frequency range, it can be accurately approximated using a finite number of RC elements [9]. The works of Valsa [10], [11] introduce a method for approximating a general CPE using a network of RC branches with a recursive definition, as in [12], complemented by additional corrective resistive and capacitive elements to achieve an accurate approximation over a specified frequency range of interest. This approach is directly applied in [13] to derive state-space representations of battery models, which are widely used in the literature (e.g., [14], [15]). In [16], the authors employ a seventh-order RC circuit and derive a finite-order lin-ear time-invariant (LTI) state-space approximation of the Warburg impedance using the Ho–Kalman algorithm. The parameters of the approximated circuit are estimated from time-domain voltage and current measurements, using pulse excitation. In [17], the au-thors demonstrate parameter estimation for an ECM consisting of a resistor in series with a Zarc element (i.e., a resistor in parallel with a CPE), using pseudo-random binary se-quence (PRBS) and multisine excitation signals spanning a wide frequency range. Their approach relies on fractional-order system identification, presented in [18]. Similarly, [19] proposes a two-stage method for estimating the parameters of a battery ECM composed of a resistor, Zarc element, and CPE, based on fractional-order system identification with non-zero initial conditions under PRBS excitation across a wide fre-quency range. Ref. [20] investigates parameterizations across different frequency regions 1using both frequency-domain (EIS) and time-domain (pulse profile) methods. Finally, in [21], the authors estimate the parameters of a second-order RC circuit using continuous-time system identification and an instrumental variable method, with pulse excitations of varying amplitudes. In view of the above state of the art on ECM parameter identification, most works focusing on time-domain parameter estimation consider models with a limited number of RC branches to represent the battery. Moreover, they rely on pre-engineered and identification friendly excitation signals such as pulses, PRBS, or multisine signals, which are typically artificially imposed rather than obtained from the battery’s normal operating conditions. The use of such signals requires the interruption of the BESS operation just to carry the identification procedure making their adoption not adequate for a continuous monitoring of the battery ECM. In this work, we investigate the identification of observable (LF) ECM parameters using time-series measurements of voltage and current sampled at low frequency by a built-in BMS, during normal battery operation. To model the ECM components observable from LF-sampled BMS data in the time domain, we employ an ECM structure consisting of a resistance and a high number of RC branches with a recursive definition to approximate a CPE (or equivalently, the Warburg impedance). The parameter estimation problem is formulated as a constrained, non-convex least-squares (LS) minimization problem, expressed in a standard discretized state-space form. To improve computational efficiency and mitigate issues related to non-convexity, we pro-pose suitable parameter initialization strategies and bounds that effectively reduce the solution space. Furthermore, we design an algorithmic approach to determine a sufficient number of RC branches, thereby enhancing convergence properties. The estimated parameters of the resulting ECM enable the recovery of the correspond-ing CPE parameters without requiring explicit fractional-order system identification. This paper is organized as follows: in Section 2, we present the method including problem formulation using state-space representation (with approximated CPE), param-eter initialization, estimation and reconstruction of original CPE parameters. Section 3 presents the results of the numerical study including a power system use case of battery providing primary frequency control. Section 4 concludes the paper. 
+
+# Keywords 
+
+Li-ion batteries, BMS, online parameter estimation, Constant-phase element, Warburg impedance, least squares. 22 Method 
+
+2.1 Battery Equivalent Circuit at Low-Frequencies 
+
+The ECM of a battery cell commonly used in literature is shown in Fig 1. As known, it consists of elements representing high-, mid- and low-frequency behavior. The high-frequency (HF) part is composed of series resistance Rs connected in series to HF constant phase element (CPE) with parameters QHF and ϕHF ∈ [−1, 0) (note that for ϕHF = −1the CPE becomes a pure inductor with L = Q−1 
+
+> HF
+
+). The mid-frequency (MF) part is modeled with one or multiple parallel branches of resistance and CPE. The LF part is usually modeled as a CPE or the Warburg impedance, (which is a special case of LF CPE the exponent ϕ = 0 .5) 1.In general, not all the parameters from the complete ECM are observable from mea-sured battery voltage and current. The reasons for this can be both limited sampling frequency of reported battery voltage and current and type of the excitation signal. In this paper we assume that: (1) BMS has a low sampling frequency (in order of seconds); (2) measurements are collected from the BMS while the battery is under operation (i.e., we are not allowed to excite the system with specific signals such as PRBS or multisine) in order to continuously infer ECM parameters. Therefore, in what follows we analyze the ECM of observable parameters at LF. With limited BMS sampling frequency, both mid- and high-frequency behavior of the battery are unobservable. In this respect, the HF and MF CPEs of the original ECM (shown in Fig. 1a) are replaced with short- and open-connections between their terminals and, therefore, the ECM seen at LF sampling consists of the total resistance 
+
+RΣ = RHF + RMF and the LF CPE. Both complete and reduced circuits are suitable for the frequency domain modelling, but due to the presence of CPEs, which are fractional order elements, in the time domain, this would require writing and solving fractional order differential equations (FODE). However, for a defined frequency range, the CPE can be decomposed using the proposed method by Valsa [10], [11] to n parallel RC branches with additional corrective elements, 
+
+R∞ and C∞. Fig. 1 depicts: (a) Full battery ECM, (b) ECM seen at LF where RΣ
+
+captures the total HF and MF resistance and (c) approximated ECM with decomposed LF CPE to n RC branches. 
+
+2.2 CPE Approximations 
+
+According to [9], the exact equivalence of CPE would require the connection of infinite RC branches, each of them having larger and larger time constants. Due to incapability to afford this in a real setting, we need to find a way to approximate the circuit with a finite number of electrical elements. This, obviously, directly limits the frequency range where the decomposed circuits approximate well the CPE behaviour. This is also the case with the model proposed in [10]. We recall that the reason why the authors included the corrective elements R∞ and C∞ is to compensate for the fact that, after n RC branches, an infinite number of RC branches are missing for the exact equivalence. In the time domain, however, the usage of an ECM comprising the series capacitor C∞
+
+can introduce initialization issues, since the initial voltage across this capacitor is undefined and largely affecting the parameters identification reliability. To avoid this problem, the model is adjusted by removing C∞. The impedance of the ideal, non-approximated CPE   
+
+> 1Using the CPE with ϕas a non-fixed parameter can improve the LF fitting, typically done from EIS measurements in frequency domain
+
+3RHF QHF , ϕ HF 
+
+¯ZHF CPE 
+
+RMF 
+
+QMF , ϕ MF 
+
+¯ZMF CPE 
+
+QLF , ϕ LF 
+
+¯ZLF CPE 
+
+(a) Full battery ECM (MF is modeled with a single Zarc element) where 
+
+RHF and RMF are HF and MF resistance, respectively, and ¯ZxF CPE is xF CPE impedance, x ∈ { H,M,L }, with the coefficient QxF and exponent ϕxF .
+
+RΣ
+
+RHF + RMF 
+
+QLF , ϕ LF 
+
+¯ZLF CP E 
+
+(b) ECM seen at LF sampling where RΣ captures the total HF and MF resis-tance. 
+
+RΣ R∞
+
+R1
+
+C1
+
+Rn
+
+Cn
+
+· · · 
+
+(c) Approximated ECM with decomposed LF CPE to n RC branches, with resistances R1, . . . , R n and capacitances C1, . . . , C n and the corrective elements 
+
+R∞ and C∞
+
+Figure 1: ECM and its approximations due to LF sampling. is taken as a reference. The theoretical locus of a CPE in the Nyquist plane is a straight line with an inclination angle γ, that depends on the CPE exponent, namely γ = πϕ  
+
+> 2
+
+. The CPE coefficient Q determines how the impedance points are distributed along this line. As illustrated in Fig. 2a, removing the corrective elements results in a Nyquist response that remains nearly linear over a certain frequency range but gradually bends toward the real axis at lower frequencies. This bending marks the deviation from the ideal CPE locus, and therefore the validity of the approximation limited to the initial, high-frequency portion of the plot. Increasing the number of RC branches extends the frequency range of validity, shifting the onset of bending toward lower frequencies and widening the linear region. The Nyquist plot shown in Fig. 2b illustrates the contribution of each RC branch and their combined effect on the total impedance. Each coloured semicircle corresponds to one parallel RC element, representing its corresponding characteristic relaxation process of the battery. As frequency decreases, successive branches dominate, shifting the response along the real axis. We recall that, the total impedance (plotted in black) is the combination of all branches and shows a smooth transition across frequency decades, forming a continuum 41.42 1.44 1.46 1.48 1.5 1.52           
+
+> Re(Z)(+)#10!3
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> !Im(Z) (+)
+> #10!5
+> TrueCPE
+> ApproximationwithC1
+> ApproximationwithoutC1
+> ApproximationwithoutC1,
+> extendedfreq.range
+
+(a) Re( Z) ( Ω)0 5 10 15 20 25 30 -Im( Z)( Ω)-10 -5 0510 15 20         
+
+> Nyquist Plot of RC Ladder (Geometric Series)
+> k= 1
+> k= 2
+> k= 3
+> k= 4
+> k= 5
+> k= 6
+> k= 7 Total
+
+(b) 
+
+Figure 2: (a) Comparison of the approximated ECMs without the corrective capacitor - for both the original and the extended frequency ranges compared to the approximated ECM with the corrective capacitor and the original CPE; and (b) Nyquist plot of the decomposed CPE ECM with seven RC branches with recursive definition. Coloured curves represent the impedance contribution of individual RC branches, while the black curve shows the total impedance. that approximates a CPE response over a defined frequency range before gradually bending at low frequencies. 
+
+2.3 Decomposed CPE model 
+
+The complex CPE impedance of the ECM shown in Fig. 1b and is given by (for the sake of readability, we omit the use of LF in the superscript): ¯ZCPE (Q, ϕ ; ω) = 1
+
+Q(jω )ϕ . (1) For the sake of consistency with later derivations, in what follows we summarize the steps for decomposing CPE, as proposed in [10]. Given the CPE coefficient Q and exponent 
+
+ϕ, these steps provide the approximated (decomposed) ECM circuit parameters with n
+
+parallel RC branches connected in series, where branch resistances and capacitances follow recursive laws: 
+
+Rk = R1ak−1 and Ck = C1bk−1, k = 1 , . . . , n (2) with 0 < a < 1 and 0 < b < 1, and the corrective resistance is defined as: 
+
+R∞ = R1
+
+an
+
+1 − a (3) Therefore, knowing R1, C 1, a and b enables us to compute all the parameters of the de-composed CPE circuit. The time constants of RC branches are in decreasing order: 
+
+τmin = τ1 = R1C1 > · · · > R nCn = τn = τmax (4) Obviously, for k-th time constant, k > 1, τk = τmin · (ab )k−1. For characteristic frequencies of each RC branch, we have: 
+
+fmin = 12πR 1C1
+
+= f1 < · · · < f n = 12πR nCn
+
+= fmax (5) 5For k-th frequency, k > 1 fk = fmin 
+
+(ab )k−1 . Minimum and maximum frequencies are related as fmin = fmax · (ab )n−1. Such an approximation with a finite number of RC branches produces a ripple in impedance phase. Ratios a and b are related to the CPE exponent and defined as: 
+
+a = qϕ and ab = q ⇒ b = qa . (6) where the coefficient q is a constant and depends only on the maximum phase ripple (in radians): 
+
+q = 0.24 1 + ∆ ϕ · 180 /π . (7) The approximated impedance is given by: ¯Zapp (ω) = R∞ +
+
+> n
+
+X
+
+> k=1
+
+Rk
+
+1 + jωR kCk
+
+(8) and can be expressed in terms of R1, C1, a and b as: ¯Zapp (R1, C 1, a, b ; ω) = R1
+
+an
+
+1 − a +
+
+> n
+
+X
+
+> k=1
+
+ak−1R1
+
+1 + jω (ab )k−1R1C1
+
+(9) To obtain the circuit parameters that approximate a CPE with coefficient Q, we require that: 
+
+| ¯Zapp (R1, C 1, a, b ; ωavg )| = | ¯ZCPE (Q, ϕ ; ωavg )| = 1
+
+Q · ωϕavg 
+
+(10) where the average angular frequency is defined by: 
+
+ωavg =
+
+ ab
+
+0.25 1
+
+R′
+
+> 1
+
+C′
+
+> 1
+
+q⌈ n  
+
+> 2−1⌉
+
+. (11) In other words, (10) ensures that, at ωavg , the equivalent impedance of the decomposed CPE circuit matches, in magnitude, the corresponding impedance of the exact CPE. The values for R1 and C1 are obtained starting from an arbitrary resistance, R′ 
+
+> 1
+
+and capaci-tance, C′
+
+> 1
+
+, that correspond to the minimum characteristic frequency, fmin :
+
+R′
+
+> 1
+
+C′ 
+
+> 1
+
+= 12πf min 
+
+= R1C1 (12) and then multiplying the resistance R′ 
+
+> 1
+
+and dividing the capacitance C′ 
+
+> 1
+
+by the following gain: 
+
+g = | ¯ZCPE (Q, ϕ ; ωavg )|| ¯Zapp (R′
+
+> 1
+
+, C ′
+
+> 1
+
+, a, b ; ωavg )| = 1
+
+Q · ωϕavg | ¯Zapp (R′
+
+> 1
+
+, C ′
+
+> 1
+
+, a, b ; ωavg )| . (13) Therefore: 
+
+R1 = gR ′ 
+
+> 1
+
+and C1 = 1
+
+g C′
+
+> 1
+
+. (14) 
+
+2.4 Discrete state-space representation of battery LF ECM with decom-posed CPE 
+
+In view of considerations made in Sec. 2.1 – 2.3 the battery LF ECM used is the one shown in Fig. 3. 6R1
+
+C1
+
+v1
+
+Rn = R1an−1
+
+Cn = C1bn−1
+
+vn
+
+i
+
+vE0
+
+RΣ + R∞
+
+vΣ
+
+· · · 
+
+Figure 3: Cell ECM with decomposed CPE consisting of the equivalent resistance RΣ
+
+(jointly capturing HF and MF ohmic behaviour), corrective element R∞ and n RC branches with recuresively defined resistances and capacitances. Writing both current and voltage Kirchoff laws for the circuit in Fig. 3 leads to system of differential equations that can be written in a compact form as the following continuous state-space model. The voltage Kirchoff law yileds: 
+
+v(t) = E0 − (RΣ + R∞) · i −
+
+> n
+
+X
+
+> k=1
+
+vk(t) (15) and for the circuit current i we have, for each RC branch: 
+
+i(t) = iRk (t) + iCk (t) ∀k = 1 , . . . , n, (16) where 
+
+iRk = vk(t)
+
+Rk
+
+and iCk = dv k(t)
+
+dt (17) Combining (16) and (17) results in: 
+
+dv k(t)
+
+dt = − 1
+
+RkCk
+
+vk(t) + i(t)
+
+Ck
+
+, k = 1 , . . . , n (18) We assume that the OCV curve is known 2 and discretized as a piecewise linear function. Therefore, its each segment can be expressed as: 
+
+E(SOC) = αl(SOC) + βl(SOC) · SOC , l = 1 , ..., N OCV (19) where αl and βl are known coefficients for each of NOCV segments, in total. The evolution of SOC is modelled by applying Coulomb counting as: SOC( t) = SOC 0 − 1
+
+Cnom 
+
+Z t
+
+> 0
+
+i(τ )dτ (20) with the nominal charge capacity (in Ah) of the battery, Cnom at a given discharge rate and temperature. Let us consider a range of SOC for which the ECM parameters can be considered as constant, and the OCV curve is linear, with coefficients α and β. Then, by combining (15)-(20), we can write the continuous state-space model as: 
+
+ddt x(t) = Ac(Θ)x(t) + Bc(Θ)u(t)
+
+y(t) = Cc(Θ)x(t) + Dc(Θ)u(t)(21)   
+
+> 2We assume the modeller to be provided with the standard OCV (SOC ) curve of the battery under study.
+
+7where the system state is: 
+
+x(t) = v1(t), . . . , v n(t), SOC( t)⊤ (22) and the input and output time-domain signals are 
+
+u(t) = [ i(t), 1] ⊤ and y(t) = v(t) (23) Matrices 3 Ac, Bc, Cc and Dc are dependent on the parameter vector 
+
+Θ = [ RΣ, R 1, C 1, a, b ]⊤ (24) and derived as follows: 
+
+Ac(Θ) = 
+
+
+
+− 1 
+
+> R1C1
+
+0 . . . 0 00 − 1 
+
+> R2C2
+
+. . . 0 0... ... . . . ... 00 0 . . . − 1 
+
+> RnCn
+
+00 0 . . . 0 0
+
+
+
+= − 1
+
+> R1C1
+
+
+
+1 0 . . . 0 00 1 
+
+> ab
+
+. . . 0 0... ... . . . ... ...0 0 . . . 1(ab )n−1 00 0 . . . 0 0
+
+
+
+(25) 
+
+Bc(Θ) = −
+
+ 
+
+> 1
+> C1
+
+0... ... 
+
+> 1
+> Cn
+
+0
+
+− 1 
+
+> Cnom
+
+0
+
+ = −
+
+ 
+
+> 1
+> C1
+
+0... ... 
+
+> 1
+> bn−1C1
+
+0
+
+− 1 
+
+> Cnom
+
+0
+
+ (26) 
+
+Cc(Θ) = [ −1, −1, −1, . . . , −1
+
+| {z }
+
+> n
+
+, β ] (27) 
+
+Dc(Θ) = −RΣ − R∞, α  =
+
+
+
+−RΣ − R1
+
+an
+
+1 − a , α 
+
+
+
+(28) Since the measured input and output signals are, in practice, discrete, we use a discrete state-space model, which also simplifies the estimation model via finite differences. The equations of discretized state-space model become: 
+
+xk+1 (Θ) = Ad(Θ)xk + Bd(Θ)uk
+
+yk(Θ) = Cd(Θ)xk + Dd(Θ)uk
+
+(29) where the discretized system state, input and output signals are 
+
+xk = v1(k), . . . , v n(k), SOC k
+
+⊤ (30) 
+
+uk = [ ik, 1] ⊤ and yk = v(k) (31) and matrices 3 derived from the continuous formulation as: 
+
+Ad(Θ) = I + Ts · Ac(Θ) (32a) 
+
+Bd(Θ) = Ts · Bc(Θ) (32b) 
+
+Cd(Θ) = Cc(Θ) (32c) 
+
+Dd(Θ) = Dc(Θ) (32d)     
+
+> 3With indices cand dwe distinguish between continuous and discrete formulation.
+
+8With I we denote ( n + 1)-dimensional identity matrix and Ts is the sampling time. Note that Coulomb counting as a simplified SOC estimation method is here included directly in the state-space model, however, other SOC estimation strategies can be also applied. After SOC is estimated, the reconstructed OCV (knowing the OCV-SOC curve) contribution can be removed from the measured voltage and used as the output. In that case, state-space matrices would be reduced by removing the last row and column for 
+
+A and B and last elements from vectors C and D. Note that inclusion of other SOC estimator methods is beyond the scope of this paper. 
+
+2.5 Parameter estimation problem 
+
+We suppose that we collect discrete measurements of the voltage and current of the battery cell via a BMS, with sampling time Ts that is bounded to several hundreds of ms (a condition usually imposed by existing BMSs). As already discussed, this forces the modeler to observe only the total resistance RΣ and LF parameters. The goal is to estimate the parameter set p = [ RΣ, Q, ϕ ]⊤. This will be done by first estimating the parameters Θ
+
+of the ECM, which includes the decomposed CPE and, then, reconstructing the CPE elements following the decomposition steps in reverse order. The number of branches to approximate the CPE depends on the minimum and max-imum frequency of interest [10]: 
+
+n =
+
+ ln fmin − ln fmax 
+
+ln q
+
+
+
+(33) First, to satisfy the Nyquist-Shannon sampling theorem, the maximum frequency fmax 
+
+is at most fmax = fs/2, where fs = 1 /T s is the sampling frequency. Additionally, to provide a stable response of the discrete state-space model introduced in the previous section, integrated with forward Euler, the theoretical limit is fs/π , which is derived in the Appendix A. In practice, depending on the excitation signal and chosen number of RC branches, the maximum estimated frequency (corresponding to the lowest estimated time constant), can be lower than this value. This introduces another dimension in the parameter estimation problem since we do not know in advance the maximum frequency that corresponds to the decomposition. Therefore, we allow: 
+
+f ↓ 
+
+> max
+
+⩽ fmax ⩽ f ↑ 
+
+> max
+
+(34) From the observability point of view, fmin in (33) is at least equal to the frequency resolution, given the number of samples [10]: 
+
+fmin ⩾ fs
+
+N (35) whereas the maximum frequency is bounded by: 
+
+fmax ⩽ fs
+
+π (36) Therefore, the maximum number of branches would be: 
+
+ ln fs/N − ln fs/π 
+
+ln q
+
+
+
+(37) assuming that each of time constants has an arbitrary value. However, under the assump-tion that time constants follow geometric series, increasing the number of branches beyond 9this limit (recall that a true CPE ECM has infinite number of RC branches), actually has a positive effect to the estimation results: it will allow us to obtain better estimates for observable RC branches (with lowest time constants) regardless the fact that some of the branches contributions will not be observable (due to the presence of noise) given the excitation. We formulate the optimization problem to estimate the parameters Θ given N samples of measured input and output signals, ˜ uk and ˜ yk, k = 0 , . . . , N − 1. For a fixed number of RC branches and assigned values to the decomposition constants 
+
+q, ∆ ϕ, the vector of unknown parameters Θ is augmented with fmax as follows: 
+
+Θ′ =
+
+ Θ
+
+fmax 
+
+
+
+= [ RΣ, R 1, C 1, a, b, f max ]⊤ = Θ′
+
+> 1
+
+, Θ′
+
+> 2
+
+, Θ′
+
+> 3
+
+, Θ′
+
+> 4
+
+, Θ′
+
+> 5
+
+, Θ′
+
+> 6
+
+⊤ (38) Knowing their values enables us to derive all the ECM parameters and completely recon-struct its response. The parameters are estimated by solving the following least squares problem: min  
+
+> Θ′
+
+˜y − y(Θ′) 22 (39a) subject to (25) − (32) , (38) (39b) 
+
+ab = q (39c) 12πR 1C1
+
+= fmin (39d) 
+
+fmin = fmax qn−1 (39e) 
+
+Θ′ 
+
+> min
+
+⩽ Θ′ ⩽ Θ′ 
+
+> max
+
+(39f) where we minimise the distance between the collection of samples of measured output voltage and the corresponding model, expressed as a function of unknown parameters, when a cell is excited with a known (measured) current 4. Considering N samples (mea-surements), the measured and modelled output vectors are ˜y = [˜ y0, . . . , ˜yN −1]⊤ and 
+
+y(Θ′) = [ y0(Θ′), . . . , y N −1(Θ′)] ⊤, respectively. The equality constraint (39c) arises di-rectly from (6) used for the CPE decomposition. The lower and upper bounds on each parameters are given by the last inequality constraint. How to set their values, Θ′ 
+
+> min
+
+and 
+
+Θ′ 
+
+> max
+
+is described in part 2.5.1. 
+
+2.5.1 Parameter Bounds 
+
+To help the solver find the optimal solution more efficiently, we here describe how to impose lower and upper limits, Θ′ 
+
+> min
+
+and Θ′ 
+
+> max
+
+on each parameter in Θ′ deriving them from chosen lower and upper bounds on p. Namely, we first set the bounds on every element of p:
+
+pmin =
+
+
+
+Rmin Σ
+
+Qmin 
+
+ϕmin 
+
+ ⩽
+
+
+
+RΣ
+
+Qϕ
+
+ ⩽
+
+
+
+Rmax Σ
+
+Qmax 
+
+ϕmax 
+
+ = pmax (40)  
+
+> 4This is a classical ordinary least squares problem assuming a homoscedastic noise model. In case the modeler has access to a more precise noise model, the objective given by (39a) can be modified by introducing weighting through a covariance matrix of the measurements.
+
+10 and translate them to lower and upper bounds on each of parameter of Θ′. First, the parameters a and b depend only on ϕ and, since q < 1, for a reasonable small ∆ ϕ, we have: 
+
+amin = qϕmax 
+
+and amax = qϕmin 
+
+(41) Consequently, 
+
+bmin = q/a max and bmax = q/a min (42) The bounds on R1 and C1, for a fixed number of RC branches, say n, are imposed by analyzing the gain g that depends on both Q and ϕ. Let us first derive the bounds on C1.Since in (12)–(14) we can start from arbitrary R′ 
+
+> 1
+
+and C′
+
+> 1
+
+, here we consider C′ 
+
+> 1
+
+= 1 F and 
+
+R′ 
+
+> 1
+
+= 2 πf min = 2 πf max qn−1, for which C1 is then inversely proportional to the gain: 
+
+C1 ∼ 1
+
+g = Q · ωϕavg | ¯Zapp (R′
+
+> 1
+
+, C ′
+
+> 1
+
+, a, b ; ωavg )| R′
+
+> 1=2 πf max qn−1
+> C′
+> 1=1
+
+(43) Therefore, the higher the coefficient, Q, the higher the C1 value. However, the remaining product depends on ϕ and fmax and it is not, in general, monotonic function of ϕ. We define it as: 
+
+hC (ϕ, f max ) = ωϕavg ¯Zapp (R′
+
+> 1
+
+, C ′
+
+> 1
+
+, a, b ; ωavg ) R′
+
+> 1=2 πf max qn−1
+> C′
+> 1=1
+
+(44) and numerically find the minimum and maximum values: 
+
+hC (ϕ, f max ) : (ϕ, f max ) ∈ ϕmin , ϕ max  × [f ↓
+
+> max
+
+, f ↑
+
+> max
+
+] (45) Therefore, the bounds of C1 can be found numerically from the family of curves (see Fig. 4) as: 
+
+Cmin 1 = Qmin min  
+
+> ϕ
+
+hC (ϕ, f max ), fmax ∈ [f ↓
+
+> max
+
+, f ↑
+
+> max
+
+] (46a) 
+
+Cmax 1 = Qmax max  
+
+> ϕ
+
+hC (ϕ, f max ), fmax ∈ [f ↓
+
+> max
+
+, f ↑
+
+> max
+
+] (46b) Similarly, to find bounds for R1, if we consider R′ 
+
+> 1
+
+= 1 Ω and C′ 
+
+> 1
+
+= 2 πf max qn−1, then: 
+
+R1 ∼ g = Q · ωϕavg ¯Zapp (R′
+
+> 1
+
+, C ′
+
+> 1
+
+, a, b ; ωavg ) R′
+
+> 1=1
+> C′
+> 1=2 πf max qn−1
+
+(47) and define: 
+
+hR(ϕ, f max ) = ωϕavg | ¯Zapp (R′
+
+> 1
+
+, C ′
+
+> 1
+
+, a, b ; ωavg )| R′
+
+> 1=1
+> C′
+> 1=2 πf max qn−1
+
+(48) the bounds of R1 can be found numerically from the family of curves (see Fig. 4) as: 
+
+Rmin 1 = 1
+
+Qmax min 
+
+> ϕ
+
+1
+
+hR(ϕ, f max ) , fmax ∈ [f ↓
+
+> max
+
+, f ↑
+
+> max
+
+] (49a) 
+
+Rmax 1 = 1
+
+Qmax max 
+
+> ϕ
+
+1
+
+hR(ϕ, f max ) , fmax ∈ [f ↓
+
+> max
+
+, f ↑
+
+> max
+
+] (49b) 11 ?
+
+0 0.2 0.4 0.6 0.8 1
+
+> log hC (?; fmax)
+
+-1
+
+0
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7        
+
+> min
+> ?loghC(?;fmax)
+> max
+> ?loghC(?;fmax)
+
+?
+
+0 0.2 0.4 0.6 0.8 1
+
+> log hR (?; fmax)
+
+-3
+
+-2
+
+-1
+
+0
+
+1
+
+2
+
+3
+
+4
+
+5                             
+
+> min
+> ?loghR(?;fmax)
+> max
+> ?loghR(?;fmax)
+> fmax=0:001Hzfmax=0:004Hzfmax=0:016Hzfmax=0:063Hzfmax=0:251Hzfmax=1:000Hz
+
+Figure 4: Family of curves showing the dependency of hC (ϕ, f max ) and hR(ϕ, f max ) on the LF CPE exponent ϕ, for different values of the maximum frequency fmax (in logarithmic scale). Fig. 4 depicts a family of curves hC (ϕ, f max ) and hR(ϕ, f max ) for ϕ ∈ [0 .1, 0.9] and six different fmax values, logarithmically spaced from 0.001 Hz to 1 Hz, and the minimum and maximum attained values used to compute Cmin 1 , Rmin 1 , Cmax 1 , and Rmax 1 .Due to the fact that fmax = 12πR 1C1qn−1 and fmax ∈ [f ↓
+
+> max
+
+, f ↑
+
+> max
+
+], additional inequalities restrict ( R1, C 1) feasible set: 
+
+f ↓ 
+
+> max
+
+⩽ 12πR 1C1qn−1 ⩽ f ↑ 
+
+> max
+
+(50) which, together with Rmin 1 ⩽ R1 ⩽ Rmax 1 and Cmin 1 ⩽ C1 ⩽ Cmin 1 , yields, in general, a non-convex set as shown in Fig. 5a. However, if instead we consider the feasible set for (R1, f max ), it is convex (see Fig. 5b). Obtaining any feasible point within this convex set provides a solution for C1 as a consequence of (39d) and (39e). This motivates the reformulation of the optimization problem. 
+
+2.5.2 Reduced Formulation 
+
+Equality constraints in (39) enables us to reduce the number of decision variables (param-eters). Namely: (39c) = ⇒ b = q/a (51a) (39d) , (39e) = ⇒ C1 = 12πf max qn−1R1
+
+(51b) This allows us to write the parameter vector Θ′ as: 
+
+Θ′ = [Θ ′
+
+> 1
+
+, Θ′
+
+> 2
+
+, ψ 1(Θ ′
+
+> 1
+
+, Θ′
+
+> 2
+
+, Θ′
+
+> 4
+
+, Θ′
+
+> 6
+
+), Θ′
+
+> 4
+
+, ψ 2(Θ ′
+
+> 1
+
+, Θ′
+
+> 2
+
+, Θ′
+
+> 4
+
+, Θ′
+
+> 6
+
+), Θ′
+
+> 6
+
+]⊤ (52) with 
+
+ψ1(Θ′) = q1−n
+
+2πΘ′
+
+> 2
+
+Θ′
+
+> 6
+
+and ψ2(Θ′) = q
+
+Θ′
+
+> 4
+
+(53) 12 R1
+
+C1
+
+0      
+
+> q1−n
+> 2πR 1C1=f↑
+> max
+> q1−n
+> 2πR 1C1=f↓
+> max
+
+Rmin 1 Rmax 1
+
+Cmin 1
+
+Cmax 1
+
+(a) Feasible region for ( R1, C 1) - non-convex set. 
+
+R1
+
+fmax 
+
+0 Rmin 1 Rmax 1
+
+f ↓
+
+> max
+
+f ↑
+
+> max
+
+(b) Feasible region for ( R1, f max ) - convex set. 
+
+Figure 5: Feasible regions depending on the problem formulation. and therefore we can define: 
+
+θ = [Θ ′
+
+> 1
+
+, Θ′
+
+> 2
+
+, Θ′
+
+> 4
+
+, Θ′
+
+> 6
+
+]⊤ = [ RΣ, R 1, a, f max ]⊤ (54) and therefore, Θ′ can be expressed as a function of θ. Therefore, the original optimization problem can be written as follows: min  
+
+> θ
+
+˜y − y(Θ′(θ)) 22 (55a) subject to (25) − (32) (55b) (52) − (54) (55c) 
+
+θmin ⩽ θ ⩽ θmax (55d) Comparing to the previously formulated problem given by (39), where both the objective and feasible set are non-convex, the reformulated problem (55) is still non-convex, however only due to the non-convexity in the objective with, instead, a convex solution space. 
+
+2.5.3 Parameter Initialization 
+
+As observed before, the problem (55) is a non-convex one and, therefore, requires an initial guess if solved using a standard gradient-descent approach. In this case it is easier to set initial values for parameters p0 = R0Σ, Q 0, ϕ 0⊤ and perform the decomposition steps described in Sec. 2.3 for CP E (Q0, ϕ 0) for pre-defined number of branches, n and the initial maximum frequency f 0max . This directly provides the initial values for R01 and a0.The initial values for parameters p0 can be assigned based on typical estimates from EIS measurements at LF. If these values are not available, the initial CPE parameters can be randomly chosen within specified lower and upper bounds. 13 The resistance RΣ is initialized by solving a least-square problem: 
+
+R0Σ = arg min 
+
+> RΣ
+
+∥RΣ˜i − ˜v∥22 (56) i.e., by neglecting all the RC branches. Therefore, the initial parameter vector is: 
+
+θ0 = R0Σ, R 01, a 0, f 0max 
+
+⊤ (57) These values represent reasonable starting points to initiate the fitting process. 
+
+2.5.4 CPE parameter reconstruction 
+
+Now we suppose that ˆθ =
+
+h ˆRΣ, ˆR1, ˆa, ˆfmax 
+
+i⊤
+
+is the minimizer of the optimization problem (39), for a fixed number of branches, n. Then, the estimated LF CPE parameters, ˆQ and ˆϕ, are reconstructed as follows. From (6), the phase angle is computed directly as ˆϕ = log q ˆa. (58) The capacitance and its corresponding geometric series coefficient are calculated as: ˆC1 = q1−n
+
+2π ˆR1 ˆfmax 
+
+and ˆb = q
+
+ˆa (59) Having the decomposed parameters and the number of branches, we can reconstruct the impedance of the decomposed circuit, for an arbitrary range of frequencies, as: ¯Zapp ( ˆR1, ˆC1, ˆa, ˆb; ˆ ωavg ) = ˆR1
+
+ˆan
+
+1 − ˆa +
+
+> n
+
+X
+
+> k=1
+
+ˆR1ˆak−1
+
+1 + j ˆωavg ˆR1 ˆC1(ˆ aˆb)k−1 (60) where the estimated average frequency is: ˆωavg =
+
+ ˆa
+
+ˆb
+
+0.25 1ˆR1 ˆC1q⌈ n  
+
+> 2−1⌉
+
+(61) Using (10) we can reconstruct the CPE coefficient: ˆQ = 1ˆω ˆϕavg · | ¯Zapp ( ˆR1, ˆC1, ˆa, ˆb; ˆ ωavg )|
+
+, (62) After this step, all the parameters ˆ p = [ ˆRΣ, ˆQ, ˆϕ]⊤ are reconstructed. 
+
+2.5.5 Estimation Procedure 
+
+The estimation consists of solving the least square (LS) problem, given by (55), for different numbers of RC branches, since the observable frequency range is not exactly known. The procedure includes the initialisation of the parameters and setting their lower and upper bounds. Starting from ECM with one RC branch, we incrementally increase the number of branches until the estimated parameters no longer improve, or the maximum set number of RC branches is reached. This, together with the limit on maximum number of RC branches, is used as a criterion to terminate the estimation procedure. 14 Algorithm 1 Estimation Procedure  
+
+> 1:
+
+procedure Estimate LF ECM Parameters (˜v,˜i) 
+
+> 2:
+
+Initialize fmax , q, ∆ϕ, p0, pmin , pmax , ∆ ← ∞ , n ← 1, ε, nmax  
+
+> RC
+> 3:
+
+Initialize R0Σ (56)  
+
+> 4:
+
+do  
+
+> 5:
+
+if n = 1 then  
+
+> 6:
+
+Derive θ0 from p0 (see (41) – (49))  
+
+> 7:
+
+else  
+
+> 8:
+
+Derive θ0 from ˆ pn−1 
+
+> 9:
+
+end if  
+
+> 10:
+
+Solve (55) for ˜v,˜i and save the estimate ˆθ 
+
+> 11:
+
+Reconstruct the LF parameters ˆp from ˆθ 
+
+> 12:
+
+if n > 1 then  
+
+> 13:
+
+∆ = ˆθn−ˆθn−1 
+
+> ˆθn
+> 14:
+
+end if  
+
+> 15:
+
+n ← n + 1  
+
+> 16:
+
+while (∆ > ε or n ⩽ nmax  
+
+> RC
+
+) 
+
+> 17:
+
+ˆθ⋆ = ˆθn−1 ˆp⋆ = ˆpn−1, 
+
+> 18:
+
+return ˆ p 
+
+> 19:
+
+end procedure 
+
+15 3 Results 
+
+This section presents the results of a numerical study conducted to validate the proposed method for estimating low-frequency (LF) parameters from time-domain measurements. Unlike conventional approaches in the literature, which typically rely on predefined excita-tion signals such as pulses, multisine inputs, or pseudo-random binary sequences (PRBS), the present study considers a more application-oriented scenario. Specifically, the battery is subjected to an excitation profile representative of frequency containment reserve (FCR) in power systems. The motivation associated with this particular application of frequency containment reserve (FCR) stems from the fact that the provision of FCR is continuous, namely, the battery never rests, making the ECM parameters assessment technically difficult. As a matter of fact, battery providing grid ancillary services usually require parameters in-ference techniques that use the operational states of the asset to feed a suitable ECM estimation technique. 
+
+3.1 Frequency containment reserve power profile 
+
+The power profile applied to the battery corresponds to a typical FCR. The profile is obtained using historical data of the measured grid frequency of continental Europe, f (k), 
+
+k = 1 , ..., T , sampled at Ts = 1 s. The power profile is obtained as follows [22], [23]: 
+
+PF CR (k) = 
+
+
+
+−P max 
+
+> F CR
+
+, ∆f (k) ⩽ −0.2 Hz 
+
+ς · ∆f (k), |∆f (k)| < 0.2 Hz 
+
+P max 
+
+> F CR
+
+, ∆f (k) ⩾ 0.2 Hz (63) where P max  
+
+> F CR
+
+is the maximum power in case of full activation of the FCR, if the frequency deviation ∆ f exceeds 0.2 Hz, and ς is the droop in W/Hz. 
+
+3.2 Synthetic BMS Data Generation 
+
+Algorithm 2 Generation  
+
+> 1:
+
+procedure Generate Data (i) 
+
+> 2:
+
+Initialize f 0max , ∆ϕ, p, T s, n, SOC 0, α, β, C nom  
+
+> 3:
+
+Decompose p to obtain θ (6)–(13)  
+
+> 4:
+
+Obtain v from (29)  
+
+> 5:
+
+∆v ← N (0 , σ 2 
+
+> V
+
+) 
+
+> 6:
+
+∆i ← N (0 , σ 2 
+
+> I
+
+) 
+
+> 7:
+
+˜v = v + ∆ v 
+
+> 8:
+
+˜i = i + ∆ i 
+
+> 9:
+
+return ˜ v,˜i 
+
+> 10:
+
+end procedure 
+
+In the numerical study where we have access to the true parameter values of non-approximated ECM, p, we first artificially generate the output data, v for a given the input power excitation of the battery under study. Having the battery power, we first translate it to voltage and current profiles by using the parameters of the ECM and assuming the initial voltage to be equal to the OCV after battery was at rest and iteratively deviding the power with voltage to obtain the current. The current excitation corresponds 16 the FCR profile on 1 Feb 2026 with total duration T = 3 h and the sampling time 
+
+Ts = 1 s, hence N = 10800 points. The approximated ECM is obtained by applying (29) using the true parameters θ, obtained by decomposition of CPE after applying (6)– (13) for a large number of branches ( n = 100). The maximum frequency of interest used for the decomposition is fmax = fs/π ≈ 0.3183 Hz, which is derived in accordance to the forward-Euler discretisation stability limit (see the Appendix A) and the maximum phase ripple is set to ∆ ϕ = 0. Parameters are assumed to be constant for SOC intervals [( k − 1) · 0.1, k · 0.1] (unitless), where k = 1 , ..., 10. The initial SOC is SOC 0 = 0 .55. The FCR droop is set to ς = 100 W/Hz, for which the SOC remains within the range between 0.5 and 0.6 where the linearized OCV segment, given by (19), has coefficients α6 = 3 .18 V and β6 = 1 V. Table 1: True parameter values of the approximated ECM associated to an NMC 60 Ah Li-ion cell. 
+
+RΣ (Ω) Q (S · sϕ) ϕ (−) fmax (Hz) 0.0014 22281 0.52 fs 
+
+> π
+
+≈ 0.3183 The input and output variables (i.e., cell’s current and voltage) are then corrupted with independent Gaussian noise with zero mean and standard deviation σV = 13 · 0.0015 V and 
+
+σI = 13 · 0.05 A, which are the typical values for a conventional BMS accuracy. This step is needed in order to represent measurement noise of these two cell’s variables. The data generation process is summarised in pseudo-code in Algorithm 2. To test the impact of the solution space reduction, we impose the upper and lower bounds on CPE parameters, ϕ and Q from p, as well as the range of maximum frequency 
+
+fmax .
+
+3.3 Sensitivity to Initial Guess and Parameter Bounds 
+
+We perform simulations in which the fixed excitation current and the generated output voltage (using the true ECM parameters) are corrupted Nsim = 1000 times with the noise of the same statistical properties. The collection of noisy data is then used to estimate the parameters. The decomposed ECM parameters are initialised from uniformly distributed randomly chosen CPE parameters, ϕ and Q, within the corresponding lower and upper imposed limits, [ ϕmin , ϕ max ] and [ Qmin , Q max ], respectively. The value for the maximum frequency is chosen as a mid-point of the interval 
+
+h fs 
+
+> N
+
+, fs
+
+> π
+
+
+
+:
+
+f 0max = 12
+
+
+
+f ↓
+
+> max
+
+(n) + f ↑
+
+> max
+
+(n)
+
+
+
+= fs
+
+2
+
+ 1
+
+π + 1
+
+N
+
+
+
+(64) We consider three cases, for which the limits for CPE parameters are listed in Tab. 2. Case 1 allows a wide range for parameters ϕ and Q as well as for the frequency fmax , whereas in Case 2 and 3 all the intervals are gradually shrunk, reducing the solution space. Table 2: Three considered cases for parameter upper and lower bounds. Case 1 Case 2 Case 3 [ϕmin , ϕmax ] [0.30, 0.70] [0.40, 0.60] [0.45, 0.55] [Qmin , Qmax ] (S · sϕ) [1e2, 1e6] [1e3, 1e5] [1e4, 3e4] 17 The statistical results are summarised in Tab. 3 and show that by executing the Algorithm 1, the estimates have almost unchanged accuracy. This means that the estimation process is robust to the initial guess and even wide parameter bounds do not affect the estimator accuracy. On average, the accuracy of all retrieved parameters, including CPE, are bellow 1 %, namely 0 .19 % for RΣ, 0 .77 % for Q and 0 .17 % for ϕ. Minimum error shows excellence performance in certain instances where the estimate parameter values are almost equal to the true ones. Maximum error is highest for Q in Case 1, with still relatively low value or 3.6 %, whereas errors of RΣ and ϕ are bounded by 0 .78 %. The evolution of estimated parameters, ˆp, along the iterations of the Alg. 1 is shown in Fig. 6. In addition, we show the evolution of Rn (corresponding to the RC branch with the lowest time constant), fmax and the objective function value. Given the values for 
+
+ε = 1 × 10 −4 and nmax  
+
+> RC
+
+= 25, the algorithm converges after 22 iterations, satisfying the stopping criteria. Table 3: Comparison of true parameters ( p), estimated parameter mean values ( μˆp⋆ ), standard deviations ( σˆp⋆ ), and associated error metrics for Cases 1–3. 
+
+p μˆp⋆ σˆp⋆ μδ (%) δmin (%) δmax (%) 
+
+RΣ (Ω) 0.0014 0.0014 3.16E-06 0.18537 0.00016 0.71528 
+
+Q (S · sϕ) 22281.00 22237.45 206.4300 0.74403 0.00034 3.64595 
+
+ϕ (−) 0.5200 0.5197 0.0010 0.15928 0.00046 0.80464 
+
+> (a) Case 1: Wide parameter bounds.
+
+p μˆp⋆ σˆp⋆ μδ (%) δmin (%) δmax (%) 
+
+RΣ (Ω) 0.0014 0.0014 3.19E-06 0.18315 0.00102 0.77900 
+
+Q (S · sϕ) 22281.00 22240.83 208.2533 0.77076 0.00021 2.91933 
+
+ϕ (−) 0.5200 0.5197 0.0011 0.16836 0.00045 0.64832 
+
+> (b) Case 2: Medium parameter bounds.
+
+p μˆp⋆ σˆp⋆ μδ (%) δmin (%) δmax (%) 
+
+RΣ (Ω) 0.0014 0.0014 3.27E-06 0.18876 0.00038 0.74843 
+
+Q (S · sϕ) 22281.00 22253.28 214.5470 0.77432 0.00072 3.41157 
+
+ϕ (−) 0.5200 0.5198 0.0011 0.16622 0.00029 0.70518 
+
+> (c) Case 3: Narrow parameter bounds.
+
+3.4 Hypothesis verification of the measurement model 
+
+After estimating the parameters, we can reconstruct the voltage response by executing the state-space model. Fig. 7a shows the reconstructed and measured voltage. The computed residuals, namely: 
+
+r = ˜ y − y( ˆθ⋆) (65) are shown as well. From the plot we can conclude that residuals, for the great majority of the points, do not exceed 1 .5 mV, by absolute value. The histogram of the residuals is shown in Fig. 7b. The residuals follow normal distribution, and the computed mean and standard deviations are: 
+
+μr = 1 .314 × 10 −7 V and σr = 0 .495 × 10 −3 V ≈ σV = 0 .500 × 10 −3 V (66) This certifies that the estimator is unbiased and that the standard deviation of voltage residuals matches well the instrument accuracy defined by σV .18 n
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> 12
+> 13
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> 20
+> 21
+> 22
+
+5
+
+10
+
+15
+
+> R' (+)
+
+#10!4
+
+Estimated
+
+True
+
+n
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> 12
+> 13
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> 20
+> 21
+> 22
+
+2
+
+4
+
+6
+
+8
+
+10
+
+> Q (S"s?)
+
+#104
+
+Estimated
+
+True
+
+n
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> 12
+> 13
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> 20
+> 21
+> 22
+> ? (!)
+
+0.5
+
+0.6
+
+0.7
+
+0.8 Estimated
+
+True
+
+n
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> 12
+> 13
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> 20
+> 21
+> 22
+
+1
+
+2
+
+3
+
+> Rn (+)
+
+#10!3
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> 12
+> 13
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> 20
+> 21
+> 22
+
+n
+
+10!4
+
+10!2
+
+> fmax (Hz)
+
+Estimated
+
+True
+
+n
+
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> 11
+> 12
+> 13
+> 14
+> 15
+> 16
+> 17
+> 18
+> 19
+> 20
+> 21
+> 22
+> Objective (V)
+
+0
+
+0.01
+
+0.02
+
+Objective
+
+Expected (true)Figure 6: Evolution of estimated parameters p along iterations of Alg. 1 (left) and Rn,
+
+fmax and the objective function value (right). The stopping criteria are satisfied for n = 22 RC branches. 0 2000 4000 6000 8000 10000       
+
+> Current (A)
+> -5
+> 0
+> 5
+> 0200040006000800010000
+> Voltage (V)
+> 3.7
+> 3.72
+> 3.74MeasuredEstimated
+
+Time (s)     
+
+> 0200040006000800010000
+> -1
+> 0
+> 1
+> Residuals (V) #10!3
+
+(a) -1.5 -1 -0.5 0 0.5 1 1.5
+
+Voltage residuals (V) #10!3             
+
+> Probability (!)
+> 0
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.17r=1:314#10!7V
+> <r=4:954#10!4V
+> Gaussian-t
+
+(b) 
+
+Figure 7: (a) Current, voltage (measured and reconstructed) profiles and voltage residuals (b) and voltage residual distribution. 19 4 Conclusion 
+
+In this paper, we addressed the problem of identifying observable low-frequency (LF) pa-rameters of equivalent circuit models (ECMs) using time-domain measurements obtained from low-frequency sampled data provided by built-in battery management systems (BMS) during operation. Unlike conventional approaches that rely on artificially imposed exci-tation signals, requiring the battery to be offline, and low-order models, the proposed method leverages naturally occurring operational data and a higher-order RC network with a recursive definition to approximate the constant phase element (CPE) behavior in time domain. The identification problem is formulated as a constrained, non-convex least-squares optimization with constraints written as a discretized state-space model. To improve tractability, we introduced parameter initialization and imposed bounds, reducing the effective search space. Additionally, an algorithmic procedure is proposed to determine a sufficient number of RC branches to improve the convergence. The results of the numerical study where we considered a power system application where battery is providing frequency containment reserve, we used corresponding voltage and current data while battery, shows that the proposed approach, under noise levels typical for conventional BMS, ensures accurate LF parameters estimates with accuracy less than 1 % for each parameter, on average. In worst case, from 1000 simulations, the maximum error of estimate is 3 .6 % for Q while for RΣ and ϕ the maximum errors remain bellow 1 %, namely 0 .78 % and 0 .80 %, respectively. Thanks to the continuous tracking of the evolution of these parameters over time, provided by the proposed method, the modeller gets the access to improved understanding of battery degradation processes. Relying only on measurements available from built-in BMS, the approach avoids intrusive testing and specialized laboratory equipment, making it suitable for online implementation and can be used in scope of ageing-aware control strategies. 20 A Stability limit of maximum frequency for the decompo-sition 
+
+In a discrete-time state-space implementation of an RC branch discretisation, stability imposes an upper limit on how fast the branch dynamics (i.e., how large its characteristic frequency) is relative to the sampling frequency, fs = 1
+
+Ts
+
+. In (39), the equations are written as a standard, discretised, state-space model, using the forward Euler discretisation method. To ensure the stable response, all the eigenvalues of the matrix Ad = I + Ts · Ac
+
+must be within a unit circle: 
+
+|λi(Ad)| < 1, ∀i = 1 , ..., n (A.1) Due to its diagonal structure, the eigenvalues are obviously 
+
+λi(Ad) = 1 − Ts · 1
+
+RiCi
+
+(A.2) and therefore, according to (A.1): 
+
+1 − Ts · 1
+
+RiCi
+
+< 1, ∀i = 1 , ..., n (A.3) 
+
+−1 < 1 − Ts · 1
+
+RiCi
+
+< 1, ∀i = 1 , ..., n (A.4) which is transformed into two inequalities: 
+
+Ts · 1
+
+RiCi
+
+< 2 ∧ Ts · 1
+
+RiCi
+
+> 0 (A.5) where the second one is always satisfied, and the first one can be written in terms of characteristic frequencies of RC branches: 2πf ci < 2fs ⇐⇒ fci < fs
+
+π ∀i = 1 , ..., n (A.6) which is equivalent to max  
+
+> i
+
+fci = fmax < fs
+
+π . (A.7) 21 Acknowledgements 
+
+This research is carried out in the frame of Swiss Circular Economy Model for Automotive Lithium Batteries (CircuBAT) Flagship project, with the financial support of the Swiss Innovation Agency (Innosuisse - Flagship Initiative) (FLAGSHIP PFFS-21-20). 22 References 
+
+[1] W. Shangshang, Z. Jianbo, G. Ouma¨ ıma, V. Vincent, G. Ming, and O. Mark, “Electrochemical impedance spectroscopy,” Nature Reviews Methods Primers , vol. 1, no. 1, p. 42, Dec. 2021. [Online]. Available: http: //www.nature.com/articles/s43586-021-00045-y [2] Z. Luo, Z. Gao, Z. Cai, X. Yan, S. Liu, L. Xiao, S. Yang, and S. Zhou, “A review of on-board electrochemical impedance spectroscopy for low-cost in situ characterization technology,” Journal of Energy Storage , vol. 141, p. 119153, Jan. 2026. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S2352152X25038666 [3] S. V. Kulkarni, G. Arjun, S. Gupta, R. Sinha, and A. Shukla, “Advanced battery diagnostics for electric vehicles using CAN based BMS data with EKF and data driven predictive models,” Scientific Reports , vol. 15, no. 1, p. 32848, Sep. 2025, publisher: Nature Publishing Group. [Online]. Available: https://www.nature.com/articles/s41598-025-18042-6 [4] F. Berger, D. Joest, E. Barbers, K. Quade, Z. Wu, D. U. Sauer, and P. Dechent, “Benchmarking battery management system algorithms - Requirements, scenarios and validation for automotive applications,” eTransportation , vol. 22, p. 100355, Dec. 2024. [Online]. Available: https://www.sciencedirect.com/science/article/pii/ S2590116824000456 [5] D. D. Tadoum, F. Berger, F. Krause, D. Wasylowski, F. Ringbeck, W. Li, and D. U. Sauer, “Standards and Regulations for Battery Management Systems in Germany: Review and Improvement Potentials,” Global Challenges , vol. 9, no. 9, p. e00129, Jul. 2025. [Online]. Available: https://pmc.ncbi.nlm.nih.gov/articles/PMC12418343/ [6] P. Gu, Z. Zhou, S. Qu, C. Zhang, and B. Duan, “Influence Analysis and Optimization of Sampling Frequency on the Accuracy of Model and State-of-Charge Estimation for LiNCM Battery,” Energies , vol. 12, no. 7, Mar. 2019, publisher: Multidisciplinary Digital Publishing Institute. [Online]. Available: https://www.mdpi.com/1996-1073/12/7/1205 [7] W. Zhou, R. Huang, K. Liu, and W. Zhang, “A novel interval-based approach for quantifying practical parameter identifiability of a lithium-ion battery model,” 
+
+International Journal of Energy Research , vol. 44, no. 5, pp. 3558–3573, 2020, eprint: https://onlinelibrary.wiley.com/doi/pdf/10.1002/er.5118. [Online]. Available: https://onlinelibrary.wiley.com/doi/abs/10.1002/er.5118 [8] P. Iurilli, C. Brivio, and V. Wood, “On the use of electrochemical impedance spectroscopy to characterize and model the aging phenomena of lithium-ion batteries: a critical review,” Journal of Power Sources , vol. 505, p. 229860, Sep. 2021. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S0378775321003992 [9] G. L. Plett, Battery Management Systems: Volume I, Battery Modeling . Boston : London: Artech House, 2015, oCLC: ocn909081842. [10] J. Valsa, P. Dvorak, and M. Friedl, “Network model of CPE,” Radioengineering ,vol. 20, no. 3, Sep. 2011. [Online]. Available: http://www.radioeng.cz/fulltexts/ 2011/11 03 619 626.pdf 23 [11] J. Valsa and J. Vlach, “RC models of a constant phase element,” International Journal of Circuit Theory and Applications , vol. 41, no. 1, pp. 59–67, 2013, eprint: https://onlinelibrary.wiley.com/doi/pdf/10.1002/cta.785. [Online]. Available: https://onlinelibrary.wiley.com/doi/abs/10.1002/cta.785 [12] J. Tenreiro Machado, “Discrete-time fractional-order controllers,” Fractional Calculus and Applied Analysis , vol. 4, pp. 47–66, Jan. 2001. [13] A. Fonseca and R. Green, “State-Space Randles Cell Model for Instrument Calibration,” in 2020 IEEE Canadian Conference on Electrical and Computer Engineering (CCECE) , Aug. 2020, pp. 1–6, iSSN: 2576-7046. [Online]. Available: https://ieeexplore.ieee.org/document/9255762/ [14] F. Sossan, E. Namor, R. Cherkaoui, and M. Paolone, “Achieving the Dispatchability of Distribution Feeders Through Prosumers Data Driven Forecasting and Model Predictive Control of Electrochemical Storage,” IEEE Transactions on Sustainable Energy , vol. 7, no. 4, pp. 1762–1777, Oct. 2016. [Online]. Available: https://ieeexplore.ieee.org/document/7542590 [15] S. M. M. Alavi, A. Mahdi, S. J. Payne, and D. A. Howey, “Identifiability of Generalized Randles Circuit Models,” IEEE Transactions on Control Systems Technology , vol. 25, no. 6, pp. 2112–2120, Nov. 2017. [Online]. Available: https://ieeexplore.ieee.org/document/7797467/ [16] P. L. d. Santos, T.-P. A. Perdico´ ulis, and P. A. Salgado, “Modeling and Identification of Li-ion Cells,” IEEE Control Systems Letters , vol. 7, pp. 1015–1020, 2023. [Online]. Available: https://ieeexplore.ieee.org/document/9989546 [17] S. M. M. Alavi, C. R. Birkl, and D. A. Howey, “Time-domain fitting of battery electrochemical impedance models,” Journal of Power Sources , vol. 288, pp. 345–352, Aug. 2015. [Online]. Available: https://www.sciencedirect.com/science/article/pii/ S0378775315007569 [18] O. Cois, A. Oustaloup, T. Poinot, and J.-L. Battaglia, “Fractional state variable filter for system identification by fractional model,” in 2001 European Control Conference (ECC) , Sep. 2001, pp. 2481–2486. [Online]. Available: https://ieeexplore.ieee.org/document/7076300/ [19] A. Adel, R. Malti, and O. Briat, “Time-domain system identification using fractional models from non-zero initial conditions applied to Li-ion Batteries,” 
+
+Annual Reviews in Control , vol. 60, p. 101017, Jan. 2025. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S136757882500032X [20] P. Schr¨ oer, E. Khoshbakht, T. Nemeth, M. Kuipers, H. Zappen, and D. U. Sauer, “Adaptive modeling in the frequency and time domain of high-power lithium titanate oxide cells in battery management systems,” 
+
+Journal of Energy Storage , vol. 32, p. 101966, Dec. 2020. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S2352152X20318016 [21] B. Xia, X. Zhao, R. de Callafon, H. Garnier, T. Nguyen, and C. Mi, “Accurate Lithium-ion battery parameter estimation with continuous-time system identification methods,” Applied Energy , vol. 179, pp. 426–436, Oct. 2016. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S0306261916309461 24 [22] “Frequency Containment Reserves.” [Online]. Available: https://www.entsoe.eu/ network codes/eb/fcr/ [23] “Commission Regulation (EU) 2017/1485 of 2 August 2017 establishing aguideline on electricity transmission system operation (Text with EEA relevance. ),” Aug. 2017, legislative Body: ENER, COM. [Online]. Available: http: //data.europa.eu/eli/reg/2017/1485/oj 25

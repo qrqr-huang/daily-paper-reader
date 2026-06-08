@@ -1,0 +1,39 @@
+{
+  "label": "2026-05-10 ~ 2026-06-08",
+  "date": "2026-05-10 ~ 2026-06-08",
+  "generated_at": "2026-06-08T14:17:09",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "20260510-20260608/2605.13200v1-a-hybrid-tucker-lstm-tensor-network-model-for-soc-prediction-in-electric-vehicles",
+      "section": "deep",
+      "title_en": "A Hybrid Tucker-LSTM Tensor Network Model for SOC Prediction in Electric Vehicles",
+      "authors": "Han Wang, Ying Wang, Bing Wang",
+      "date": "2026-05-13",
+      "pdf": "https://arxiv.org/pdf/2605.13200v1",
+      "score": "9.0",
+      "evidence": "直接针对电动汽车锂离子电池SOC估计提出混合模型",
+      "tldr": "电动汽车SOC估计的传统方法存在累积误差、依赖简化模型等问题。本文提出一种Tucker张量分解与LSTM混合模型，利用全生命周期实车数据，在降维同时保持时间结构。实验表明，Tucker-LSTM显著优于标准LSTM，MSE降低70.5%，MAE降低48.7%，R²升至0.976。该工作为电池管理领域引入高效的张量分析技术，潜力巨大。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Accurate state of charge estimation is critical for the success of electric vehicle battery management strategies, but it is well known that conventional estimators suffer from two fundamental shortcomings: cumulative errors that grow over time and reliance on simplified battery models that do not reflect real world dynamics. Therefore, this paper presents a novel hybrid approach combining Tucker tensor decomposition with LSTM networks, using full - lifecycle EV field data for SOC prediction. The inputs are charge status, mileage, voltage, current, cell differentials, and temporal features. Tucker decomposition is skillfully used to reduce dimensionality while maintaining the temporal structure, hence allowing a direct, fair comparison with standard LSTM. The result is unequivocal: Tucker - LSTM outperforms the baseline on all metrics, with MSE dropping 70.5\\% (from 21.07 to 6.22 ), MAE improving 48.7\\% (from 3.37\\% to 1.73\\%), RMSE falling from 4.59\\% to 2.49\\%, and $R^2$ rising from 0.918 to 0.976. Since the experimental results demonstrably demonstrate that tensor decomposition compresses high-dimensional battery data very well without loss of predictive fidelity, this paper naturally opens up a new direction for tensor-based analytics in electric vehicle battery management.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "20260510-20260608/2605.28901v1-identifiability-of-low-frequency-li-ion-battery-parameters-in-time-domain",
+      "section": "deep",
+      "title_en": "Identifiability of Low Frequency Li-ion Battery Parameters in Time Domain",
+      "authors": "Vladimir Sovljanski, Mario Paolone",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.28901v1",
+      "score": "9.0",
+      "evidence": "基于BMS数据辨识低频ECM参数，为等效电路模型SOC估计提供支撑。",
+      "tldr": "准确识别电池等效电路模型的低频参数对电池状态估计至关重要，但电池管理系统（BMS）在运行时以低频采样电压电流，导致参数可辨识性低。本文提出一种时域方法，利用高阶RC网络递归逼近常相位元件（CPE），避免频域转换，并将参数估计转化为约束非凸最小二乘问题。通过推导初始化策略、边界及RC分支选择规则，提升了鲁棒性。在电网一次频率控制应用场景中，数值仿真表明，所提方法在典型BMS噪声下实现低频参数（包括CPE）平均估计误差低于1%，证实了其在实际条件下的高辨识精度和鲁棒性，为BMS实时参数辨识提供了可行途径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "This paper investigates the identification of observable low-frequency (LF) parameters of battery cell's equivalent circuit models (ECMs) using time-domain voltage and current measurements sampled at low frequency by built-in battery management systems (BMS) during operation. Accurate estimation of such parameters is challenging due to measurement resolution available in practical settings. To address this, a modeling and identification framework is proposed in which fractional constant phase element (CPE), commonly used to model LF diffusion phenomena of battery cells, is approximated in the time domain using a high-order RC network with a recursive definition. The parameter estimation problem is formulated as a constrained, non-convex least-squares problem in a discretized state-space representation. To improve robustness, parameter initialization strategies, bounds, and a procedure for selecting the number of RC branches are rigorously derived. The method is evaluated in a numerical study based on a power system application where the battery under the study provides primary frequency control to the grid. Under noise levels representative of typical BMS measurements, the proposed approach achieves, from time-domain measurements, accurate LF parameter estimation (including the CPE), with average errors below 1 %.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

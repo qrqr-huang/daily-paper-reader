@@ -1,0 +1,89 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-08T14:13:30.685718+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2605.13200v1",
+      "source": "arxiv",
+      "title": "A Hybrid Tucker-LSTM Tensor Network Model for SOC Prediction in Electric Vehicles",
+      "abstract": "Accurate state of charge estimation is critical for the success of electric vehicle battery management strategies, but it is well known that conventional estimators suffer from two fundamental shortcomings: cumulative errors that grow over time and reliance on simplified battery models that do not reflect real world dynamics. Therefore, this paper presents a novel hybrid approach combining Tucker tensor decomposition with LSTM networks, using full - lifecycle EV field data for SOC prediction. The inputs are charge status, mileage, voltage, current, cell differentials, and temporal features. Tucker decomposition is skillfully used to reduce dimensionality while maintaining the temporal structure, hence allowing a direct, fair comparison with standard LSTM. The result is unequivocal: Tucker - LSTM outperforms the baseline on all metrics, with MSE dropping 70.5\\% (from 21.07 to 6.22 ), MAE improving 48.7\\% (from 3.37\\% to 1.73\\%), RMSE falling from 4.59\\% to 2.49\\%, and $R^2$ rising from 0.918 to 0.976. Since the experimental results demonstrably demonstrate that tensor decomposition compresses high-dimensional battery data very well without loss of predictive fidelity, this paper naturally opens up a new direction for tensor-based analytics in electric vehicle battery management.",
+      "authors": [
+        "Han Wang",
+        "Ying Wang",
+        "Bing Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.ET"
+      ],
+      "published": "2026-05-13T08:54:17+00:00",
+      "link": "https://arxiv.org/pdf/2605.13200v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "directly addresses SOC estimation for EV Li-ion batteries using hybrid model",
+      "llm_evidence_cn": "直接针对电动汽车锂离子电池SOC估计提出混合模型",
+      "llm_evidence": "直接针对电动汽车锂离子电池SOC估计提出混合模型",
+      "canonical_evidence": "直接针对电动汽车锂离子电池SOC估计提出混合模型",
+      "llm_tldr_en": "A hybrid Tucker-LSTM model addresses cumulative errors and model simplicity in SOC estimation by using full-lifecycle EV data. Tucker decomposition reduces dimensionality while preserving temporal structure, enabling more accurate and reliable SOC prediction for EV battery management.",
+      "llm_tldr_cn": "针对传统SOC估计器累积误差大、依赖简化模型等缺陷，本文提出一种融合Tucker张量分解与LSTM的混合模型。该模型利用电动汽车全生命周期实测数据（充电状态、里程、电压、电流等），通过Tucker分解降低维度并保留时序结构，再输入LSTM进行SOC预测。实验表明，该方法提升了预测精度，为电动汽车电池管理提供了更可靠的SOC估计。",
+      "llm_tldr": "针对传统SOC估计器累积误差大、依赖简化模型等缺陷，本文提出一种融合Tucker张量分解与LSTM的混合模型。该模型利用电动汽车全生命周期实测数据（充电状态、里程、电压、电流等），通过Tucker分解降低维度并保留时序结构，再输入LSTM进行SOC预测。实验表明，该方法提升了预测精度，为电动汽车电池管理提供了更可靠的SOC估计。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.28901v1",
+      "source": "arxiv",
+      "title": "Identifiability of Low Frequency Li-ion Battery Parameters in Time Domain",
+      "abstract": "This paper investigates the identification of observable low-frequency (LF) parameters of battery cell's equivalent circuit models (ECMs) using time-domain voltage and current measurements sampled at low frequency by built-in battery management systems (BMS) during operation. Accurate estimation of such parameters is challenging due to measurement resolution available in practical settings. To address this, a modeling and identification framework is proposed in which fractional constant phase element (CPE), commonly used to model LF diffusion phenomena of battery cells, is approximated in the time domain using a high-order RC network with a recursive definition. The parameter estimation problem is formulated as a constrained, non-convex least-squares problem in a discretized state-space representation. To improve robustness, parameter initialization strategies, bounds, and a procedure for selecting the number of RC branches are rigorously derived. The method is evaluated in a numerical study based on a power system application where the battery under the study provides primary frequency control to the grid. Under noise levels representative of typical BMS measurements, the proposed approach achieves, from time-domain measurements, accurate LF parameter estimation (including the CPE), with average errors below 1 %.",
+      "authors": [
+        "Vladimir Sovljanski",
+        "Mario Paolone"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-05-27T15:49:07+00:00",
+      "link": "https://arxiv.org/pdf/2605.28901v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Identifies low-frequency ECM parameters using BMS data, enabling accurate SOC estimation via equivalent circuit models.",
+      "llm_evidence_cn": "基于BMS数据辨识低频ECM参数，为等效电路模型SOC估计提供支撑。",
+      "llm_evidence": "基于BMS数据辨识低频ECM参数，为等效电路模型SOC估计提供支撑。",
+      "canonical_evidence": "基于BMS数据辨识低频ECM参数，为等效电路模型SOC估计提供支撑。",
+      "llm_tldr_en": "This paper proposes a framework for identifying low-frequency parameters of Li-ion battery ECMs using low-sampling-rate BMS data. It approximates the CPE with a high-order RC network and solves a constrained least-squares problem. The work demonstrates identifiability under practical constraints, facilitating accurate ECM-based state estimation.",
+      "llm_tldr_cn": "本文针对电池管理系统低频采样下等效电路模型参数难以准确辨识的问题，提出时域参数可辨识性分析框架。方法将常相位元件近似为高阶RC网络，建立约束最小二乘优化模型。实验表明，在实际测量分辨率限制下，所提方法能可靠辨识低频参数，为基于等效电路模型的电池荷电状态和健康状态精准估计提供了理论基础和技术支撑。",
+      "llm_tldr": "本文针对电池管理系统低频采样下等效电路模型参数难以准确辨识的问题，提出时域参数可辨识性分析框架。方法将常相位元件近似为高阶RC网络，建立约束最小二乘优化模型。实验表明，在实际测量分辨率限制下，所提方法能可靠辨识低频参数，为基于等效电路模型的电池荷电状态和健康状态精准估计提供了理论基础和技术支撑。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
