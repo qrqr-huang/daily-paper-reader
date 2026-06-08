@@ -1,0 +1,2337 @@
+Title: Optimal Sensor Scheduling and Selection for Continuous-Discrete Kalman Filtering with Auxiliary Dynamics
+
+URL Source: https://openreview.net/pdf?id=CAPNgWkEEk
+
+Number of Pages: 27
+
+Markdown Content:
+# Optimal Sensor Scheduling and Selection for Continuous-Discrete Kalman Filtering with Auxiliary Dynamics 
+
+Mohamad Al Ahdab 1 2 John Leth 1 Zheng-Hua Tan 1 2 
+
+## Abstract 
+
+We study the Continuous-Discrete Kalman Filter (CD-KF) for State-Space Models (SSMs) where continuous-time dynamics are observed via multi-ple sensors with discrete, irregularly timed mea-surements. Our focus extends to scenarios in which the measurement process is coupled with the states of an auxiliary SSM. For instance, higher measurement rates may increase energy consumption or heat generation, while a sensor’s accuracy can depend on its own spatial trajec-tory or that of the measured target. Each sensor thus carries distinct costs and constraints asso-ciated with its measurement rate and additional constraints and costs on the auxiliary state. We model measurement occurrences as independent Poisson processes with sensor-specific rates and derive an upper bound on the mean posterior co-variance matrix of the CD-KF along the mean auxiliary state. The bound is continuously differ-entiable with respect to the measurement rates, which enables efficient gradient-based optimiza-tion. Exploiting this bound, we propose a finite-horizon optimal control framework to optimize measurement rates and auxiliary-state dynam-ics jointly. We further introduce a deterministic method for scheduling measurement times from the optimized rates. Empirical results in state-space filtering and dynamic temporal Gaussian process regression demonstrate that our approach achieves improved trade-offs between resource usage and estimation accuracy.      
+
+> 1Department of Electronic Systems, Aalborg University, Aal-borg Øst 9220, Denmark. 2Pioneer Centre for Artificial Intelli-gence, Copenhagen 1350, Denmark.. Correspondence to: Mo-hamad Al Ahdab <maah@es.aau.dk >.
+> Proceedings of the 42 nd International Conference on Machine Learning , Vancouver, Canada. PMLR 267, 2025. Copyright 2025 by the author(s).
+
+## 1. Introduction 
+
+State-space models (SSMs) are fundamental tools for ad-dressing sequential inference challenges in time-series fore-casting, signal processing, and dynamic systems. A core task in SSMs is Bayesian filtering, which aims to com-pute the posterior distribution of latent states online given noisy observations. For linear systems driven by indepen-dently and identically distributed process noise with known dynamics, the Kalman filter (KF) is the optimal linear fil-ter in mean squared error (Kalman, 1960). In the case of nonlinear dynamics, approximate inference methods such as the Extended Kalman Filter (EKF) and the Unscented Kalman Filter (UKF) are commonly used (Simon, 2006; S ¨arkk ¨a & Svensson, 2023). In this paper, we focus on the Continuous-Discrete Kalman Filter (CD-KF) setup, where continuous-time state evolution is observed via multiple sensors with discrete, and possibly irregularly timed, mea-surements. This choice is motivated by the fact that many real-world processes (e.g., blood pressure, ocean tempera-ture, or radiation levels) evolve continuously but are only observed intermittently due to hardware constraints and op-erational considerations. Such formulation is especially relevant when selecting from multiple sensors operating un-der distinct costs, conditions, and constraints. Moreover, the measurement process is often coupled to auxiliary dynamics such as a sensor’s temperature, spatial position, or stored energy, which affect measurement cost and quality. For example, consider a low-orbit satellite observing terrestrial phenomena (e.g., ocean temperature) using sensors whose accuracy depends on the satellite’s orbital position. The satellite has two types of sensors: high-resolution sensors that are accurate during daylight periods, and radar-based sensors that are always available, but are energy-intensive and less accurate. Another example is a glucose monitoring setup where a diabetic patient tracks blood glucose via three different types of sensors: a continuous glucose monitor that provides noisy but frequently sampled measurements, intermittent finger-prick tests that offer higher accuracy but cause patient discomfort, and very accurate but infrequent and costly clinical blood tests. In these examples, the sen-sors differ not only in accuracy but also in their relation to auxiliary quantities such as energy consumption, monetary costs, and human discomfort. This means that adopting 1Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+a naive strategy of uniform high-rate sampling for all the sensors is undesirable and practically infeasible. Instead, measurement decisions must be scheduled to balance be-tween minimizing the uncertainty in what they are measur-ing while simultaneously accounting for their interaction with dynamically changing auxiliary variables. In the literature, most existing works do not consider the continuous-discrete setup. Additionally, scheduling mea-surements while simultaneously considering their interac-tion with an auxiliary state has not been explored directly in the literature. In this paper, we address this gap by formaliz-ing the problem of optimal sensor scheduling for continuous-discrete SSMs with auxiliary dynamics and proposing an optimization scheme to solve it. Specifically, we model the arrival of the measurements from each sensor as a Poisson process with a time-varying rate. We then formulate an op-timization problem that is continuously differentiable with respect to the measurement rates of each sensor and other relevant decision variables affecting the auxiliary dynamics (e.g, the trajectory of a vehicle carrying a sensor). Finally, we provide a deterministic strategy to select the measure-ment time instances for each sensor based on the optimized measurement rate for that sensor. Our contributions in this paper are summarized as follows: 1. We derive an upper bound on the mean posterior co-variance matrix of the CD-KF conditioned on the mean auxiliary state. This bound is continuously differen-tiable with respect to the sensor-specific measurement rates, which enables efficient gradient-based optimiza-tion. 2. We propose the setup of a finite-horizon optimal control framework to jointly optimize measurement rates and other inputs that are relevant to the auxiliary dynamics. 3. We propose a deterministic method for obtaining mea-surement time events from the optimized rates. The method is based on minimizing the Wasserstein dis-tance between the distribution of measurement events generated by the optimized Poisson rates and an empir-ical distribution determined by the expected number of measurements for each sensor. 
+
+## 2. Related Works 
+
+Sensor Scheduling and Selection in Kalman Filtering: 
+
+The problem of optimizing sensor usage in Kalman filtering has been studied across diverse settings. Early work by (Ny et al., 2009) addressed continuous-time sensor management for Linear Time-Invariant (LTI) systems but assumed con-tinuous measurements, a restrictive assumption for practical systems with discrete, asynchronous sensor observations. Subsequent studies focused on discrete-time formulations: (Orihuela et al., 2014) developed periodic scheduling poli-cies for discrete LTI systems, while (Marelli et al., 2019) introduced stochastic scheduling strategies under resource constraints. Optimal control perspectives have also been explored, such as the infinite-horizon formulation in (Zhao et al., 2014) and the finite-horizon networked control frame-work in (Ayan et al., 2020), which incorporated auxiliary network dynamics but retained a discrete-time LTI assump-tion. These works do not address the continuous-discrete setting with irregular measurements, nor do they consider the coupling between sensor scheduling and general aux-iliary state dynamics (e.g., sensor’s spatial trajectory and the available stored energy). Our work generalizes these ap-proaches by unifying continuous-time state evolution with stochastic measurement scheduling via Poisson processes and integrating auxiliary state dynamics into the framework. 
+
+Active Sensing: Active sensing encompasses both sensor scheduling and trajectory optimization to maximize infor-mation gain. Recent advances leverage deep learning for sequential decision-making, for example, (Yoon et al., 2018) used recurrent neural networks to dynamically select med-ical tests based on patient history, while (Qin et al., 2024) proposed controlled neural ordinary differential equations to determine optimal measurement intervals in continuous-discrete settings. However, these methods focus on dis-crete classification tasks (e.g., disease diagnosis) rather than Bayesian state estimation. Recent work by (Napoli-tano et al., 2024) optimized for informative trajectories for Gaussian process (GP) regression in a model learning setup. However, these approaches do not consider the challenge of sensor scheduling and selection with general auxiliary state dynamics interacting with the sensor (e.g., the sensor’s temperature affects its accuracy). 
+
+Bayesian Optimization: Bayesian Optimization (BO) has been widely adopted for optimizing expensive black-box functions, particularly in experimental design (Snoek et al., 2012). Classical BO methods rely on acquisition functions like Expected Improvement (Jones et al., 1998) or Upper Confidence Bound (Srinivas et al., 2012) to balance explo-ration and exploitation. Recent extensions integrate BO with reinforcement learning for sequential decision-making un-der uncertainty (Ling et al., 2016). BO has also been used to design experiments with mutual information in (Kleinegesse & Gutmann, 2020). These methods do not exploit known system dynamics or state-space structures. In contrast, our work leverages the analytic properties of the CD-KF to derive differentiable bounds on the estimation error (mean-squared error), which enables gradient-based optimization of measurement policies. Additionally, these approaches do not account for the influence of auxiliary dynamics on the measurements and their costs and constraints. Our formula-tion generalizes these settings by unifying continuous-time dynamics, stochastic measurement scheduling, and auxiliary 2Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+state constraints within a single optimal control framework. To the best of our knowledge, the framework of scheduling sensors and measurements in a CD-KF setup with auxiliary dynamics has not been explored before. This work proposes this framework and presents some results on efficiently solv-ing a class of this problem. 
+
+## 3. Notation 
+
+We denote by Sn 
+
+> ≥0
+
+(Sn>0) the cones of positive semi-definite (positive definite) n × n matrices. The Loewner order on 
+
+Sn 
+
+> ≥0
+
+(Sn>0) is written as A ⪯ B (A ≺ B), while element-wise inequalities are written as ≤e, <e,≥e, and >e. We write In for the n × n identity matrix, and tr( M ) for the trace of a matrix M . The Dirac measure at ti is denoted δti .The indicator function 1A : X → { 0, 1} is defined by 
+
+1A(x) := 
+
+(
+
+1, x ∈ A, 
+
+0, x / ∈ A. 
+
+## 4. Background: Bayesian Filtering for SSMs 
+
+A (continuous-discrete stochastic) SSM is governed by: 
+
+dx = A(t)xdt + σ(t)dW, x0 ∼ N (μ0, Σ0), (1a) 
+
+y(ti) = C(ti)x(ti) + v(ti), v (ti) ∼ N (0 , R (ti)) , (1b) where x ∈ Rn is the state, dW ∈ Rm is a Wiener process, 
+
+A(t) ∈ Rn×n and σ(t) ∈ Rn×m define the drift and diffu-sion matrices, y(ti) ∈ Rq is a discrete-time measurement at time ti (here, i indexes the measurement occasions, so ti
+
+denotes the i-th observation time), v(ti) is the measurement noise v(ti) ∼ N (0 , R (ti)) with R(ti) ∈ Sq>0 (independent and identically distributed), and C(ti) ∈ Rq×n is the output matrix. For time instants t1 < t 2 < · · · < t i, The Bayesian fil-tering problem involves sequentially obtaining p(x(ti) |
+
+y(t1), . . . , y (ti)) . For linear-Gaussian SSMs, the CD-KF provides exact closed-form solutions for both the filtering density p(x(ti) | y(t1), . . . , y (ti)) and the prediction den-sity p(x(t) | y(t1), . . . , y (ti)) for t > t i (Jazwinski, 2013). Given a Gaussian prior x(0) ∼ N (μ0, Σ0) with μ0 ∈ Rn
+
+and Σ0 ∈ Sn>0, the CD-KF follows the following steps: 
+
+Prediction (t ∈ [ti−1, t i)): 
+
+dμ dt = A(t)μ, (2a) 
+
+dΣ
+
+dt = A(t)Σ + Σ A⊤(t) + σ(t)σ⊤(t), (2b) 
+
+Update (at measurement ti): 
+
+μ(ti) = μ(t− 
+
+> i
+
+) + K(Σ( t− 
+
+> i
+
+), t i)  y(ti) − C(ti)μ(t− 
+
+> i
+
+) ,
+
+(3a) 
+
+Σ( ti) =  In − K(Σ( t− 
+
+> i
+
+), t i)C(ti) Σ( t− 
+
+> i
+
+), (3b) where 
+
+K(Σ( t− 
+
+> i
+
+), t i) := Σ( t− 
+
+> i
+
+)C⊤(ti)  C(ti)Σ( t− 
+
+> i
+
+)C⊤(ti) + R(ti)−1 , (4) is the Kalman gain. Let N (t) be the total number of mea-surements up until time t, then the equation for the covari-ance Σ in the CD-KF can be written compactly as 
+
+dΣ
+
+dt = A(t)Σ + Σ A⊤(t) + σ(t)σ⊤(t)
+
+− K(Σ , t )C(t)Σ  
+
+> N(t)
+
+X
+
+> i=1
+
+δti , (5) where δti is the dirac delta measure at ti.
+
+## 5. The Problem Setup 
+
+We consider a multi-sensor setup in which, at each mea-surement time, a sensor s ∈ { 1, . . . , S } can be selected from S available sensors. Additionally, we introduce an auxiliary state ξ ∈ Rnξ (e.g., representing the position of a vehicle and its energy storage), governed by the following dynamics: 
+
+dξ p
+
+dt = fp(ξ, u, t ) + 
+
+> S
+
+X
+
+> s=1
+
+gs(ξ, u, t )
+
+> Ns(t)
+
+X
+
+> i=1
+
+δtsi , (6a) 
+
+dξ u
+
+dt = fu(ξu, u, t ), (6b) where ξ = [ ξu ξp]⊤. Here, ξp ∈ Rnp denotes the ”per-turbed” part of ξ affected by measurements, while ξu ∈
+
+Rnξ −np represents the unperturbed part. The input sig-nal u ∈ Rmξ (e.g., the velocity of a vehicle) influences the dynamics, and Ns(t) represents the total number of measurements up to time t for sensor s with tsi being the 
+
+i-th measurement instant for that sensor. Note that the dif-ferential equation for ξu depends only on ξu. Therefore, given an initial condition ξu(0) = ξu0 and an input trajctory 
+
+u(t) ∈ Rmξ , then we can solve for ξu(t) independantly from the measurement times. The functions fp, g 1, . . . , g S
+
+and fu are assumed to be Lipschitz continuous in ξ, u, and 
+
+t.Decomposing the auxiliary state into ξp and ξu is general and does not impose restrictions. For instance, if all of ξ
+
+is perturbed by measurements, then ξ = ξp; conversely, if none of ξ is perturbed, then ξ = ξu. This division be-comes crucial later when analyzing the covariance structure of the KF. Often, such decomposition arises naturally. For example, ξu may represent the kinematics or dynamics of a vehicle, which are typically independent of measurements, while ξp might correspond to the stored energy of the vehi-cle, which depends on position and velocity (e.g., locations 3Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+for recharging or energy consumption rates at different ter-rains). Additionally, the stored energy can decrease with each measurement, and the consumed energy by each mea-surement event for sensor s ∈ { 1, . . . , S } is characterized by gs.We now extend the SSM in (1a) to incorporate the auxiliary state ξ:
+
+dx = A(ξ, t )x dt + σ(ξ, t ) dW, x 0 ∼ N (μ0, Σ0), (7a) 
+
+ys(ti) = Cs(ξ(ti), t i)x(ti) + vs(ξ(ti), t i), (7b) where ys(ti) is the measurement taken by sensor s at time 
+
+ti, Cs is the corresponding output matrix with the measure-ment noise being vs(ξ(ti), t i) ∼ N (0 , R s(ξ(ti), t i)) . Here, we also assume that A, σ, C 1, . . . , C S and R1, . . . , R S are Lipshitz continuous in ξ and t.Our goal in this paper is to jointly optimize the measurement times for each sensor and the input u within the context of a CD-KF. In this paper, we will consider the following assumption for the dynamics of the auxiliary variables in (6). 
+
+Assumption 5.1. The functions fp and gs(ξ, u, t ) are con-cave (convex) for all s ∈ { 1, . . . , S } with respect to ξp (in the elementwise or product order sense). This concavity (convexity) assumption is essential for deriv-ing upper (lower) bounds that lead to a tractable optimiza-tion problem for the state ξp. Importantly, it encompasses a broad class of systems, including all affine systems of the form α(ξu, u, t )ξp + β(ξu, u, t ), which satisfy this assump-tion. 
+
+## 6. The Kalman Filter with Randomized Measurements 
+
+We now describe the randomized KF framework that forms the foundation for computing optimal measurement rates. Specifically, we model the arrival of measurements from each sensor s ∈ { 1, . . . , S } as a Poisson process Ns(t) with time-dependent intensity λs(t). The composite measure-ment count is N (t) = PSs=1 Ns(t), and the randomized covariance matrix evolution for the CD-KF then becomes: 
+
+dΣ =  A(ξ, t )Σ + Σ A⊤(ξ, t ) + σ(ξ, t )σ⊤(ξ, t ) dt 
+
+−
+
+> S
+
+X
+
+> s=1
+
+Ks(Σ , ξ, t )Cs(ξ, t )Σ dN s, (8) where the Kalman gain Ks(Σ , ξ, t ) is given by: 
+
+Ks(Σ , ξ, t ) := ΣC⊤ 
+
+> s
+
+(ξ, t )  Cs(ξ, t )Σ C⊤ 
+
+> s
+
+(ξ, t ) + Rs(ξ, t )−1 .
+
+Similarly, the perturbed part of the auxiliary state becomes 
+
+dξ p = fp(ξ, u, t ) dt +
+
+> S
+
+X
+
+> s=1
+
+gs(ξ, u, t ) dN s. (9) We now state the following two propositions, which enable us to formulate a deterministic optimization problem in the rates λ1, . . . , λ S and the input u. Throughout the rest of the paper, we will assume that the jump size functions satisfy the mean-square integrability condition (e.g., see Theorem 3.20 in (Hanson, 2007)). 
+
+Proposition 6.1 (Covariance Matrix Bound) . Given initial conditions ξ0 ∈ Rnξ and Σ0 ∈ Sn>0, let ξ(t) be the solu-tion to (9) with ξ(0) = ξ0 and Σ( t) be the solution to (8) 
+
+with Σ(0) = Σ 0. Let ¯ξ(t) := E[ξ(t)] with ¯ξ(0) = ξ0 and 
+
+¯Σ( t; ξ∗) := E[Σ( t)|ξ(t) = ξ∗(t)] for some ξ∗(t) ∈ Rnξ
+
+with ¯Σ( t; ξ∗) = Σ 0. Then, the solution ˆΣ( t) of 
+
+d ˆΣ
+
+dt = A(ξ∗, t ) ˆΣ + ˆΣA⊤(ξ∗, t ) + σ(ξ∗, t )σ⊤(ξ∗, t )
+
+−
+
+> S
+
+X
+
+> s=1
+
+λs(t)Ks(ξ∗, t )Cs(ξ∗, t ) ˆΣ, ˆΣ(0) = Σ 0, (10) 
+
+satisfies ¯Σ( t; ξ∗) ⪯ ˆΣ( t), ∀t ≥ 0.
+
+Proposition 6.2 (Auxiliary State Bound) . Let ˆξ(t) := [ ˆξp(t) ξu(t)] ⊤ ∈ Rnξ be the solution to 
+
+d ˆξp
+
+dt = fp( ˆξ, u, t ) + 
+
+> S
+
+X
+
+> s=1
+
+λs(t)gs( ˆξ, u, t ), ˆξ(0) = ξ0,
+
+(11) 
+
+where ξu evolves according to (6b) . If fp and g1, . . . , g S
+
+are concave (convex) with respect to ξp (Assumption 5.1), then ¯ξ(t) ≤e ˆξ(t)
+
+ ¯ξ(t) ≥e ˆξ(t)
+
+
+
+, ∀t ≥ 0.
+
+The proofs are provided in Appendix B. 
+
+Remark 6.3 . If A, σ, C 1, . . . , C S , and R1, . . . , R S do not depend on ξp, then E [Σ( t)] = E [Σ( t) | ξ(t) = ξ∗(t)] .
+
+Moreover, if fp, g 1, . . . , g S are affine in ξp, then ¯ξp(t) = ˆξp(t).
+
+## 7. The Optimal Control Problem 
+
+This section will utilize the bounds from Proposition 6.1 and Proposition 6.2 to formulate a general optimal con-trol problem to calculate u and the rates λ1, . . . , λ S for a horizon [0 , T ]. Consider that we have a continuously dif-ferentiable running cost L : Rnξ × Sn>0 × U × RS 
+
+> ≥0
+
+→
+
+R with a continuously differentiable terminal cost LT :
+
+Rnξ × Sn>0 × U × RS 
+
+> ≥0
+
+→ R which we desire to min-imize (e.g., minimizing tr( ˆΣ) ). In addition to the costs, consider that we have ncr continuously differentiable run-ning constraints C : Rnξ ×Sn>0 ×U × RS 
+
+> ≥0
+
+→ Rncr together 4Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+with ncT continuously differentiable terminal constraints 
+
+CT : Rnξ × Sn>0 × U × RS 
+
+> ≥0
+
+→ RncT (e.g, ξp(T ) ≥ 0
+
+if ξp(T ) represent energy). We formulate the following general optimal control problem: 
+
+min   
+
+> λ≥e0, u ∈U ,
+> ˆξ∈Rnξ,ˆΣ∈Sn>0
+
+Z T
+
+> 0
+
+L
+
+ ˆξ, ˆΣ, u, λ 
+
+
+
+dt 
+
++ LT
+
+ ˆξ(T ), ˆΣ( T ), u (T ), λ (T )
+
+
+
+(12a) subject to 
+
+d ˆΣ
+
+dt = A( ˆξ, t ) ˆΣ + ˆΣA⊤( ˆξ, t ) + σ( ˆξ, t )σ⊤( ˆξ, t )
+
+−
+
+> S
+
+X
+
+> s=1
+
+λs(t)Ks( ˆξ, t )Cs( ˆξ, t ) ˆΣ,
+
+(12b) 
+
+d ˆξp
+
+dt = fp( ˆξ, u, t ) + 
+
+> S
+
+X
+
+> s=1
+
+λs(t)gs( ˆξ, u, t ), (12c) 
+
+dξ u
+
+dt = fu(ξu, u, t ), (12d) 
+
+ˆξ(0) = ξ0, ˆΣ(0) = Σ 0, (12e) 
+
+λ(t) ≥e 0, u (t) ∈ U , ∀t ∈ [0 , T ], (12f) 
+
+C
+
+ ˆξ(t), ˆΣ( t), u (t), λ (t)
+
+
+
+≤e 0, ∀t ∈ [0 , T ], (12g) 
+
+CT
+
+ ˆξ(T ), ˆΣ( T ), u (T ), λ (T )
+
+
+
+≤e 0, (12h) where U ⊂ Rmξ . Since ˆΣ( t) and ˆξp(t) represent bounds on the true mean covariance and mean perturbed state, the cost functions L, LT and the constraints C, CT are assumed to be monotonically non-increasing (in the Loewner or-der) in ˆΣ, and monotonically non-decreasing (respectively, non-increasing) in ˆξp if fp and g1, . . . , g S are concave (re-spectively, convex) in ξp (element-wise) 1. This ensures that the bounds from Propositions 6.1 and 6.2 provide mean-ingful constraints and costs. When fp and gs are affine in 
+
+ξp, we have ¯ξp(t) = ˆξp(t) for all t ≥ 0, so no additional monotonicity restrictions are required with respect to ˆξp.Since we typically want to decrease or upper bound uncer-tainty, the requirement for monotonically increasing costs and constraints with respect to ˆΣ is not restrictive. Note that one can also add slack variables to relax constraints and other optimization-related variables to (12) . Furthermore, we assume the following: 
+
+Assumption 7.1 (Feasibility) . There exists at least one ad-missible pair (u(·), λ (·)) with a corresponding ˆΣ( ·) and ξ(·)
+
+such that C ≤ e 0 and CT ≤e 0 are satisfied.                  
+
+> 1We say for a differentiable function f:Rn→Rmthat it is non-decreasing (non-increasing) if ∂f i/∂x j≥0(∂f i/∂x j≤0)for i∈ { 1, . . . , m }and j∈ { 1, . . . , n }.
+
+Obtaining a closed-form solution to the problem in (12) is generally intractable. Thankfully, several numerical ap-proaches can be utilized to obtain an approximate solution to the problem (Rao, 2009) (see Appendix D for a summary of these methods and the choice for the examples in this paper). 
+
+Remark 7.2 . For the OCP in (12) , we use ˆξ from Propo-sition 6.2 in the cost, in the constraints, and also for the dynamics of ˆΣ. By Proposition 6.1, ˆΣ then upper-bounds the true covariance ¯Σ( t; ˆξ). We distinguish three cases for our setup and the OCP in (12) . The first case is when 
+
+fp, g 1, . . . , g S are affine in ξp. In this situation, we have 
+
+ˆξ = ¯ξ and the constraints and the costs in the OCP in (12) are for the exact mean trajectory ¯ξ. Additionally, ˆΣ
+
+will be an upper-bound for the covariance matrix along the mean trajectory ¯ξ, and the costs and the constraints in the OCP will thus target the mean behaviour. If fp, g 1, . . . , g S
+
+are nonlinear but are concave (respectively, convex) in 
+
+ξp (Assumption 5.1), then ˆξ upper-bounds (respectively, lower-bounds) ¯ξ, so any monotonically non-decreasing (re-spectively, non-increasing) cost or constraint depending only on ˆξ remains meaningful. However, without further convexity/concavity assumptions on A, σ, C 1, . . . , C S and 
+
+R1, . . . , R S from (7) , it need not follow that ˆΣ = ¯Σ( t; ˆξ)
+
+bounds ¯Σ( t; ¯ξ). Nevertheless, if the dynamics are locally nearly linear (similar to the EKF mean approximation   
+
+> d¯ξdt
+
+≈ fp( ¯ξ, u, t ) + PNs 
+
+> s=1
+
+λs(t)gs( ¯ξ, u, t ) (Simon, 2006; S ¨arkk ¨a & Svensson, 2023)), one finds ˆΣ ≈ ¯Σ( t; ¯ξ), and thus, still approximately targets the mean behavior. Finally, in the fully nonlinear case violating Assumption 5.1, we can still treat ˆξ as a heuristic approximation for ¯ξ without formal guarantees if the dynamics are locally nearly linear. Empiri-cal results in Appendix H show that this approximation can yield acceptable performance in many scenarios. 
+
+Remark 7.3 . While this paper focuses on an optimal control setup, Proposition 6.1 and Proposition 6.2 offer the oppor-tunity to attempt different control strategies to compute λ
+
+and u depending on the specific problem of interest. For example, we can use control barrier function techniques (Ames et al., 2019) to find a feedback law for λ and u such that the set Sc := { Σ ∈ Sn>0 | tr(Σ) ≤ c} with c > 0 is forward-invariant. 
+
+## 8. Deterministic Selection of Measurement Times 
+
+After solving the OCP in (12) for the measurement rates 
+
+λ and inputs u, we would like to select the measurement times for each sensor s ∈ { 1, . . . , S } within the horizon 
+
+[0 , T ] which are, loosely speaking, closely related to the average behavior of a Poisson process with rate λs. Rely-ing on sampling the Poisson process to select measurement times is not suitable for a finite-horizon planning task as 5Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+we could sample a realization which is far from the average behaviour of the process. While this realization could pro-vide a better solution, in terms of the cost and constraints in (12) , than the average one, it could also provide a worse solution. Therefore, we aim to deterministically select the measurement times to be as close as possible to the average behavior according to a specific metric. To select determin-istic measurement points ¯ts = (¯ ts
+
+> 1
+
+, . . . , ¯tsns ) for sensor s
+
+with intensity rate λs(t) over [0 , T ], we cast the problem as one of optimal quantization. Define the normalized intensity measure 
+
+μs(dt ) = λs(t)Λs(T ) dt, where Λs(T ) = 
+
+Z T
+
+> 0
+
+λs(t) dt, 
+
+and let τs ∼ μs be the random variable that describes the time of a measurement from sensor s. Our goal is then to approximate μs by a discrete measure νs = νs, ¯ts given by: 
+
+νs(dt ) = 1
+
+nsnsX
+
+> i=1
+
+δ¯tsi (dt ).
+
+Denote τ ds ∼ νs to be the discrete random variable rep-resenting the time of measurement of sensor s under νs.We select ¯ts which minimizes the squared Wasserstein-2 distance, 
+
+W 22 (μs, ν s) = inf 
+
+> γ∈Γ( μs,ν s)
+
+Z 
+
+> [0 ,T ]2
+
+|t − t′|2 dγ (t, t ′),
+
+where Γ( μs, ν s) is the set of all couplings of μs and νs. In one dimension, this distance simplifies to: 
+
+W 22 (μs, ν s) = 
+
+Z 10
+
+ F −1 
+
+> s
+
+(p) − G−1 
+
+> s
+
+(p)2 dp, 
+
+where Fs and Gs are the cumulative distribution functions (CDFs) of μs and νs, respectively (Villani et al., 2009). In this case, we have Fs(t) = R t  
+
+> 0
+> λs(t)Λs(T)
+
+dt = Λs(t)Λs(T ) and 
+
+Gs(t) = 1
+
+> ns
+
+Pns 
+
+> i=1
+
+1[¯ tsi ,∞)(t).
+
+Proposition 8.1 (Optimal Quantization Points) . The points 
+
+¯ts
+
+> 1
+
+, . . . , ¯tsns that minimize W 22 (μs, ν s) are the conditional centroids on ns intervals of equal probability under μs.Specifically, 
+
+¯tsi = E τs | τs ∈ [asi−1, a si ] =
+
+R asi
+
+> asi−1
+
+t λ s(t) dt 
+
+R asi
+
+> asi−1
+
+λs(t) dt , (13) 
+
+where asi = F −1
+
+> s
+
+ ins
+
+
+
+for i = 1 , . . . , n s − 1, as 
+
+> 0
+
+= 0 , and 
+
+asns = T . With this construction, νs matches the first mo-ment of μs (i.e. E[τs] = E[τ ds ]) and the variance difference is Var( τs) − Var( τ ds ) = W 22 (μs, ν s).
+
+The proof can be found in Appendix C. Note that Λs(asi ) = Λs
+
+
+
+F −1 
+
+> s
+
+( ins )
+
+
+
+= Λ s
+
+
+
+Λ−1
+
+> s
+
+
+
+Λs(T ) ins
+
+ 
+
+= Λs(T )ins for all 
+
+i ∈ { 1, . . . , n s − 1}. In other words, in Propositions 8.1, we divide Λs(T ) into ns equal parts. This strategy distributes points more densely in regions where λs(t) is large while preserving the mean of μs and minimizing second-order distortion in the Wasserstein-2 sense. The solution is unique and admits a closed-form expression, making it computa-tionally efficient. Furthermore, minimizing the Wasserstein distance is equivalent to minimizing the quantization error 
+
+E[min t∈¯ts || τs − t|| 2], which is a classic result from optimal quantization theory for probability distributions (Graf & Luschgy, 2000). To match the average number of measure-ments, we select ns = ⌊Λs(T ) + 0 .5⌋.To clarify Proposition 8.1, assume for simplicity that Λs(T )
+
+is an integer, then according to Proposition 8.1, we will par-tition [0 , T ] into intervals such that Λs(asi ) − Λs(asi−1) = 1 
+
+for i ∈ { 1, . . . , n s} if ns = Λ s(T ). This means that we par-tition [0 , T ] into intervals wherein each one of them contains exactly one measurement on average. The location of that one measurement in each interval is taken to be the mean of   
+
+> λs(t)Λs(asi)−Λs(asi−1)
+
+= λs(t) over that interval. We select the measurement times for each sensor s ∈ { 1, . . . , S } based on Proposition 8.1 independently. 
+
+## 9. Experiments 
+
+In many real-world applications (e.g., environmental mon-itoring (Alvear et al., 2017; Bird et al., 2018), and search-and-rescue (Waharte & Trigoni, 2010)), robots must oper-ate under limited energy resources while gathering data in potentially hazardous environments. We consider such a scenario where a robot, constrained by its energy capacity, needs to collect measurements (e.g., pollutant concentra-tion, air quality, temperature) using two onboard sensors for temporal GP regression 2.
+
+9.1. Robot Model and Problem Setup 
+
+The state ξu = [ pr , θ r ]⊤ ∈ R3 represents the planner robot’s position pr ∈ R2 and its heading θr ∈ R. It evolves accord-ing to a unicycle model (see Appendix J for details). The input u = [ v, ω ]⊤ ∈ R2 consists of the heading velocity v
+
+and the angular velocity ω, both subject to physical bounds. The energy state ξp = η ∈ R evolves according to 
+
+dη dt = ce exp  −re∥pr −pe∥2−cuv−cuω−
+
+> 2
+
+X
+
+> s=1
+> Ns
+
+X
+
+> i=1
+
+cs δtsi ,
+
+(14) 
+
+> 2
+
+The code for generating the results, in addition to the corresponding animations and different examples, can be found on https://github.com/MOHAMMADZAHD93/ When2measureKF 
+
+6Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0.00 0.25 0.50 0.75 1.00 
+
+−1.0
+
+−0.5
+
+0.0
+
+0.5
+
+1.0
+
+1.5
+
+Time 
+
+> xp
+
+ˆxp ± 1σ True xp
+
+ˆxsp ± 1σ Sensor 1 
+
+Sensor 2 
+
+0.00 0.25 0.50 0.75 1.00 
+
+0
+
+1
+
+2
+
+3
+
+Time 
+
+> tr(Σ)
+
+Planned ˆΣ True Σ 
+
+Sensor 1 Sensor 2 
+
+0.00 0.25 0.50 0.75 1.00 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+x-coordinates 
+
+> y-coordinates
+
+Path Sensor 1 
+
+Sensor 2 Base 
+
+Target Robot 
+
+0.00 0.25 0.50 0.75 1.00 
+
+0
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+Time 
+
+> Energy
+
+Planned ˆ η True η
+
+Sensor 1 Sensor 2 
+
+(a) 0.00 0.25 0.50 0.75 1.00 
+
+−1.0
+
+−0.5
+
+0.0
+
+0.5
+
+1.0
+
+1.5
+
+Time 
+
+> xp
+
+ˆxp ± 1σ True xp
+
+ˆxsp ± 1σ Sensor 1 
+
+Sensor 2 
+
+0.00 0.25 0.50 0.75 1.00 
+
+0
+
+1
+
+2
+
+3
+
+Time 
+
+> tr(Σ)
+
+Planned ˆΣ True Σ 
+
+Sensor 1 Sensor 2 
+
+0.00 0.25 0.50 0.75 1.00 
+
+0.00 
+
+0.05 
+
+0.10 
+
+0.15 
+
+Time 
+
+> Radiation damage
+
+True ζ1 Planned ˆζ1
+
+True ζ2 Planned ˆζ2
+
+Sensor 1 Sensor 2 
+
+0.00 0.25 0.50 0.75 1.00 
+
+0
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+Time 
+
+> Energy
+
+Planned ˆ η True η
+
+Sensor 1 Sensor 2 
+
+(b) 
+
+Figure 1. The planned proposed mean solution according to (12) and the true simulated solution based on the proposed measurement times selected according to (13) from the calculated rates λ for (a) without radiation damage and (b) with radiation damage. xp represents the true process, ˆxp represents the KF estimate of it, and ˆxsp represents the RTS estimate of it (the GP regression output). 
+
+7Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+where cu ≥ c1 ≥ c2 ≥ 0 are the energy costs of using the inputs and the sensors. The term ce exp  −re∥pr − pb∥2
+
+(with ce, r e ≥ 0) represents an energy charging source (e.g., solar) with its maximum charging rate at the base located at 
+
+pb ∈ R2.The measurement noise covariance matrices depend on the robot–process distance: 
+
+Rs(pr ) = Rsmax exp  rs∥pr − pp∥2, s ∈ { 1, 2}, (15) where R2max > R 1max > 0, r2 > r 1 > 0, and pp ∈
+
+R2 is the location of the process. This setup implies that sensor 1 is more accurate but also consumes more energy than sensor 2. Starting at the base pb with initial energy 
+
+ξp(0) = ξ0 ≥ 0, the robot must collect measurements at pp
+
+and return to pb by time T ≥ 0 while ensuring that there is sufficient residual energy to continue operating. We employ the state-space representation of the Mat ´ern kernel (degree 1) for the GPs (S ¨arkk ¨a & Hartikainen, 2012; Todescato et al., 2020). Kalman filtering and smoothing (Rauch-Tung-Striebel (RTS)) with this state-space representation is known to be equivalent to GP regression (see Appendix I for more details). The objective is to reduce uncertainties in the CD-KF estimate; hence, schedule measurements to minimize 
+
+tr(Σ) , where Σ is the Kalman filter’s covariance matrix for the estimated process (an upper bound on the smoothing covariance). In the OCP in (12), the running cost is 
+
+L( ˆξ, ˆΣ, u, λ, ε ) = wΣ tr( ˆΣ) + wλ λ⊤λ + wu u⊤u + wε ε2,
+
+(16) where wε ≫ wΣ ≥ wλ ≥ wu ≥ 0, and the terminal cost is zero. To avoid large fluctuations in tr( ˆΣ) , we add the constraint tr( ˆΣ( t)) ≤ cΣ + ε(t) for t ∈ [1 /2, T ], where 
+
+ε(t) ≥ 0 is a slack variable to ensure feasibility. We en-forced the constraint on ˆΣ only for t ∈ [1 /2, T ] since requir-ing the trace of ˆΣ to decrease rapidly can be restrictive and will always lead to large ε at the beginning of the horizon. The running constraints C thus encodes the input bounds 
+
+u ≤e u ≤e ¯u, λ ≥e 0, the trace constraint tr( ˆΣ) ≤ cΣ + ε
+
+(enforced for t ∈ [1 /2, T ]), ε ≥ 0, and an energy lower bound ˆη ≥ cη with cη ≥ 0. The terminal constraint CT
+
+encodes that the robot should return to the base at the end of the horizon pr (T ) = pb. Note that the dynamics of Σ
+
+do not depend on the auxiliary state ξp. The results of the optimization and simulation for a horizon of T = 1 are illustrated in Figure 1(a). 
+
+9.2. Radioactive Environment Extension 
+
+We next examine a setting inspired by nuclear or chemical disaster scenarios, where the process of interest is located in a dangerously radioactive zone (Bird et al., 2018). Each measurement in this area degrades the sensors’ accuracy over time. Specifically, the auxiliary state is now ξp =[η ζ 1 ζ2]⊤ ∈ R3, where ζ1 and ζ2 denote the accumulated radiation damage on Sensors 1 and 2, respectively. The damage dynamics are 
+
+dζ s
+
+dt =
+
+> Ns
+
+X
+
+> i=1
+
+γi exp  −rζ ∥pr − pp∥2 δtsi , (17) where γ1 > γ 2 ≥ 0, implying Sensor 1 is more susceptible to radiation damage than Sensor 2, and rζ > 0. Conse-quently, the sensor covariance matrices become Rs(ξ) = 
+
+Rsmax exp  rs∥pr − pp∥2 exp( rsζs) , s ∈ { 1, 2}. Radia-tion damage thus exponentially increases the measurement noise of each sensor. Figure 1(b) presents results for this second scenario. 
+
+9.3. Comparisions 
+
+The approach used for the example jointly optimizes scheduling sensors while optimizing other inputs for the auxiliary dynamics. To our knowledge, there exist no meth-ods that jointly optimize inputs for auxiliary dynamics to-gether with scheduling sensors in a continuous-discrete setup. Therefore, we compare our approach with baseline strategies that utilize different measurement schemes while employing the optimized inputs for the auxiliary states. The baseline scheduling strategies are summarized as follows: • Random: Discretize the horizon uniformly according to the number of discretization points for the OCP (NO ). Then, sample the measurement times for each sensor s ∈ { 1, . . . , S } according to a Poisson process with constant rate λs = NO /S .• Greedy: Discretize the horizon into small time steps. Then, at each time step and for each sensor, compute a “score” equal to the immediate reduction in the trace of the predicted covariance minus the associated sensor costs and penalties on constraint violations. The mea-surement is then chosen according to the sensor with the highest positive score. If all the scores are negative, then we do not perform a measurement. • M-Optimized: Instead of finding the measurement times according to the quantization rule in (13) , we sample multiple realizations (10000 for the example in this paper) of measurement times according to the cor-responding Poisson process with the optimized rates. Afterwards, we pick the measurement times corre-sponding to the realization with the minimum value of the cost function modified with penalties on constraint violations. Table 1 summarizes the statistics for the comparisons where ”Optimized” refers to our suggested approach. 8Optimal Sensor Scheduling and Selection with Auxiliary Dynamics  
+
+> Table 1. Trajectory statistics for the covariance trace, energy, and degradation over the horizon. The proposed approach in this paper is denoted as ”Optimized”.
+
+Covariance Trace 
+
+Method Mean Std Worst Case Optimized 1.90221 0.3406 2.94496 M-Optimized 1.89024 0.341106 2.94496 Greedy 2.60768 0.487677 3.21866 Random 2.27854 0.48601 2.96245 
+
+Energy η
+
+Method Mean Std Worst Case Optimized 21.5435 10.1709 0.433792 M-Optimized 21.2173 10.5831 -1.11621 Greedy -1.67343 14.0586 -21.1662 Random -23.2507 33.7226 -82.6662 
+
+Degradation ( ζ1 + ζ2)
+
+Method Mean Std Worst Case Optimized 0.0905529 0.0654335 0.185626 M-Optimized 0.0975802 0.0729591 0.213117 Greedy 0.193289 0.081316 0.232247 Random 0.873604 0.596903 1.68309 
+
+9.4. Discussion of the Results 
+
+From Figure 1, we observe that solving the optimal control problem in both scenarios yields a planned robot trajectory together with a corresponding measurement schedule for both of the sensors to track the measured process. We also remark from the figure that the planned upper bound ˆΣ on the mean for Σ nicely tracks the simulated true solutions for 
+
+Σ with measurement times calculated according to Proposi-tion 8.1. We observe the same for η, ζ 1, and ζ2. Additionally, we note that the trace of Σ for the radioactive case is, on av-erage, higher than that for the non-radioactive case, and the smoothing results (GP regression results) are visually worse for the radioactive case. This is expected since the radioac-tive environment case is more challenging. The results in Table 1 suggest that our method (”Optimized”) outperforms the greedy and random scheduling approaches for the robot example. The results also demonstrate that our determinis-tic quantization provides similar results to ”M-Optimized” without having to sample multiple realizations. Sampling multiple realizations can be computationally expensive and unrealistic since we do not have the real measurements to compute the corresponding cost for each realization. Over-all, the results demonstrate the potential and feasibility of utilizing the proposed approach in the CD-KF setup with auxiliary dynamics for sensor scheduling and selection. See Appendix E for another example involving water quality monitoring with fouling and active defouling. In addition, an example with spacecraft monitoring targets on Earth can be found in Appendix F. Moreover, Appendix G provides a discussion on how our approach can be generalized to uncertain and nonlinear SSMs with an example of a robot estimating the position and velocity of a moving target while attempting to track it. Finally, in Appendix H we provide examples for cases where the auxiliary dynamics do not satisfy Assumption 5.1. 
+
+## 10. Conclusion 
+
+We propose a novel methodology for sensor scheduling in SSMs that incorporates auxiliary state-space dynamics. By modeling the occurrence of sensor measurements through independent inhomogeneous Poisson processes with sensor-specific rates, we derive a continuously differentiable up-per bound on the mean posterior covariance matrix of the CD-KF conditioned on the mean auxiliary state. This dif-ferentiability enables efficient gradient-based optimization of the sensor measurement rates. In addition, we formu-late a finite-horizon optimal control problem that jointly optimizes these measurement rates with inputs for auxiliary dynamics. We further provide a quantization-based method for selecting deterministic sensor measurement times that closely match the mean behavior of Poisson processes with optimized measurement rates, thereby matching the actual sensor schedule with the intended resource–accuracy trade-offs. An Empirical evaluation in state-space filtering and dynamic GP regression confirms the feasibility and potential of this approach. 
+
+## Acknowledgements 
+
+This project is supported by the Pioneer Centre for Artificial Intelligence, Denmark. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of machine learning in general and Bayesian filtering in particular. There are many potential societal consequences of our work, none of which we feel must be specifically highlighted here. 
+
+## References 
+
+Alvear, O., Zema, N. R., Natalizio, E., and Calafate, C. T. Using uav-based systems to monitor air pollution in areas with poor accessibility. Journal of Advanced Transporta-tion , 2017(1):8204353, 2017. Ames, A. D., Coogan, S., Egerstedt, M., Notomista, G., Sreenath, K., and Tabuada, P. Control barrier functions: 9Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+Theory and applications. In 2019 18th European Control Conference (ECC) , pp. 3420–3431. IEEE, 2019. Ayan, O., G ¨ursu, H. M., Hirche, S., and Kellerer, W. Aoi-based finite horizon scheduling for heterogeneous net-worked control systems. In GLOBECOM 2020: IEEE Global Communications Conference , pp. 1–7. IEEE, 2020. Bemporad, A. and Morari, M. Robust model predictive control: A survey. In Robustness in Identification and Control , pp. 207–226. Springer, 2007. Bird, B., Griffiths, A., Martin, H., Codres, E., Jones, J., Stancu, A., Lennox, B., Watson, S., and Poteau, X. A robot to monitor nuclear facilities: Using autonomous radiation-monitoring assistance to reduce risk and cost. 
+
+IEEE Robotics & Automation Magazine , 26(1):35–43, 2018. Bock, H. G. and Plitt, K. J. A multiple shooting algorithm for direct solution of optimal control problems*. IFAC Proceedings Volumes , 17(2):1603–1608, 1984. ISSN 1474-6670. 9th IFAC World Congress: A Bridge Between Control Science and Technology, Budapest, Hungary, July 2–6, 1984. Budincevic, M. A comparison theorem of differential equa-tions. Novi Sad J. Math , 40(1):55–56, 2010. B ¨ohme, T. J. and Frank, B. Direct Methods for Optimal Control , pp. 233–273. Springer International Publishing, Cham, 2017. ISBN 978-3-319-51317-1. Delauney, L., Comp `ere, C., and Lehaitre, M. Biofouling pro-tection for marine environmental sensors. Ocean Science ,6(2):503–511, 2010. Delgado, A., Briciu-Burghina, C., and Regan, F. Antifouling strategies for sensors used in water monitoring: review and future perspectives. Sensors , 21(2):389, 2021. Dunning, I., Huchette, J., and Lubin, M. Jump: A modeling language for mathematical optimization. SIAM Review ,59(2):295–320, 2017. Graf, S. and Luschgy, H. Foundations of Quantization for Probability Distributions . Springer Science & Business Media, 2000. Hanson, F. B. Applied Stochastic Processes and Control for Jump-Diffusions: Modeling, Analysis and Computation .SIAM, 2007. Hartikainen, J. and S ¨arkk ¨a, S. Kalman filtering and smooth-ing solutions to temporal Gaussian process regression models. In 2010 IEEE International Workshop on Ma-chine Learning for Signal Processing , pp. 379–384, 2010. Jazwinski, A. H. Stochastic processes and filtering theory .Courier Corporation, 2013. Jones, D. R., Schonlau, M., and Welch, W. J. Efficient global optimization of expensive black-box functions. Journal of Global Optimization , 13:455–492, 1998. Kalman, R. E. A new approach to linear filtering and pre-diction problems. Journal of Basic Engineering , 82(1): 35–45, 03 1960. ISSN 0021-9223. Kleinegesse, S. and Gutmann, M. U. Bayesian experimental design for implicit models by mutual information neu-ral estimation. In International Conference on Machine Learning , pp. 5316–5326. PMLR, 2020. Ling, C. K., Low, K. H., and Jaillet, P. Gaussian process planning with lipschitz continuous reward functions: To-wards unifying Bayesian optimization, active learning, and beyond. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 30, 2016. Marelli, D. E., Sui, T., Rohr, E. R., and Fu, M. Stability of Kalman filtering with a random measurement equa-tion: Application to sensor scheduling with intermittent observations. Automatica , 99:390–402, 2019. ISSN 0005-1098. McNabb, A. Comparison theorems for differential equa-tions. Journal of Mathematical Analysis and Applications ,119(1–2):417–428, 1986. Napolitano, O., Cognetti, M., Pallottino, L., Kanoulas, D., Salaris, P., and Modugno, V. Active sensing for data quality improvement in model learning. IEEE Control Systems Letters , 2024. Ny, J. L., Feron, E., and Dahleh, M. A. Scheduling Kalman filters in continuous time. In 2009 American Control Conference , pp. 3799–3805. IEEE, 2009. Orihuela, L., Barreiro, A., G ´omez-Estern, F., and Rubio, F. R. Periodicity of Kalman-based scheduled filters. Au-tomatica , 50(10):2672–2676, 2014. ISSN 0005-1098. Passenberg, B. Theory and Algorithms for Indirect Meth-ods in Optimal Control of Hybrid Systems . PhD thesis, Technische Universit¨ at M¨ unchen, 2012. Qin, Y., van der Schaar, M., and Lee, C. Risk-averse active sensing for timely outcome prediction under cost pressure. 
+
+Advances in Neural Information Processing Systems , 36, 2024. Rao, A. V. A survey of numerical methods for optimal control. Advances in the Astronautical Sciences , 135(1): 497–528, 2009. 10 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+Rozonoer, L. I. Pontryagin maximum principle in the theory of optimum systems. Avtomat i Telemekh , 20:1320–1334, 1959. Simon, D. Optimal state estimation: Kalman, H infinity, and nonlinear approaches . John Wiley & Sons, 2006. Snoek, J., Larochelle, H., and Adams, R. P. Practical Bayesian optimization of machine learning algorithms. 
+
+Advances in Neural Information Processing Systems , 25, 2012. Srinivas, N., Krause, A., Kakade, S. M., and Seeger, M. W. Information-theoretic regret bounds for Gaussian process optimization in the bandit setting. IEEE Transactions on Information Theory , 58(5):3250–3265, 2012. S ¨arkk ¨a, S. and Hartikainen, J. Infinite-dimensional Kalman filtering approach to spatio-temporal Gaussian process regression. In Proceedings of the Artificial Intelligence and Statistics , pp. 993–1001. PMLR, 2012. S ¨arkk ¨a, S. and Svensson, L. Bayesian Filtering and Smooth-ing , volume 17. Cambridge University Press, 2023. Todescato, M., Carron, A., Carli, R., Pillonetto, G., and Schenato, L. Efficient spatio-temporal Gaussian regres-sion via Kalman filtering. Automatica , 118:109032, 2020. ISSN 0005-1098. Villani, C. et al. Optimal Transport: Old and New , volume 338. Springer, 2009. von Stryk, O. Numerical Solution of Optimal Control Prob-lems by Direct Collocation , pp. 129–143. Birkh ¨auser Basel, Basel, 1993. ISBN 978-3-0348-7539-4. W ¨achter, A. and Biegler, L. T. On the implementation of an interior-point filter line-search algorithm for large-scale nonlinear programming. Mathematical programming ,106:25–57, 2006. Waharte, S. and Trigoni, N. Supporting search and rescue operations with uavs. In 2010 International Conference on Emerging Security Technologies , pp. 142–147. IEEE, 2010. W ¨achter, A. and Biegler, L. T. On the implementation of an interior-point filter line-search algorithm for large-scale nonlinear programming. Mathematical Programming ,106:25–57, 2006. Yoon, J., Zame, W. R., and Schaar, M. V. D. Deep sensing: Active sensing using multi-directional recurrent neural networks. In International Conference on Learning Rep-resentations , 2018. Zhao, L., Zhang, W., Hu, J., Abate, A., and Tomlin, C. J. On the optimal solutions of the infinite-horizon linear sensor scheduling problem. IEEE Transactions on Automatic Control , 59(10):2825–2830, 2014. 11 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+## A. Convexity of the Kalman Update 
+
+The following lemma will be necessary to find the bound on Proposition 6.1. 
+
+Lemma A.1. Let Σ ∈ Sn>0, C ∈ Rm×n, and R ∈ Sm>0, then the map Σ 7 → ΣC⊤  CΣC⊤ + R−1 CΣ is convex. Proof. A map f : Sn>0 → Sn 
+
+> ≥0
+
+is convex if and only if its epigraph 
+
+epi( f ) = { (Σ , X ) | Σ ≻ 0, X ⪰ f (Σ) }
+
+is a convex set. Thus, we need to show that 
+
+X ⪰ f (Σ) := Σ C⊤ C Σ C⊤ + R−1C Σ
+
+defines a convex constraint in (Σ , X ). By the Schur complement, X ⪰ f (Σ) holds if and only if 
+
+X Σ C⊤
+
+C Σ C Σ C⊤ + R
+
+!
+
+⪰ 0. (18) Since each block of this matrix depends affinely on the pair (Σ , X ), the set of all (Σ , X ) satisfying the above block-positivity is described by a linear matrix inequality. Since sets that are defined by linear matrix inequalities are convex, we conclude that 
+
+epi( f ) = 
+
+
+
+(Σ , X ) : Σ ≻ 0,
+
+ X Σ C⊤
+
+C Σ C Σ C⊤ + R
+
+
+
+⪰ 0
+
+
+
+is convex, which shows that f (Σ) is convex. Note that concavity and convexity are understood here in terms of the natural order structure associated with the notion of positive semidefiniteness (Loewner order). 
+
+## B. Proof of Proposition 6.1 and Proposition 6.2 
+
+We start by writing the conditional infinitesimals (Chapter 4 in (Hanson, 2007)) for (8) and (9) 
+
+E [dΣ | Σ = Σ ∗, ξ = ξ∗] = A(ξ∗, t )Σ ∗ + Σ ∗A(ξ∗, t )⊤ + σ(ξ∗, t )σ(ξ∗, t )⊤ −
+
+> Ns
+
+X
+
+> s=1
+
+λs(t)Ks(Σ ∗, ξ ∗, t )Cs(ξ∗, t )Σ ∗
+
+!
+
+dt, 
+
+(19) 
+
+E [dξ | ξ = ξ∗] = fp(ξ∗, t ) + 
+
+> Ns
+
+X
+
+> s=1
+
+λs(t)gs(ξ∗, t )
+
+!
+
+dt. (20) Let ¯ξ(t) := E[ξ(t)] then d ¯ξ = E[dξ ] = E [E [dξ | ξ]] where the first equality follows by Fubini’s theorem and the mean-square integrability condition, and the second equality by the tower property. Utilizing assumption 5.1 with Jensen’s inequality, we therefore get 
+
+d ¯ξ = E
+
+"
+
+fp(ξ, t ) + 
+
+> Ns
+
+X
+
+> s=1
+
+λs(t)gs(ξ, t )
+
+#
+
+dt ≤e (fp( ¯ξ, t ) + 
+
+> Ns
+
+X
+
+> s=1
+
+λs(t)gs( ¯ξ, t )) dt. (21) Letting d ˆξdt = fp( ˆξ, t ) + PNs 
+
+> s=1
+
+λs(t)gs( ˆξ, t ), with ˆξ(0) = ¯ξ(0) = ξ0 ∈ Rnξ , we conclude proposition 6.2 using the comparision theorem of ordinary differential equations (McNabb, 1986; Budincevic, 2010). Similarly, denoting ¯Σ( t; ξ∗) := E[Σ( t) | ξ(t) = ξ(t)∗] and taking the expectation with respect to Σ in (8), we get 
+
+d ¯Σ( t; ξ∗) := 
+
+
+
+A(ξ∗, t ) ¯Σ( t; ξ∗) + ¯Σ( t; ξ∗)A(ξ∗, t )⊤ + σ(ξ∗, t )σ(ξ∗, t )⊤ −
+
+> Ns
+
+X
+
+> s=1
+
+λs(t)E [Ks(Σ , ξ ∗, t )Cs(ξ∗, t )Σ | ξ = ξ∗]
+
+
+
+dt. (22) 12 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+Using Lemma A.1, we can apply Jensen’s inequality to obtain 
+
+d ¯Σ( t; ξ∗)
+
+dt ⪯ A(ξ∗, t ) ¯Σ( t; ξ∗) + ¯Σ( t; ξ∗)A(ξ∗, t )⊤
+
++ σ(ξ∗, t )σ(ξ∗, t )⊤ −
+
+> Ns
+
+X
+
+> s=1
+
+λs(t)Ks( ¯Σ( t; ξ∗), ξ ∗, t )Cs(ξ∗, t ) ¯Σ( t; ξ∗) := F ( ¯Σ, ξ ∗, t ) (23) Now let d ˆΣ 
+
+> dt
+
+= A(ξ∗, t ) ˆΣ + ˆΣA(ξ∗, t )⊤ + σ(ξ∗, t )σ(ξ∗, t )⊤ − PNs 
+
+> s=1
+
+λs(t)Ks( ˆΣ, ξ ∗, t )Cs(ξ∗, t ) ˆΣ = F ( ˆΣ, ξ ∗, t ) with 
+
+ˆΣ(0) = ¯Σ(0) = Σ 0 ∈ Sn>0. By noting that F is order-preserving in the covariance matrix ( ˆΣ ⪰ ¯Σ ⇒ F ( ˆΣ, ξ ∗, t ) ⪰
+
+F ( ¯Σ, ξ ∗, t )), we conclude ˆΣ( t) ⪰ ¯Σ( t) for all t ≥ 0 using the comparison theorem of ordinary differential equations. This concludes the bound in Proposition 6.1. 
+
+## C. Proof of Proposition 8.1 
+
+Proof. Since μs is supported on [0 , T ] with CDF Fs, the quantile function 
+
+F −1 
+
+> s
+
+(p) = inf {t ∈ [0 , T ] : Fs(t) ≥ p}
+
+partitions the interval into subintervals [asi−1, a si ] each having mass 1 
+
+> ns
+
+under μs. The discrete measure νs has CDF Gs with jumps at ¯tsi , so 
+
+G−1 
+
+> s
+
+(p) = ¯ tsi for p ∈
+
+ i−1 
+
+> ns
+
+, ins
+
+i
+
+.
+
+Hence, 
+
+W 22 (μs, ν s) = 
+
+Z 10
+
+ F −1 
+
+> s
+
+(p) − G−1 
+
+> s
+
+(p)2 dp = min 
+
+> ¯ts
+> 1,..., ¯tsns
+> ns
+
+X
+
+> i=1
+
+Z ins
+
+> i−1
+> ns
+
+ F −1 
+
+> s
+
+(p) − ¯tsi
+
+2 dp. 
+
+Taking derivatives with respect to each ¯tsi and setting them to zero yields 
+
+¯tsi = ns
+
+Z ins
+
+> i−1
+> ns
+
+F −1 
+
+> s
+
+(p) dp = E τs | τs ∈ [asi−1, a si ] .
+
+Uniqueness follows from the strict convexity of the squared-error objective. To see that E[τs] = E[τ ds ], observe that 
+
+E[τs] = 1
+
+nsnsX
+
+> i=1
+
+¯tsi =
+
+Z T
+
+> 0
+
+t μ s(dt ) = E[τ ds ],
+
+since each ¯tsi is the average of τs over the interval [asi−1, a si ]. Finally, we have Var( τs) − Var( τ ds ) = W 22 (μs, ν s) which follows by the definition of W 22 (μs, ν s).
+
+## D. Numerical Solutions for Optimal Control Problems 
+
+There are several numerical methods to solve continuous-time OCPs. We list here the common methods used for solving them. 
+
+Direct methods (B ¨ohme & Frank, 2017) work by discretizing the time axis and formulating the problem as a finite-dimensional Nonlinear Program (NLP). There are three common approaches for direct methods: direct single shooting, direct multiple shooting, and direct collocation. In direct single shooting, the control trajectories (in our case u(t) and λ(t)) are parametrized, for example, by polynomials, piecewise constant functions, or piecewise polynomials. The system dynamics are then integrated forward (using an ODE solver) to compute the objective and constraint values, with the NLP’s decision variables corresponding to the control parameters. For direct multiple shooting, the time horizon is divided into smaller subintervals. In each subinterval, the control trajectory is parametrized as in the single shooting case. However, the dynamics are integrated separately for each subinterval instead of integrating them in one go for the entire horizon. The initial conditions for each subinterval for the 13 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 100 200 300 400 
+
+0.0
+
+0.5
+
+1.0
+
+1.5
+
+Number of Discretization Points (D) 
+
+> Mean Absolute Difference
+
+# Mean Absolute Difference vs. D 
+
+100 200 300 400 
+
+0.5
+
+1.0
+
+1.5
+
+2.0
+
+2.5
+
+3.0
+
+3.5
+
+Number of Discretization Points (D) 
+
+> Optimization Time (seconds)
+
+# Optimization Time vs. D     
+
+> Figure 2. Mean absolute difference between all the trajectories and the one with Nd= 400 . Computation times are reported for each Nd.
+
+ODE solver are additional decision variables for the NLP with constraints ensuring the continuity conditions of the dynamics between the subintervals. Direct collocation (von Stryk, 1993; Bock & Plitt, 1984) follows a similar approach but also parametrizes the state trajectories together with the control trajectories. Direct methods are well-suited for handling problems with many constraints and benefit from efficient off-the-shelf NLP solvers such as IPOPT (W ¨achter & Biegler, 2006). However, as the time grid becomes finer, it can lead to large-scale optimization problems. 
+
+Indirect methods (Rao, 2009; Passenberg, 2012) rely on necessary conditions for optimality (e.g., Pontryagin’s Minimum Principle (Rozonoer, 1959)). One formulates the costate (or adjoint) equations and boundary conditions, then solves a Boundary Value Problem (BVP). While indirect methods can offer a deeper analytical insight into the problem, they can be challenging to implement for problems with many inequality constraints and nontrivial system dynamics. Additionally, numerical tools to solve BVP are sensitive to initial conditions. In practice, the choice between direct and indirect methods often depends on problem size, constraint complexity, and the availability of good initial guesses or analytical insights. For the examples in this paper, we choose a multiple shooting approach with forward Euler discretization and adaptive discretization steps. To ensure the positive definiteness of the covariance matrix in the NLP setup, we parametrized it with a 14 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+Cholesky decomposition. These choices are not limited, and one can, in principle, experiment with different choices based on the specific problem to solve. It is important to note that discretization-based methods for OCPs with constraints over a horizon t ∈ [T1, T 2] may not strictly satisfy the constraints for all t ∈ [T1, T 2] due to numerical approximation errors. The choice of the discretization scheme inherently depends on the specific problem structure and its solution. While increasing the number of discretization points or adopting higher-order integration methods can improve accuracy, these enhancements often come with an increased computational cost. Figure D illustrates this trade-off in a two-sensor scheduling scenario for a two-dimensional CD-KF. We apply implicit Euler discretization with varying numbers of discretization points and quantify the resulting estimation error against a high-resolution reference (400 discretization points). Additionally, we record wall-clock runtimes on an Intel Core™ Ultra 7 155H @ 1.40 GHz device with 64 GB RAM. The optimization problems are formulated in Julia using the JuMP (Dunning et al., 2017) framework and solved with IPOPT (W ¨achter & Biegler, 2006). As the number of discretization points increases, the estimation accuracy improves, but at the cost of higher computation times. 15 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0 5 10 15 20 
+
+0.0
+
+0.5
+
+1.0
+
+1.5
+
+2.0
+
+2.5
+
+Time (hr) 
+
+> Measurement Rate
+
+# Optimal Measurement Rates 
+
+λ1 λ2
+
+0 5 10 15 20 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+Time (hr) 
+
+> Defouling Input
+
+# Optimal Defouling Inputs 
+
+u1 u2
+
+0 5 10 15 20 
+
+0
+
+50 
+
+100 
+
+150 
+
+200 
+
+Time (hr) 
+
+> tr(Σ)
+
+# Planned vs. KF Variance 
+
+Planned ˆΣ True Σ
+
+Sensor 1 Sensor 2 
+
+0 5 10 15 20 
+
+70 
+
+80 
+
+90 
+
+100 
+
+110 
+
+Time (hr) 
+
+> Water Quality (ppb)
+
+# True vs. KF vs. RTS 
+
+xp ˆxp ± σ
+
+ˆxsp ± σ Sensor 1 
+
+Sensor 2 
+
+0 5 10 15 20 
+
+0.000 
+
+0.025 
+
+0.050 
+
+0.075 
+
+0.100 
+
+Time (hr) 
+
+> Fouling
+
+# Fouling Evolution (Sensor 1) 
+
+Planned ˆξ1 Real ξ1
+
+Sensor 1 
+
+0 5 10 15 20 
+
+0.00 
+
+0.05 
+
+0.10 
+
+0.15 
+
+0.20 
+
+0.25 
+
+Time (hr) 
+
+> Fouling
+
+# Fouling Evolution (Sensor 2) 
+
+Planned ˆξ2 Real ξ2
+
+Sensor 2     
+
+> Figure 3. Water fouling example. The KF estimate is ˆxpand the RTS estimate is ˆxsp.
+
+## E. Additional Example: Water Quality Monitoring with Fouling and Active Defouling 
+
+In many real-world water quality monitoring applications, sensors deployed in rivers, lakes, or coastal areas are prone to fouling due to the accumulation of biological, chemical, or sedimentary deposits. Fouling degrades sensor performance by increasing the measurement noise (Delauney et al., 2010). In addition, active defouling techniques (e.g., ultrasonic cleaning) have been developed to counteract fouling, although these methods incur their own operational costs (Delgado et al., 2021). In this example, we describe a model in which sensor scheduling is optimized jointly with active defouling control. 16 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+We assume that the water quality parameter evolves according to a linear model: 
+
+dx p = −κ (xp − xamb ) dt + σ dW, xp(0) ∼ N (μ0, Σ0), (24) with parameters set to κ > 0, xamb > 0, and σ > 0.Each sensor provides a measurement of xp at discrete times where the noise covariance Rs of each sensor s ∈ { 1, 2}
+
+depends on the fouling level via 
+
+Rs(ξ, t ) = Rs0 exp 
+
+
+
+λfs ξsp(t)
+
+
+
+, (25) where ξps is the fouling level for sensor s, R10 > R 20 > 0, and λf 
+
+> 1
+
+= λf 
+
+> 2
+
+> 0. Higher fouling leads to a larger Rs and, hence, lower measurement accuracy. For each sensor s, the fouling level evolves as 
+
+dξ sp
+
+dt = −  αfs + γfs us(t) ξsp(t) + 
+
+> Ns
+
+X
+
+> i=1
+
+ρfs δtsi , s ∈ { 1, 2}, (26) where the parameters αf 
+
+> 1
+
+= αf 
+
+> 2
+
+> 0 represent the natural cleaning rate, ρf 
+
+> 1
+
+, ρ f 
+
+> 2
+
+> 0 representing the parameters for the fouling increase per measurement with ρf 
+
+> 2
+
+> ρ f 
+
+> 1
+
+> 0, us(t) ≥ 0 represent active fouling control with rates γf 
+
+> 1
+
+= γf 
+
+> 2
+
+> 0.Remark that the second sensor can provide more accurate measurements ( R02 < R 01 ) but is more prone to fouling with each measurement ( ρf 
+
+> 2
+
+> ρ f 
+
+> 1
+
+) due, for example, to an increased surface area. The goal is to schedule the measurements for a CD-KF while optimizing for the defouling inputs u = [ u1 u2]⊤. We formulate an optimal control problem of the form in (12) for a horizon of T = 24 hr where the running cost is 
+
+L( ˆξ, ˆΣ, u, λ, ε ) = wΣ tr( ˆΣ) + wλ λ⊤λ + wu u⊤u, 
+
+where wΣ ≥ wλ ≥ wu > 0. The running constraints includes input bounds u ≤e u ≤e ¯u and an upper bound on the fouling for each sensor ˆξ1 
+
+> p
+
+, ˆξ2 
+
+> p
+
+≤ cξ with cξ > 0. Figure E shows the results. We can see from the results how the scheduling scheme brings the trace of the covariance matrix to a low level compared to its initial value. Additionally, we see that the planned measurements result in good estimates of the process. It is also worth noting how the OCP solution uses both the sensors equally in the beginning to reduce the trace of the covariance quickly. After that, the OCP solution reduces the rate of measurements for sensor 2 while saturating the defouling input to clean it. At the same time, it increases the rate of measurement for the first sensor while simultaneously increasing the defouling input at a faster rate. 
+
+## F. Additional Example: Spacecraft Monitoring Targets 
+
+We consider two spacecraft in circular low Earth orbit at an altitude of 500 km separated by π rad . Each platform is tasked to monitor two processes on Earth’s surface (for example, surface temperature and humidity). We model each target’s local dynamics as an Ornstein Uhlenbeck process (equivalent to a Gaussian process with exponential kernel; see Appendix H): 
+
+dx 1 = A1 x1 dt + σ1 dW 1,dx 2 = A2 x2 dt + σ2 dW 2,
+
+where A1, A 2 < 0 and σ1, σ 2 > 0.Each spacecraft has two distinct sensors. The first sensor on each spacecraft is a sensor whose accuracy depends on solar illumination. The second sensor on each spacecraft operates independently of solar illumination but requires higher energy per measurement. The accuracy of the first sensor with solar illumination is better than the second one, but it become worse in the absence of illumination. Additionally, daylight sensors are more prone to fail when used excessively compared to the other sensors. To capture these sensors in our framework, we denote the output matrices C1 and C2 for the first and second sensor in the first spacecraft, respectively, and C3 and C4 for the first and second sensor in the second spacecraft, respectively. We also denote the same for the corresponding measurement-noise variances R1, R 2, R 3, R 4. Since each platform can only observe a ground target when it falls within its line of sight, we model the output matrices according to an angular visibility function: 
+
+Cs
+
+ θsat i , θ τj
+
+ = exp −
+
+ κδ
+
+ 1 − cos  θsat i − θτj
+
+ 
+
+1 − cos( δ)
+
+4!
+
+, i ∈ { 1, 2}, j ∈ { 1, 2}, s ∈ { 1, 2, 3, 4}.
+
+17 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0 5 10 15 20 
+
+−15 
+
+−10 
+
+−5
+
+0
+
+5
+
+10 
+
+Time (hr) 
+
+> x1
+
+## Target 1: True vs. KF vs. RTS 
+
+x1 ˆx1 ± σ
+
+ˆxs 
+
+> 1
+
+± σ Sensor 1 
+
+Sensor 2 Sensor 3 
+
+Sensor 4 
+
+0 5 10 15 20 
+
+−15 
+
+−10 
+
+−5
+
+0
+
+5
+
+10 
+
+Time (hr) 
+
+> x2
+
+## Target 2: True vs. KF vs. RTS 
+
+x2 ˆx2 ± σ
+
+ˆxs 
+
+> 2
+
+± σ Sensor 1 
+
+Sensor 2 Sensor 3 
+
+Sensor 4 
+
+0 5 10 15 20 
+
+0
+
+2
+
+4
+
+6
+
+Time (hr) 
+
+> Variance
+
+## Σ1: Planned vs. KF 
+
+Planned ˆΣ1 KF Σ 1
+
+Sensor 1 Sensor 2 
+
+Sensor 3 Sensor 4 
+
+0 5 10 15 20 
+
+0
+
+2
+
+4
+
+6
+
+Time (hr) 
+
+> Variance
+
+## Σ2: Planned vs. KF 
+
+Planned ˆΣ2 KF Σ 2
+
+Sensor 1 Sensor 2 
+
+Sensor 3 Sensor 4 
+
+Figure 4. spacecraft example with the targeted processes. The KF estimates are ˆx1, ˆx2 and the RTS estimates are ˆxs
+
+> 1
+
+, ˆxs
+
+> 2
+
+. See an animation of the results on https://github.com/MOHAMMADZAHD93/When2measureKF .
+
+Here, θsat i denotes the angular position of the i-th spacecraft, θτj denotes the geodetic longitude of the j-th surface target, δ
+
+is the half-cone angle defining the field of view, and κδ > 0 is a shaping constant. For the daylight-dependent sensors (Sensor 1 aboard spacecraft 1 and Sensor 3 aboard spacecraft 2), we model the instantaneous measurement variance as a smooth function of the solar illumination angle: 
+
+Rs
+
+ θsat i , θ ⊙
+
+ = Rmin ρκ⊙
+
+ θsat i , θ ⊙
+
+ + Rmax 
+
+ 1 − ρκ⊙
+
+ θsat i , θ ⊙
+
+ , i ∈ { 1, 2}, s ∈ { 1, 3},
+
+where 
+
+ρκ(θ, θ ′) = 11 + exp  −κ cos( θ − θ′) ,
+
+where θ⊙ is the solar illumination angle, Rmax > R min > 0, and κ⊙ > 0 is a shaping constant determining how sharply the variance transitions from Rmin (when the platform and sun are coaligned) to Rmax . For the solar independent sensors (sensor 2 and sensor 4), we fix the variance at a nominal value 
+
+R2 = R4 = R⊕,
+
+18 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0 5 10 15 20 
+
+0
+
+5
+
+10 
+
+15 
+
+20 
+
+Time (hr) 
+
+> Measurement Rates
+
+## λ1 and λ2
+
+λ1 λ2
+
+0 5 10 15 20 
+
+0
+
+5
+
+10 
+
+15 
+
+Time (hr) 
+
+> Measurement Rates
+
+## λ3 and λ4
+
+λ3 λ4
+
+0 5 10 15 20 
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+Time (hr) 
+
+> Energy (kJ)
+
+## Energy Evolution (Spacecraft 1) 
+
+Planned ˆ η1 Real η1
+
+Sensor 1 Sensor 2 
+
+0 5 10 15 20 
+
+30 
+
+40 
+
+50 
+
+60 
+
+Time (hr) 
+
+> Energy (kJ)
+
+## Energy Evolution (Spacecraft 2) 
+
+Planned ˆ η2 Real η2
+
+Sensor 3 Sensor 4 
+
+Figure 5. spacecraft example with measurement rates and the energy states. See an animation of the results on https://github. com/MOHAMMADZAHD93/When2measureKF .
+
+chosen so that Rmin < R ⊕ < R max . In a more detailed analysis, one could distinguish Earth occultation of direct sunlight from simple misalignment, but here we adopt this smooth logistic model in order to keep the example concise. Each spacecraft carries an onboard battery whose stored energy ( η1 for the first spacecraft and η2 for the second one) evolves according to 
+
+dη 1
+
+dt = − ph + pc ρκη
+
+ θsat 1 , θ ⊙
+
+ u1 +
+
+> 2
+
+X
+
+> s=1
+> Ns
+
+X
+
+> i=1
+
+cs δtsi ,dη 2
+
+dt = − ph + pc ρκη
+
+ θsat 2 , θ ⊙
+
+ u2 +
+
+> 4
+
+X
+
+> s=3
+> Ns
+
+X
+
+> i=1
+
+cs δtsi ,
+
+where ph > 0 is the nominal operating power of each spacecraft, pc > 0 is the peak solar charging power, κη > 0 is a shaping constant, u1, u 2 ∈ [0 , 1] are control variables controlling the charging of each battery such that the stored energy does not exceed an upper limit, and cs is the energy cost per measurement of sensor s, with c1 = c3 > c 2 = c4 > 0.19 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+We formulate an optimal control problem with a horizon of T = 24 hr . The running cost is 
+
+L( ˆξ, ˆΣ, u, λ, ε ) = wΣ ( ˆΣ1 + ˆΣ2) + wλ λ⊤Qλ, 
+
+where Σ1 and Σ2 are the variances of the CD-KF estimate for first target process and the second target process, respectively, and wΣ ≥ wλ ≥ wu > 0, and Q = diag([10 1 10 1]) used to increase the weights on Sensor 1 and Sensor 3 as they are more prone to fail with excessive use than Sensor 2 and Sensor 4. The running constraints includes input bounds 
+
+0 ≤e u ≤e 1, and a bound on the maximum stored energy ˆηi ≤ ηmax , i ∈ { 1, 2}. The results are shown in Figure F and Figure F. We see from F that the scheduling scheme manages to provide estimates tracking the processes nicely. We see an obvious periodic behaviour for the variances for each process. This periodicity is natural as both spacecraft passes over the target processes with periodically. We can observe this periodicity also in Figure F for both the scheduled measurement rates and the stored energy for each spacecraft. 
+
+## G. A Receding Horizon Framework for Unknown or Nonlinear Dynamics 
+
+In many practical scenarios, the dynamics that govern the process we wish to filter are either uncertain or nonlinear. One approach to extend our framework to handle these cases is a Receding Horizon (RH) formulation or a model predictive framework. RH approaches enjoy a rich literature showing that, by repeatedly solving a finite-horizon OCP with updated model information, one can retain provable closed-loop guarantees even when the prediction model is misspecified or learned online (Bemporad & Morari, 2007). Since our proposed approach in this paper is cast as an OCP, we can naturally extend it to an RH setup and utilize the existing approaches for robust or learning-based RH. One way to extend our approach to an RH setup is to solve the OCP in (12) at time tl for a horizon [tl, T + tl], obtain the measurement rates and the other possible control inputs over the horizon [tl, T + tl], use (13) to find the time tl+1 for the first sensor s∗ to measure within the interval [tl, T + tl], apply the possible control for t ∈ [tl, t l+1 ], measure with s∗ at tl+1 ,update the KF estimates and the uncertain parameters of the model based on the measurement at time tl+1 , and re-solve the OCP for the horizon [tl+1 , T + tl+1 ] and repeat. In case of a nonlinear SSM, we can use the EKF (Simon, 2006; S ¨arkk ¨a & Svensson, 2023) for each OCP optimization. The EKF uses linearized dynamics for the covariance propagation, and we can update the linearized dynamics after each measurement between the finite-horizon OCPs. To illustrate this approach, we implemented a moving target tracking task in which a mobile robot with a unicycle model with an energy budget must localize and track a target whose true motion follows a constant turn rate velocity model perturbed by noise 
+
+dx τ = vτ cos θτ dt + σx dW x,dy τ = vτ sin θ dt + σy dW y ,dv τ = σv dW v ,dθ τ = ωτ dt + σθ dW θ ,dω τ = σω dW ω .
+
+(27) where pτ = [ xτ , y τ ]⊤ is the position coordinates of the target, θτ is the heading of the target, vτ , ω τ are the heading linear and angular velocity of the target, respectively, and σx, σ y , σ v , σ θ , σ ω > 0 with Wx, W y , W v , W θ and Wω being independent Wiener processes. The OCP and the CD-KF assume a constant velocity model for the target with random perturbations on the velocity only 
+
+dx = ˜ vx dt dy = ˜ vy dt d˜vx = σvx dW vx ,d˜vy = σvy dW vy ,
+
+(28) where ˜pτ = [ x, y ]⊤ is the position coordinates of the target, ˜vx, ˜vy are the linear velocities on the horizontal and vertical axis, respectively, and σvx , σ vy > 0 with Wvx and Wvy being independent Wiener processes. We assume we have two sensors for the position of the target and that the measurement noise covariance matrices are given as the ones in (15) with 
+
+pp replaced with pτ for simulation and the estimated ˜pτ in the OCP. Additionally, the energy of the robot follows the same dynamics in (14) but with a constant charging rate that does not depend on the position of the robot (more suitable for target tracking). We used an RH setup to plan for the measurements and the robot’s velocities for a horizon of T = 0 .05 where for each OCP optimization, we use the current estimate for the target according to the constant velocity model (28) instead of 20 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0.0 0.2 0.4 0.6 0.8 1.0 1.2
+
+0.0
+
+0.2
+
+0.4
+
+0.6
+
+x-coordinates 
+
+> y-coordinates
+
+Path Sensor 1 
+
+Sensor 2 Robot 
+
+Target 
+
+0 1 2 3 4
+
+0.4
+
+0.6
+
+0.8
+
+1.0
+
+1.2
+
+Time 
+
+> x
+
+ˆx ± 2σ ˆxs ± 2σ
+
+True x
+
+0 1 2 3 4
+
+0.3
+
+0.4
+
+0.5
+
+0.6
+
+0.7
+
+0.8
+
+Time 
+
+> y
+
+ˆy ± 2σ ˆys ± 2σ
+
+True y
+
+0 1 2 3 4
+
+20 
+
+30 
+
+40 
+
+50 
+
+Time 
+
+> Energy
+
+True η (Energy) 
+
+0 1 2 3 4
+
+2
+
+4
+
+6
+
+8
+
+Time 
+
+> Trace of Σ
+
+tr(Σ)       
+
+> Figure 6. Target Tracking example utilizing an RH approach. The KF position estimates are ˆx, ˆyand the RTS position estimates are
+> ˆxs,ˆys. See an animation of the results on https://github.com/MOHAMMADZAHD93/When2measureKF .
+
+the model (27) which was used for simulation. The running cost for each OCP is 
+
+L( ˆξ, ˆΣ, u, λ, ε ) = wΣ tr( ˆΣ) + wλ λ⊤λ + wu u⊤u
+
+where wΣ ≥ wλ ≥ wu ≥ 0, and the terminal cost being the distance between the robot and the predicted location of the target according to the model in (28) . The running constraints C encodes the input bounds u ≤e u ≤e ¯u, λ ≥e 0, and an energy lower bound ˆη ≥ cη with cη ≥ 0. The terminal constraint CT encodes a tighter lower bound on energy to ensure feasibility for the next optimization. The results are illustrated in Figure G. The results in Figure G show that the RH implementation manages to make the robot obtain close estimates to the target’s position, which enables the robot to track 21 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+it closely. Additionally, we can see that the energy drops to a lower value close to the terminal constraint on energy with measurement-induced oscillations. We also see that the same thing happens to the covariance matrix of the CD-KF. 
+
+## H. Experiments for Nonconcave/Nonconvex Auxiliary Dynamics 
+
+In this section, we will solve the OCP in (12) for several cases in which we modify the auxiliary dynamics for the robot example in Section 9 and the water sensors in Appendix E to violate the concavity/convexity assumption 5.1. For the robot example in Section 9, we consider three different cases in which we modify equation (17) to be 
+
+dζ s
+
+dt =
+
+> Ns
+
+X
+
+> i=1
+
+γi exp  −rζ ∥pr − pp∥2  12 + 12 ψζ (ζs)
+
+
+
+δtsi , (29) where ψζ (ζs) = 11+exp( −ζs) for the first case, ψζ (ζs) = 1(1+exp( −ζs)) 3 for the second and third case (the degradation cost doubles as the degradation state for each sensor increases). The difference in the third case is that we modify the energy dynamics in equation (14) to be 
+
+dη dt = ceψη1 (η) exp  re∥pr − pe∥2 − cuv2 − cuω2 −
+
+> 2
+
+X
+
+> s=1
+> Ns
+
+X
+
+> i=1
+
+csψη2 (η) δtsi , (30) where ψη1 (η) = 1+exp( −(η−20)) 2+exp( −(η−20)) (charging efficiency is halfed as the stored energy increases), and ψη2 (η) = 1 + exp( −η2/52) (low stored energy increases the energy costs). For the example of the water sensors in Appendix E, we consider a case in which fouling equation in (26) is modified to be 
+
+dξ sp
+
+dt = −  αfs + γfs us(t)   ξsp(t)3 +
+
+> Ns
+
+X
+
+> i=1
+
+ρfs δtsi , s ∈ { 1, 2}. (31) The results for the different cases are shown in Figure 7, Figure 8, Figure 9, and Figure 10. The figures for robot cases show that we can still obtain satisfactory results even if the dynamics for the auxiliary states violate assumption 5.1. The same can also be said for the results of the modified water fouling example in Figure 10, except for the fouling state of the second sensor, where it can be seen that the planned fouling becomes different from the true one towards the end. Nevertheless, the planned and true covariance matrix Σ for all of these examples are similar. These empirical examples support the idea in Remark 7.2 that our method can still work in situations where the dynamics of the perturbed auxiliary state have a local near-linear behaviour. 22 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0.00 0.25 0.50 0.75 1.00 
+
+# −1.0
+
+# −0.5
+
+# 0.0
+
+# 0.5
+
+# 1.0
+
+# Time 
+
+> xp
+
+# ˆxp ± 1σ True xp
+
+# ˆxsp ± 1σ Sensor 1 
+
+# Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0
+
+# 1
+
+# 2
+
+# 3
+
+# Time 
+
+> tr(Σ)
+
+# Planned ˆΣ True Σ 
+
+# Sensor 1 Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0.000 
+
+# 0.025 
+
+# 0.050 
+
+# 0.075 
+
+# 0.100 
+
+# 0.125 
+
+# Time 
+
+> Radiation damage
+
+# True ζ1 Planned ˆζ1
+
+# True ζ2 Planned ˆζ2
+
+# Sensor 1 Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0
+
+# 10 
+
+# 20 
+
+# 30 
+
+# 40 
+
+# 50 
+
+# Time 
+
+> Energy
+
+# Planned ˆ η True η
+
+# Sensor 1 Sensor 2     
+
+> Figure 7. The first modified (nonconvex/nonconcave) case for the robot example in Section 9. The KF estimate is ˆxpand the RTS estimate is ˆxsp.
+
+23 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0.00 0.25 0.50 0.75 1.00 
+
+# −1.0
+
+# −0.5
+
+# 0.0
+
+# 0.5
+
+# 1.0
+
+# Time 
+
+> xp
+
+# ˆxp ± 1σ True xp
+
+# ˆxsp ± 1σ Sensor 1 
+
+# Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0
+
+# 1
+
+# 2
+
+# 3
+
+# Time 
+
+> tr(Σ)
+
+# Planned ˆΣ True Σ 
+
+# Sensor 1 Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0.000 
+
+# 0.025 
+
+# 0.050 
+
+# 0.075 
+
+# 0.100 
+
+# Time 
+
+> Radiation damage
+
+# True ζ1 Planned ˆζ1
+
+# True ζ2 Planned ˆζ2
+
+# Sensor 1 Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0
+
+# 10 
+
+# 20 
+
+# 30 
+
+# 40 
+
+# 50 
+
+# Time 
+
+> Energy
+
+# Planned ˆ η True η
+
+# Sensor 1 Sensor 2     
+
+> Figure 8. The second modified (nonconvex/nonconcave) case for the robot example in Section 9. The KF estimate is ˆxpand the RTS estimate is ˆxsp.
+
+24 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0.00 0.25 0.50 0.75 1.00 
+
+# −1.0
+
+# −0.5
+
+# 0.0
+
+# 0.5
+
+# 1.0
+
+# Time 
+
+> xp
+
+# ˆxp ± 1σ True xp
+
+# ˆxsp ± 1σ Sensor 1 
+
+# Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0
+
+# 1
+
+# 2
+
+# 3
+
+# Time 
+
+> tr(Σ)
+
+# Planned ˆΣ True Σ 
+
+# Sensor 1 Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0.000 
+
+# 0.025 
+
+# 0.050 
+
+# 0.075 
+
+# 0.100 
+
+# Time 
+
+> Radiation damage
+
+# True ζ1 Planned ˆζ1
+
+# True ζ2 Planned ˆζ2
+
+# Sensor 1 Sensor 2 
+
+# 0.00 0.25 0.50 0.75 1.00 
+
+# 0
+
+# 10 
+
+# 20 
+
+# 30 
+
+# 40 
+
+# 50 
+
+# Time 
+
+> Energy
+
+# Planned ˆ η True η
+
+# Sensor 1 Sensor 2     
+
+> Figure 9. The third modified (nonconvex/nonconcave) case for the robot example in Section 9. The KF estimate is ˆxpand the RTS estimate is ˆxsp.
+
+25 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 0 5 10 15 20 
+
+0.0
+
+0.5
+
+1.0
+
+1.5
+
+2.0
+
+2.5
+
+Time (hr) 
+
+> Measurement Rate
+
+# Optimal Measurement Rates 
+
+λ1 λ2
+
+0 5 10 15 20 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+Time (hr) 
+
+> Defouling Input
+
+# Optimal Defouling Inputs 
+
+u1 u2
+
+0 5 10 15 20 
+
+0
+
+50 
+
+100 
+
+150 
+
+200 
+
+Time (hr) 
+
+> tr(Σ)
+
+# Planned vs. KF Variance 
+
+Planned ˆΣ True Σ
+
+Sensor 1 Sensor 2 
+
+0 5 10 15 20 
+
+70 
+
+80 
+
+90 
+
+100 
+
+110 
+
+120 
+
+Time (hr) 
+
+> Water Quality (ppb)
+
+# True vs. KF vs. RTS 
+
+xp ˆxp ± σ
+
+ˆxsp ± σ Sensor 1 
+
+Sensor 2 
+
+0 5 10 15 20 
+
+0.000 
+
+0.025 
+
+0.050 
+
+0.075 
+
+0.100 
+
+Time (hr) 
+
+> Fouling
+
+# Fouling Evolution (Sensor 1) 
+
+Planned ˆξ1 Real ξ1
+
+Sensor 1 
+
+0 5 10 15 20 
+
+0.00 
+
+0.05 
+
+0.10 
+
+0.15 
+
+Time (hr) 
+
+> Fouling
+
+# Fouling Evolution (Sensor 2) 
+
+Planned ˆξ2 Real ξ2
+
+Sensor 2    
+
+> Figure 10. The modified water fouling example in Appendix E (nonconvex/nonconcave). The KF estimate is ˆxpand the RTS estimate is
+> ˆxsp.
+
+26 Optimal Sensor Scheduling and Selection with Auxiliary Dynamics 
+
+## I. State-Space Realization for Gaussian Processes 
+
+A one-dimensional GP with a covariance kernel whose power spectral density is rational admits an exact representation as an SSM (Hartikainen & S ¨arkk ¨a, 2010; S ¨arkk ¨a & Hartikainen, 2012; Todescato et al., 2020). In this framework, forward filtering via the CD-KF combined with backward RTS smoothing computes the exact posterior mean and covariance of GP regression (Hartikainen & S ¨arkk ¨a, 2010). The CD-KF and RTS algorithms achieve this with O(N ) computational complexity for N measurements (in contrast to O(N 3) with the traditional Gaussian Process regression), thus enabling scalable inference for large datasets. For linear-Gaussian models, the smoothing covariance matrix is always dominated by the filtering covariance in the Loewner order. Consequently, the OCP in (12) inherently controls both the filtering and smoothing uncertainties. This means our framework for sensor scheduling with auxiliary dynamics in this paper can be used in connection with efficient GP regression. For kernels with non-rational spectral densities (e.g., the squared-exponential kernel), approximations can be constructed using rational function expansions such as Pad ´e approximants (Todescato et al., 2020). These approximations will yield finite-dimensional SSM representations. 
+
+## J. Unicycle Model 
+
+For a unicycle model of a robot, we have the state 
+
+ξp =
+
+pr
+
+θ
+
+
+
+, where pr =
+
+pr1
+
+pr2
+
+
+
+represents the planar position with respect to a global frame, and θ is the heading angle. The linear (heading) velocity is v
+
+and the angular velocity is ω. The kinematic equations are then 
+
+˙ξp =
+
+
+
+˙pr1
+
+˙pr2
+
+˙θ
+
+ =
+
+
+
+v cos( θ)
+
+v sin( θ)
+
+ω
+
+ .
+
+27

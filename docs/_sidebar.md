@@ -1,5 +1,10 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
+
+* Conference Papers
+  * ICML 2025 <!--dpr-conference:icml-2025-->
+    * lfp-soc <!--dpr-conference-topic:icml-2025:query-lfp-soc-->
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/conference/icml-2025/openreview-icml-2025-capngwkeek-optimal-sensor-scheduling-and-selection-for-continuous-discrete-kalman-filtering-with-auxiliary-dynamics" data-sidebar-item="{&quot;title&quot;: &quot;Optimal Sensor Scheduling and Selection for Continuous-Discrete Kalman Filtering with Auxiliary Dynamics&quot;, &quot;link&quot;: &quot;https://openreview.net/forum?id=CAPNgWkEEk&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;selection_source&quot;: &quot;conference_retrieval&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;lfp-soc&quot;}], &quot;evidence&quot;: &quot;开发了用于连续-离散卡尔曼滤波的最优传感器调度方法，可用于电池荷电状态估计。&quot;}">Optimal Sensor Scheduling and Selection for Continuous-Discrete Kalman Filtering with Auxiliary Dynamics</a>
 * Daily Papers
   * 2026-05-10 ~ 2026-06-08 <!--dpr-date:20260510-20260608-->
     * 精读区

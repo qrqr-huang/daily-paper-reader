@@ -1,0 +1,332 @@
+{
+  "top_k": 200,
+  "generated_at": "2026-06-08T15:15:49.881051+00:00",
+  "papers": [
+    {
+      "id": "openreview-icml-2025-capngwkeek",
+      "source": "ICML-2025-Accepted",
+      "title": "Optimal Sensor Scheduling and Selection for Continuous-Discrete Kalman Filtering with Auxiliary Dynamics",
+      "abstract": "We study the Continuous-Discrete Kalman Filter (CD-KF) for State-Space Models (SSMs) where continuous-time dynamics are observed via multiple sensors with discrete, irregularly timed measurements. Our focus extends to scenarios in which the measurement process is coupled with the states of an auxiliary SSM. For instance, higher measurement rates may increase energy consumption or heat generation, while a sensor’s accuracy can depend on its own spatial trajectory or that of the measured target. Each sensor thus carries distinct costs and constraints associated with its measurement rate and additional constraints and costs on the auxiliary state. We model measurement occurrences as independent Poisson processes with sensor-specific rates and derive an upper bound on the mean posterior covariance matrix of the CD-KF along the mean auxiliary state. The bound is continuously differentiable with respect to the measurement rates, which enables efficient gradient-based optimization. Exploiting this bound, we propose a finite-horizon optimal control framework to optimize measurement rates and auxiliary-state dynamics jointly. We further introduce a deterministic method for scheduling measurement times from the optimized rates. Empirical results in state-space filtering and dynamic temporal Gaussian process regression demonstrate that our approach achieves improved trade-offs between resource usage and estimation accuracy.",
+      "authors": [
+        "Mohamad Al Ahdab",
+        "John Leth",
+        "Zheng-Hua Tan"
+      ],
+      "primary_category": "Kalman Filtering",
+      "categories": [
+        "Kalman Filtering",
+        "Sensor Scheduling",
+        "Bayesian State-Space Models",
+        "Control"
+      ],
+      "published": "2025-05-01T13:22:01.315+00:00",
+      "link": "https://openreview.net/forum?id=CAPNgWkEEk",
+      "pdf_url": null,
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "type": "intent_query",
+      "tag": "lfp-soc",
+      "paper_tag": "query:lfp-soc",
+      "query_text": "Find papers on state of charge estimation for lithium iron phosphate batteries under high rate discharge conditions",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-capngwkeek",
+          "score": 0.702712746191007,
+          "star_rating": 4
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "lfp-soc",
+      "paper_tag": "query:lfp-soc",
+      "query_text": "I need articles about state of charge estimation techniques considering high rate cycling of LiFePO4 batteries",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-capngwkeek",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "lfp-soc",
+      "paper_tag": "query:lfp-soc",
+      "query_text": "Look for studies on the effect of high discharge rates on state of charge accuracy for LFP batteries",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.016129032258064516,
+          "rank": 2
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-capngwkeek",
+          "score": 1.0,
+          "star_rating": 5
+        }
+      ]
+    },
+    {
+      "type": "intent_query",
+      "tag": "lfp-soc",
+      "paper_tag": "query:lfp-soc",
+      "query_text": "Retrieve research on battery state of charge estimation during fast discharge of lithium ion batteries",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      },
+      "ranked": [
+        {
+          "paper_id": "openreview-icml-2025-capngwkeek",
+          "score": 0.7703788748564866,
+          "star_rating": 4
+        }
+      ]
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "adaptive Kalman filter for SOC estimation",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "battery management system state of charge estimation",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "equivalent circuit model",
+      "sim_scores": {}
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "equivalent circuit model for SOC estimation",
+      "sim_scores": {}
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "high-rate discharge conditions for battery state of charge",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "lithium iron phosphate battery state of charge estimation",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    },
+    {
+      "type": "keyword",
+      "tag": "lfp-soc",
+      "paper_tag": "keyword:lfp-soc",
+      "query_text": "state of charge estimation for lithium ion batteries",
+      "sim_scores": {
+        "openreview-icml-2025-capngwkeek": {
+          "score": 0.01639344262295082,
+          "rank": 1
+        }
+      }
+    }
+  ],
+  "global_candidate_ids": [
+    "openreview-icml-2025-capngwkeek",
+    "openreview-icml-2025-rqtrsrcbnu",
+    "openreview-icml-2025-d7v7rvxbnh",
+    "openreview-icml-2025-ykanivy5hf",
+    "openreview-icml-2025-eyjrms4hhm",
+    "openreview-icml-2025-laud1q5iww",
+    "openreview-icml-2025-krk0wtii0i",
+    "openreview-icml-2025-uzvshd7who",
+    "openreview-icml-2025-yh9vxlxnja",
+    "openreview-icml-2025-upgr7mzpki",
+    "openreview-icml-2025-hmequfd3uz",
+    "openreview-icml-2025-eiepgfixf6",
+    "openreview-icml-2025-ll8r2quevb",
+    "openreview-icml-2025-ayhefrhizr",
+    "openreview-icml-2025-pws925fkyk",
+    "openreview-icml-2025-gz5n3tljwv",
+    "openreview-icml-2025-psnce503is",
+    "openreview-icml-2025-9dhilxylvc",
+    "openreview-icml-2025-rnmh9njzxb",
+    "openreview-icml-2025-quowurtf61",
+    "openreview-icml-2025-v9d9yuxg6s",
+    "openreview-icml-2025-iuqorxdrcg",
+    "openreview-icml-2025-nvywrqbzob",
+    "openreview-icml-2025-f4cpc211u1",
+    "openreview-icml-2025-8jgwozceqs",
+    "openreview-icml-2025-vprweqjltg",
+    "openreview-icml-2025-ywuyqn2lav",
+    "openreview-icml-2025-u7emordigi",
+    "openreview-icml-2025-bijismlgov",
+    "openreview-icml-2025-gn2izaiyzz",
+    "openreview-icml-2025-pqhwzvikkn",
+    "openreview-icml-2025-jrg8p2bx8p",
+    "openreview-icml-2025-r6alcbgbxf",
+    "openreview-icml-2025-r0pbjxibgm",
+    "openreview-icml-2025-nq3oz7vn3j",
+    "openreview-icml-2025-dugfth9w8b",
+    "openreview-icml-2025-qmizuuspwo",
+    "openreview-icml-2025-dmpw0po3f3",
+    "openreview-icml-2025-va5jzardcx",
+    "openreview-icml-2025-zvyhcocwsw",
+    "openreview-icml-2025-oel3l8osas",
+    "openreview-icml-2025-owkrmgjgmj",
+    "openreview-icml-2025-bl7wmljkzm",
+    "openreview-icml-2025-sezgrffnis",
+    "openreview-icml-2025-aqzkgwf7cc",
+    "openreview-icml-2025-jnpgx8ozfd",
+    "openreview-icml-2025-36oullxtus",
+    "openreview-icml-2025-x6nibckemw",
+    "openreview-icml-2025-bwfifv8kg2",
+    "openreview-icml-2025-xvbfdlthst",
+    "openreview-icml-2025-xkutfm93mg",
+    "openreview-icml-2025-u8gumxnzxn",
+    "openreview-icml-2025-yaqjxxbtsb",
+    "openreview-icml-2025-ezlgupyjlb",
+    "openreview-icml-2025-ubmnbcbetz",
+    "openreview-icml-2025-dtvvltu1ak",
+    "openreview-icml-2025-yphabeqxbj",
+    "openreview-icml-2025-f9jvsrgpdg",
+    "openreview-icml-2025-wgejwcgrpd",
+    "openreview-icml-2025-auwnrkhkn4",
+    "openreview-icml-2025-zm0kper4yx",
+    "openreview-icml-2025-ruxtjhfmg5",
+    "openreview-icml-2025-hyhcznrkox",
+    "openreview-icml-2025-ffjft93oa7",
+    "openreview-icml-2025-ghgrzxfuju",
+    "openreview-icml-2025-ddigck25bo",
+    "openreview-icml-2025-f9xsnq8osd",
+    "openreview-icml-2025-lbjqynsh41",
+    "openreview-icml-2025-o0lxlp4abd",
+    "openreview-icml-2025-zrgz4ocfxv",
+    "openreview-icml-2025-ctdkrynxrm",
+    "openreview-icml-2025-gaco82yc7z",
+    "openreview-icml-2025-y0zxgw0guk",
+    "openreview-icml-2025-uxyzzv6fie",
+    "openreview-icml-2025-fwijjghnbd",
+    "openreview-icml-2025-guj2fxqclz",
+    "openreview-icml-2025-crcplutiuu",
+    "openreview-icml-2025-cq7xu5tmp8",
+    "openreview-icml-2025-rmwpe3frhw",
+    "openreview-icml-2025-y2fyxf5hre",
+    "openreview-icml-2025-weolzmdxya",
+    "openreview-icml-2025-c0xvsevipu",
+    "openreview-icml-2025-jawke4vg0l",
+    "openreview-icml-2025-bezl796mkt",
+    "openreview-icml-2025-0p0fukrmze",
+    "openreview-icml-2025-pqirsaiqdn",
+    "openreview-icml-2025-djvlagkrfo",
+    "openreview-icml-2025-ukx0k1cwfl",
+    "openreview-icml-2025-4x83oh6oy6",
+    "openreview-icml-2025-li4rieeclo",
+    "openreview-icml-2025-hcoxm3vwgy",
+    "openreview-icml-2025-s09b5wna6j",
+    "openreview-icml-2025-tzfgukazvf",
+    "openreview-icml-2025-p8qrhkkiax",
+    "openreview-icml-2025-9uxeydnm1n",
+    "openreview-icml-2025-efhfrqrjjo",
+    "openreview-icml-2025-oplj5we1ax",
+    "openreview-icml-2025-dlshkv0s9t",
+    "openreview-icml-2025-ybno0zp44z",
+    "openreview-icml-2025-hq2rniqaet",
+    "openreview-icml-2025-sncnyt4czj",
+    "openreview-icml-2025-enwyluteup",
+    "openreview-icml-2025-xkv3ucqtjm",
+    "openreview-icml-2025-mwsbilnldq",
+    "openreview-icml-2025-jgbrkajhdz",
+    "openreview-icml-2025-rxa6fwkces",
+    "openreview-icml-2025-5rvckwyvnt",
+    "openreview-icml-2025-lftsdsnwh8",
+    "openreview-icml-2025-nv70eguaa7",
+    "openreview-icml-2025-xaluojffqr",
+    "openreview-icml-2025-5rysqskz9b",
+    "openreview-icml-2025-ydgaste6r6",
+    "openreview-icml-2025-oh9sg5ae2b",
+    "openreview-icml-2025-s69ei2vriw",
+    "openreview-icml-2025-bjnsplwscl",
+    "openreview-icml-2025-z2ulbbck2x",
+    "openreview-icml-2025-rrq8hvilhb",
+    "openreview-icml-2025-unrfyfblz3",
+    "openreview-icml-2025-emkdmoraj4",
+    "openreview-icml-2025-vno2gepmlb"
+  ],
+  "global_pool_lane_top_k": 30,
+  "global_pool_limit": 120,
+  "global_pool_guaranteed_per_lane": 2,
+  "global_pool_effective_size": 120,
+  "reranked_at": "2026-06-08T15:16:59.858910+00:00",
+  "llm_ranked": [
+    {
+      "paper_id": "openreview-icml-2025-capngwkeek",
+      "score": 7.0,
+      "evidence_en": "Develops optimal sensor scheduling for Continuous-Discrete Kalman filtering, applicable to battery state of charge estimation.",
+      "evidence_cn": "开发了用于连续-离散卡尔曼滤波的最优传感器调度方法，可用于电池荷电状态估计。",
+      "canonical_evidence": "开发了用于连续-离散卡尔曼滤波的最优传感器调度方法，可用于电池荷电状态估计。",
+      "tldr_en": "This paper studies optimal sensor scheduling and selection for Continuous-Discrete Kalman filtering with auxiliary dynamics, providing a framework that can improve state estimation in battery management systems by optimizing measurement timings and sensor choices.",
+      "tldr_cn": "现有卡尔曼滤波中传感器测量往往固定且无约束，本文提出一种最优传感器调度与选择方法，在连续-离散状态空间模型中引入辅助动力学，模拟测量过程与辅助状态耦合。通过泊松过程建模测量发生，设计算法最小化估计误差同时满足成本约束。实验验证该方法在多种场景下均能有效提升滤波精度，为电池荷电状态估计等实际应用中的传感器管理提供理论支撑。",
+      "title_zh": "带辅助动力学的连续-离散卡尔曼滤波的最优传感器调度与选择",
+      "motivation_cn": "现有卡尔曼滤波器在多传感器场景下缺乏对测量调度和传感器选择的优化，尤其当测量过程涉及辅助动力学和成本约束时。",
+      "method_cn": "提出将测量发生建模为独立泊松过程，结合辅助状态空间模型，设计最优调度策略以最小化估计误差。",
+      "result_cn": "实验表明，该方法在多种模拟场景下能够显著提高滤波精度，并有效管理传感器资源。",
+      "conclusion_cn": "为带约束的传感器管理提供了理论框架，可直接应用于电池管理系统的状态估计。",
+      "matched_requirement_id": "req-6",
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation"
+    }
+  ],
+  "llm_ranked_at": "2026-06-08T15:18:56.824496+00:00",
+  "display_min_score": 4.0,
+  "pruned_at": "2026-06-08T15:18:56.863246+00:00"
+}
