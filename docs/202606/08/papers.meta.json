@@ -1,0 +1,54 @@
+{
+  "label": "2026-06-08",
+  "date": "2026-06-08",
+  "generated_at": "2026-06-09T00:04:54",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202606/08/2606.02335v1-neural-spectral-element-methods-for-stiff-multiphysics-pdes-with-electrochemical-transport-benchmarks",
+      "section": "quick",
+      "title_en": "Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks",
+      "authors": "Conrard Giresse Tetsassi Feugmo, David Pankaczy",
+      "date": "2026-06-01",
+      "pdf": "https://arxiv.org/pdf/2606.02335v1",
+      "score": "7.0",
+      "evidence": "求解电化学输运PDE，对物理电池模型至关重要；方法学可用于SOC估计",
+      "tldr": "求解电化学输运等刚性多物理场偏微分方程时，传统物理信息神经网络（PINN）面临配点需求高、收敛慢的问题。神经谱元方法（NSEM）将网络限定在Legendgre-Gauss-Lobatto求积节点上，用预计算谱微分矩阵替代自动微分，构建确定性损失函数，支持L-BFGS优化至10^-9量级残差。引入Kosloff-Tal-Ezer变换解析边界层，无网格神经网络mortar实现多域耦合；在Poisson-Nernst-Planck基准上，NSEM以两个数量级更少的配点取得10^-4至10^-7的相对误差，超越自适应重采样PINN。该方法同时适用于tanh多层感知机和Legendgre Kolmogorov-Arnold网络，后者仅需一半Adam步进入L-BFGS域，展示了神经谱元框架的通用性与高效性。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "The Neural Spectral Element Method (NSEM) evaluates each network only at fixed Legendre-Gauss-Lobatto quadrature nodes and replaces all derivative calls with precomputed spectral differentiation matrices. The resulting deterministic loss enables limited-memory BFGS (L-BFGS) to reach residuals of 10^-9 to 10^-10. A Kosloff-Tal-Ezer coordinate map resolves electrochemical boundary layers, while a mesh-free neural mortar framework couples multi-element domains. On the four-example Poisson-Nernst-Planck (PNP) benchmark of Huang and co-workers, NSEM attains 10^-4 to 10^-7 relative pointwise error with two orders of magnitude fewer collocation points than the adaptive-resampling PINN baseline. Both a tanh multilayer perceptron (MLP) and a basis-aligned Legendre Kolmogorov-Arnold Network (KAN) backbone attain spectral accuracy within the same NSEM infrastructure, with the KAN requiring roughly half the Adam steps to enter the L-BFGS basin of attraction on the 1D PNP benchmark.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/08/2606.02658v1-fixed-time-dynamic-landing-of-quadrotors-using-adaptive-unscented-kalman-filtering-and-nonlinear-model-predictive-control",
+      "section": "quick",
+      "title_en": "Fixed-Time Dynamic Landing of Quadrotors using Adaptive Unscented Kalman Filtering and Nonlinear Model Predictive Control",
+      "authors": "Mohammadreza Izadi, Zeinab Shayan, Steven Waslander, Reza Faieghi",
+      "date": "2026-06-01",
+      "pdf": "https://arxiv.org/pdf/2606.02658v1",
+      "score": "7.0",
+      "evidence": "采用在线更新噪声统计的自适应无迹卡尔曼滤波",
+      "tldr": "针对四旋翼无人机在移动平台上自主着陆面临平台运动不确定、时变测量噪声和固定触地时间约束等难题，本文提出一种集成自适应无迹卡尔曼滤波与非线性模型预测控制的动态着陆框架。框架通过实时最小jerk轨迹规划器生成满足固定终端时间的参考轨迹，并利用AUKF在线更新过程与测量噪声协方差，以应对感知质量变化。理论可行性分析证实最小jerk轨迹在有界跟踪误差下产生有界推力与力矩。仿真与硬件实验显示，该方法实现可重复着陆，平台速度预测精度优于传统EKF/UKF，为无人机动态回收提供了完整可靠的技术方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "This paper introduces an estimation and control framework for dynamic landing of multi-rotor uncrewed aerial vehicles on moving platforms. The proposed method integrates nonlinear model predictive control with a real-time minimum-jerk trajectory planner that enforces a prescribed touchdown time, enabling consistent timing during the terminal descent. To enhance robustness in the presence of time-varying sensing quality, we utilize an adaptive unscented kalman filter that updates the process and measurement noise statistics online. In addition, we provide a reference feasibility analysis showing that minimum-jerk references induce bounded thrust and torque commands under standard tracking hypotheses. The proposed framework is evaluated in simulation and hardware experiments, and it is shown to achieve repeatable landings and improved platform velocity prediction accuracy relative to EKF/UKF-based methods.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/08/2606.02767v1-hybrid-adaptive-kalman-filtering-for-data-efficient-joint-tracking-and-classification",
+      "section": "quick",
+      "title_en": "Hybrid Adaptive Kalman Filtering for Data-Efficient Joint Tracking and Classification",
+      "authors": "Jiho Lee, Nisar R. Ahmed, Rebecca Russell",
+      "date": "2026-06-01",
+      "pdf": "https://arxiv.org/pdf/2606.02767v1",
+      "score": "6.0",
+      "evidence": "提出一种自监督混合自适应卡尔曼滤波器，可学习系统动力学和过程噪声协方差的校正，适用于SOC估计",
+      "tldr": "传统卡尔曼滤波对模型失配和噪声协方差敏感，基于学习的方法依赖大量标签且不确定性不一致。本文提出自监督混合自适应卡尔曼滤波器，仅从测量值学习动态和协方差的修正，保留概率结构以计算创新似然，实现广义贝叶斯分类。实验证实，方法提高了估计精度与统计一致性，并在不同数据规模下取得强鲁棒分类性能，为数据高效联合跟踪与分类提供新方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Kalman filtering performance is highly sensitive to model mismatch and noise covariance tuning. Learning-based approaches address these limitations but typically rely on supervised training with large datasets and do not produce consistent uncertainty estimates. In this paper, we propose a self-supervised Hybrid Adaptive Kalman Filter that learns structured corrections to system dynamics and process noise covariance from measurements alone while preserving the probabilistic structure of the filter. This allows the innovation likelihood to be computed and subsequently used for model classification via generalized Bayesian inference. Experimental results on real-world and simulated datasets demonstrate improved estimation accuracy and statistical consistency as well as robust classification performance across both low-data and large-data scenarios.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

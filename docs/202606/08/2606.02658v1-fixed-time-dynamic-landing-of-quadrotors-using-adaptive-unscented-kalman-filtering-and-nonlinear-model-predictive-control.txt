@@ -1,0 +1,721 @@
+Title: Fixed-Time Dynamic Landing of Quadrotors using Adaptive Unscented Kalman Filtering and Nonlinear Model Predictive Control
+
+URL Source: https://arxiv.org/pdf/2606.02658v1
+
+Published Time: Wed, 03 Jun 2026 00:03:00 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Fixed-Time Dynamic Landing of Quadrotors using Adaptive Unscented Kalman Filtering and Nonlinear Model Predictive Control 
+
+Mohammadreza Izadi, Zeinab Shayan, Steven Waslander, Reza Faieghi 
+
+Abstract — This paper introduces an estimation and control framework for dynamic landing of multi-rotor uncrewed aerial vehicles on moving platforms. The proposed method integrates nonlinear model predictive control with a real-time minimum-jerk trajectory planner that enforces a prescribed touchdown time, enabling consistent timing during the terminal descent. To enhance robustness in the presence of time-varying sensing quality, we utilize an adaptive unscented kalman filter that updates the process and measurement noise statistics online. In addition, we provide a reference feasibility analysis showing that minimum-jerk references induce bounded thrust and torque commands under standard tracking hypotheses. The proposed framework is evaluated in simulation and hardware experiments, and it is shown to achieve repeatable landings and improved platform velocity prediction accuracy relative to EKF/UKF-based methods. 
+
+I. INTRODUCTION 
+
+A. Motivation 
+
+The ability to land autonomously on moving platforms such as ground vehicles and maritime vessels increases the operational efficiency and expands the deployment scenarios of multi-rotor uncrewed aerial vehicles (MRUAVs). The key challenges of landing on moving platforms, here-after referred to as dynamic landing (Fig. 1), arise in the final stage of landing. During the final descent and touchdown, the vehicle encounters turbulent airflow, including its own wake and platform-induced disturbances, that can lead to flight-path deviations. At the same time, the vehicle must perform rapid position and attitude corrections to synchronize with the platform’s motion for precise landing. Addressing these challenges requires a careful treatment of state estimation, motion planning, and control. State estima-tion must not only determine the current states of the vehicle and landing platform but also predict their future states during the final descent. The planner must then generate a feasible agile landing trajectory, while the controller ensures precise tracking of the landing trajectory. 
+
+B. Related Work 
+
+In recent years, several studies have investigated the dy-namic landing of MRUAVs [1–12]. These studies commonly employ a finite state machine or a similar mechanism to transition from conventional navigation to a dedicated multi-stage dynamic landing algorithm, which typically consists                     
+
+> M. Izadi, Z. Shayan, and R. Faieghi are with the Autonomous Vehicles Laboratory, Department of Aerospace Engineering, Toronto Metropolitan University, Toronto, Canada.
+
+{mizadi, zshayan, reza.faieghi}@torontomu.ca . S. Waslander is with the Uni-versity of Toronto Institute for Aerospace Studies, University of Toronto, Toronto, Canada. steven.waslander@utoronto.ca .
+
+Fig. 1: Trajectory of the quadrotor and moving landing platform in a representative dynamic landing trial. 
+
+of: (i) approaching the vicinity of the landing platform, (ii) tracking the landing pad, and (iii) final descent and touchdown. These three stages are often formulated as a visual servoing problem [5], where an onboard vision-based system informs the vehicle’s relative position and orientation to the landing pad for planning and control purposes. Several studies rely on fiducial markers, e.g., AprilTag [2, 6, 7] and ArUco [8], for precise localization. Others incorporate visual-inertial odometry (VIO) to estimate the MRUAV’s state without external positioning infrastructure [9]. Additionally, some approaches integrate optical flow-based velocity estimation [5] and ultraviolet direction and ranging systems for enhanced target tracking [4]. To achieve robust localization of both the MRUAV and the moving platform, many methods employ Kalman filtering, fusing data from inertial measurement units, global naviga-tion satellite systems, and onboard cameras [1–4, 6, 9–11]. For landing trajectory planning, several studies employ linear model predictive control (LMPC) to generate optimal trajectories while accounting for system constraints and disturbances [1–4]. Some works integrate pure pursuit or proportional navigation (PN) guidance for long-range target tracking before landing [6, 11]. Polynomial-based trajectory generation has been proposed to ensure smooth and feasible landing trajectories, with certain methods specifically min-imizing jerk or snap to optimize control effort and vehicle stability [9]. Other approaches include gradient-based motion planners [8] and log-polynomial velocity controllers [11]. Regarding flight control strategies, a few studies have explored proportional-integral-derivative (PID) controllers 
+
+> arXiv:2606.02658v1 [cs.RO] 1 Jun 2026
+
+[6, 8]. [2] has employed LMPC, though its results are limited to simulations. Nonlinear controllers are more commonly used, including incremental nonlinear dynamic inversion [1], boundary-layer sliding mode control [3], and other Lyapunov-based designs [5, 12]. One control strategy that has recently proven effective for improving quadrotor trajectory tracking is nonlinear model predictive control (NMPC), which can leverage both the current and predicted states of the vehicle and landing platform to optimize control actions while accounting for actuator constraints [13–18], along with its variants such as contour NMPC [19] and linear model bank NMPC [20]. While previous dynamic landing studies demonstrate sig-nificant progress, several critical limitations remain unad-dressed. Many existing approaches rely on linear controllers despite the system’s inherent nonlinearities and the need for agile maneuvers during the critical touchdown phase [2, 4]. Among studies employing nonlinear controllers [1, 13], three fundamental challenges persist, as explained below. First, time-inconsistent landing trajectories remain a criti-cal issue. Existing approaches [1–12] lack explicit fixed-time touchdown constraints, resulting in unpredictable touchdown timing that increases the risk of landing failures. Second, incomplete dynamic modeling limits trajectory generation effectiveness. Several studies such as [5, 7, 11, 12] utilize only the landing platform’s position for real-time trajectory planning, neglecting velocity information that is crucial for incorporating landing dynamics. While convex optimization-based planning methods [4] offer computational advantages, they frequently employ simplified dynamics models that prove inadequate for the complex nonlinear maneuvers required during final descent. Third, most prior works such as [2, 3, 6, 7, 9, 13] depend on unscented or extended Kalman filters with fixed noise statistics, which experience significant performance degra-dation when measurement quality fluctuates due to changing platform distances or environmental conditions. 
+
+C. Contributions 
+
+To address the above challenges, we propose an improved dynamic landing algorithm for MRUAVs, validated through hardware experiments. Our main contributions include: 1) Prescribed-time landing trajectory generation: We in-tegrate NMPC with a real-time minimum-jerk planner that enforces a user-specified touchdown time for the terminal descent, targeting consistent timing during dynamic landing. 2) Reference feasibility under actuator bounds: We ex-amine the thrust and torque requirements caused by minimum-jerk references and provide sufficient con-ditions under which the reference caused inputs are within actuator constraints (ensuring feasibility of con-straint satisfaction in NMPC tracking). 3) Robust adaptive estimation: We use an AUKF that ad-justs noise statistics online to account for time-varying measurement quality, and we demonstrate prediction Ω4
+
+> Ω1
+> Ω3
+> Ω2
+> 𝐿
+> 𝐼 𝑍 (𝑈 )
+> 𝐼 𝑌 (𝑁 )
+> 𝐼 𝑋 (𝐸 )
+> 𝐼 𝑂
+> 𝐵 𝑌
+> 𝐵 𝑋
+> 𝐵 𝑍
+> 𝜔 𝑥
+> 𝜔 𝑧
+> 𝜔 𝑦
+> 𝐵 𝑂
+> 𝛼
+> Fig. 2: Quadrotor model and coordinate frames
+
+accuracy and repeatable landings in simulation and indoor experiments. These contributions address key limitations of previous NMPC-based landing studies such as [13] by enabling prescribed-time touchdown, improving robustness to time-varying noise, and demonstrating consistent experimental performance. II. PRELIMINARIES 
+
+A. Notation 
+
+Throughout this paper, unless stated otherwise, we use the following notation standards. Italic letters indicate scalars, lowercase bold letters represent vectors, and uppercase bold letters denote matrices. In indicates n × n identity matrix. We use the ENU (East-North-Up) inertial frame I and FLU (Forward-Left-Up) body frame B as shown in Fig. 2 . A vector in I is denoted as I p, and the rotation from B to I is represented by a rotation matrix IB R(q) or quaternion IB q =[qw, q x, q y , q z ]T ∈ H (Hamilton convention). Quaternion operations include conjugation q∗ = [ qw, −qx, −qy , −qz ]T ,multiplication ⊗, and vector extraction V(q) = [ qx, q y , q z ]T .
+
+V∗(·) is used to represent the inverse mapping from aposition point, defined as V∗(p) := [0 , p]T , where R3 is mapped to H. The rigid-body (pose) transformation in 3D is:  
+
+> I
+
+p = V  IB q ⊗ V ∗(B p) ⊗ IB q∗+I pBo = IB R(q)B p+I pBo ,
+
+where I pBo is the origin of B in I, and R(q) is: 
+
+R(q) = 
+
+
+
+1 − 2q2 
+
+> y
+
+− 2q2 
+
+> z
+
+2qxqy − 2qwqz 2qxqz + 2 qwqy
+
+2qxqy + 2 qwqz 1 − 2q2 
+
+> x
+
+− 2q2 
+
+> z
+
+2qy qz − 2qwqx
+
+2qxqz − 2qwqy 2qy qz + 2 qwqx 1 − 2q2 
+
+> x
+
+− 2q2
+
+> y
+
+ .
+
+B. Quadrotor Model 
+
+The quadrotor dynamics are derived from six degrees-of-freedom rigid body dynamics. The position ξ, velocity υ,attitude q, and angular velocity ω dynamics are [21] 
+
+ 
+
+> I
+
+˙ξ = I υ, 
+
+> I
+
+˙υ = 1
+
+> m
+
+ IB R(q) · B fu
+
+ + I g, 
+
+> IB
+
+˙q = 1 /2 · IB q ⊗ V ∗(B ω), 
+
+> B
+
+˙ω = J−1  −B ω ×  J · B ω + B τ u
+
+ .
+
+(1) where B fu = [0 , 0, f c]T and B τ u = [ τx, τ y , τ z ]T are the con-trol force and torque, m is the mass, J = diag (Jxx , J yy , J zz )Moving Platform  AUKF 
+
+MJT 
+
+NMPC              
+
+> Desired Rate
+> Generation (Eq. 28)
+> (Eqs .6-13)
+> (Eqs .14-18)
+> (Eqs .22 -25)
+> Autopilot
+> …𝑡 =𝑇 𝑠 𝑡 =2𝑇 𝑠 𝑡 =𝑇 𝑠 ×𝑁
+
+𝛏 , 𝐪 
+
+𝝉 𝒖 
+
+> No
+> Yes
+
+𝝎 𝒅     
+
+> PWM
+> (Eqs .28, 2 9)(Eq. 1)
+> Reference Optimization Nonlinear Model
+
+𝐩       
+
+> Landing
+> ෝ𝐩 ,ො𝐯 𝑗 =1
+> 𝑁 −1
+> ෝ𝐩 ,ො𝐯 𝑁
+> ෝ𝐩 ,ො𝐯 𝑗 =1
+> 𝑁 −1
+
+෠𝛏 , ෝ𝝊 ෠𝛏    
+
+> ෝ𝝊
+> ෝ𝐪
+> ෞ𝛚 𝐩 𝑚𝑗𝑡
+> 𝐯 𝑚𝑗𝑡
+> Time Updating Measurement
+> Update
+> Noise Estimation
+
+𝐟 𝐮 Fig. 3: Block diagram of the proposed dynamic landing algorithm 
+
+is the inertia matrix, and I g = [0 , 0, −g]T is gravity. The rotor thrust and torque are: 
+
+Ti = ktΩ2 
+
+> i
+
+, τi = kq Ω2 
+
+> i
+
+(2) where kt and kq are thrust and torque coefficients, and Ωi is the rotor speed. Then fu and τ u can be expressed as follows 
+
+fc, τ u
+
+T = G T1, T 2, T 3, T 4
+
+T , (3) where G is 
+
+G =
+
+
+
+1 1 1 1
+
+−L sin α L sin α −L sin α L sin α
+
+−L cos α L cos α −L cos α L cos α
+
+−kq /k t −kq /k t kq /k t kq /k t
+
+ , (4) with L as the arm length and α as the rotor arm angle (Fig. 2). III. DYNAMIC LANDING ALGORITHM Figure 3 illustrates the overall block diagram of the proposed dynamic landing algorithm. We focus on two main modes: (i) tracking, which ensures synchronization of the vehicle with the landing pad, and (ii) final descent and touchdown. The initial phases, such as approach to the vicinity of the landing pad, can be handled by conventional navigation methods. For both tracking and final descent, we employ NMPC as the flight controller. A key feature of our framework is the use of an adaptive unscented Kalman filter (AUKF) to estimate the position and velocity of the landing platform over the prediction horizon. These estimates are then fed into the NMPC, giving rise to a prescient NMPC formu-lation [22]. This predictive capability is crucial for reliable synchronization, particularly under noisy measurement con-ditions. As shown in Fig. 5, the AUKF achieves significantly lower velocity prediction errors compared to EKF and UKF, demonstrating its robustness to noise and its critical role in ensuring precise landing performance. Once the position and velocity of both the vehicle and the landing platform remain bounded within a specified neighborhood for a user-defined duration, the algorithm transitions to the final descent phase. At this stage, the MJT planner computes a fixed-time landing trajectory using the vehicle’s current states together with the AUKF-predicted fu-ture positions and velocities of the platform. The use of MJT ensures smooth references, while the fixed-time formulation eliminates the variable descent durations observed in prior works, thereby reducing the likelihood of desynchronization between the vehicle and the platform. The landing trajectory is then passed to NMPC for tracking until the quadrotor reaches a predefined proximity to the platform and their relative velocities fall within a specified tolerance, at which point the vehicle’s motors are stopped. In the following subsections, we provide a detailed de-scription of the AUKF, MJT, and NMPC components. 
+
+A. Adaptive Unscented Kalman Filter 
+
+For simultaneous estimation of quadrotor and landing platform states using AUKF, there exist two methods: the joint and the dual filtering methods [23]. The joint method is more straightforward and easier to implement than the dual method; therefore, it will be our method of choice here. To this end, introduce an augmented state vector as 
+
+ζ = [ ξT , qT , υT , ωT , pT , vT ]. The dynamics of the landing platform are expressed by ˙p = v, ˙v = ϕ(p, v), where 
+
+ϕ(p, v) represents the motion dynamics of the platform, which may be unknown. Therefore, the complete system dynamics and measurement model are given by 
+
+ζk+1 = f (ζk, uk) + wk, yk+1 = h(ζk+1 ) + vk, (5) where f (ζk, uk) represents the quadrotor and platform dy-namics, yk is the measurement vector and uk is controlled input. wk is the process noise with mean qk and covariance 
+
+Qk. vk is the measurement noise with mean rk and covari-ance Rk. In our implementation, the measurement vector includes the quadrotor position and attitude, as well as the position of the landing platform. Because the velocity of the landing platform is not measured, the unmodeled dynamics of the platform motion for example, accelerations during turns, are modeled by the process noise term in the platform dynamics. For AUKF predictions, we initialize the state estimate ˆζ0
+
+and its covariance P0, and the noise statistics estimates ˆq0,
+
+ˆQ0, ˆr0, and ˆR0 that are considered known as ˆζ0 = E[ζ0]
+
+and P0 = E[( ζ0 − ˆζ0)( ζ0 − ˆζ0)T ]. This is followed by generating 2n + 1 sigma points χi,k based on the state estimate ˆζk and covariance Pk
+
+χ0,k = ˆζk,
+
+χi,k = ˆζk + ( p(n + λ)Pk)i, i = 1 , . . . , n, 
+
+χi+n,k = ˆζk − (p(n + λ)Pk)i, i = n + 1 , . . . , 2n, 
+
+(6) where n is the number of states and λ is a scaling parameter to minimize the higher-order effects defined as λ = δ2(n +
+
+κ) − n. κ ≥ 0 must be chosen appropriately to ensure that 
+
+Pκ ≥ 0. The parameter 0 < δ ≤ 1 regulates the spread of the sigma points. Each of these sigma points is propagated through the system dynamics, f
+
+χi,k +1 |k = f (χi,k , uk), i = 0 , 1, . . . , 2n (7) The posterior mean and covariance matrix are consequently computed as 
+
+ˆζk+1 |k =
+
+> 2n
+
+X
+
+> i=0
+
+w(m) 
+
+> i
+
+χi,k +1 |k, (8) 
+
+Pk+1 |k =
+
+> 2n
+
+X
+
+> i=0
+
+w(c)
+
+> i
+
+
+
+χi,k +1 |k − ˆζk+1 |k
+
+
+
+×
+
+
+
+χi,k +1 |k − ˆζk+1 |k
+
+T
+
++ ˆQk. (9) The weights w(m) 
+
+> i
+
+and w(c) 
+
+> i
+
+are expressed as 
+
+w(m)0 = λn + λ , w(c)0 = λn + λ + (1 − δ2 + β), (10) 
+
+w(m) 
+
+> i
+
+= w(c) 
+
+> i
+
+= 12( n + κ) , i = 1 , . . . , 2n, (11) where β is a non-negative parameter, and for a Gaussian prior, it is set to β = 2 .The next step is to propagate each sigma point through the measurement model 
+
+γi,k +1 |k = h(χi,k +1 |k), i = 0 , 1, . . . , 2n. (12) The predicted measurement, innovation covariance, and cross-covariance matrix are calculated as 
+
+ˆyk+1 |k =
+
+> 2n
+
+X
+
+> i=0
+
+w(m) 
+
+> i
+
+γi,k +1 |k, (13) 
+
+Pyy,k +1 |k =
+
+> 2n
+
+X
+
+> i=0
+
+w(c) 
+
+> i
+
+[γi,k +1 |k − ˆyk+1 |k]
+
+×[γi,k +1 |k − ˆyk+1 |k]T + ˆRk, (14) 
+
+Pxy,k +1 |k =
+
+> 2n
+
+X
+
+> i=0
+
+w(c) 
+
+> i
+
+[χi,k +1 |k − ˆζk+1 |k]
+
+×[γi,k +1 |k − ˆyk+1 |k]T (15) Using these matrices, we can compute the Kalman filter gain and update the state estimate and covariance matrix as follows 
+
+Kk+1 = Pxy,k +1 |kP−1
+
+> yy,k +1 |k
+
+, (16) 
+
+ˆζk+1 = ˆζk+1 |k + Kk+1 (yk+1 − ˆyk+1 |k), (17) 
+
+Pk+1 = Pk+1 |k − Kk+1 (Pyy,k +1 |k + ϵI)KTk+1 (18) Note that we added a regularization term ϵI19 in (18) where ϵ is a small number ( ϵ = 10 −6). This is to prevent singularity and numerical instability issues that may arise in updating the Pk+1 .As mentioned earlier, the primary challenge with standard UKF is that it assumes that Qk and Rk are known and time-invariant. With AUKF, we aim to dynamically estimate the noise statistics ( ˆQ, ˆq, ˆR, ˆr) that optimize the posterior density function based on measurements yk and states ζk
+
+by formulating the estimation problem using Maximum A Posteriori (MAP) estimation [24]. This approach optimizes the posterior density function based on measurements yk and states ζk, as follows 
+
+J∗ = p(Z(k), q, Q, r, R|Y(k)) 
+
+∝ p(Y(k)|Z(k), q, Q, r, R)
+
+×p(Z(k)|q, Q, r, R). (19) Where Z(k) denotes the measurement vector at time step k. Assuming Gaussian noise distributions, the state and measurement likelihoods are 
+
+p(Z(k)|q, Q) ∝
+
+> k
+
+Y
+
+> j=1
+
+exp 
+
+
+
+− 12 ζj − Fj−1(ζj−1) − q 2
+
+> Q−1
+
+
+
+, (20) 
+
+p(Y(k)|Z(k), r, R) ∝
+
+> k
+
+Y
+
+> j=1
+
+exp 
+
+
+
+− 12 yj − Hj (ζj ) − r 2
+
+> R−1
+
+
+
+. (21) Maximizing the posterior probability and solving for the optimal noise statistics yield [25] 
+
+ˆqk = 1
+
+k
+
+> k
+
+X
+
+> j=1
+
+[ˆζj − Fj−1(ˆζj−1)] , (22) 
+
+ˆQk = 1
+
+k
+
+> k
+
+X
+
+> j=1
+
+[ˆζj − Fj−1(ˆζj−1) − ˆq]
+
+×[ˆζj − Fj−1(ˆζj−1) − ˆq]T , (23) 
+
+ˆrk = 1
+
+k
+
+> k
+
+X
+
+> j=1
+
+[yj − Hj (ˆζj |j − 1)] , (24) 
+
+ˆRk = 1
+
+k
+
+> k
+
+X
+
+> j=1
+
+[yj − Hj (ˆζj |j − 1) − ˆr]
+
+×[yj − Hj (ˆζj |j − 1) − ˆr]T . (25) The system functions F and H are computed as follows 
+
+Fj−1(ˆζj−1) = 
+
+> 2n
+
+X
+
+> i=0
+
+w(m) 
+
+> i
+
+F(χi,j −1|j−1), (26) 
+
+Hj (ˆζj |j − 1) = 
+
+> 2n
+
+X
+
+> i=0
+
+w(m) 
+
+> i
+
+H(χi,j |j−1). (27) B. Fixed-Time MJT Planning 
+
+To eliminate the timing inconsistency inherent in con-ventional NMPC-based landing [13], we generate fixed-time minimum-jerk landing trajectory in real-time. Given the current quadrotor state and the predicted motion of the landing platform (provided by the AUKF), we compute smooth reference trajectories that guarantee convergence at a prescribed touchdown time Tf . This formulation ensures pre-dictable synchronization with the platform while minimizing control effort. The MJT generation problem is posed as a variational optimization: 
+
+min  
+
+> p(·)
+
+J = 12
+
+Z Tf
+
+> 0
+> d3p(t)
+> dt 3
+> 2
+> Wj
+
+dt (28) subject to the boundary conditions p(0) = p0, ˙p(0) =
+
+v0, ¨p(0) = a0 and p(Tf ) = pT , ˙p(Tf ) = vT , ¨p(Tf ) = aT .The optimal solution corresponds to a fifth-order polynomial trajectory whose coefficients are obtained by solving the associated boundary value problem. At each time step, the MJT planner generates synchronized position and velocity setpoints {pmjt (t), vmjt (t)} that are tracked by the NMPC. This guarantees fixed-time convergence and avoids the vari-able landing durations observed in prior NMPC landing studies. For brevity, the full derivation of the polynomial coefficients is omitted, as it follows standard MJT planning formulations [26]. In our implementation, the touchdown time Tf is chosen as a fixed constant for the terminal descent. 
+
+C. Controller Design 
+
+Let us begin by defining the state vector s =
+
+h ˆξT , ˆqT , ˆυT , ˆωT iT
+
+provided by AUKF. The tracking error is defined as e = s − sr , where sr =
+
+h
+
+ξTr , qTr , υTr , ωTr
+
+iT
+
+represents the reference trajectory. qr = [1 , 0, 0, 0] T , and 
+
+ωr = [0 , 0, 0] T . Since the platform attitude remains approx-imately level in our experiments, we use a level attitude reference during landing. ξr , and υr , take different values depending on the mission stage. During the tracking phase, they correspond to the estimated position and velocity of the platform, denoted as ˆp and ˆv respectively. In the landing phase, they are set to MJT pmjt and vmjt .The goal is to determine the control signal u =B fu, B τ u
+
+T such that s reaches the desired trajectory sr .To this end, we adopt the standard NMPC formulation 
+
+min 
+
+> uk
+
+M (eN ) +  
+
+> N−1
+
+X
+
+> k=0
+
+L (ek, uk)
+
+!
+
+, (29) subject to 
+
+sk+1 = g (sk, uk) , s0 = sinit ,
+
+sk ∈ S , uk ∈ U , (30) where L (ek, uk) is the running cost, M (eN ) is the terminal cost, sk+1 = g (sk, uk) is the discretized nonlinear dynamics (1), S and U are the sets of allowable s and u, and N is the prediction horizon. For our implementations, we set 
+
+L(ek, uk) = eTk Qeek + uTk Quuk,
+
+M(eN ) = eTN QeeN . (31) where Qe > 0 and Qu > 0 are the weight matrices. After obtaining the control input by solving (29), the desired body rates ωd are computed based on τ u by 
+
+˙ωd = J−1 (τu − ω × Jω) ,
+
+ωd = ω + ˙ ωd · Ts. (32) where Ts is the sample time. 
+
+D. Theoretical Analysis of MJT Integration with NMPC 
+
+We analyze how the MJT reference influences the fea-sibility of NMPC under actuator limits. Consider the quadrotor dynamics in (1) with control inputs B fu =[0 , 0, f c]⊤ and B τ u = [ τx, τ y , τ z ]⊤. Let the MJT reference 
+
+(pmjt , ˙pmjt , ¨pmjt ) be used to define the desired translational acceleration 
+
+aref (t) := ¨ pmjt (t), ∥aref ∥∞ ≤ αa, ∥ ˙aref ∥∞ ≤ αj .
+
+where αa > 0 and αj > 0 denotes a uniform bound on the acceleration, and jerk respectively. Define ag (t) := 
+
+aref (t) − I g and the desired thrust direction I b3,d (t) := 
+
+ag (t)/∥ag (t)∥. The corresponding thrust magnitude is 
+
+fc,d (t) = m ∥ag (t)∥. (33) By the triangle inequality, fc,d (t) is uniformly bounded as 
+
+0 ≤ fc,d (t) ≤ m αa + ∥I g∥ =: ¯fc, ∀t ∈ [0 , T f ].
+
+(34) where ¯fc is the maximum thrust demand induced by MJT references. Next, suppose the attitude controller tracks I b3,d 
+
+with bounded angular velocity and acceleration, i.e., 
+
+∥B ω(t)∥ ≤ ¯ω, ∥ ˙B ω(t)∥ ≤ κ0 
+
+> ω
+
++ κ1 
+
+> ω
+
+αa + κ2 
+
+> ω
+
+αj , (35) where ¯ω is a uniform bound on body angular velocity mag-nitude, and the constants κ0 
+
+> ω
+
+, κ 1 
+
+> ω
+
+, κ 2 
+
+> ω
+
+> 0 capture controller-dependent gains and geometry that scale with the accelera-tion and jerk bounds. From the rotational dynamics in (1), the control torques satisfy 
+
+∥B τ u(t)∥ ≤ ∥ B ω(t) × JB ω(t)∥
+
+| {z }
+
+> ≤∥ J∥¯ω2
+
++ ∥J∥ ∥ ˙B ω(t)∥
+
+| {z }    
+
+> ≤∥ J∥(κ0
+> ω+κ1
+> ωαa+κ2
+> ωαj)
+
+=: ¯ τ , 
+
+(36) 
+
+so that componentwise 
+
+|fc| ≤ ¯fc, |τi| ≤ ¯τi (i ∈ { x, y, z }),
+
+with ¯τi induced by ¯τ and the allocation matrix G. Note that the Coriolis contribution is bounded by ¯τcori ≤ ∥ J∥¯ω2.Finally, assume the actuator constraints are 
+
+Ti ∈ [Tmin , T max ], i = 1 , . . . , 4,
+
+⇐⇒ fc ∈ [f c, f c], τ u ∈ B ∞(τ )where the thrust interval and torque box B∞(τ ) are induced by the allocation matrix G in (4). If the bounds satisfy 
+
+¯fc ≤ f c − γf , ¯τi ≤ τ i − γτ,i , i ∈ { x, y, z }, (37) for some positive margins γf and γτ,i , then the tightened input set 
+
+Uγ := 
+
+n
+
+(fc, τ u) : fc ∈ [f c+γf , f c−γf ], |τi| ≤ τ i−γτ,i 
+
+o
+
+is feasible for the entire MJT reference horizon. Conse-quently, NMPC admits a strictly positive constraint margin 
+
+γ = min {γf , γ τ,x , γ τ,y , γ τ,z },
+
+which guarantees that actuator limits are respected through-out the maneuver. The above results indicate that the thrust and torque de-mands induced by the MJT reference are uniformly bounded, and a nonempty tightened input set Uγ is guaranteed to exist when the actuator margins are satisfied. This is a sufficient condition that lends support to the satisfaction of constraints in NMPC tracking. In this case, the bounded acceleration and jerk values lead to less aggressive input transients, which in turn ensures smooth control allocation during the terminal descent phase. We note that this result addresses reference-induced inputboundedness and does not, by itself, guarantee NMPC convergence or optimality. IV. SIMULATION AND HARDWARE EXPERIMENTS 
+
+A. Simulations 
+
+We conducted numerical simulations to evaluate the al-gorithm prior to hardware implementations. We carried out simulation assuming that only the position and orientation of the vehicle and the position of the landing platform is available. The NMPC problem is solved in real time using acados with the partial-condensing HPIPM QP solver [27], running at 100 Hz. We set the initial position of the quadrotor and the landing platform as (2 , 2, 2) T and 
+
+(4 , 6, 0.1) T , respectively. The quadrotor begins tracking the landing platform and, once within a sufficient proximity, initiates the landing maneuver. The results of the simulated experiments are illustrated in Fig. 4. The parameters used in the simulations are set as follows: m = 2.3 kg, L = 0.25 m, g = 9.8 m/s 2,
+
+α = 45 ◦, and inertia J = diag(0 .03 , 0.03 , 0.06) kg ·m2.For the NMPC, the weights are chosen as Qe =10 3diag(8 , 8, 8, 6, 4, 4.5, 1, 1, 1, 1, 4, 4, 4) and 
+
+Qu = 100 I3, with a sampling time Ts = 0.01 s and horizon length N = 80 . The AUKF parameters are set as δ = 0.15 , β = 2, κ = 0, and n = 19 , with initial covariance P0 = 0.1I19 . The measurement noise covariance is ˆR0 = diag(0 .01 , 0.01 , 0.01 , 0.2, 0.2, 0.2) ,and the process noise covariance is ˆQ0 =diag(0 .01 I3, 0.01 I3, 0.001 I4, 0.05 I3, 0.01 I3, 0.2I3).X [m] 23456Y [m] 234567Z [m] 0.0 0.5 1.0 1.5 2.0 2.5 3.0 
+
+> Quadrotor Trajectory Moving Platform Trajectory Future Predictions Start Point
+
+Fig. 4: Simulated landing of a quadrotor on a moving platform. TABLE I: RMSE of velocity predictions for AUKF, UKF, and EKF                
+
+> Velocity Component AUKF [m/s] UKF [m/s] EKF [m/s]
+> ˆvx0.025 0.038 0.067
+> ˆvy0.026 0.039 0.096
+> ˆvz0.022 0.028 0.048
+
+B. Hardware Experiments 
+
+For hardware experiments, we utilized a modified Holybro X500 equipped with a Pixhawk flight controller and a com-panion computer featuring an Intel Core i5-1340P processor. We implement NMPC within the Robot Operating System (ROS) framework on the onboard companion computer, with its outputs sent to PX4 Autopilot via the MAVROS protocol at 100 Hz. We used a TurtleBot3 Waffle Pi to carry the landing platform. The landing pad measured 50 [cm] × 50 [cm], mounted the ground robot as shown in Fig. 1. We conducted the experiments in an indoor environment with an OptiTrack motion capture system that measured the position of the vehicle and the landing platfrom. Since the motion capture position measurements are accurate with negligible noise, Gaussian noise N (0 , 0.01) m2 was added to the OptiTrack position data to emulate realistic sensing conditions. To evaluate the performance of the AUKF, we compared its performed with EKF and the standard UKF. Figure 5 presents the estimated velocity of the landing platform for the three estimators, followed by the comparison of their root meant square error (RMSE) in Tab. I. It is evident that AUKF maintains much lower prediction error compared to the UKF and EKF (on average, 29.66% lower than UKF and 63.26% lower than EKF). This lower prediction error directly translates into improved landing precision. Figure 6 illustrates the vehicle and landing platform tra-jectory over a dynamic landing trial. The landing platform follows a piecewise-smooth trajectory, and the motion pattern is varied across trials. The vehicle ascends from the initial position (1 .8, 1.8, 0.34) hovers for 2 [s]. Next, given the landing pad position, the vehicle approaches the landing 0 2 4 6 8 10 12 14 16 18 20 -0.2 -0.1 00 2 4 6 8 10 12 14 16 18 20 -0.3 -0.2 -0.1 00 2 4 6 8 10 12 14 16 18 20 
+
+> Time [s]
+> -0.1 00.1
+
+Fig. 5: Velocity prediction error for AUKF, UKF, and EKF 21.5 Hovering 10.5 2 1.5 0.4 01 0.5 0 -0.5 -1 0.6 -1.5 0.8 Approach Landing 1Tracking 
+
+Fig. 6: 3D view of quadrotor and landing platform trajectories across different mission states in a dynamic landing trial. 
+
+platform and synchronizes its motion with the platform. The final descent starts at t = 8 .5 [s] takes approximately 1.5 [s], terminating with a successful landing on the platform. The accuracy of the AUKF’s predictions of the landing platform’s position is evident in this figure. Additionally, the computed landing MJT demonstrates a rapid descent and how closely NMPC has followed the planned trajectory. Figure 7 illustrates the velocity of the quadrotor alongside the estimated velocity of the landing platform, as computed by the AUKF. The quadrotor’s velocity closely follows that of the platform throughout the tracking phase, demonstrating effective synchronization. Figure 8 depicts the thrust and moments prescribed by NMPC alongside the actuator constraints. Except for the initial approach phase, which required the vehicle to rapidly reach the landing platform, the commanded thrust and mo-ments remain well within the input constraints. This observa-tion is consistent with our theoretical analysis, which shows that minimum-jerk references induce uniformly bounded 0 1 2 3 4 5 6 7 8 9 10 -0.6 -0.4 -0.2 00 1 2 3 4 5 6 7 8 9 10 -1.5 -1 -0.5 00 1 2 3 4 5 6 7 8 9 10 
+
+> Time [s]
+> -0.5 00.5
+
+Fig. 7: Quadrotor velocity and landing platform estimated velocity across multiple stages of a dynamic landing trial. 0 1 2 3 4 5 6 7 8 9 10 20 25 30 0 1 2 3 4 5 6 7 8 9 10 -5 050 1 2 3 4 5 6 7 8 9 10 -5 050 1 2 3 4 5 6 7 8 9 10 
+
+> Time [s]
+> -5 05
+
+Fig. 8: Thrust and moments prescribed by the NMPC across multiple stages of a dynamic landing trial. 
+
+thrust and torque demands, which is consistent with the reference feasibility analysis in III-D and supports constraint satisfaction during landing. To assess the repeatability of the results, we conducted 10 dynamic landing trials, each starting from different initial conditions and with varying motion patterns for the land-ing platform. All 10 trials resulted in successful dynamic landings. Figure 9 illustrates the final touchdown positions of the quadrotor on the landing pad. The mean Euclidean distance from the center of the landing pad was 0.0787 
+
+[m], with a maximum of 0.1192 [m] and a minium of 
+
+0.0224 [m]. Figure 10 evaluates the real-time feasibility of our formulation. We measured the solver time per iteration on the onboard computer. The average computation time was ≈ 4.9 [ms], with all runs remaining well below the 
+
+10 [ms] sampling period ( 100 [Hz]). This demonstrates that the optimization can be solved reliably in real time without exceeding hardware limits. V. CONCLUSION In this paper, we introduced a dynamic landing algorithm for MRUAVs that combines finite-horizon predictions with -0.25 -0.2 -0.15 -0.1 -0.05 0 0.05 0.1 0.15 0.2 0.25 -0.25 -0.2 -0.15 -0.1 -0.05 00.05 0.1 0.15 0.2 0.25 Fig. 9: Quadrotor touchdown position for 10 dynamic landing trials. 0 1 2 3 4 5 6 7 8 9 10 345678910 10 -3 
+
+Fig. 10: Computational load of the NMPC solver. 
+
+a fixed-time minimum-jerk trajectory planner to achieve precise synchronization with a moving landing pad and smooth, consistent descent. The framework effectively han-dles varying levels of measurement noise, which is essential for ensuring accuracy in such a demanding maneuver. Hard-ware experiments confirmed the robustness of the approach across multiple successful trials. Future work will focus on validating the framework in outdoor environments with wind disturbances and extending the MJT planner to incorporate energy constraints for more efficient landings. REFERENCES [1] K. Guo et al. , “Autonomous landing of a quadrotor on a moving platform via model predictive control,” Aerospace , vol. 9, no. 1, p. 34, 2022. [2] Y. Feng et al. , “Autonomous landing of a uav on a moving platform using model predictive control,” Drones , vol. 2, no. 4, p. 34, 2018. [3] A. Paris et al. , “Dynamic landing of an autonomous quadrotor on a moving platform in turbulent wind conditions,” in 2020 IEEE International Conference on Robotics and Automation (ICRA) . IEEE, 2020, pp. 9577–9583. [4] O. Procházka et al. , “Model predictive control-based trajectory gener-ation for agile landing of unmanned aerial vehicle on a moving boat,” 
+
+Ocean Engineering , vol. 313, p. 119164, 2024. [5] P. Serra et al. , “Landing of a quadrotor on a moving target using dynamic image-based visual servo control,” IEEE Transactions on Robotics , vol. 32, no. 6, pp. 1524–1535, 2016. [6] A. Borowczyk et al. , “Autonomous landing of a quadcopter on a high-speed ground vehicle,” Journal of Guidance, Control, and Dynamics ,vol. 40, no. 9, pp. 2378–2385, 2017. [7] Y. Qi et al. , “Autonomous landing solution of low-cost quadrotor on a moving platform,” Robotics and Autonomous Systems , vol. 119, pp. 64–76, 2019. [8] P. Wang et al. , “Quadrotor autonomous landing on moving platform,” 
+
+Procedia Computer Science , vol. 209, pp. 40–49, 2022. [9] D. Falanga et al. , “Vision-based autonomous quadrotor landing on a moving platform,” in 2017 IEEE International Symposium on Safety, Security and Rescue Robotics (SSRR) . IEEE, 2017, pp. 200–207. [10] J. Ghommam and M. Saad, “Autonomous landing of a quadrotor on a moving platform,” IEEE Transactions on Aerospace and Electronic Systems , vol. 53, no. 3, pp. 1504–1519, 2017. [11] A. Gautam et al. , “Autonomous quadcopter landing on a moving target,” Sensors , vol. 22, no. 3, p. 1116, 2022. [12] N. Xuan-Mung et al. , “Quadcopter precision landing on moving targets via disturbance observer-based controller and autonomous landing planner,” IEEE Access , vol. 10, pp. 83 580–83 590, 2022. [13] B. Zhu et al. , “A nonlinear model predictive control based control method to quadrotor landing on moving platform,” Cognitive Compu-tation and Systems , vol. 5, no. 2, pp. 118–131, 2023. [14] D. Wang et al. , “Efficient nonlinear model predictive control for quadrotor trajectory tracking: Algorithms and experiment,” IEEE Transactions on Cybernetics , vol. 51, no. 10, pp. 5057–5068, 2021. [15] F. Nan et al. , “Nonlinear mpc for quadrotor fault-tolerant control,” 
+
+IEEE Robotics and Automation Letters , vol. 7, no. 2, pp. 5047–5054, 2022. [16] Z. Shayan et al. , “Nonlinear model predictive control of tiltrotor quadrotors using feasible control allocation,” Journal of Intelligent & Robotic Systems , vol. 111, no. 2, p. 54, 2025. [17] S. Sun et al. , “A comparative study of nonlinear mpc and differential-flatness-based control for quadrotor agile flight,” 2022. [18] Z. Shayan et al. , “Exponential control barrier function and model pre-dictive control for jerk-level reactive motion planning of quadrotors,” 
+
+Control Engineering Practice , vol. 164, p. 106489, 2025. [19] A. Romero et al. , “Model predictive contouring control for time-optimal quadrotor flight,” IEEE Transactions on Robotics , vol. 38, no. 6, pp. 3340–3356, 2022. [20] M. Izadi et al. , “Multi-model predictive attitude control of quadrotors,” in 2024 IEEE 20th International Conference on Automation Science and Engineering (CASE) , 2024, pp. 3830–3835. [21] J. Li et al. , “Nonlinear mpc for quadrotors in close-proximity flight with neural network downwash prediction,” in 2023 62nd IEEE Conference on Decision and Control (CDC) . IEEE, 2023, pp. 2122– 2128. [22] S. Tajeddin et al. , “Ecological adaptive cruise control with optimal lane selection in connected vehicle environments,” IEEE Transactions on Intelligent Transportation Systems , vol. 21, no. 11, pp. 4538–4549, 2019. [23] N. Aswal et al. , “Joint and dual estimation of states and parameters with extended and unscented kalman filters,” in Recent Developments in Structural Health Monitoring and Assessment–Opportunities and Challenges: Bridges, Buildings and Other Infrastructures . World Scientific, 2022, pp. 223–252. [24] L. Zhao and X. Wang, “An adaptive ukf with noise statistic estimator,” in 2009 4th IEEE Conference on Industrial Electronics and Applica-tions . IEEE, 2009, pp. 614–618. [25] M. Xing and Q. Hongzhuan, “An adaptive ukf algorithm and its application for satellite attitude determination,” in 2011 International Conference on Consumer Electronics, Communications and Networks (CECNet) . IEEE, 2011, pp. 78–81. [26] A. Piazzi and A. Visioli, “Global minimum-jerk trajectory planning of robot manipulators,” IEEE transactions on industrial electronics ,vol. 47, no. 1, pp. 140–149, 2000. [27] R. Verschueren et al. , “acados—a modular open-source framework for fast embedded optimal control,” Mathematical Programming Compu-tation , vol. 14, no. 1, pp. 147–183, 2022.

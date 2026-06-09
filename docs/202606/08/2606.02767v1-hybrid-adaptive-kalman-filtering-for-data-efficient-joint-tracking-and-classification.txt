@@ -1,0 +1,622 @@
+Title: Hybrid Adaptive Kalman Filtering for Data-Efficient Joint Tracking and Classification
+
+URL Source: https://arxiv.org/pdf/2606.02767v1
+
+Published Time: Wed, 03 Jun 2026 00:07:24 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Hybrid Adaptive Kalman Filtering for Data-Efficient Joint Tracking and Classification 
+
+Jiho Lee 1,2,3, Nisar R. Ahmed 2, and Rebecca Russell 1
+
+Abstract —Kalman filtering performance is highly sensitive to model mismatch and noise covariance tuning. Learning-based approaches address these limitations but typically rely on supervised training with large datasets and do not produce consistent uncertainty estimates. In this paper, we propose a self-supervised Hybrid Adaptive Kalman Filter that learns structured corrections to system dynamics and process noise covariance from measurements alone while preserving the probabilistic structure of the filter. This allows the innovation likelihood to be computed and subsequently used for model classification via generalized Bayesian inference. Experimental results on real-world and simulated datasets demonstrate improved estimation accuracy and statistical consistency as well as robust classification performance across both low-data and large-data scenarios. 
+
+Index Terms —Kalman Filter, hybrid learning-based filtering 
+
+I. I NTRODUCTION 
+
+# KALMAN filters (KFs) and their variants have been widely used for state estimation in robotics, navigation, and autonomous systems due to their principled probabilistic framework and computational efficiency [1]–[3]. In practice, however, the performance of a KF depends heavily on accurate system models and carefully tuned noise covariances. Obtain-ing these parameters often requires expert knowledge, system identification, and manual tuning. Recent advances in machine learning have motivated a growing body of work that integrates neural networks with classical filtering frameworks [4]. These learning-augmented approaches aim to improve estimation performance by learning system dynamics, filter parameters, or correction terms directly from data. While promising, existing learning-based filtering methods typically rely on supervised training with access to ground-truth states and are optimized using accuracy-based loss functions. As a result, these methods primarily improve point-estimation accuracy but often neglect the statistical consistency of the estimated uncertainty, which is critical for assessing filter reliability. Furthermore, many approaches assume access to large-scale training datasets, often generated in simplified simulation environments, which may not be available in real-world systems. These limitations pose challenges for many safety-critical systems where ground-truth state information may be un-available, uncertainty calibration is essential, and collecting large labeled datasets can be costly or infeasible. In con-trast, classical adaptive filtering methods, extensively studied 
+
+> 1
+
+J. Lee and R. Russell are with the Charles Stark Draper Laboratory, Inc., Cambridge, MA. 
+
+> 2
+
+J. Lee and N. Ahmed are with the Ann and H. J. Smead Department of Aerospace Engineering Sciences at the University of Colorado, Boulder, Boulder, CO. 
+
+> 3
+
+J. Lee is a Draper Scholar funded by Draper. (a)  Classical Filtering 
+
+> Kalman
+> Filter
+> Tracking
+> Hand -tuned
+> static noise
+> covariances
+> Classification
+> Classifier
+
+(b)  Machine Learning  
+
+> Requires abundant data with
+> ground truth
+
+(c) Hybrid Method (Proposed)            
+
+> (ΔF ₖ, Q ₖ)
+> Adaptive Model &
+> Noise Covariances
+> Correction
+> Learns from limited m easurement data
+> (no ground -truth required)
+> Generalized Bayesian
+> Inference (GBI)
+> Innovation likelihood s
+> Tracking
+> Classification Tracking
+> Kalman
+> Filter
+> Measurements Measurements
+> Classification
+> ▪Improved accuracy and
+> consistency vs. (a)
+> ▪Increased data efficiency vs. (b)
+> Measurements
+> Drone 1
+> Innovation
+> Features
+> Joint tracking & classification
+> Online
+> Adaptive
+> Loop
+> Neural
+> Net
+> Neural
+> Net
+> Drone 2
+> Drone 3
+> Neural
+> Net
+> Separate
+> classifier
+
+Fig. 1. Comparison between classical filtering, purely learning-based meth-ods, and the proposed hybrid framework. (a) Classical KF relies on manually tuned noise covariances and domain expertise to produce reliable state estimates and uncertainty. (b) Purely learning-based approaches use neural net-works to directly predict system states, typically requiring abundant ground-truth training data. (c) The proposed Hybrid Adaptive Kalman Filter combines model-based filtering with data-driven adaptation, enabling accurate state estimation and probabilistic model classification under limited-data conditions. 
+
+since the 1970s, address model mismatch by adapting filter parameters directly from measurements [5]. Techniques such as covariance matching, correlation analysis, and likelihood-based estimation enable parameter adaptation without requir-ing ground-truth state information [6]. However, they still assume that the underlying system model is correctly specified, and modeling errors can induce biases and estimation errors that cannot be corrected through parameter adaptation alone. Motivated by these ideas, we propose a Hybrid Adaptive Kalman Filter (HAKF) that combines model-based filtering with data-driven learning. The proposed framework augments a classical KF with a neural network that learns structured corrections to the nominal dynamics and noise covariances directly from measurement data. By incorporating structural inductive bias from the underlying physics-based model and restricting learning to components most susceptible to mis-match, the proposed approach enables data-efficient adaptation while preserving the probabilistic structure of the filter. In addition to improving state estimation, the measurement likelihood produced by the hybrid filter naturally enables model classification through a generalized Bayesian inference (GBI) framework [7]. This allows the same filtering architec-ture to perform both probabilistic state estimation and model classification. Fig. 1 illustrates the overall conceptual differ-ences between classical KF, purely learning-based approaches, 
+
+> arXiv:2606.02767v1 [cs.RO] 1 Jun 2026
+
+and the proposed hybrid framework. We evaluate the proposed hybrid method on both real-world drone trajectories from the multimodal indoor 3D drone tracking dataset (DPJAIT) [8] and high-fidelity simulated trajectories generated using AirSim [9]. Experimental results demonstrate that HAKF improves estimation accuracy while achieving substantially better statistical consistency compared to a tuned classical KF. For model classification, HAKF shows strong performance in low-data regimes where purely learning-based methods struggle, while also remaining effective when larger training datasets are available. The main contributions of this paper are summarized as follows: (1) A self-supervised HAKF framework inspired by classical adaptive KF that integrates model-based filtering with neural network-based adaptive model correction without requiring ground-truth state supervision.; (2) A GBI frame-work that enables probabilistic model classification using the innovation likelihood produced by the hybrid filter; and (3) Experimental validation on both real-world and simulated datasets demonstrating robust performance spanning the low-data and large-data regimes. II. R ELATED WORK 
+
+A. Kalman Filter (KF) 
+
+The KF provides a Bayesian optimal estimator for linear dynamical systems subject to Gaussian noise [1]. Consider the following discrete-time state-space model: 
+
+xk = Fkxk−1 + wk, (1) 
+
+zk = Hkxk + vk. (2) Table I summarizes the KF notation used throughout the paper. If the linear-Gaussian assumptions of the KF are satisfied and the system model is correctly specified, then the following dynamical consistency conditions must hold [2]: 
+
+E[ex,k ] = 0 , E[ex,k e⊤
+
+> x,k
+
+] = Pk|k ∀k, (3) 
+
+νk ∼ N (0 , S k|k−1), E[νkν⊤ 
+
+> j
+
+] = δkj Sk|k−1. (4) In practice, the assumed linear-Gaussian system model is often incorrect due to modeling errors and mistuned noise covari-ances. Such structural mismatch leads to biased estimation errors and temporally correlated innovation sequences [6], vi-olating the dynamical consistency conditions (3)–(4) required for optimal Bayesian inference. Hence, violations of these properties provide informative signals of model mismatch that can be exploited for adaptive model correction. 
+
+B. Adaptive Kalman Filter 
+
+To address this issue, adaptive Kalman filtering methods have been extensively studied since the 1970s [5]. Existing approaches can be broadly categorized into Bayesian infer-ence, maximum likelihood estimation, covariance-matching, and correlation methods. More recently, consistency-based methods have been proposed that tune filter noise covariances by enforcing their statistical consistency.                          
+
+> TABLE I KALMAN FILTER NOTATION
+> Symbol Description
+> xkstate vector
+> zkmeasurement vector
+> Fkstate transition matrix
+> Hkobservation matrix
+> Qkprocess noise covariance matrix
+> Rkmeasurement noise covariance matrix
+> wkprocess noise, wk∼ N (0 , Q k)
+> vkmeasurement noise, vk∼ N (0 , R k)ˆxk|k−1predicted state mean
+> Pk|k−1predicted state covariance
+> ˆxk|kposterior state mean
+> Pk|kposterior state covariance
+> νkinnovation
+> Sk|k−1innovation covariance
+> KkKalman gain
+> ex,k state estimation error
+
+Bayesian methods treat unknown model parameters as latent random variables and estimate them jointly with the system state through recursive inference. The posterior distribution of the parameters is updated sequentially using Bayes’ rule; however, exact inference is generally intractable and typically requires approximate techniques like Monte Carlo sampling, which can introduce computational overhead and limit real-time application [10]–[12]. Maximum likelihood methods estimate unknown model parameters by maximizing the likelihood of the observed mea-surement sequence under an assumed probabilistic model [13], [14]. In the marginal likelihood formulation, the state variables are treated as latent and integrated out, and parameters are obtained by solving 
+
+θ∗ = arg max  
+
+> θ
+
+pθ (z1: T ), (5) where θ denotes the set of unknown model parameters. These methods typically require iterative optimization of a non-convex likelihood objective, making them sensitive to initial-ization and susceptible to local optima convergence [6]. Covariance-matching techniques enforce consistency be-tween the emprical covariance of the innovation sequence and its theoretical covariance predicted by the KF. More formally, 
+
+1
+
+m
+
+> k
+
+X
+
+> i=k−m+1
+
+νiν⊤ 
+
+> i
+
+≈ Sk|k−1, (6) where m is an empirically chosen finite window length used for statistical smoothing [5]. Correlation-based methods exploit the fact that, under cor-rection model specification, the innovation sequence should be temporally uncorrelated. Nonzero innovation autocorrelation provides a direct signal of misspecification, which can be used to adapt filter parameters [5], [6]. Lastly, recent work proposes consistency-based methods that tune the filter noise covariances such that the state estimation errors and innovations are statistically consistent [15], [16]. The normalized estimation error squared (NEES) and normalized innovation squared (NIS) statistics, 
+
+ϵx,k = e⊤
+
+> x,k
+
+P −1 
+
+> k|k
+
+ex,k , (7) 
+
+ϵz,k = ν⊤ 
+
+> k
+
+S−1
+
+> k|k−1
+
+νk, (8) follow chi-squared distributions under correct model specifica-tion [2]. These methods adjust the noise parameters by match-ing the empirical statistics to their corresponding theoretical moments. Our proposed HAKF architecture integrates principles from classical adaptive filtering methods, including maximum like-lihood, covariance matching, and correlation approaches, to enable statistically consistent adaptation without requiring ground-truth states. Accordingly, NEES and NIS are used in the experiments to evaluate the consistency of the resulting estimates. 
+
+C. Hybrid Kalman Filter 
+
+Recent work combines KF with learned neural components to mitigate model mismatch and unknown noise statistics. These approaches are commonly referred to as hybrid methods and can be categorized into the following three categories: state-correction, model-learning, and gain-learning methods. State-correction approaches augment the Kalman filtering framework with a learned neural component that compensates for estimation errors. In these methods, the neural network typically learns a residual mapping to correct either the predicted state or the innovation term without modifying the assumed system model [4], [17], [18]. While such approaches can improve point-estimation accuracy, they rely on post hoc compensation and do not explicitly enforce statistical consistency of the associated estimates. Model-learning methods learn unknown system parameters directly from data. In these approaches, neural networks pa-rameterize components of the underlying state-space model, enabling the representation of complex nonlinear dynamics beyond classical linear-Gaussian assumptions [19]–[21]. This improves modeling flexibility but often replaces explicitly structured model components with learned parameterizations, making the resulting filter harder to interpret in classical state-space terms. Lastly, gain-learning methods retain the prediction step of the KF while replacing the analytically derived measurement update step with a learned neural update operator. Representa-tive approaches such as KalmanNet and its variants explicitly replace or augment the analytical Kalman gain computation with recurrent neural networks [22]–[25]. These methods have been shown to improve state estimation accuracy under par-tially known dynamics without requiring explicit identification of the process or measurement noise statistics. In contrast, our proposed HAKF preserves the analytical Kalman prediction and update recursion and uses learning only to adapt structured corrections to the dynamics and process noise. Unlike hybrid methods trained with supervised state-estimation losses, HAKF is trained directly from measurement data alone. This distinction is important because while KF is often interpreted as an minimum mean-square error (MMSE) estimator, it fundamentally performs recursive Bayesian infer-ence by propagating both the posterior mean and covariance. Consequently, training and evaluating hybrid filters solely in terms of point-estimation accuracy disregards the uncertainty information captured by the filter that is essential for assessing its reliability. Moreover, existing hybrid methods employ ex-pressive neural components that are trained assuming access to abundant training data, which are typically generated from simplified simulation environments. III. HAKF: H YBRID ADAPTIVE KALMAN FILTER 
+
+In this section, we present a self-supervised HAKF that learns corrections to the system dynamics and process noise while preserving the analytic Bayesian filtering structure. We first describe the problem formulation and the proposed hybrid filtering architecture followed by the training objective, classification method, and implementation details. 
+
+A. Problem Formulation 
+
+In practice, the discrete-time linear dynamical system de-scribed in (1)–(2) is often misspecified due to unmodeled dynamics and inaccurate noise statistics. The objective of the proposed HAKF is therefore to adaptively learn corrections to both the nominal system dynamics and the process noise covariance from observable features. Specifically, at each time step, a neural network parameterized by θ maps a feature vector ϕk to 
+
+(∆ F ML  
+
+> k
+
+, Q ML  
+
+> k
+
+) = fθ (ϕk), (9) where ϕk is constructed from innovations and state-update information described in III-B. Accordingly, the system evo-lution is modeled as 
+
+xk =  F MB  
+
+> k
+
++ ∆ F ML 
+
+> k
+
+ xk−1 + ˜ wk, ˜wk ∼ N (0 , Q ML  
+
+> k
+
+).
+
+(10) The structure of the correction term ∆F ML  
+
+> k
+
+can be strategi-cally designed to control the degree of model adaptation. More specifically, ∆F ML  
+
+> k
+
+may be constrained to follow a predefined sparsity pattern or low-dimensional parameterization, which allows a trade-off between model expressiveness and data efficiency. This allows the HAKF framework to have varying levels of modeling flexibility while avoiding overparameteriza-tion under limited training data. The specific parameterization used in this work is described in Section IV-A. 
+
+B. Architecture 
+
+Fig. 2 illustrates the proposed HAKF architecture. The filter preserves the standard Kalman prediction and measurement correction recursion. We assume the observation model (i.e. 
+
+Hk, R k) is known. The same framework could, in principle, be extended to learn measurement parameters as well, but this is left for future work. At each time step, a feature vector is constructed from a finite window of recent innovations, 
+
+ν(K) 
+
+> k
+
+≜ {νk−K+1 , . . . , ν k}, (11) which is used as input to a feedforward neural network that outputs ∆F ML  
+
+> k
+
+and QML  
+
+> k
+
+. In addition, the state correction 
+
+∆ˆ xk = ˆ xk|k − ˆxk|k−1 (12) ො𝑥 0, 𝑃 0                                        
+
+> 𝜈 𝑘
+> (𝐾 )=𝜈 𝑘 −𝐾 +1,…,𝝂 𝒌
+> ෝ𝒙 𝒌 |𝒌 −𝟏 =(𝐹 𝑘
+> 𝑀𝐵 +𝚫 𝑭 𝒌
+> 𝑴𝑳 )ෝ𝒙 𝒌 −𝟏 |𝒌 −𝟏
+> 𝑷 𝒌 |𝒌 −𝟏 =(𝐹 𝑘
+> 𝑀𝐵 +𝚫 𝑭 𝒌
+> 𝑴𝑳 )𝑷 𝒌 −𝟏 |𝒌 −𝟏 (𝐹 𝑘
+> 𝑀𝐵 +𝚫 𝑭 𝒌
+> 𝑴𝑳 )𝑇 +𝑸 𝒌
+> 𝑴𝑳
+> Least Squares
+> Initialization
+> 𝝂 𝒌 =𝑧 𝑘 −𝐻 𝑘 ෝ𝒙 𝒌 |𝒌 −𝟏
+> 𝑆 𝑘 =𝐻 𝑘 𝑷 𝒌 |𝒌 −𝟏 𝐻 𝑘
+> 𝑇 +𝑅 𝑘
+> 𝐾 𝑘 =𝑷 𝒌 |𝒌 −𝟏 𝐻 𝑘
+> 𝑇 𝑆 𝑘
+> −1
+> ෝ𝒙 𝒌 |𝒌 =ෝ𝒙 𝒌 |𝒌 −𝟏 +𝐾 𝑘 𝝂 𝒌
+> 𝑷 𝒌 |𝒌 =𝐼 −𝐾 𝑘 𝐻 𝑘 𝑷 𝒌 |𝒌 −𝟏
+> 𝑧 𝑘
+> Prediction
+> Measurement Update
+> 𝚫 𝑭 𝒌
+> 𝑴𝑳 ,𝑸 𝒌
+> 𝑴𝑳
+> Adaptive Correction
+> Δො𝑥 𝑘 =ෝ𝒙 𝒌 |𝒌 −ෝ𝒙 𝒌 |𝒌 −𝟏
+> Input Features
+
+Fig. 2. HAKF architecture. The predcition and measurment correction steps follow the classical KF framework. An adaptive neural network module uses features derived from the innovation sequence and state updates to estimate a transition correction ∆F M L k and process noise covariance QM L k , which are used to compensate for model mismatch in the prediction step. 
+
+is used as a feature. A multilayer perceptron (MLP) is em-ployed for data-efficient adaptation under limited training data, due to its relatively simple architecture. In the prediction step, the predicted state covariance is also computed using the corrected transition matrix, 
+
+Pk|k−1 =
+
+
+
+F MB  
+
+> k
+
++ ∆ F ML 
+
+> k
+
+
+
+Pk−1|k−1
+
+
+
+F MB  
+
+> k
+
++ ∆ F ML 
+
+> k
+
+⊤
+
++ QML  
+
+> k
+
+.
+
+(13) 
+
+The resulting innovation νk from the measurement correction step is appended to the window ν(K) 
+
+> k
+
+, closing the feedback loop. The use of innovation-sequence features in the learning module is motivated by the innovation-based training objective described below in Section III-C. 
+
+C. Cost Function 
+
+Given the hybrid filtering architecture described above, we consider the marginal maximum likelihood estimation objective. Under the correct model specification and the KF assumptions, the predictive measurement distribution is 
+
+zk | z1: k−1 ∼ N (Hk ˆxk|k−1, S k), (14) Substituting this predictive distribution into (5) yields a closed-form expression for the marginal likelihood. Maximizing this likelihood is equivalent to minimizing the innovation negative log-likelihood (NLL), which gives the cost function: 
+
+L(θ) = 
+
+> T
+
+X
+
+> k=1
+
+ ν⊤ 
+
+> k
+
+S−1 
+
+> k
+
+νk + log det Sk
+
+ , (15) where an additive constant independent of θ has been omitted. Under Gaussian assumptions, minimizing (15) yields first-order optimality conditions that implicitly enforce covariance-matching on the innovation sequence. This connection has been formally established in the data assimilation literature [26], [27]. However, these conditions enforce only marginal consistency of the innovation statistics and do not explicitly account for their temporal correlation. Under model misspec-ification, the resulting Kalman gain is generally suboptimal, and the innovation sequence becomes temporally correlated [6], violating the independence assumptions implicit in (15). To address this limitation, the proposed HAKF architecture uses a finite window of recent innovations as an input feature, enabling the MLP to capture temporal correlation structure that cannot be learned through one recent innovation alone. In this way, HAKF integrates principles from likelihood-based, covariance-matching, and correlation-based classical adaptive Kalman filtering methods through its cost function and architecture. 
+
+D. Classification via Generalized Bayes Inference 
+
+The KF can be interpreted as a generative model that induces a predictive measurement likelihood through the dis-tribution defined in (14). Model classification can therefore be mathematically performed by computing the posterior over candidate models using Bayes’ rule. Under model misspecification, however, direct likelihood-based calculation may lead to overconfident or inconsistent posterior estimates [7]. Moreover, in practice, model misspec-ification may vary across candidate models. To mitigate this issue, we adopt a generalized Bayesian inference (GBI) using a model-dependent tempered likelihood [28], 
+
+p(Mj | z1: k) ∝ p(z1: k | Mj )αj p(Mj ), (16) where αj ∈ (0 , 1] controls the influence of the likelihood associated with model Mj on the posterior update. Various approaches for selecting the tempering parameter have been proposed in the literature [29]. In this work, we determine αj using a grid-based search that minimizes the Brier score on a validation dataset, 
+
+α∗ 
+
+> j
+
+= arg min 
+
+> αj
+
+1
+
+N
+
+> N
+
+X
+
+> i=1
+
+
+
+pαj (Mj | Z (i)) − yi,j 
+
+2
+
+, (17) where Z(i) denotes the measurement sequence of the i-th trajectory and yi,j ∈ [0 , 1] indicates whether trajectory i was generated by model Mj . This enables per-class calibration of the predicted model posterior. 
+
+E. Implementation Details 
+
+For numerical stability and training, several implementation details are adopted. First, the posterior covariance is updated using the Joseph form [30] 
+
+Pk|k = ( I − KkHk)Pk|k−1(I − KkHk)⊤ + KkRkK⊤ 
+
+> k
+
+,
+
+which guarantees symmetry and positive definiteness of the updated state covariance in the presence of numerical errors. Second, to ensure that the learned QM L k remains positive semi-definite, the neural network outputs a lower-triangular matrix Lk and a diagonal matrix Dk, from which 
+
+QML  
+
+> k
+
+= LkDkL⊤ 
+
+> k
+
+(18) is constructed via Cholesky LDL composition [31]. In our experiment, this parameterization provided better numerical conditioning during training compared to the commonly used 
+
+LkL⊤ 
+
+> k
+
+composition in other works [24] [25] [32]. Third, (ˆ x0, P 0) is obtained via a weighted least-squares estimate using the minimum number of measurements required to obtain an observable batch estimate of the initial state [3]. Under the assumed motion model described in Section IV-A, the corresponding solution is given by 
+
+ˆx0 = ( A⊤Σ−1A)−1A⊤Σ−1Y, (19) 
+
+P0 = ( A⊤Σ−1A)−1, (20) where A =
+
+ HHF M B 
+
+
+
+and Y =
+
+y0
+
+y1
+
+
+
+are constructed using two measurements, and Σ denotes a block-diagonal of the stacked measurement noise covariance. Lastly, the network parameters are optimized using the gradient-based Adam optimizer [33]. IV. E XPERIMENTAL SETUP 
+
+A. System Model 
+
+For experimental evaluation, we consider a constant-velocity (CV) motion model with state 
+
+xk = [ px, p y , p z , v x, v y , v z ]⊤, (21) where px, p y , p z denote the 3D position and vx, v y , v z denote the corresponding velocity components. The nominal model-based transition matrix is given by 
+
+F MB =
+
+I3 dt I 3
+
+0 I3
+
+
+
+, (22) and the observations are position-only measurements, 
+
+H = I3 0 . (23) In the CV motion model, the position update is kinematic and governed by known physics, whereas the constant velocity assumption in the velocity dynamics is often violated in prac-tice due to unmodeled forces and disturbances. Hence, rather than learning a fully data-driven transition model, we restrict learning to a structured correction of the velocity dynamics. Accordingly, the corrected transition matrix is computed as 
+
+Fk =
+
+I3 dt I 3
+
+0 (1 − λ)I3 + λ∆F ML 
+
+> k
+
+
+
+, (24) where λ ∈ [0 , 1] is an interpolation parameter that blends the nominal CV dynamics with the learned correction. Specifi-cally, λ = 0 uses only the nominal model while λ = 1 fully adopts the learned transition. Depending on the availability of training data, the structure of ∆F ML  
+
+> k
+
+can be further constrained. Under limited data, learning is restricted to diagonal velocity scaling, 
+
+∆F ML  
+
+> k
+
+= diag( δk,x , δ k,y , δ k,z ), (25) where δk’s are learned scalar correction factors applied to each velocity component. With sufficient data, however, full velocity coupling is permitted (i.e. entire R3×3 matrix). While Qk in the CV model admits a closed-form parametric structure derived from a continuous-time white Gaussian ac-celeration disturbance model, such structure may no longer hold under model mismatch and unmodeled disturbances. Hence, to allow greater flexibility, the learned covariance 
+
+QML  
+
+> k
+
+is parameterized using the Cholesky LDL composition described in Section III-E. −40 −20 0 20 40 60 80 100 120 
+
+> X (m)
+> −180
+> −160
+> −140
+> −120
+> −100
+> −80
+> −60
+> −40
+> −20
+> Y (m)
+> −120
+> −100
+> −80
+> −60
+> −40
+> −20
+> 0
+> 20
+> 40
+> Z (m)
+> AirSim Trajectories
+> Hexacopter
+> Flamewheel
+
+(a) −2000   
+
+> −1000
+> 0
+> 1000
+> 2000
+> X (mm) −2000
+> −1000
+> 0
+> 1000
+> 2000
+> Y (mm)
+> 0
+> 1000
+> 2000
+> 3000
+> 4000
+> Z (mm)
+> DJAIT Trajectories
+> Drone1
+> Drone2
+> Drone3
+
+(b) 
+
+Fig. 3. Example trajectories used in the experiment. (a) Synthetic trajectories generated in AirSim for two quadrotor platforms. (b) Real-world trajectories from the DPJAIT dataset for three quadrotor platforms. 
+
+B. Datasets 
+
+We evaluate HAKF on both real-world flight data and high-fidelity simulation data. Example trajectories from both datasets are shown in Fig. 3. For real-world evaluation, we use the multimodal dataset indoor 3D drone tracking (DPJAIT) dataset [8], which provides ground-truth 3D trajectories from three different quadrotor platforms. For each recorded flight sequence, multiple reflective markers are attached to the drone body. In this work, the drone position is defined as the centroid of the tracked markers. The sampling interval is given by 
+
+dt = 1 /f s, where fs = 100 Hz [8]. In addition to real-world data, synthetic flight trajectories are generated using the Microsoft AirSim simulator for two quadrotor platforms, Flamewheel and Hexacopter. This allows evaluation in a large-data regime, allowing comparison with purely machine learning methods that typically rely on abun-dant training data. To sufficiently excite the system dynamics for model classification, trajectories are generated by continu-ously rotating the commanded horizontal velocity vector while modulating the yaw rate. This results in circular and gradually tightening horizontal motion patterns with oscillatory heading dynamics. These trajectories introduce non-constant velocity behavior, allowing the resulting motion patterns to exhibit dis-tinct velocity dynamics versus simple waypoint-based motion. To construct position-only observations for filtering, noisy measurements are generated by injecting zero-mean white Gaussian noise into the ground-truth position trajectories, 
+
+zk = pk + vk, vk ∼ N (0 , R k), (26) where Rk is assumed to be known. Although the filter operates on position measurements, velocity ground truth is also re-quired to evaluate full-state estimation accuracy performance, as described in Section IV-C1. Accordingly, velocity is com-puted from the position trajectory using finite differences. 
+
+C. Evaluation Metrics and Baseline Methods Comparison 
+
+The performance of the proposed HAKF is evaluated in terms of both state estimation and model classification. 1) Estimation: Estimation accuracy is measured using the root mean square error (RMSE) between the estimated state 
+
+ˆxk and the ground-truth state xk,
+
+RMSE = 
+
+vuut 1
+
+T
+
+> T
+
+X
+
+> k=1
+
+∥ˆxk − xk∥22. (27) To evaluate filter consistency, we compute the NEES and NIS statistics defined in (7)–(8). Consistency is assessed using a 
+
+χ2 hypothesis test with significance level 0.05 . Specifically, we compute the proportion of NEES and NIS values that fall within the corresponding confidence interval and compare it with the ideal target coverage of 95% .We compare the proposed HAKF with two baseline ap-proaches. The first baseline is a classical CV KF with fixed transition matrix F and manually tuned process noise co-variance Q, representing the standard model-based filtering approach commonly used for drone tracking. The second baseline is a purely learning-based model implemented using a recurrent neural network (RNN) [34] that directly estimates the system state from a window of recent measurements and is trained using ground-truth state supervision using (27). The RNN processes a fixed-length window of measurement incre-ments and outputs the corresponding state estimate. Unlike KF methods, the RNN baseline produces only point estimates and does not provide a state covariance, and therefore statistical consistency metrics are not evaluated for this model. 
+
+2) Classification: Model classification performance is eval-uated using trajectory-level accuracy. For each test trajectory the predicted label is produced once after processing the full sequence and is compared to the ground-truth label. The test set is approximately balanced across classes. We compare the HAKF classification method based on GBI framework with three baseline approaches. The first baseline is a Random Forest [35] classifier that predicts the drone model directly from features extract from the measurement sequence. These features include summary statistics of the observed motion such as velocity and acceleration estimates derived from the measurements. The second baseline augments the Random Forest with filtering-based features. In this approach, a classical CV KF is first applied to the measurement sequence and statistical quantities derived from the estimated filter states are used as input features for the Random Forest. This baseline evaluates whether incorporating filtering-based features alone can im-prove classification performance. The third baseline is a purely learning-based model imple-mented using a RNN that processes the measurement sequence and outputs the predicted drone model. The network is trained using a cross-entropy loss function with the Adam optimizer. 
+
+D. Hyperparameter Tuning 
+
+To ensure fair comparison across methods, hyperparameters for all learning-based models were selected using grid search on validation datasets. For the RNN and the MLP component of HAKF, we varied the hidden dimension and number of layers. For the Random Forest classifiers, the number of trees and maximum tree depth were tuned. V. R ESULTS 
+
+A. Estimation Performance 
+
+Table II reports the average state estimation accuracy and statistical consistency on test trajectories from both the DP-JAIT real-world dataset and the AirSim simulation dataset, averaged over 20 Monte Carlo runs. We compare the pro-posed HAKF against the baseline methods described in Sec-tion IV-C1. Starting with the DPJAIT dataset, the classical KF exhibits poor statistical consistency. In particular, the NEES value (60.12%) is significantly below the ideal target of 95%, indicating that fixed noise covariances cannot adequately ac-count for time-varying model mismatch present in real flight dynamics. Although the NIS value is closer to the target, this is largely due to the assumption that Rk is known. In contrast, the proposed HAKF substantially improves both estimation accuracy and statistical consistency. All HAKF variants achieve significantly lower RMSE compared to the baseline KF. Among the tested configurations, learning both the transition correction and process noise covariance with the NLL loss (∆ F, Q )∗ achieves the best overall performance, re-ducing RMSE to 206 .32 while also achieving the lowest NLL. Importantly, this configuration achieves estimation accuracy comparable to the model trained using RMSE loss, despite not requiring ground-truth state supervision during training. To further evaluate performance when large training datasets are available, we consider the AirSim dataset containing approximately 10 5 training samples per drone. In this setting, the purely learning-based RNN model improves substantially compared to its performance on the DPJAIT dataset, achieving an RMSE of 88 .39 . This confirms that deep learning methods can outperform the classical KF baseline when sufficient training data are available. However, the proposed HAKF still achieves the best overall performance. The same trend observed in the DPJAIT dataset persists, where the configuration learning both (∆ F, Q )∗ provides strong statistical consistency (NEES 89 .88% , NIS 94 .03% )while maintaining RMSE performance comparable to the variant trained using RMSE loss. Furthermore, unlike RNN models which only provide point estimates, the HAKF pro-duces full probabilistic state estimates, enabling uncertainty quantification and statistical consistency evaluation. 
+
+B. Classification Performance 
+
+Fig. 4 compares model classification accuracy across both simulated and real-world datasets. We compare HAKF’s GBI classification detailed in Section III-D with the baseline meth-ods described in Section IV-C2. We first analyze the AirSim dataset, where the number of training samples is systematically varied to study performance under different data regimes. In the low-data regime (fewer than 10 4 training samples), HAKF consistently achieves higher classification accuracy than the purely learning-based RNN model as well as the Random Forest baselines. This validates the advantage of incorporating model-based structure together with probabilistic inference through GBI when training data are limited in the classification setting. TABLE II AVERAGE TRACKING ACCURACY AND STATISTICAL CONSISTENCY ON UNSEEN DRONE TRAJECTORIES FROM THE DPJAIT AND AIR SIM DATASETS , 
+
+> AVERAGED OVER
+
+MONTE CARLO RUNS . T RAINING SAMPLE COUNTS CORRESPOND TO THE NUMBER OF POINTS USED TO TRAIN THE MODEL .
+
+DPJAIT (Train: ≈5500 samples per drone) AirSim (Train: ≈100000 samples per drone) 
+
+Method RMSE Loss ↓ NLL Loss ↓ NEES (%) NIS (%) RMSE Loss ↓ NLL Loss ↓ NEES (%) NIS (%) KF (Fixed F, Q )‡ 311.44 12.71 60.12 92.67 160.54 14.24 66.12 91.92 HAKF Q (Q only) ∗ 210.59 12.07 83.22 92.27 95.03 9.73 81.68 93.48 HAKF ( ∆F, Q )∗ 206.39 11.98 86.32 93.56 83.07 9.59 89.88 94.03 
+
+HAKF ( ∆F, Q )† 206.32 12.05 83.68 92.36 82.69 9.64 85.92 93.86 RNN (Pure ML) † 327.92 – – – 88.39 – – –Target – – 95 95 – – 95 95 
+
+∗ Trained with NLL loss defined in (15). † Trained with RMSE loss defined in (27). ‡ KF F is fixed while static Q is manually tuned. 1000 2000 3000 4000 5000 10000 20000 50000 100000  
+
+> Training Data Size (Average Number of Training Samples per Drone)
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Classification Accuracy (%)
+> Low-Data Regime High-Data Regime
+> Random Forest
+> Random Forest + KF
+> HAKF (Proposed)
+> RNN (Pure ML)
+
+(a) AirSim Test Dataset (2 Drones) Random Forest RF + KF HAKF (Proposed) RNN  
+
+> 40
+> 50
+> 60
+> 70
+> Classification Accuracy (%)
+
+(b) DPJAIT Test Dataset (3 Drones) 
+
+Fig. 4. Model classification accuracy across datasets. (a) AirSim simulated dataset showing performance as a function of average training samples per drone. (b) DPJAIT real-world dataset using approximately 5500 training samples per drone. 
+
+As the amount of training data increases, the performance of HAKF plateaus and converges with that of the Random Forest methods. However, the RNN model improves substantially and eventually surpasses the other approaches in the high-data regime. This behavior is expected since deep neural networks can learn highly expressive nonlinear dynamics di-rectly from data when sufficient training samples are available. In contrast, HAKF and Random Forest classifiers rely on structured features derived from filtering and measurement statistics, which introduce useful inductive bias in low-data settings but can limit representational capacity in the large-data regime. Despite this, the proposed HAKF maintains strong performance in the high-data regime, achieving approximately 
+
+84% classification accuracy. We next evaluate classification performance on the DPJAIT real-world dataset using approximately 5500 training samples per drone. The results show that HAKF achieves the highest classification accuracy among all tested methods. In contrast, the RNN model exhibits the lowest performance on this dataset, indicating that purely data-driven models struggle to generalize when training data are limited. VI. C ONCLUSION AND FUTURE WORK 
+
+This paper introduced a self-supervised HAKF framework that integrates model-based filtering with data-driven learning for both state estimation and classification. The proposed method augments a classical KF with a neural network that learns corrections to the system dynamics and process noise covariance using only measurement data. Within this frame-work, model classification is performed using GBI based on the innovation likelihood while maintaining the traditional filtering structure. Experimental results on both real-world (DPJAIT) and sim-ulated (AirSim) datasets demonstrate that the proposed frame-work improves estimation accuracy while achieving substan-tially better statistical consistency compared to classical KF. For classification, HAKF shows strong performance in low-data regimes where purely learning-based methods struggle while still remaining effective when larger training datasets are available. These results highlight the advantage of combining traditional model-based structure with data-driven adaptation across both low-data and high-data scenarios. Despite these advantages, the proposed framework has sev-eral limitations. The adaptive dynamics correction is structured and therefore cannot represent arbitrarily complex nonlinear dynamics. Moreover, the current formulation still relies on standard KF assumptions such as white Gaussian noise. As a result, this method may fail when the incorporated inductive bias is fundamentally incorrect, and purely learning-based models may outperform when very large training datasets are available. Future work will explore extending the proposed framework to more expressive dynamical models and nonlin-ear filtering formulations in order to address the limitations and assumptions embedded in classical KF. REFERENCES [1] R. E. Kalman and R. S. Bucy, “New Results in Linear Filtering and Prediction Theory,” Journal of Basic Engineering ,vol. 83, no. 1, pp. 95–108, Mar. 1961. [Online]. Avail-able: https://asmedigitalcollection.asme.org/fluidsengineering/article/83/ 1/95/426820/New-Results-in-Linear-Filtering-and-Prediction [2] Y. Bar-Shalom, X. Li, and T. Kirubarajan, “Estimation with Applications to Tracking and Navigation: Theory, Algorithms and Software,” 2001. [Online]. Available: https://api.semanticscholar.org/CorpusID: 108666793 [3] D. Simon, Optimal State Estimation: Kalman, H Infinity, and Nonlinear Approaches , 1st ed. Wiley, May 2006. [Online]. Available: https://onlinelibrary.wiley.com/doi/book/10.1002/0470045345 [4] X.-B. Jin, R. J. Robert Jeremiah, T.-L. Su, Y.-T. Bai, and J.-L. Kong, “The New Trend of State Estimation: From Model-Driven to Hybrid-Driven Methods,” Sensors , vol. 21, no. 6, p. 2085, Mar. 2021. [Online]. Available: https://www.mdpi.com/1424-8220/21/6/2085 [5] R. Mehra, “Approaches to adaptive filtering,” IEEE Transactions on Automatic Control , vol. 17, no. 5, pp. 693–698, Oct. 1972. [Online]. Available: http://ieeexplore.ieee.org/document/1100100/ [6] L. Zhang, D. Sidoti, A. Bienkowski, K. R. Pattipati, Y. Bar-Shalom, and D. L. Kleinman, “On the Identification of Noise Covariances and Adaptive Kalman Filtering: A New Look at a 50 Year-Old Problem,” 
+
+IEEE Access , vol. 8, pp. 59 362–59 388, 2020. [Online]. Available: https://ieeexplore.ieee.org/document/9044358/ [7] J. Knoblauch, J. Jewson, and T. Damoulas, “Generalized Variational Inference: Three arguments for deriving new Posteriors,” arXiv: Machine Learning , 2019. [Online]. Available: https://api.semanticscholar.org/ CorpusID:212761273 [8] J. Rosner, T. Krzeszowski, A. ´ Swito´ nski, H. Josi´ nski, W. Lindenheim-Locher, M. Zieli´ nski, G. Paleta, M. Paszkuta, and K. Wojciechowski, “Multimodal dataset for indoor 3D drone tracking,” Scientific Data , vol. 12, no. 1, p. 257, Feb. 2025. [Online]. Available: https://www.nature.com/articles/s41597-025-04521-y [9] S. Shah, D. Dey, C. Lovett, and A. Kapoor, “AirSim: High-Fidelity Visual and Physical Simulation for Autonomous Vehicles,” in Field and Service Robotics , M. Hutter and R. Siegwart, Eds. Cham: Springer International Publishing, 2018, vol. 5, pp. 621–635, series Title: Springer Proceedings in Advanced Robotics. [Online]. Available: http://link.springer.com/10.1007/978-3-319-67361-5_40 [10] C. Hilborn and D. Lainiotis, “Optimal Estimation in the Presence of Unknown Parameters,” IEEE Transactions on Systems Science and Cybernetics , vol. 5, no. 1, pp. 38–43, 1969. [Online]. Available: http://ieeexplore.ieee.org/document/4082201/ [11] P. Matisko and V. Havlena, “Noise covariance estimation for Kalman filter tuning using Bayesian approach and Monte Carlo,” 
+
+International Journal of Adaptive Control and Signal Processing ,vol. 27, no. 11, pp. 957–973, Nov. 2013. [Online]. Available: https://onlinelibrary.wiley.com/doi/10.1002/acs.2369 [12] R. Mehra, “On the identification of variances and adaptive Kalman filtering,” IEEE Transactions on Automatic Control , vol. 15, no. 2, pp. 175–184, Apr. 1970. [Online]. Available: http://ieeexplore.ieee.org/ document/1099422/ [13] A. P. Dempster, N. M. Laird, and D. B. Rubin, “Maximum Likelihood from Incomplete Data Via the EM Algorithm,” Journal of the Royal Statistical Society Series B: Statistical Methodology ,vol. 39, no. 1, pp. 1–22, Sep. 1977. [Online]. Available: https: //academic.oup.com/jrsssb/article/39/1/1/7027539 [14] R. H. Shumway and D. S. Stoffer, “An Approach To Time Series Smoothing And Forecasting Using The Em Algorithm,” 
+
+Journal of Time Series Analysis , vol. 3, no. 4, pp. 253–264, Jul. 1982. [Online]. Available: https://onlinelibrary.wiley.com/doi/10.1111/j. 1467-9892.1982.tb00349.x [15] Z. Chen, C. Heckman, S. Julier, and N. Ahmed, “Weak in the NEES?: Auto-Tuning Kalman Filters with Bayesian Optimization,” in 
+
+2018 21st International Conference on Information Fusion (FUSION) .Cambridge: IEEE, Jul. 2018, pp. 1072–1079. [Online]. Available: https://ieeexplore.ieee.org/document/8454982/ [16] Z. Chen, H. Biggie, N. Ahmed, S. Julier, and C. Heckman, “Kalman Filter Auto-Tuning With Consistent and Robust Bayesian Optimization,” IEEE Transactions on Aerospace and Electronic Systems , vol. 60, no. 2, pp. 2236–2250, Apr. 2024. [Online]. Available: https://ieeexplore.ieee.org/document/10382621/ [17] N. Shaukat, A. Ali, M. Javed Iqbal, M. Moinuddin, and P. Otero, “Multi-Sensor Fusion for Underwater Vehicle Localization by Augmentation of RBF Neural Network and Error-State Kalman Filter,” Sensors ,vol. 21, no. 4, p. 1149, Feb. 2021. [Online]. Available: https: //www.mdpi.com/1424-8220/21/4/1149 [18] H.-N. Nguyen, J. Zhou, and H.-J. Kang, “A calibration method for enhancing robot accuracy through integration of an extended Kalman filter algorithm and an artificial neural network,” Neurocomputing ,vol. 151, pp. 996–1005, Mar. 2015. [Online]. Available: https: //linkinghub.elsevier.com/retrieve/pii/S0925231214013423 [19] M. Fraccaro, S. Kamronn, U. Paquet, and O. Winther, “A Disentangled Recognition and Nonlinear Dynamics Model for Unsupervised Learning,” Oct. 2017, arXiv:1710.05741 [stat]. [Online]. Available: http://arxiv.org/abs/1710.05741 [20] M. Karl, M. Soelch, J. Bayer, and P. v. d. Smagt, “Deep Variational Bayes Filters: Unsupervised Learning of State Space Models from Raw Data,” Mar. 2017, arXiv:1605.06432 [stat]. [Online]. Available: http://arxiv.org/abs/1605.06432 [21] R. G. Krishnan, U. Shalit, and D. Sontag, “Deep Kalman Filters,” Nov. 2015, arXiv:1511.05121 [stat]. [Online]. Available: http://arxiv.org/abs/ 1511.05121 [22] G. Revach, N. Shlezinger, X. Ni, A. L. Escoriza, R. J. G. v. Sloun, and Y. C. Eldar, “KalmanNet: Neural Network Aided Kalman Filtering for Partially Known Dynamics,” IEEE Transactions on Signal Processing ,vol. 70, pp. 1532–1547, 2022, arXiv:2107.10043 [eess]. [Online]. Available: http://arxiv.org/abs/2107.10043 [23] Y. Dahan, G. Revach, J. Dunik, and N. Shlezinger, “Bayesian KalmanNet: Quantifying Uncertainty in Deep Learning Augmented Kalman Filter,” IEEE Transactions on Signal Processing , vol. 73, pp. 2558–2573, 2025. [Online]. Available: https://ieeexplore.ieee.org/ document/11048390/ [24] M. Ko and A. Shafieezadeh, “Cholesky-KalmanNet: Model-Based Deep Learning With Positive Definite Error Covariance Structure,” 
+
+IEEE Signal Processing Letters , vol. 32, pp. 326–330, 2025. [Online]. Available: https://ieeexplore.ieee.org/document/10804573/ [25] H. Mortada, C. Falcon, Y. Kahil, M. Clavaud, and J.-P. Michel, “Recursive KalmanNet: Deep Learning-Augmented Kalman Filtering for State Estimation with Consistent Uncertainty Quantification,” Jun. 2025, arXiv:2506.11639 [eess]. [Online]. Available: http://arxiv.org/abs/ 2506.11639 [26] B. Chapnik, G. Desroziers, F. Rabier, and O. Talagrand, “Properties and first application of an error-statistics tuning method in variational assimilation,” Quarterly Journal of the Royal Meteorological Society ,vol. 130, no. 601, pp. 2253–2275, Jul. 2004. [Online]. Available: https://rmets.onlinelibrary.wiley.com/doi/10.1256/qj.03.26 [27] P. Tandeo, P. Ailliot, M. Bocquet, A. Carrassi, T. Miyoshi, M. Pulido, and Y. Zhen, “A Review of Innovation-Based Methods to Jointly Estimate Model and Observation Error Covariance Matrices in Ensemble Data Assimilation,” Monthly Weather Review , vol. 148, no. 10, pp. 3973–3994, Oct. 2020, arXiv:1807.11221 [stat]. [Online]. Available: http://arxiv.org/abs/1807.11221 [28] C. C. Holmes and S. G. Walker, “Assigning a value to a power likelihood in a general Bayesian model,” Biometrika , vol. 104, no. 2, pp. 497–503, Mar. 2017, _eprint: https://academic.oup.com/biomet/article-pdf/104/2/497/17239738/asx010.pdf. [Online]. Available: https://doi. org/10.1093/biomet/asx010 [29] P.-S. Wu and R. Martin, “A comparison of learning rate selection methods in generalized Bayesian inference,” Bayesian Analysis , vol. 18, no. 1, Mar. 2023, arXiv:2012.11349 [stat]. [Online]. Available: http://arxiv.org/abs/2012.11349 [30] R. S. Bucy and P. D. Joseph, Filtering for stochastic processes with applications to guidance , 2nd ed. Providence, R.I: AMS Chelsea Pub, 2005. [31] J. C. Pinheiro and D. M. Bates, “Unconstrained parametrizations for variance-covariance matrices,” Statistics and Computing , vol. 6, no. 3, pp. 289–296, Sep. 1996. [Online]. Available: http://link.springer.com/ 10.1007/BF00140873 [32] I. Greenberg, N. Yannay, and S. Mannor, “Optimization or Architecture: How to Hack Kalman Filtering,” Oct. 2023, arXiv:2310.00675 [cs]. [Online]. Available: http://arxiv.org/abs/2310.00675 [33] D. P. Kingma and J. Ba, “Adam: A Method for Stochastic Optimization,” Jan. 2017, arXiv:1412.6980 [cs]. [Online]. Available: http://arxiv.org/abs/1412.6980 [34] I. Goodfellow, Y. Bengio, and A. Courville, Deep learning , ser. Adaptive computation and machine learning. Cambridge, Mass: The MIT press, 2016. [35] L. Breiman, “Random Forests,” Machine Learning , vol. 45, no. 1, pp. 5– 32, Oct. 2001. [Online]. Available: https://link.springer.com/10.1023/A: 1010933404324

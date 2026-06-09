@@ -1,0 +1,132 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-09T00:02:33.224634+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.02335v1",
+      "source": "arxiv",
+      "title": "Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks",
+      "abstract": "The Neural Spectral Element Method (NSEM) evaluates each network only at fixed Legendre-Gauss-Lobatto quadrature nodes and replaces all derivative calls with precomputed spectral differentiation matrices. The resulting deterministic loss enables limited-memory BFGS (L-BFGS) to reach residuals of 10^-9 to 10^-10. A Kosloff-Tal-Ezer coordinate map resolves electrochemical boundary layers, while a mesh-free neural mortar framework couples multi-element domains. On the four-example Poisson-Nernst-Planck (PNP) benchmark of Huang and co-workers, NSEM attains 10^-4 to 10^-7 relative pointwise error with two orders of magnitude fewer collocation points than the adaptive-resampling PINN baseline. Both a tanh multilayer perceptron (MLP) and a basis-aligned Legendre Kolmogorov-Arnold Network (KAN) backbone attain spectral accuracy within the same NSEM infrastructure, with the KAN requiring roughly half the Adam steps to enter the L-BFGS basin of attraction on the 1D PNP benchmark.",
+      "authors": [
+        "Conrard Giresse Tetsassi Feugmo",
+        "David Pankaczy"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "math-ph",
+        "physics.app-ph",
+        "physics.comp-ph"
+      ],
+      "published": "2026-06-01T14:44:48+00:00",
+      "link": "https://arxiv.org/pdf/2606.02335v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Solves electrochemical transport PDEs crucial for physics-based battery models; methodology applicable to SOC estimation",
+      "llm_evidence_cn": "求解电化学输运PDE，对物理电池模型至关重要；方法学可用于SOC估计",
+      "llm_evidence": "求解电化学输运PDE，对物理电池模型至关重要；方法学可用于SOC估计",
+      "canonical_evidence": "求解电化学输运PDE，对物理电池模型至关重要；方法学可用于SOC估计",
+      "llm_tldr_en": "Introduces Neural Spectral Element Method for electrochemical transport PDEs, achieving high accuracy with fewer points, applicable to battery modeling for SOC estimation.",
+      "llm_tldr_cn": "提出神经谱元方法用于求解电化学输运方程组，包括Poisson-Nernst-Planck方程，通过固定节点和谱微分矩阵实现确定性损失，结合坐标映射处理边界层，在基准测试中相比PINN方法精度更高且所需配点少两个数量级，为基于物理的锂电池建模提供了高效求解工具，可间接用于提升荷电状态估计精度。",
+      "llm_tldr": "提出神经谱元方法用于求解电化学输运方程组，包括Poisson-Nernst-Planck方程，通过固定节点和谱微分矩阵实现确定性损失，结合坐标映射处理边界层，在基准测试中相比PINN方法精度更高且所需配点少两个数量级，为基于物理的锂电池建模提供了高效求解工具，可间接用于提升荷电状态估计精度。",
+      "llm_tags": [
+        "query:lfp-soc:composite"
+      ],
+      "matched_query_tag": "query:lfp-soc:composite",
+      "matched_query_text": "Papers central to 请帮我找关于锂离子电池荷电状态估计的文章，最好是关于高倍率放电，磷酸铁锂电池, especially work that connects or combines: state of charge estimation for lithium ion batteries; lithium iron phosphate battery state of charge estimation; high-rate discharge conditions for battery state of charge; battery management system state of charge estimation; equivalent circuit model for SOC estimation; adaptive Kalman filter for SOC estimation; Find papers on state of charge estimation for lithium iron phosphate batteries under high rate discharge conditions; I need articles about state of charge estimation techniques considering high rate cycling of LiFePO4 batteries; Retrieve research on battery state of charge estimation during fast discharge of lithium ion batteries; Look for studies on the effect of high discharge rates on state of charge accuracy for LFP batteries.",
+      "matched_requirement_id": "req-composite-lfp-soc",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.02767v1",
+      "source": "arxiv",
+      "title": "Hybrid Adaptive Kalman Filtering for Data-Efficient Joint Tracking and Classification",
+      "abstract": "Kalman filtering performance is highly sensitive to model mismatch and noise covariance tuning. Learning-based approaches address these limitations but typically rely on supervised training with large datasets and do not produce consistent uncertainty estimates. In this paper, we propose a self-supervised Hybrid Adaptive Kalman Filter that learns structured corrections to system dynamics and process noise covariance from measurements alone while preserving the probabilistic structure of the filter. This allows the innovation likelihood to be computed and subsequently used for model classification via generalized Bayesian inference. Experimental results on real-world and simulated datasets demonstrate improved estimation accuracy and statistical consistency as well as robust classification performance across both low-data and large-data scenarios.",
+      "authors": [
+        "Jiho Lee",
+        "Nisar R. Ahmed",
+        "Rebecca Russell"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "cs.LG"
+      ],
+      "published": "2026-06-01T18:30:59+00:00",
+      "link": "https://arxiv.org/pdf/2606.02767v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Proposes a self-supervised Hybrid Adaptive Kalman Filter that learns corrections to system dynamics and process noise covariance, applicable to SOC estimation",
+      "llm_evidence_cn": "提出一种自监督混合自适应卡尔曼滤波器，可学习系统动力学和过程噪声协方差的校正，适用于SOC估计",
+      "llm_evidence": "提出一种自监督混合自适应卡尔曼滤波器，可学习系统动力学和过程噪声协方差的校正，适用于SOC估计",
+      "canonical_evidence": "提出一种自监督混合自适应卡尔曼滤波器，可学习系统动力学和过程噪声协方差的校正，适用于SOC估计",
+      "llm_tldr_en": "This paper presents a self-supervised Hybrid Adaptive Kalman Filter that learns corrections to dynamics and noise covariance from measurements, improving accuracy without large datasets. Its probabilistic structure and data efficiency make it a promising method for battery state of charge estimation where model mismatch is common.",
+      "llm_tldr_cn": "卡尔曼滤波在模型失配和噪声协方差调谐方面表现出敏感性，限制了其在荷电状态估计中的性能。本文提出一种自监督混合自适应卡尔曼滤波器，直接从测量数据中学习对系统动力学和过程噪声协方差的校正，同时保持滤波器的概率结构。实验表明，该方法在真实和模拟数据集上均提高了估计精度和统计一致性。该研究为数据高效的电池管理系统状态估计提供了潜在的新途径。",
+      "llm_tldr": "卡尔曼滤波在模型失配和噪声协方差调谐方面表现出敏感性，限制了其在荷电状态估计中的性能。本文提出一种自监督混合自适应卡尔曼滤波器，直接从测量数据中学习对系统动力学和过程噪声协方差的校正，同时保持滤波器的概率结构。实验表明，该方法在真实和模拟数据集上均提高了估计精度和统计一致性。该研究为数据高效的电池管理系统状态估计提供了潜在的新途径。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.02658v1",
+      "source": "arxiv",
+      "title": "Fixed-Time Dynamic Landing of Quadrotors using Adaptive Unscented Kalman Filtering and Nonlinear Model Predictive Control",
+      "abstract": "This paper introduces an estimation and control framework for dynamic landing of multi-rotor uncrewed aerial vehicles on moving platforms. The proposed method integrates nonlinear model predictive control with a real-time minimum-jerk trajectory planner that enforces a prescribed touchdown time, enabling consistent timing during the terminal descent. To enhance robustness in the presence of time-varying sensing quality, we utilize an adaptive unscented kalman filter that updates the process and measurement noise statistics online. In addition, we provide a reference feasibility analysis showing that minimum-jerk references induce bounded thrust and torque commands under standard tracking hypotheses. The proposed framework is evaluated in simulation and hardware experiments, and it is shown to achieve repeatable landings and improved platform velocity prediction accuracy relative to EKF/UKF-based methods.",
+      "authors": [
+        "Mohammadreza Izadi",
+        "Zeinab Shayan",
+        "Steven Waslander",
+        "Reza Faieghi"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-06-01T06:05:34+00:00",
+      "link": "https://arxiv.org/pdf/2606.02658v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "employs an adaptive unscented Kalman filter that updates noise statistics online",
+      "llm_evidence_cn": "采用在线更新噪声统计的自适应无迹卡尔曼滤波",
+      "llm_evidence": "采用在线更新噪声统计的自适应无迹卡尔曼滤波",
+      "canonical_evidence": "采用在线更新噪声统计的自适应无迹卡尔曼滤波",
+      "llm_tldr_en": "Proposes a landing framework integrating nonlinear MPC with an adaptive unscented Kalman filter that updates process and measurement noise statistics online; the adaptive state estimation method is transferable to battery SOC estimation under varying conditions.",
+      "llm_tldr_cn": "针对四旋翼飞行器在移动平台上的动态着陆，提出集成非线性模型预测控制与自适应无迹卡尔曼滤波的框架。该滤波在线更新过程和测量噪声统计，增强了对时变感知质量的鲁棒性。其自适应状态估计方法可迁移至电池荷电状态估计，尤其适用于高倍率放电等噪声特性变化场景，具有方法论借鉴意义。",
+      "llm_tldr": "针对四旋翼飞行器在移动平台上的动态着陆，提出集成非线性模型预测控制与自适应无迹卡尔曼滤波的框架。该滤波在线更新过程和测量噪声统计，增强了对时变感知质量的鲁棒性。其自适应状态估计方法可迁移至电池荷电状态估计，尤其适用于高倍率放电等噪声特性变化场景，具有方法论借鉴意义。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

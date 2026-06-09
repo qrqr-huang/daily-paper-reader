@@ -1,0 +1,895 @@
+Title: Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks
+
+URL Source: https://arxiv.org/pdf/2606.02335v1
+
+Published Time: Tue, 02 Jun 2026 03:13:46 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# NEURAL SPECTRAL ELEMENT METHODS FOR STIFF MULTIPHYSICS PDE S WITH ELECTROCHEMICAL TRANSPORT BENCHMARKS 
+
+A P REPRINT 
+
+Conrard Giresse Tetsassi Feugmo 1,2,∗
+
+> 1
+
+Department of Chemistry 
+
+> 2
+
+Department of Physics and Astronomy University of Waterloo 200 University Ave. West Waterloo, ON N2L 3G1, Canada 
+
+> ∗
+
+cgtetsas@uwaterloo.ca 
+
+David Pankaczy 2
+
+> 2
+
+Department of Physics and Astronomy University of Waterloo 200 University Ave. West Waterloo, ON N2L 3G1, Canada 
+
+# ABSTRACT 
+
+Physics-informed neural networks (PINNs) are limited by three interlocking bottlenecks, the PINN trilemma : Monte-Carlo collocation, serial automatic differentiation, and a resulting stochastic loss landscape that prevents quasi-Newton optimisation. These bottlenecks place an empirical O(10 −2)
+
+accuracy floor on stiff multiphysics problems such as electrochemical transport, well above the sub-percent precision required for quantitative parameter inference. In this paper we address that accuracy floor by replacing the random-collocation pipeline with a spectral one. We introduce the Neural Spectral Element Method (NSEM), which evaluates each network only at fixed Legendre–Gauss– Lobatto quadrature nodes and replaces all derivative calls with precomputed spectral differentiation matrices. The resulting deterministic loss enables limited-memory BFGS (L-BFGS) to reach residuals of 10 −9–10 −10 . A Kosloff–Tal-Ezer coordinate map resolves electrochemical boundary layers; a mesh-free neural mortar framework couples multi-element domains. On the four-example Poisson– Nernst–Planck (PNP) benchmark of Huang and co-workers, NSEM attains 10 −4–10 −7 relative pointwise error with two orders of magnitude fewer collocation points than the adaptive-resampling PINN baseline. Both a tanh multilayer perceptron (MLP) and a basis-aligned Legendre Kolmogorov– Arnold Network (KAN) backbone attain spectral accuracy within the same NSEM infrastructure, with the KAN requiring roughly half the Adam steps to enter the L-BFGS basin of attraction on the 1D PNP benchmark. 
+
+Keywords: neural spectral element methods; physics-informed neural networks; Poisson–Nernst–Planck; spectral collocation; Legendre–Gauss–Lobatto quadrature; mortar elements; Kolmogorov–Arnold networks; L-BFGS. 
+
+# 1 Introduction 
+
+Physics-informed neural networks (PINNs) embed the residual of a partial differential equation as a soft penalty in the training loss, requiring neither labelled data nor a computational mesh [ 1, 2 ]. Their flexibility has spurred applications across fluid mechanics, materials science, and electrochemistry, but three interlocking limitations — which we call the PINN trilemma — bound the accuracy that is practically achievable. First, PDE residuals are integrated by Monte-Carlo sampling over randomly re-drawn collocation points, which converges at the slow rate O(N −1/2) and injects high-frequency noise into the gradient even for smooth integrands, contributing to the stiff-PDE failure modes documented by Krishnapriyan et al. [ 3]. Second, spatial derivatives are evaluated by automatic differentiation through the network, at cost O(L) in evaluation time for a depth-L network and O(L2) for a full Laplacian, while serialising the computation graph in a way that underutilises batched linear-algebra hardware [ 4, 5]. Third, the stochastic gradient produced by random resampling corrupts the curvature information required by quasi-Newton optimisers such as the 
+
+> arXiv:2606.02335v1 [cond-mat.mtrl-sci] 1 Jun 2026
+
+Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+limited-memory BFGS method (L-BFGS), so practitioners are restricted to first-order methods that plateau several orders of magnitude above machine precision [6, 7]. We introduce the Neural Spectral Element Method (NSEM), which attacks all three legs of the trilemma simultaneously. The core substitution is to evaluate the network only at the N fixed LGL quadrature nodes and to replace all autodiff derivative calls by left-multiplication with the precomputed spectral matrices D(1) and D(2) = D(1) D(1) , assembled once before training at O(N 2) cost independent of network depth. The physics loss thereby becomes a deterministic function of the trainable parameters, enabling the four-phase training schedule of Sec. 3.6 to reach residuals below 
+
+10 −10 . Multi-element domains are handled by a mesh-free neural mortar framework (Sec. 3.4), and a Kosloff–Tal-Ezer coordinate map resolves thin electrochemical boundary layers with no extra node cost. We validate NSEM on a full four-example Poisson–Nernst–Planck (PNP) benchmark suite, spanning 1D and 3D steady problems and 1D and 2D time-dependent problems with manufactured analytic solutions and stiff coupling coefficients, and on three canonical convergence tests (Helmholtz, Allen–Cahn, convection–diffusion). We compare two interchangeable network backbones — a tanh-activated MLP and a Legendre-KAN [ 8] whose polynomial edge-functions are aligned with the LGL basis (Sec. 7) — and find that both achieve spectral accuracy with identical solver infrastructure. 
+
+# 2 Related work 
+
+Classical spectral elements. The classical spectral element method (SEM) achieves exponential convergence by representing each field on a polynomial basis supported at Gauss–Lobatto quadrature nodes and coupling elements through mortar projections [ 9, 10 ], and is the method of choice for smooth PDEs in computational fluid dynamics and seismology [11]. 
+
+Domain decomposition for PINNs. Several lines of work attack the multi-scale failure mode of PINNs through geometric decomposition. XPINN [ 12 ] assigns one network per non-overlapping subdomain and enforces value and flux continuity through interface losses. FBPINN [ 13 ] uses overlapping subdomains coupled by a partition of unity. Variational PINNs and their hp-refined descendants [ 14 , 15 ] recast the residual loss in weak form with piecewise polynomial test functions. These approaches reduce per-subdomain variance, but they retain Monte-Carlo sampling for the residual integral and automatic differentiation for derivatives; the trilemma still bites every subdomain. 
+
+Spectral-neural couplings. Three concurrent works pursue orthogonal-polynomial differentiation more aggressively. Du et al. [ 16 ] minimise a Parseval-norm loss in a spectral expansion but do not use physical-space collocation or multi-element geometry. Yu et al. [ 17 ] replace automatic differentiation by spectral multiplication in Fourier space but omit boundary-layer adaptation. Shukla et al. [ 18 ] couple a PINN correction to a classical Nektar++ SEM solver, keeping an external mesh and solver in the loop. 
+
+Residual reweighting and causal training. A second family of improvements modifies the loss aggregator rather than the geometry. PIRBN [ 19 ] introduces a residual-based attention weighting; causal training [ 20 ] imposes an explicit temporal weighting that respects the causal structure of time-dependent PDEs. Both methods close part of the accuracy gap but do not remove the Monte-Carlo quadrature or the autodiff derivative cost, so the L-BFGS-grade landscape is still out of reach. 
+
+Kolmogorov–Arnold networks. KANs [ 8 ] replace fixed activations by learnable univariate edge functions, originally parameterised as B-splines. Polynomial-edge variants [ 21 – 24 ] explore Legendre and Chebyshev bases; only the Legendre choice combined with LGL quadrature delivers the exact basis-alignment property we exploit in Sec. 7.1. 
+
+Positioning of NSEM. No prior method combines all five of the ingredients NSEM requires: (i) deterministic physical-space quadrature at Legendre–Gauss–Lobatto (LGL) nodes; (ii) precomputed spectral differentiation matrices; (iii) nonlinear coordinate stretching for boundary-layer resolution; (iv) a mesh-free multi-element mortar framework; and (v) L-BFGS polish to machine precision on a stiff coupled PDE system. The remainder of this paper develops these five ingredients and demonstrates that their combination eliminates the PINN trilemma on stiff multiphysics benchmarks. 2Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT ξ       
+
+> −1+1
+> wj=2
+> N(N−1) PN−1(ξj)2
+
+# (a) LGL quadrature grid     
+
+> N= 8 nodes on [ −1,1]; bar height ∝wj
+
+# (b) Spectral D-matrix D (1)         
+
+> row  i
+> column j
+> diagonal
+> Dii =−N(N−1) 4
+> off-diagonal
+> Dij =cicj
+> (−1) i+jξi−ξj
+> row sum = 0
+
+# (c) KTE boundary-layer clustering              
+
+> α=0
+> α=0 .85
+> λD
+> x(ξ;α) = a+b
+> 2+b−a
+> 2arcsin( αξ )arcsin α
+> clustering rate ∝1
+> √1−α2
+
+# (d) Multi-element mortar interface                 
+
+> Element A,α= 0 .85
+> KTE-stretched
+> Element B,α= 0
+> uniform
+> mortar
+> LC0=∥uRA−uLB∥2
+> LC1=∥u′RA−u′LB∥2
+
+Figure 1: Architecture of the NSEM framework. (a) The N Legendre–Gauss–Lobatto nodes on the reference element [−1, 1] with their quadrature weights wj drawn as bar heights; the network is evaluated only at these fixed nodes, making the loss in equation (1) deterministic. (b) The spectral first-derivative matrix D(1) assembled in barycentric form ( 25 ; equation (2)); D(2) = D(1) D(1) 
+
+replaces a full autodiff Laplacian by one dense general matrix–matrix multiplication (GEMM) per forward pass. (c) The Kosloff–Tal-Ezer map (equation (3)) deforms the uniform LGL distribution towards either boundary, controlled by a single learnable parameter 
+
+α; the larger α, the sharper the boundary-layer resolution. (d) Two non-conforming elements joined by an L2 Lagrange mortar projection. Value continuity is exact by construction; the diffusive flux is enforced by a C1 penalty (Sec. 3.4). 
+
+# 3 The Neural Spectral Element Method 
+
+3.1 LGL collocation grid 
+
+Fig. 1(a) illustrates the LGL nodal grid that underpins this section. A standard PINN approximates the spatial integral R 
+
+> Ω
+
+|R (x)|2 dx by a Monte-Carlo average over randomly re-drawn samples, which converges at the slow rate O(N −1/2)
+
+and introduces stochastic gradient noise that prevents convergence of second-order optimisers [ 1, 2]. Replacing this estimator by a Legendre–Gauss–Lobatto (LGL) quadrature rule yields a deterministic loss with exponential convergence for analytic integrands, the standard accuracy guarantee of spectral element methods [ 9 , 10 , 26 , 27 ]. On the reference interval [−1, 1] the LGL nodes consist of the two endpoints ξ0 = −1 and ξN −1 = +1 together with the N − 2 interior zeros of P ′ 
+
+> N−1
+
+, the derivative of the (N − 1) -th Legendre polynomial; we compute these zeros by Newton–Raphson iteration seeded from Chebyshev nodes. The associated quadrature weights are wj = 2  N (N − 1) PN −1(ξj )2 and define the discrete physics loss 
+
+LNSEM = 
+
+> N−1
+
+X
+
+> j=0
+
+wj R(ξj ) 2 ≈ ∥R∥ 2 
+
+> L2(Ω)
+
+. (1) Because the nodes {ξj } are fixed for the entire training run, the gradient ∇θ LNSEM has exactly zero estimator variance. The N -point LGL rule integrates any polynomial of degree ≤ 2N − 3 exactly, and the quadrature error decays as 
+
+|EN | ≤ C e −σN for analytic integrands [ 10 , 27 ]; at N = 32 the residual integration error is already at machine precision. 3Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+3.2 Spectral differentiation matrix 
+
+The structure of the precomputed D(1) matrix is sketched in Fig. 1(b). A standard PINN obtains derivatives by backpropagating through the network, which costs O(L) per evaluation for a network of depth L for a first derivative and O(L2) for a Laplacian, and serialises the computation graph in a way that underutilises modern GPU tensor cores. The NSEM forward pass replaces both autodiff calls by a single dense matrix–vector product. Evaluating the network only at the LGL nodes yields a vector u = [ˆ u(ξ0), . . . , ˆu(ξN −1)] ⊤; the spectral first-derivative matrix D(1) 
+
+then provides the discrete Lagrange derivative at every node by u(1) = D(1) u. We assemble D(1) in the barycentric form of Berrut and Trefethen [25], 
+
+D(1)  
+
+> ij
+
+= ci
+
+cj
+
+· (−1) i+j
+
+ξi − ξj
+
+(i̸ = j), D(1) 00 = − N (N − 1) 4 , D(1)    
+
+> N−1,N −1
+
+= + N (N − 1) 4 , D(1)  
+
+> ii
+
+= 0 (0 < i < N −1) ,
+
+(2) with endpoint corrections c0 = cN −1 = 2 and ci = 1 otherwise. The second-derivative operator is then D(2) =
+
+D(1) D(1) , computed once before training and stored as a constant tensor. The construction is the polynomial-collocation analogue of the discrete variable representation in chemical physics [ 28 , 29 ]: it is exact on the polynomial subspace of degree ≤ N − 1, and converges exponentially in N on analytic functions. This is the appropriate response to the recent defence of autodiff for PDE solving by Wang et al. [ 30 ]: their argument assumes finite-difference or random-sample discretisations whose own errors dominate; in NSEM the LGL inner product is polynomial-exact up to degree 2N − 3,so the spectral matrix is exact on the relevant subspace and adding autodiff on top would merely re-derive the same numbers at higher cost. A practical caveat is essential when the LGL grid is composed with a nonlinear coordinate map: the physical second-derivative matrix is D(2) phys = D(1) phys D(1) phys and not diag(1 /J 2) D(2) ref , because the Jacobian J(ξ) is itself ξ-dependent (see Sec. 3.3); applying the naive formula degrades the steady nonlinear Gouy–Chapman benchmark to a relative error of ∼ 6% , whereas the correct chain-rule product yields ∼ 0.15% .
+
+3.3 Kosloff–Tal-Ezer coordinate mapping 
+
+The KTE coordinate stretching used in this subsection is depicted in Fig. 1(c). LGL nodes cluster near each element boundary at rate O(N −2), which is insufficient for problems whose physical solution varies on a much shorter length scale — the Debye layer in electrochemistry, for instance, has thickness λD ∼ κ−1 ≪ N −2 in the non-dimensional cell. We resolve such boundary layers by composing the LGL grid with the analytic stretching of Kosloff and Tal-Ezer [ 31 ], 
+
+x(ξ; α) = a + b
+
+2 + b − a
+
+2arcsin( αξ )arcsin( α) , α ∈ [0 , 1) , (3) which sends ξ ∈ [−1, 1] to x ∈ [a, b ] and reduces to the linear affine map as α → 0 while concentrating nodes exponentially near x = a and x = b as α → 1. The Jacobian is J(ξ) = (b − a)/(2 arcsin α)α/ p1 − α2ξ2, and the physical first-derivative matrix is the row-scaling D(1) phys = diag(1 /J ) D(1) ref ; the physical quadrature weights become 
+
+wphys  
+
+> j
+
+= J(ξj ) wref  
+
+> j
+
+. All KTE rescalings are precomputed once and stored, so the stretching adds no per-step cost. We expose α as a learnable parameter when the optimal clustering is not known a priori, which is the usual case for non-self-similar boundary layers. Fig. 1(c) illustrates the effect on node placement. 
+
+3.4 Multi-element mortar interfaces 
+
+The two-element mortar configuration with C0 and C1 interface penalties is sketched in Fig. 1(d). A single KTE-mapped element resolves one boundary layer but not two disparate scales separated by a bulk region; for those cases we decompose the physical domain into K disjoint subdomains Ω(e) and assign each a private network whose outputs are LGL-collocated as in Sec. 3.1. Following the classical mortar method [ 32 , 33 ], continuity between non-conforming neighbouring elements is enforced weakly by L2 Lagrange projection between LGL traces. Because the mass matrix associated with LGL nodes is diagonal, the projection matrix between two-element traces reduces to a single sparse matrix–vector product per training step, with no additional storage or solve. We supplement this C0 value continuity with an explicit C1 flux-continuity penalty that compares the spectral derivative on the two sides of each interface, yielding a soft constraint on the diffusive flux which is essential for stiff transport problems with a thin space-charge layer at the joint. This non-conforming, disjoint-element design contrasts with the overlapping-window construction of FBPINNs [ 13 ] and the residual-continuity approach of XPINNs [ 12 ]: NSEM elements share no points, no partition-of-unity weights are needed, and global continuity is enforced by the mortar projection rather than by a smoothing window. 4Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+3.5 Loss assembly 
+
+The total training objective combines the deterministic PDE residual with boundary and interface penalties: 
+
+L =
+
+> K
+
+X
+
+> e=1
+
+  ew(e)⊤ R(e) ⊙ R(e) + λBC LBC + λC0 LC0 + λC1 LC1 , (4) where R(e) is the residual vector evaluated at the LGL nodes of element e, LBC collects Dirichlet, Neumann, and Robin (e.g., Butler–Volmer) boundary contributions, and LC0 , LC1 enforce value and flux continuity at element interfaces (Sec. 3.4). The per-element normalisation ew(e) = w(e)1⊤w(e) is mandatory when subdomains of very different physical size coexist; without it the raw LGL weights scale with the element length and the PDE loss is dominated by the largest element, so the network never resolves the thin layer. We observed this failure mode for the charged-wall problem with a domain-size ratio of 5000:1 between bulk and EDL elements — with raw weights, the bulk contribution exceeds the interface contribution by three orders of magnitude and L-BFGS stalls after one to two steps; the per-element normalisation restores convergence. The constant multipliers (λBC , λ C0 , λ C1 ) can be set manually, but for problems with heterogeneous loss scales we instead employ the balanced residual-decay-rate (BRDR) adaptive aggregator [ 34 ](Supplementary Sec. S1.5), which re-weights each loss component to equalise relative decay rates via an exponential moving average ( β = 0 .999 ), preventing any single term from dominating the optimisation. 
+
+3.6 Four-phase training schedule 
+
+Because L in equation (4) is evaluated at fixed quadrature nodes, both its value and its gradient are deterministic functions of the parameters θ, so the quasi-Newton history matrix required by L-BFGS is meaningful from step to step. We use a four-phase schedule. Phase 0 pre-trains each element network independently against the boundary data for 
+
+5000 Adam steps so that the physics-loss optimisation starts from a physically meaningful initialisation. Phase 1 runs 
+
+500 joint Adam steps at learning rate 10 −4 to set the coupled residual on the correct scale. Phase 2 then performs up to 
+
+2000 iterations of L-BFGS with strong Wolfe line search [ 35 , 36 ] on a single set of per-equation parameters; Phase 3 
+
+follows with up to 1000 joint L-BFGS steps that optimise all element parameters simultaneously, terminating when 
+
+L < 10 −10 or when the relative change stalls below 10 −14 |L| . In all our benchmarks Phases 2–3 contribute the final five to seven orders of magnitude of error reduction; for a stochastic-loss PINN these phases are unusable because the history matrix is corrupted by the per-step Monte-Carlo noise, which is the main mechanism by which the PINN trilemma identified in Sec. 1 compounds. 
+
+Algorithm 1 NSEM forward pass. All quantities outside the network call are precomputed once before training. 
+
+Require: LGL nodes {ξi}N −1 
+
+> i=0
+
+, normalised weights { ewi}, spectral matrices D(1) , D(2) = D(1) D(1) , network uθ , PDE residual functional N . 
+
+> 1:
+
+Evaluate the network at every LGL node: ui ← uθ (ξi), i = 0 , . . . , N − 1. 
+
+> 2:
+
+Compute the discrete derivatives by a single GEMM each: u(1) ← D(1) u and u(2) ← D(2) u. 
+
+> 3:
+
+Form the pointwise residual vector Ri ← N (ui, u (1)  
+
+> i
+
+, u (2)  
+
+> i
+
+; xi). 
+
+> 4:
+
+return L = ew⊤(R ⊙ R), a deterministic, noise-free evaluation of ∥R∥ 2 
+
+> L2
+
+.
+
+3.7 Network backbones 
+
+The forward pass, spectral derivative, KTE mapping, mortar interfaces and the four-phase training schedule are entirely agnostic to the network family that produces the LGL-node outputs. We report results for two interchangeable backbones plugged into the same NSEM machinery: a tanh-activated multilayer perceptron, which serves as the default and the comparator against the existing PINN literature, and a Legendre-Kolmogorov–Arnold network [ 8, 21 , 22 ] whose edge non-linearities are polynomial expansions in the Legendre basis — the same basis whose roots define the LGL nodes themselves. This basis alignment yields exact nodal–modal inner products and the synergy theorem proved in Supplementary Sec. S1.6; the empirical consequences are reported in Sec. 7. 
+
+# 4 Benchmark convergence 
+
+Before turning to the headline electrochemical validation, we verify the predicted spectral convergence of NSEM on three canonical PDEs of increasing stiffness. The first is the one-dimensional Helmholtz problem −u′′ + k2u = f
+
+at wavenumber k = 10 , manufactured against the analytic solution u(x) = sin( πx ); with a single uniform element 5Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Algorithm 2 Four-phase NSEM training. The deterministic loss assembled in Algorithm 1 makes Phases 2–3 exact. 
+
+Require: initial parameters θ0, pretrain budget n0 = 5000 , Adam budget n1 = 500 , L-BFGS budgets n2 = 2000 ,
+
+n3 = 1000 , η = 10 −4, tolerance tol = 10 −10 . 
+
+> 1:
+
+Phase 0 (per-variable pretrain):  
+
+> 2:
+
+for each element network e do  
+
+> 3:
+
+run n0 Adam steps fitting u(e) 
+
+> θ
+
+to boundary/IC data only  
+
+> 4:
+
+end for  
+
+> 5:
+
+Phase 1 (Adam — joint physics descent):  
+
+> 6:
+
+for k = 1 , . . . , n 1 do  
+
+> 7:
+
+compute full Lk via Algorithm 1; update θ 
+
+> 8:
+
+end for  
+
+> 9:
+
+Phase 2 (L-BFGS — per-equation polish):  
+
+> 10:
+
+for k = 1 , . . . , n 2 do  
+
+> 11:
+
+accept strong-Wolfe step; stop if Lk < tol or |∆L| < 10 −14 |L k| 
+
+> 12:
+
+end for  
+
+> 13:
+
+Phase 3 (joint L-BFGS — final polish):  
+
+> 14:
+
+for k = 1 , . . . , n 3 do  
+
+> 15:
+
+same stopping criterion as Phase 2, all parameters updated jointly  
+
+> 16:
+
+end for  
+
+> 17:
+
+return θ.                               
+
+> Figure 2: Spectral convergence of NSEM on three canonical benchmarks as the number of LGL nodes per element Nis increased.
+> Upper row: Helmholtz problem ( −u′′ +k2u=f,k= 10 ). Middle row: Steady Allen–Cahn equation ( ε2u′′ −(u3−u) = 0 ,
+> ε2= 10 −2). Lower row: Stiff convection–diffusion equation ( −εu ′′ +u′= 0 ,ε= 10 −2, KTE map α= 0 .85 ). Left column: maximum pointwise error and relative L2error on a semi-log axis; right column: log-linear view with exponential fit, confirming
+> |EN| ≤ C e −σN decay. See Supplementary Sec. S2 for per-problem definitions and solution snapshots.
+
+(α = 0 ) and N = 32 LGL nodes the trainer reaches a pointwise maximum error of 4.1×10 −5 (upper panel of Fig. 2; see Supplementary Sec. S4 for the sweep). The second is the steady Allen–Cahn equation ε2u′′ − (u3 − u) = 0 at 
+
+ε2 = 10 −2, whose hyperbolic-tangent interior layer of width O(ε) is resolved by a single KTE-mapped element with 
+
+N = 48 nodes, yielding a peak pointwise error of 1.1×10 −2 at the centre of the layer (middle panel of Fig. 2). The third is a linear convection–diffusion problem −εu ′′ + u′ = 0 with ε = 10 −2, whose O(ε) boundary layer at the inflow boundary requires the coordinate stretching of Sec. 3.3; with N = 32 and α = 0 .85 the peak error is 5.4×10 −3 (lower panel of Fig. 2). On all three problems the error follows the |EN | ≤ C e −σN scaling predicted by classical spectral theory [ 10 , 27 ] and the recent rigorous PINN-error estimates of [ 6, 37 ]; an equivalent collocation-PINN baseline (random sampling, autodiff Laplacian, matched parameter budget) saturates two to three orders of magnitude higher at the same node count, in agreement with the spectral-bias mechanism characterised by Rahaman et al. [ 5] and the stiff-PDE failure modes catalogued by [3]. The boundary-layer test makes the role of the KTE map explicit: without coordinate stretching the standard LGL clustering rate of O(N −2) near each endpoint is too coarse to capture a layer of physical thickness ε = 10 −2, and the trainer converges instead to the algebraic mean of the inner and outer solutions. At α = 0 .85 the same N = 32 
+
+nodes recover the correct profile (Fig. 3); in the same wall-clock budget a uniform grid would need N ≳ 200 to 6Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT                          
+
+> Figure 3: Stiff convection–diffusion benchmark −εu ′′ +u′= 0 with ε= 10 −2, solved with a single KTE-mapped element (N= 32 ,α= 0 .85 ). Left: NSEM solution (markers) overlaid on the exact boundary-layer profile (solid). Centre: pointwise error
+> |uNSEM −uexact |, peaking at 5.4×10 −3in the centre of the layer. Right: training-loss convergence with the Adam-to-L-BFGS handover marked. Without the KTE map ( α= 0 ) at the same Nthe trainer saturates at O(1) error (see Sec. 6.2).
+
+reach an equivalent error [ 31 ]. Quantitatively the effective Péclet number that NSEM can resolve at fixed N scales as 
+
+O(N/ √1 − α2), consistent with the spectral-matrix conditioning at the element endpoints. 
+
+# 5 Electrochemical validation: Poisson–Nernst–Planck 
+
+5.1 The PNP system 
+
+The Poisson–Nernst–Planck system describes the coupled diffusion, electromigration and electrostatic interaction of charged species in an electrolyte and underpins models of batteries, fuel cells, electroosmotic flows, and biological ion channels [ 38 –40 ]. Let c+(x, t ) and c−(x, t ) denote the local number densities of a binary 1:1 salt and φ(x, t ) the electric potential. The non-dimensional system is 
+
+∂tc± = ∇· ∇c± ± c±∇φ, ∇2φ = 12 λ2
+
+> D
+
+(c− − c+), (5) with λD the dimensionless Debye length. Boundary conditions may be Dirichlet (specified concentration or potential), no-flux (blocking electrode) or nonlinear Robin (Butler–Volmer kinetics); all are accommodated by the NSEM loss assembly of Sec. 3.5. Equation (5) couples nonlinearly through the drift term c±∇φ, which introduces stiff space-charge layers of width λD at every electrode—precisely the regime in which the KTE map of Sec. 3.3 pays off. We validate NSEM on a suite of four stiff PNP problems with manufactured analytic solutions — a 1D steady, a 1D time-dependent, a 2D time-dependent and a 3D steady configuration — whose specifications follow the benchmark introduced in Huang et al. [ 41 ]. Full non-dimensional derivations and per-problem boundary conditions are collected in Section S2 of the Supplementary Information. 
+
+5.2 Gouy–Chapman linear and nonlinear 
+
+We begin with the static limit, which provides the cleanest test of the NSEM machinery on a stiff coupled electrochemical problem. At equilibrium with a binary 1:1 salt at the Debye–Hückel limit the PNP system in equation (5) reduces to the linear Poisson–Boltzmann (Gouy–Chapman) equation ψ′′ = κ2ψ on [0 , L ] with ψ(0) = ψ0 and ψ(L) → 0, whose exact solution is the exponential decay ψ∗(x) = ψ0 e−κx . Beyond the Debye–Hückel limit ( |ψ0| ≳ 1 in kB T /e units) the full nonlinear form ψ′′ = κ2 sinh ψ applies, with analytic Gouy–Chapman solution ψ∗(x) = 4 arctanh  tanh( ψ0/4) e−κx .Both versions are solved on [0 , 8] with κ = 3 using two elements: a KTE-stretched element ( α = 0 .85 , N = 32 )resolving the diffuse layer of thickness λD = 1 /κ , and a uniform element ( α = 0 , N = 32 ) in the bulk, coupled by 
+
+C0 and C1 mortar constraints. After the four-phase training schedule, both runs reach peak relative errors of order 
+
+10 −3–10 −2 against the analytic profiles. The nonlinear problem requires the BRDR adaptive aggregator (Sec. 3.5): the residual scale changes by two orders of magnitude across the wall transition, and with uniform weights the bulk residual dominates so the wall potential ψ(0) converges to the wrong asymptote. Full per-field solution panels, pointwise errors, and training-convergence traces for both linear and nonlinear cases are collected in Supplementary ?? to keep the main paper focused on the more demanding multi-scale geometries that follow. 7Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+5.3 Electric double layer and charged wall 
+
+We next address two multi-scale electrochemical geometries that exercise the per-element loss normalisation of Sec. 3.5. Both reduce, at equilibrium, to the steady-state Poisson–Boltzmann form of equation (5), 
+
+φ′′ (x) = 12 λ2
+
+> D
+
+ eφ(x) − e−φ(x) = 1
+
+λ2
+
+> D
+
+sinh φ(x), x ∈ [0 , L ], (6) with concentrations recovered through the Boltzmann distribution c∗±(x) = c∞ e∓φ(x). The first geometry (EDL at a neutral surface) imposes φ(0) = φ0 and φ(L) → 0 with L ≫ λD ; the linearised solution is φ∗(x) = φ0 e−x/λ D
+
+and the full nonlinear Gouy–Chapman solution is φ∗(x) = 4 arctanh  tanh( φ0/4) e−x/λ D
+
+. The second geometry — the charged-wall problem — replaces the Dirichlet condition at x = 0 with a fixed-charge Neumann condition 
+
+φ′(0) = −σ/ε and uses a 5000:1 domain-size ratio between the wall element and the bulk element. This extreme ratio was the test case that exposed the loss-weight pathology discussed in Sec. 3.5: with raw LGL weights the bulk residual exceeds the wall residual by three orders of magnitude and the trainer stalls within one to two L-BFGS steps; with per-element normalisation ew(e) = w(e)/(1⊤w(e)) the relative scale is preserved and the trainer converges to O(10 −4)
+
+peak error. Fig. 4 shows both fields, the analytic Boltzmann reference, and the training-convergence trace for each case. These geometries are the direct precursors to the time-dependent battery transport models we discuss in Sec. 8. 
+
+5.4 1D steady PNP 
+
+The 1D steady benchmark is a steady coupled Poisson–Nernst–Planck system on [−3, 3] with deliberately stiff linear coefficients ( 3000 and 1000 ) chosen to stress the residual balance: c′′  
+
+> p
+
+= −π2(cn + φ), 3000 c′′  
+
+> n
+
++ 100( c′
+
+> n
+
+c′ 
+
+> p
+
++ cnc′′  
+
+> p
+
+) + 
+
+fv (x) = 0 , 1000 φ′′ +50( φ′c′ 
+
+> p
+
++φc ′′  
+
+> p
+
+)+ fw(x) = 0 , admitting the manufactured exact solution cp = sin( πx )+cos( πx ),
+
+cn = sin( πx ), φ = cos( πx ). We decompose [−3, 3] into six unit-width elements and assign each N = 16 LGL nodes, giving 96 collocation points in total — substantially fewer than the adaptive resampling used in prior PINN treatments of the same problem, and arranged on a static grid that keeps the loss deterministic. After Phase 1 Adam (5000 steps) and Phase 2 L-BFGS, the total residual loss reaches 9.3×10 −9 in 2700 L-BFGS iterations; the resulting maximum pointwise errors across the 96-node solution are |cp|max = 4 .5×10 −4, |cn|max = 2 .8×10 −5 and |φ|max = 2 .2×10 −5,all dominated by the stiff-coupling residual in the central element. Fig. 5 (a) overlays the NSEM and analytic solutions for the three fields; the deviation is invisible at plot scale. Panel (b) shows the loss landscape: a clean monotonic bowl in the two leading PCA directions, in contrast to the rugged landscape produced by random-sampling PINNs on the same problem [3, 42]. 
+
+5.5 3D steady PNP (K +/Cl –)
+
+The 3D steady benchmark is the three-dimensional analogue of the Goldman–Hodgkin–Katz problem on a 200 nm 
+
+cubic domain Ω = [ −100 , 100] 3 nm 3, with K + and Cl − as the binary salt. The governing system is the steady limit of equation (5), 
+
+∇· ∇c± ± c±∇φ = f src  
+
+> ±
+
+(x), ∇2φ = 12 λ2
+
+> D
+
+(c− − c+) + f src  
+
+> φ
+
+(x), (7) with Dirichlet boundary conditions specifying the bulk concentration and electrode potential, and manufactured-solution source terms f src 
+
+> ±,φ
+
+(x) chosen so that c∗ 
+
+> K+
+
+(x) = sin( πx ) sin( πy ) sin( πz ), c∗ 
+
+> Cl −
+
+(x) = cos( πx ) cos( πy ) cos( πz ) and 
+
+φ∗(x) is a smooth analytic profile of magnitude ∼ 10 −25 that closes the Poisson equation exactly. We discretise the cube with a single tensor-product element using Nx = Ny = Nz = 8 LGL nodes, giving 512 collocation points in total — two orders of magnitude fewer than the ∼ 10 4-point random sampling used for the same case. Three independent networks supply cK+ , cCl − and φ at every LGL node; the three-dimensional spectral derivatives are computed by a single Kronecker GEMM per axis (see Algorithm 1 extended trivially to 3D via tensor-product structure). After the same Adam +L-BFGS schedule the final pointwise maxima are |cK+ |max = 1 .6×10 −7, |cCl − |max = 1 .7×10 −7
+
+and |φ|max = 3 .5×10 −30 in absolute units. The manufactured reference solutions have peak magnitudes |c∗ 
+
+> K+
+
+| ∼ |c∗ 
+
+> Cl −
+
+| ∼ 10 −3 and |φ∗| ∼ 10 −25 , giving relative L∞ errors of ∼ 10 −4 for both ionic species and ∼ 10 −5 for φ — the three fields are resolved to comparable relative accuracy. The small absolute φ error reflects the manufactured analytic coefficients, which assign |φ∗| ∼ 10 −25 by design; the relative error remains O(10 −5) and is not a physical constraint. Fig. 6 visualises these results; the 3D case is the most demanding verification in the suite. The tensor-product structure of the spectral derivative scales as O(N 4) per residual evaluation versus O(N 6) for a naive 3D autodiff Laplacian, and the deterministic loss again makes Phase 2 L-BFGS the decisive contributor. 8Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 4: Multi-scale electrochemical benchmarks. Top: electric double layer next to a neutral surface (concentration BC at infinity). Bottom: charged wall with a fixed-charge BC at x = 0 and the extreme 5000:1 wall-to-bulk domain ratio that exposed the per-element-normalised loss-weight requirement. Both runs use a two-element KTE-stretched/uniform decomposition; analytic profiles overlaid for reference. Peak error O(10 −4) in each case. 
+
+9Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 5: 1D steady Poisson–Nernst–Planck: stiff leading coefficients 3000 (cn equation) and 1000 (φ equation), six elements of unit width with N = 16 each. (a) NSEM solutions for cp, cn and φ (markers) overlaid on the exact analytic solutions (solid), indistinguishable at plot scale. (b) Two-dimensional projection of the NSEM loss landscape around the converged parameter set: a smooth monotonic basin, in contrast to the rugged landscape exhibited by random-sampling PINNs on stiff coupled systems [ 3]. Final maximum pointwise errors: |cp| = 4 .5×10 −4, |cn| = 2 .8×10 −5, |φ| = 2 .2×10 −5.
+
+5.6 1D time-dependent PNP 
+
+The 1D time-dependent PNP problem is the unsteady form of equation (5) on Ω × (0 , T ) = [ −1, 1] × (0 , 1] :
+
+∂tc± = ∂x
+
+∂xc± ± c±∂xφ + f src  
+
+> ±
+
+(x, t ), ∂2
+
+> x
+
+φ = 12λ2
+
+> D
+
+(c− − c+) + f src  
+
+> φ
+
+(x, t ). (8) Manufactured-solution source terms are chosen so that c∗
+
+> p
+
+(x, t ) = e−t sin( πx ), c∗
+
+> n
+
+(x, t ) = e−t cos( πx ) and φ∗(x, t ) = 
+
+e−tsin( πx ) + cos( πx ), with Dirichlet boundary and initial data derived from these exact profiles. NSEM treats the temporal direction identically to the spatial direction: both are collocated on a tensor-product LGL grid with a single element [0 , 1] in time and four elements of width 0.5 in space, each carrying N = 16 nodes and Nt = 16 time nodes. The spectral D-matrix applies separately along each axis via Kronecker product (one GEMM per axis per forward pass), so no time-stepping or operator splitting is needed. After Phases 2–3 L-BFGS the maximum pointwise errors are 
+
+|cp|max = O(10 −5), |cn|max = O(10 −5), and |φ|max = O(10 −5) across the space–time domain (Fig. 7). 
+
+5.7 2D time-dependent PNP 
+
+The 2D time-dependent PNP problem extends the 1D unsteady system equation (8) to two spatial dimensions on 
+
+[−1, 1] 2 × (0 , 1] :
+
+∂tc± = ∇· ∇c± ± c±∇φ + f src  
+
+> ±
+
+(x, y, t ), ∇2φ = 12λ2
+
+> D
+
+(c− − c+) + f src  
+
+> φ
+
+(x, y, t ), (9) with manufactured-solution profiles c∗
+
+> p
+
+(x, y, t ) = e−t sin( πx ) cos( πy ), c∗
+
+> n
+
+(x, y, t ) = e−t cos( πx ) cos( πy ) and 
+
+φ∗(x, y, t ) = e−tsin( πx ) + cos( πx ) cos( πy ). NSEM uses a single tensor-product element with Nx = Ny = 12 spa-tial nodes and Nt = 12 time nodes, yielding 12 3 = 1728 space–time collocation points. The three Kronecker-product spectral derivatives (one per axis) replace all autodiff Laplacians; the per-step cost scales as O(N 4) versus O(N 6) for 10 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 6: 3D steady Poisson–Nernst–Planck: cubic domain [−100 , 100] 3 nm 3, single tensor-product element with Nx = Ny =
+
+Nz = 8 , 512 LGL nodes total. Two-dimensional heatmap slice at z ≈ 0 arranged as a 3×3 grid: rows correspond to cK+ , cCl − and 
+
+φ; columns show the exact manufactured solution, the NSEM prediction, and |error | on a hot colourmap. Peak pointwise errors: 
+
+1.6×10 −7 for both ionic species (relative L∞ ∼ 10 −4); φ reaches |err |max = 3 .5×10 −30 in absolute units against a reference scale 
+
+|φ∗| ∼ 10 −25 (relative L∞ ∼ 10 −5), so all three fields are resolved to comparable relative accuracy. Table 1: PNP κ-sweep: peak pointwise errors for the 1D steady PNP problem at three Debye-layer thicknesses ( λD = 1 /κ ). Configuration: N = 32 , α = 0 .7, single element, float64. The κ = 10 row reports the median over 3 random seeds with sub/superscript min/max; κ = 3 and κ = 30 are single representative runs. 
+
+κ max |ψ−ψ∗| max |cp −c∗
+
+> p
+
+| max |cn −c∗
+
+> n
+
+| Final loss 3 7.6×10 −4 6.1×10 −3 6.4×10 −3 7.1×10 −5
+
+10 2.91 +5 .88  
+
+> −2.07
+
+×10 −3 5.37 +6 .4 
+
+> −2.6
+
+×10 −3 5.52 +6 .3 
+
+> −2.8
+
+×10 −3 4.5×10 −4
+
+30 4.4×10 −2 8.2×10 −2 8.2×10 −2 1.1×10 −2
+
+a naive 3D autodiff evaluation. After training, the NSEM solution converges to peak errors of O(10 −4) across the three fields (Fig. 8), matching the accuracy tier of adaptive-sampling PINN baselines on the same problem at roughly one-quarter the collocation-point count. 
+
+5.8 Debye-length robustness: κ-sweep 
+
+A practical concern for the PNP solver is whether accuracy degrades for small Debye lengths, i.e., large κ. We sweep 
+
+κ ∈ { 3, 10 , 30 } on the 1D steady PNP problem (Sec. 5.4) with a fixed configuration ( N = 32 , α = 0 .7, one element) and report the peak pointwise errors and final training loss in Table 1 and Fig. 9. 11 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT     
+
+> Figure 7: 1D time-dependent PNP. Top two rows: cp,cn; NSEM solution (left), exact (centre), absolute error (right) at the final training loss. Bottom left: φspace–time map. Bottom right: loss landscape in the two leading PCA directions — a smooth bowl enabling L-BFGS convergence.
+
+# 6 Convergence and ablation studies 
+
+Sec. 5 demonstrated NSEM on the target electrochemical application, where the dominant design choices — Debye-layer resolution via KTE, multi-scale per-element loss normalisation, and the BRDR aggregator for the nonlinear cases — are entangled with the physics. This section isolates the three solver design knobs — spectral node count N , KTE stretching parameter α, and network backbone — on canonical scalar benchmarks (Helmholtz, Allen–Cahn, convection–diffusion) where the per-parameter contribution is unambiguous, and confirms the spectral-convergence theory that underpins the application results in Sec. 5. Each knob is varied while holding the remaining solver infrastructure fixed. 
+
+6.1 Spectral convergence in N
+
+Fig. 10 shows the spectral convergence on the Helmholtz benchmark −u′′ + k2u = f at k = 10 as the number of LGL nodes N is increased: the peak error drops from O(1) at N = 8 (insufficient to resolve the six wavelengths in 
+
+[−1, 1] ) to ∼ 10 −14 at N = 16 –24 , then floats slightly upward at N = 32 as the spectral matrix’s O(N 4) condition number begins to leak floating-point rounding errors. This is the textbook N > 2k rule for resolving an oscillating Helmholtz problem [ 27 ]. The complementary Fig. 11 reports the same sweep on the stiff convection–diffusion problem at ε = 10 −2, α = 0 .85 : exponential decay log EN ∼ − σN with empirical decay constant σ ≈ 0.20 down to the L-BFGS floor at N = 32 . Both sweeps exhibit the canonical |EN | ≤ C e −σN scaling predicted by classical spectral theory [10]. 12 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT                       
+
+> Figure 8: 2D time-dependent PNP problem on [−1,1] 2×[0 ,1] , single tensor-product element, Nx=Ny=Nt= 12 , 1728 collocation points total. Top row: cp(left) and cn(right) at t= 0 .5. Bottom left: electric potential φat t= 0 .5. Bottom right:
+> N-convergence — max error for all three fields vs the number of spatial nodes per axis, confirming spectral decay on the 2D+time problem.
+
+6.2 KTE stretching ablation 
+
+The same stiff convection–diffusion benchmark exposes the role of the KTE map directly. Fig. 12 compares α = 0 
+
+(uniform LGL nodes) against α = 0 .85 (sharp endpoint clustering) at the same N = 32 . With α = 0 the trainer fails to resolve the O(ε) inflow layer and saturates at O(1) error in the layer (the bulk is still captured); with α = 0 .85 the layer is resolved and the pointwise error drops by roughly three orders of magnitude. Quantitatively the effective Péclet number that NSEM can resolve at fixed N scales as O(N/ √1 − α2). Conditioning of the spectral matrix deteriorates as 1/√1 − α2 → ∞ for α → 1; in practice the optimum lies near α = 0 .85 –0.90 for Debye-layer problems and we have not needed α ≥ 0.95 on any benchmark. The charged-wall problem (Sec. 5.3) provides an independent test: a 5000:1 domain-size ratio makes even moderate 
+
+N sensitive to the per-element normalisation, and the KTE map is essential to resolve the nanometre-thin Stern layer. Fig. 13 shows the N -convergence on this problem with α = 0 .95 : peak error decays exponentially until the spectral-matrix conditioning plateau at N ≈ 48 .
+
+6.3 Wavenumber sweep and NSEM-vs-PINN comparison 
+
+Fig. 14 sweeps the Helmholtz wavenumber k ∈ { 5, 10 , 20 , 40 } at fixed N = 32 , α = 0 , comparing NSEM head-to-head with a vanilla collocation PINN of matched parameter budget trained with autodiff and random sampling. At every k,NSEM reaches a final error two to four orders of magnitude lower than the PINN baseline; the vanilla PINN reaches the spectral-bias plateau at k = 20 and is unable to resolve the k = 40 problem at all. Wall-clock training times are comparable at k ≤ 20 ; the NSEM curve at k = 40 takes longer because the L-BFGS phase runs to its convergence-stall criterion rather than to a fixed step budget. This is the quantitative form of the “no-spectral-bias” claim that motivates the deterministic-loss design. Fig. 15 makes the comparison direct: for each of the Gouy–Chapman linear, Helmholtz ( k = 10 ), and stiff convection– diffusion benchmarks, the left column shows the NSEM and PINN training curves overlaid, and the right column shows the corresponding loss landscape cross-sections projected onto the first two principal directions of the Hessian. NSEM’s loss is a smooth, convex bowl in every case; the matched PINN landscape is riddled with local minima and flat plateaus, which cause L-BFGS (applied to the PINN) to stall after the first few descent steps. The training curves 13 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 9: Debye-length robustness of the 1D steady PNP solver. Peak pointwise errors for ψ, cp and cn as a function of 
+
+κ ∈ { 3, 10 , 30 } at fixed resolution N = 32 , α = 0 .7. Error grows roughly as κ1.5 (dashed guide line), consistent with the Debye layer thickness λD = κ−1 approaching the inter-node spacing. For κ = 30 the boundary-layer scale is ∼ 1/30 , comparable to 
+
+N −1 ≃ 0.03 ; increasing N or applying stronger KTE stretching ( α → 0.9) is expected to restore sub-percent accuracy. 
+
+Figure 10: Spectral N -convergence on the Helmholtz problem at k = 10 . Left: max |uNSEM − uexact | and relative L2 error as functions of N , on a semilog axis. Right: log max |err | vs N , with an exponential fit valid for N > 2k = 20 . The error rises slightly at N = 32 due to floating-point conditioning of the spectral D matrix. 
+
+14 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 11: Spectral N -convergence on the stiff convection–diffusion problem at ε = 10 −2, α = 0 .85 . Left: max and relative L2
+
+error. Right: log-linear view — empirical exponential rate σ ≈ 0.20 per added node from N = 16 onwards. 
+
+Figure 12: KTE coordinate-stretching ablation on the stiff convection–diffusion problem at ε = 10 −2, N = 32 . Top: full-domain solution and boundary-layer zoom. Bottom: pointwise error and training-loss curve. Without stretching ( α = 0 , red) the layer is unresolved and the maximum error reaches 5.2×10 −4 outside the layer while the layer itself remains qualitatively wrong; with 
+
+α = 0 .85 (blue) the layer is resolved and the pointwise error drops by roughly three orders of magnitude in the layer region. 
+
+15 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT                         
+
+> Figure 13: Spectral N-convergence on the charged-wall benchmark ( α= 0 .95 , Stern + diffuse layer, 5000:1 domain ratio). Exponential decay holds until N≈48 ; saturation above N= 48 is numerical rounding from the ill-conditioned D-matrix, not a discretisation error.
+> Figure 14: Helmholtz wavenumber sweep k∈ { 5,10 ,20 ,40 }, NSEM versus a matched-parameter vanilla collocation PINN. Left: final maximum pointwise error. Right: wall-clock training time. NSEM achieves two to four orders of magnitude lower error at every k; the PINN baseline saturates at O(1) for k≥20 , consistent with the spectral-bias failure mode documented by [ 5] and [ 3].
+
+confirm the consequence: PINN loss stops improving two to three orders of magnitude above the final NSEM floor. These landscapes are not post-hoc visualisations — they are evaluated on the same parameter manifold at training end, making the comparison geometry-controlled. 
+
+6.4 Modern PINN baselines: PIRBN and causal training 
+
+A natural concern is whether the vanilla collocation PINN constitutes a sufficiently strong baseline. To address this we add two modern PINN variants that explicitly target the failure modes diagnosed by the PINN trilemma: the 
+
+Residual-Based Attention aggregator (PIRBN, 19 ) which re-weights collocation residuals dynamically to focus the network on hard regions, and the causal-training schedule of Wang et al. [ 20 ] that imposes a temporal weighting 
+
+wi = exp( −ε P 
+
+> j<i
+
+Lj ) to enforce causality in time-dependent PINNs. Both baselines share the network architecture of the vanilla PINN comparator and were trained with 1024 –4096 random collocation points and (2 –3) ×10 4 Adam steps on the same GB10 hardware as the NSEM runs, with three random seeds per problem. Table 2 reports the peak pointwise error (median over seeds) for each baseline on the benchmarks where the comparison is most stringent. Three findings stand out. First, on the linear-elliptic Helmholtz benchmarks PIRBN closes about one order of magnitude relative to the vanilla PINN at k = 10 but still trails NSEM by four orders of magnitude (7.4×10 −2 versus 1.26 ×10 −6). At k ≥ 20 the spectral-bias barrier overwhelms the attention aggregator and PIRBN saturates at the trivial solution. Second, on the GC linear electrochemical benchmark PIRBN reaches 5×10 −2 peak error against NSEM’s ∼ 10 −3;16 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT      
+
+> Figure 15: NSEM versus a vanilla collocation PINN [ 1]: training-loss curves (left) and loss-landscape cross-sections (right) for three benchmarks (rows: Gouy–Chapman linear, Helmholtz k= 10 , stiff convection–diffusion). NSEM loss descends monotonically to near machine precision; the PINN loss stalls two to three orders of magnitude higher, consistent with the rugged landscape visible in the right column. Both models use identical architecture and parameter count; the only difference is the collocation scheme (LGL fixed nodes + spectral Dvs random samples + autodiff).
+
+the boundary layer of thickness λD = 1 /κ is simply not resolvable by Monte-Carlo sampling without a coordinate map. Third, the causal-training baseline is the most competitive opponent on the time-dependent PNP problems, reaching 1.0×10 −2 on the 1D unsteady case and 2.1×10 −2 on the 2D unsteady case (with one of three seeds diverging entirely), but again two to three orders of magnitude above the NSEM benchmark. We conclude that the gap between NSEM and the PINN family is structural rather than implementation-level: replacing the residual aggregator (PIRBN) or the temporal weighting (causal PINN) attacks only one leg of the trilemma at a time, and neither recovers the curvature-clean L-BFGS regime that NSEM enters by construction. 
+
+6.5 Allen–Cahn ε-sweep and interface sharpness 
+
+The Allen–Cahn benchmark has an interior layer of width O(ε); sweeping ε2 ∈ { 0.04 , 0.01 , 0.005 , 0.001 } at fixed 
+
+N = 48 with a single uniform element traces out the point at which the layer becomes too thin for the LGL grid (Fig. 16). The maximum error rises from ∼ 10 −2 at ε2 = 0 .04 to ∼ 0.6 at ε2 = 10 −3, while the final training loss remains close to its floor across the sweep — the network is fitting the LGL nodes accurately, but those nodes simply do not resolve the layer once ε ≲ 1/N 2. The natural remedy is a multi-element decomposition with a KTE-stretched element centred on the interior interface, which we did not deploy here because the four-element budget required would push the configuration beyond the present scope; the corresponding interior-layer KTE map is a one-line modification of the existing endpoint formula in equation (3). 17 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT    
+
+> Table 2: Peak pointwise error against modern PINN baselines. NSEM values are from the seeded ablation Table 3; PIRBN [ 19 ] and causal-PINN [ 20 ] are 3-seed medians measured on identical hardware (Dell Pro Max GB10). “diverged” indicates that the baseline saturated at the trivial solution ( |uPINN |=O(1) ).
+
+Problem Variant NSEM PIRBN Causal PINN Helmholtz k = 10 1D steady 1.26 ×10 −6 7.4×10 −2 —Helmholtz k = 20 1D steady O(10 −6) diverged ( 1.0) —Helmholtz k = 40 1D steady O(10 −5) diverged ( 1.0) —Gouy–Chapman (linear) 1D steady, κ2 = 9 ∼ 10 −3 5.0×10 −2 —PNP 1D steady (proxy) 1D steady ∼ 10 −4 5.1×10 −4 —PNP 1D unsteady 1D unsteady ∼ 10 −4 — 1.0×10 −2
+
+PNP 2D unsteady 2D unsteady ∼ 10 −4 — 2.1×10 −2†           
+
+> †Median over the two non-diverged seeds; seed 0 saturated.
+> Figure 16: Allen–Cahn ε-sweep at fixed N= 48 . Left: final maximum pointwise error. Right: final training loss. The loss remains near its floor for every ε, but the pointwise error grows once the layer width O(ε)drops below the LGL grid spacing, consistent with the predicted resolution limit at ε∼1/N 2.
+
+6.6 Allen–Cahn vs Cahn–Hilliard landscape 
+
+Finally, we contrast the loss landscape of the Allen–Cahn benchmark against the higher-order Cahn–Hilliard generalisa-tion (Supplementary Sec. S4.4), using identical projections. As shown in Fig. 17, the Allen–Cahn loss is a sharp, narrow basin in every component, whereas the Cahn–Hilliard loss is broader and shallower, reflecting the O(ε4) residual scaling and the resulting weaker curvature. This makes the quantitative case for the deterministic-loss approach: even when the total loss bowl flattens, the curvature is well defined and L-BFGS can descend it without restart, in contrast to the rugged surfaces produced by random-sampling PINNs on the same problems. 
+
+6.7 Ablation summary 
+
+Table 3 condenses the ablation results into a single comparison. The three binary switches, namely backbone (MLP vs KAN), coordinate map ( α = 0 vs α = 0 .85 ), and second-order optimiser (Adam-only vs Adam +L-BFGS), are varied independently on the Helmholtz benchmark ( k = 10 , N = 32 ). Errors are reported as the median over three random seeds, with sub/superscript min/max bounds. The most important contrast is the optimiser: without L-BFGS the maximum error stalls at O(10 −1) regardless of backbone or mapping; with L-BFGS it drops to O(10 −5)–O(10 −7).Among the L-BFGS rows, the Legendre-KAN with KTE stretching achieves the lowest error ( 3.5+4 .2 
+
+> −0.7
+
+×10 −7) at the lowest training time ( 38 s ) — a direct consequence of the basis-alignment synergy described in Sec. 7, amplified by the sharper layer resolution that KTE provides. Min/max bounds across the three seeds remain within one order of magnitude of the median for every L-BFGS row, confirming that the deterministic-loss design removes the seed sensitivity reported elsewhere in the PINN literature [3, 6]. 18 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 17: Loss landscape comparison between Allen–Cahn (second order, top row) and Cahn–Hilliard (fourth order, bottom row) at 
+
+ε = 0 .1, ε2 = 0 .01 . Columns: PDE residual, auxiliary μ residual (Cahn–Hilliard only), total loss. The higher-order problem has a broader, shallower basin — still a well-defined L-BFGS target, but with the predicted weaker curvature. Table 3: Ablation: backbone × mapping × optimiser on the Helmholtz benchmark ( k = 10 , N = 32 , single element). Errors reported as median over 3 random seeds with sub/superscript min/max. Time in seconds on a single Dell Pro Max with NVIDIA GB10 Grace–Blackwell Superchip (float64). 
+
+Backbone Mapping Optimiser max |err | (median max min , n=3 ) Time (s) MLP Uniform α = 0 Adam only 8.57 +0 .74  
+
+> −0.78
+
+×10 −1 13.6 MLP Uniform α = 0 Adam + L-BFGS 9.96 +10 .33  
+
+> −3.26
+
+×10 −6 1020 MLP KTE α = 0 .85 Adam only 8.55 +0 .77  
+
+> −0.69
+
+×10 −1 13.5 MLP KTE α = 0 .85 Adam + L-BFGS 2.25 +1 .93  
+
+> −1.99
+
+×10 −5 1088 KAN Uniform α = 0 Adam only 2.34 +1 .79  
+
+> −1.03
+
+×10 −2 25.9 KAN Uniform α = 0 Adam + L-BFGS 1.26 +2 .86  
+
+> −0.58
+
+×10 −6 46.9 KAN KTE α = 0 .85 Adam only 1.15 +2 .27  
+
+> −0.36
+
+×10 −2 23.3 
+
+KAN KTE α = 0 .85 Adam + L-BFGS 3.48 +4.24  
+
+> −0.71
+
+×10 −7 38.2 
+
+# 7 Backbone study: MLP vs Legendre-KAN 
+
+7.1 Why Legendre polynomials and not splines 
+
+The original Kolmogorov–Arnold Network of Liu et al. [ 8] uses B-spline edge functions: every learnable edge is a piecewise polynomial defined on a user-specified knot grid. Splines are local and adaptive, but they are a poor fit for the NSEM pipeline because (i) the spline domain is partitioned by a knot vector that has no relation to the LGL nodes used for quadrature, and (ii) the spline basis is not orthogonal under any natural inner product, so the mass matrix that enters the mortar projection is dense and requires an explicit linear solve at every interface evaluation. Both properties break the deterministic, single-GEMM evaluation that gives NSEM its performance. We therefore replace splines with the Legendre polynomial expansion : every learnable edge is the global modal sum 
+
+ϕ(ξ; c) = 
+
+> K
+
+X
+
+> k=0
+
+ck Pk(ξ), c ∈ RP +1 , (10) 19 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+on the reference interval ξ ∈ [−1, 1] , with Pk the k-th Legendre polynomial and {ck} the trainable parameters. This single architectural choice cascades: • Every edge output is a polynomial of degree at most K. After n KAN layers with degree-K activations, the network output is a polynomial of degree at most K n in the input variable. • The LGL N -point quadrature integrates polynomials of degree ≤ 2N − 3 exactly. Choosing N ≥ 12 (P n + 3) 
+
+therefore makes the NSEM physics loss an exact discretisation of the L2 residual integral — no quadrature error, regardless of how many Adam or L-BFGS steps have been taken. • Legendre polynomials are orthogonal under the standard L2([ −1, 1]) inner product: the mass matrix is exactly diagonal, Mjk = 22j+1 δjk . This trivialises the mortar projection (Sec. 3.4): the interface-coupling operator 
+
+P = M−1C× degenerates to an element-wise rescaling of the cross-mass matrix and never requires a linear solve. • The derivative of a Legendre expansion is another Legendre expansion, computable by a closed-form recur-rence; combined with the spectral D-matrix of Sec. 3.2 this means that both quadrature and differentiation of the network output are exact, not just floating-point-accurate. The Chebyshev-KAN variants of SS and R [ 23 ] and Guo et al. [ 24 ] share the modal-edge motivation but use Chebyshev nodes for evaluation; they do not align the network basis with the LGL quadrature, so the exact-quadrature property above does not hold and the mortar mass matrix is no longer diagonal. 
+
+7.2 Basis alignment: the formal consequence 
+
+The NSEM forward pass evaluates the network only at the N fixed LGL nodes {ξj }, and the Legendre-KAN architecture [8, 21 , 22 ] assigns to each trainable edge the modal expansion equation (10), where Pk is the k-th Legendre polynomial and K is thepolynomial degree. Because the LGL nodes are the zeros of (1 − ξ2)P ′ 
+
+> N−1
+
+(ξ), the N -point rule integrates 
+
+Pj (ξ)Pk(ξ) exactly for j + k ≤ 2N − 3; when K ≤ N − 1 this covers the entire orthogonality mass matrix 
+
+Mjk = R 1 
+
+> −1
+
+Pj Pk dξ = 22j+1 δjk . The consequence — which we call basis alignment — is that the modal coefficients 
+
+{ck} of every KAN edge can be recovered exactly from its N LGL-node evaluations by a single Vandermonde solve, and the inner product between the edge output and any polynomial residual of degree ≤ P + ( N − 1) carries no quadrature error. Both the NSEM loss integral and the KAN edge representation live in the same LGL polynomial space, so their approximation errors do not compound. The Chebyshev-KAN variants of SS and R [ 23 ] and Guo et al. [ 24 ] share the motivation but do not use LGL nodes as the evaluation set, so they do not achieve the exact quadrature property described above. Fig. 18 compares the tanh-MLP and the Legendre-KAN backbones on the 1D steady PNP problem. At matched trainable-parameter count the Legendre-KAN with polynomial degree K = 4 reaches comparable final accuracy to the MLP while requiring roughly half the Adam steps to enter the L-BFGS basin of attraction, consistent with the smoother loss geometry implied by the basis-alignment argument. At degree K = 8 the KAN is over-parameterised relative to the N = 16 -node LGL grid and shows no further gain over K = 4 , confirming the predicted saturation at 
+
+K = N − 1. The MLP backend is the more practical choice for large N because its parameter count grows linearly in depth, whereas the KAN’s grows with the polynomial degree and number of edges; however, for moderate N ≤ 32 
+
+the Legendre-KAN provides a theoretically well-motivated and empirically competitive alternative. All NSEM results in Sec. 4–Sec. 5 use the MLP backbone unless otherwise stated; the full Legendre-KAN derivation and the synergy theorem are in Supplementary Sec. S1.6. 
+
+7.3 Per-field accuracy: 3-seed comparison on PNP 1D steady 
+
+To quantify the per-field robustness of the two backbones we re-ran the PNP 1D steady problem with three independent random seeds for both the tanh-MLP and the Legendre-KAN at identical configuration ( N = 16 , six elements, K = 4 
+
+for the KAN). Table 4 reports the resulting peak pointwise errors per field, with the median over the three seeds in bold. The seeded comparison reveals a more nuanced picture than the single-seed Helmholtz ablation of Table 3. On the cation profile cp – which carries the steepest Debye-layer gradient in the PNP 1D steady manufactured solution – the Legendre-KAN backbone delivers a ∼ 5× lower median peak error than the MLP, consistent with the basis-alignment argument: the KAN edges live in the same Legendre polynomial space as the LGL quadrature, so the sharp cp gradient is represented exactly up to polynomial degree K + ( N − 1) . On the smoother anion profile cn and the potential φ
+
+the two backbones are within a factor of two of each other, with the MLP slightly ahead on the median (by ∼ 0.65 ×). Both backbones reach 10 −4 peak error on every field across all three seeds, confirming that the spectral-collocation 20 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+Figure 18: Backbone comparison on the 1D steady PNP problem ( N = 16 LGL nodes per element, six unit-width elements). Panels (a)–(c) report a single representative training run; the corresponding 3-seed median per-field error statistics are collected in Table 4. 
+
+(a) Training convergence: KAN Phase 1 Adam (blue) and Phase 2 L-BFGS (red) reach a final total loss of 9.3×10 −9; the MLP best achieves ∼ 1.5×10 −6 (green dashed line). (b) Per-field maximum pointwise errors for the tanh MLP and the Legendre-KAN (K = 4 ) at matched N = 16 . (c) Final total loss vs N for both backbones; the KAN achieves a consistent ∼ 10 2–10 3× improvement over the MLP at moderate N , consistent with the basis-alignment argument in Sec. 3.7. Table 4: Per-field peak pointwise errors on PNP 1D steady for the tanh-MLP and Legendre-KAN backbones, three independent random seeds each. Configuration: N = 16 LGL nodes per element, six unit-width elements, K = 4 for the KAN, identical Adam+L-BFGS schedule for both backbones. Bold rows are the median. 
+
+Backbone Seed max |∆cp| max |∆cn| max |∆φ|
+
+KAN ( K = 4 ) 0 1.36 ×10 −3 5.28 ×10 −5 6.46 ×10 −5
+
+KAN ( K = 4 ) 1 1.97 ×10 −4 5.05 ×10 −4 5.51 ×10 −4
+
+KAN ( K = 4 ) 2 1.37 ×10 −3 1.75 ×10 −4 1.82 ×10 −4
+
+KAN median — 1.36 ×10 −3 1.75 ×10 −4 1.82 ×10 −4
+
+MLP (tanh) 0 1.06 ×10 −2 1.68 ×10 −4 1.66 ×10 −4
+
+MLP (tanh) 1 7.18 ×10 −3 1.14 ×10 −4 1.16 ×10 −4
+
+MLP (tanh) 2 1.77 ×10 −3 2.66 ×10 −5 2.87 ×10 −5
+
+MLP median — 7.18 ×10 −3 1.14 ×10 −4 1.16 ×10 −4
+
+Ratio (MLP / KAN, median) 5.3× 0.65 × 0.64 ×
+
+infrastructure — not the choice of network family — is what fixes the accuracy floor. The practical recommendation is to use the Legendre-KAN when the target problem has thin boundary layers (KAN’s cp advantage), and the MLP when storage / depth scaling matters more. 
+
+# 8 Discussion 
+
+NSEM is designed for PDEs whose solutions are smooth on each spectral element, which is the regime in which classical SEM achieves exponential convergence [ 9 , 10 ]. The method is particularly well suited to stiff coupled transport systems such as the Poisson–Nernst–Planck equations, where boundary layers of known location can be pre-targeted by KTE coordinate stretching and the sharp residuals in those layers are resolved exactly by the spectral D matrix. NSEM does not currently handle moving interfaces or topological changes in the solution support, where the LGL grid would need to track the interface adaptively; extending the framework to phase-field problems with spontaneous interface migration is a natural direction for future work. High-dimensional problems ( d ≥ 4) face the tensor-product node-count 21 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+growth N d, which limits the present implementation to d ≤ 3, though low-rank tensor methods could extend the range. Stochastic forcing or uncertain parameters require ensembles or variational inference on top of the deterministic solver, which is outside the current scope. Three concurrent works pursue the same spectral–neural integration strategy and must be carefully distinguished. Du et al. [ 16 ] minimise a Parseval-norm loss directly in the spectral expansion, working entirely in modal space; they achieve exponential convergence on smooth periodic problems but provide no physical-space collocation, no multi-element mortar framework, and no nonlinear coordinate map for boundary-layer resolution. Yu et al. [ 17 ] replace autodiff by spectral multiplication in Fourier space, reporting exponential convergence and reduced memory; however, their framework has no domain decomposition and no KTE stretching, which limits applicability to geometrically simple, non-stiff problems. Shukla et al. [ 18 ] couple a PINN correction to the classical Nektar++ SEM solver; because Nektar++ generates and manages the element mesh, their method requires external mesh-generation infrastructure and is not purely neural. By contrast, NSEM requires no classical solver and no mesh: the spectral matrices are constructed algebraically from the LGL node formula and stored as constant PyTorch tensors, making the entire pipeline differentiable end-to-end and trivially portable to any hardware without a compiled FEM/SEM library. The claim by Wang et al. [ 30 ] that automatic differentiation is essential for training neural networks on PDEs deserves a precise response. Their argument applies when the spatial discretisation error dominates — as it does for finite-difference or random-sample quadrature — and shows that autodiff delivers the exact gradient at the discrete nodes at no extra discretisation error. In NSEM the quadrature is polynomial-exact on the LGL subspace, so the spectral matrix is the exact derivative on that subspace; applying autodiff on top would recompute the same numbers at higher computational cost and introduce floating-point noise from the automatic-differentiation tape. The “autodiff is essential” argument is therefore not in conflict with NSEM: it addresses poorly resolved discretisations, while NSEM ensures that the resolution is adequate before any gradient step is taken. Looking ahead, the most natural extension of the present work is frequency-domain electrochemical impedance spectroscopy (EIS): linearising the time-dependent PNP system around a steady state yields a complex-valued eigenvalue problem for the impedance Z(ω) whose spectral structure is directly accessible to NSEM, avoiding the small-signal stiffness that makes time-domain EIS training challenging [ 43 –45 ]. Further extensions include the Doyle–Fuller–Newman pseudo-2D porous electrode model [ 46 ], for which NSEM’s multi-element mortar framework provides a natural particle–electrolyte interface treatment, and inverse problems such as inferring the Debye length or ion diffusivities from partial boundary measurements, which can exploit the deterministic gradient for efficient parameter estimation. 
+
+# 9 Conclusion 
+
+We have introduced the Neural Spectral Element Method (NSEM), which replaces Monte-Carlo collocation and automatic differentiation in physics-informed neural networks with a fixed Legendre–Gauss–Lobatto quadrature grid and precomputed spectral differentiation matrices, yielding a deterministic training loss that enables L-BFGS to polish PDE solutions to residuals below 10 −10 . Validated on the full four-example Poisson–Nernst–Planck suite (1D and 3D steady; 1D and 2D time-dependent), on three canonical convergence tests spanning Helmholtz, Allen–Cahn, and convection–diffusion problems, and with both a tanh-MLP and a basis-aligned Legendre-KAN backbone, NSEM demonstrates a principled route from the PINN trilemma — slow quadrature, serial autodiff, stochastic optimisation — to high-accuracy, geometry-flexible spectral PDE solving with neural backbones. Despite these encouraging results, there is further space for improvement. NSEM in its current form assumes a fixed element partition with smooth solutions on each element, and the tensor-product cost O(N d) limits naive 3D demonstrations to moderate N ; problems with moving interfaces, or spatial dimensions beyond three, require an adaptive remeshing or a low-rank tensor compression that is outside our present scope. The most immediate extensions are frequency-domain electrochemical impedance spectroscopy and the Doyle–Fuller–Newman porous-electrode model, both of which map directly onto the multi-element mortar infrastructure developed here. 
+
+# Reproducibility statement 
+
+All experiments reported in this paper are reproducible from the public code release accompanying the submission. The nsem Python package, training scripts, configuration files, and post-processing notebooks are archived at https: //github.com/cgtetsas/nsem (a permanent DOI will be minted on acceptance). Each benchmark in Secs. 4 to 7 is driven by a single shell entry point under scripts/ ; the canonical command for each problem is listed in Supplementary Sec. S5. Per-run outputs (loss curves, solution snapshots, configuration snapshots) are written to a timestamped directory under outputs/ , and the run identifiers cited in figure captions correspond one-to-one to these directories. All NSEM runs use float64 on a single Dell Pro Max with NVIDIA GB10 Grace–Blackwell Superchip (also sold as the NVIDIA DGX Spark): a unified 20-core Arm64 CPU (10 ×Cortex-X925 + 10 ×Cortex-A725) with an 22 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+integrated Blackwell GPU (6,144 CUDA cores, 128 GB LPDDR5X unified memory). Reported wall-clock times are end-to-end including data loading and plotting. The fixed random seed used throughout is seed=0 (PyTorch global generator); a multi-seed study of the headline rows is reported in Supplementary Sec. S5. A reproducible runtime environment is provided as an nvcr.io/nvidia/pytorch:26.01-py3 Docker recipe in the repository README .
+
+# Competing interests 
+
+The authors declare no competing interests. 
+
+# Acknowledgements 
+
+The authors thank the University of Waterloo Department of Physics & Astronomy and Department of Chemistry for computational resources and intellectual support during this work. 
+
+# Funding 
+
+No external funding was received for this work. 
+
+# Author contributions 
+
+C.G.T.F. conceived the method, implemented the nsem package, designed and ran all experiments, analysed the results, prepared the figures, and wrote the manuscript. D.P. contributed to the scientific discussion and reviewed the manuscript. 
+
+# Data availability 
+
+All benchmark problems considered in this work use manufactured analytic solutions whose definitions are reproduced in full in Section S2 of the Supplementary Information. The numerical outputs underlying every figure and table — training-loss curves, per-iteration field snapshots, configuration files, and aggregated ablation tables — are available at 
+
+https://github.com/cgtetsas/nsem under the directory outputs/ , with run identifiers matching the timestamps cited in figure captions and table footnotes. A permanent Zenodo DOI will be minted at acceptance. 
+
+# Supplementary information 
+
+Supplementary information is available for this paper at the journal website. The supplementary file contains: theoretical derivations of the NSEM framework (Section S1), full non-dimensional PNP system derivations and per-example boundary conditions (Section S2), additional benchmark results and solution panels (Sections S3–S4), and complete reproducibility commands with multi-seed statistics (Section S5). 
+
+# References 
+
+[1] Raissi M, Perdikaris P and Karniadakis G E 2019 Journal of Computational Physics 378 686–707 [2] Karniadakis G E, Kevrekidis I G, Lu L, Perdikaris P, Wang S and Yang L 2021 Nature Reviews Physics 3 422–440 [3] Krishnapriyan A S, Gholami A, Zhe S, Kirby R and Mahoney M W 2021 Characterizing possible failure modes in physics-informed neural networks Advances in Neural Information Processing Systems (NeurIPS) vol 34 pp 26548–26560 ( Preprint 2109.01050 )[4] Tancik M, Srinivasan P P, Mildenhall B, Fridovich-Keil S, Raghavan N, Singhal U, Ramamoorthi R, Barron J T and Ng R 2020 Fourier features let networks learn high-frequency functions in low-dimensional domains 
+
+Advances in Neural Information Processing Systems (NeurIPS) vol 33 pp 7537–7547 [5] Rahaman N, Baratin A, Arpit D, Draxler F, Lin M, Hamprecht F A, Bengio Y and Courville A 2019 On the spectral bias of neural networks International Conference on Machine Learning (ICML) (Preprint 1806.08734 )[6] Mishra S and Molinaro R 2023 IMA Journal of Numerical Analysis 43 1–43 ( Preprint 2006.16144 )[7] Mishra S and Molinaro R 2022 IMA Journal of Numerical Analysis 42 981–1022 ( Preprint 2007.01138 )23 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+[8] Liu Z, Wang Y, Vaidya S, Ruehle F, Halverson J, Soljaˇ ci´ c M, Hou T Y and Tegmark M 2024 Transactions on Machine Learning Research ISSN 2835-8856 ( Preprint 2404.19756 )[9] Patera A T 1984 Journal of Computational Physics 54 468–488 [10] Karniadakis G E and Sherwin S J 2005 Spectral/hp Element Methods for Computational Fluid Dynamics 2nd ed (Oxford University Press) [11] Komatitsch D and Tromp J 1999 Geophysical Journal International 139 806–822 [12] Jagtap A D and Karniadakis G E 2020 Communications in Computational Physics 28 2002–2041 ( Preprint 
+
+2004.02518 )[13] Moseley B, Markham A and Nissen-Meyer T 2023 Advances in Computational Mathematics 49 (Preprint 
+
+2107.07871 )[14] Kharazmi E, Zhang Z and Karniadakis G E 2021 Computer Methods in Applied Mechanics and Engineering 374 
+
+113547 ( Preprint 2003.05385 )[15] Anandh T, Ghose D, Jain H and Ganesan S 2024 SIAM Journal on Scientific Computing 46 A3881–A3908 (Preprint 2404.12063 )[16] Du Y, Chalapathi N and Krishnapriyan A 2024 Neural spectral methods: Self-supervised learning in the spectral domain International Conference on Learning Representations (ICLR) (Preprint 2312.05225 )[17] Yu T, Qi Y, Oseledets I and Chen S 2025 Journal of Computational and Applied Mathematics (Preprint 2408. 16414 )[18] Shukla K, Zou Z, Chan C H, Pandey A, Wang Z and Karniadakis G E 2024 Computer Methods in Applied Mechanics and Engineering 433 117498 ( Preprint 2407.21217 )[19] Anagnostopoulos S J, Toscano J D, Stergiopulos N and Karniadakis G E 2024 Computer Methods in Applied Mechanics and Engineering 421 116805 ( Preprint 2307.00379 )[20] Wang S, Sankaran S and Perdikaris P 2024 Computer Methods in Applied Mechanics and Engineering 421 116813 (Preprint 2203.07404 )[21] Wang Y, Sun J, Bai J, Anitescu C, Eshaghi M S, Zhuang X, Rabczuk T and Liu Y 2024 Computer Methods in Applied Mechanics and Engineering (Preprint 2406.11045 )[22] Zhang Z, Xiong X, Zhang S, Wang W, Zhong Y, Yang C and Yang X 2025 Expert Systems with Applications 
+
+(Preprint 2406.08992 )[23] SS S and R G 2024 Chebyshev polynomial-based Kolmogorov–Arnold networks: An efficient architecture for nonlinear function approximation arXiv preprint arXiv:2405.07200 ( Preprint 2405.07200 )[24] Guo C, Sun L, Li S, Yuan Z and Wang C 2024 Physics-informed Kolmogorov–Arnold network with Chebyshev polynomials for fluid mechanics arXiv preprint arXiv:2411.04516 ( Preprint 2411.04516 )[25] Berrut J P and Trefethen L N 2004 SIAM Review 46 501–517 [26] Trefethen L N 2000 Spectral Methods in MATLAB (Philadelphia: SIAM) [27] Boyd J P 2001 Chebyshev and Fourier Spectral Methods 2nd ed (New York: Dover) [28] Light J C, Hamilton I P and Lill J V 1985 Journal of Chemical Physics 82 1400 [29] Colbert D T and Miller W H 1992 Journal of Chemical Physics 96 1982–1991 [30] Wang Z, Hao S, Zhang Y and Zhang L 2024 SIAM Journal on Numerical Analysis 62 1702–1720 ( Preprint 
+
+2405.14099 )[31] Kosloff D and Tal-Ezer H 1993 Journal of Computational Physics 104 457–469 [32] Bernardi C, Maday Y and Patera A T 1994 A new nonconforming approach to domain decomposition: The mortar element method Nonlinear Partial Differential Equations and Their Applications, Collège de France Seminar, vol. XI ed Brezis H and Lions J L (Pitman Research Notes in Mathematics) pp 13–51 [33] Lacour C and Maday Y 1997 BIT Numerical Mathematics 37 720–738 [34] Chen W, Howard A A and Stinis P 2025 Journal of Computational Physics (Preprint 2407.01613 ) URL 
+
+https://www.sciencedirect.com/science/article/pii/S0021999125005091 
+
+[35] Liu D C and Nocedal J 1989 Mathematical Programming 45 503–528 [36] Byrd R H, Lu P, Nocedal J and Zhu C 1995 SIAM Journal on Scientific Computing 16 1190–1208 24 Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks A P REPRINT 
+
+[37] Doumèche N, Biau G and Boyer C 2023 On the convergence of PINNs arXiv preprint arXiv:2305.01240 ( Preprint 
+
+2305.01240 )[38] Newman J and Thomas-Alyea K E 2004 Electrochemical Systems 3rd ed (Wiley) [39] Bard A J and Faulkner L R 2001 Electrochemical Methods: Fundamentals and Applications 2nd ed (Wiley) [40] Bazant M Z, Thornton K and Ajdari A 2004 Physical Review E 70 021506 ( Preprint cond-mat/0401118 )[41] Huang X, Wang F, Zhang B and Liu H 2025 Mathematics and Computers in Simulation 237 231–246 ( Preprint 
+
+2402.01768 )[42] Wang S, Yu X and Perdikaris P 2022 Journal of Computational Physics 449 110768 ( Preprint 2007.14527 )[43] Macdonald J R 1953 Physical Review 92 4–17 [44] Lasia A 2014 Electrochemical Impedance Spectroscopy and Its Applications 2nd ed (Springer) [45] Orazem M E and Tribollet B 2017 Electrochemical Impedance Spectroscopy 2nd ed (Wiley (ECS Series)) [46] Doyle M, Fuller T F and Newman J 1993 Journal of The Electrochemical Society 140 1526–1533 25

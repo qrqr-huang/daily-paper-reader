@@ -6,29 +6,32 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-05-10 ~ 2026-06-08
-- 运行时间：2026-06-08 14:16:57 UTC
+- 最新运行日期：2026-06-08
+- 运行时间：2026-06-09 00:04:43 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：2
-- 速读区：0
+- 本次总论文数：3
+- 精读区：0
+- 速读区：3
 
 ### 今日简报（AI）
-本周精读两篇高评分电池研究，探索用张量网络模型提升电动汽车荷电状态预测，并验证时域低频参数的可辨识性。  
-最值得关注的方向：将 Tucker 分解与 LSTM 融合，在 SOC 预测中同时捕捉多维模式和时序依赖；时域低频辨识方法为电池内部状态观测提供了更严谨的理论边界。  
-推荐对电池建模感兴趣的读者，关注张量技术与经典辨识理论的交叉，这可能会给老化诊断和云端 BMS 带来新思路。
-- 详情：[/20260510-20260608/README](/20260510-20260608/README)
+今日速读三篇论文，覆盖AI求解刚性多物理场PDE、四旋翼固定时间着陆与数据高效联合追踪。  
+最值得关注：Neural Spectral Element Methods 用神经网络谱元法突破电化学输运等多物理场仿真瓶颈，Fixed-Time Dynamic Landing 结合自适应无迹卡尔曼滤波与非线性MPC实现精准动态着陆。  
+建议读者根据场景选择深入方向——计算物理仿真可追谱元法，无人机控制可研固定时间着陆策略。
+- 详情：[/202606/08/README](/202606/08/README)
 
 ### 精读区论文标签
-1. [A Hybrid Tucker-LSTM Tensor Network Model for SOC Prediction in Electric Vehicles](/20260510-20260608/2605.13200v1-a-hybrid-tucker-lstm-tensor-network-model-for-soc-prediction-in-electric-vehicles)  
-   标签：评分：9.0/10、query:lfp-soc
-   evidence：直接针对电动汽车锂离子电池SOC估计提出混合模型
-2. [Identifiability of Low Frequency Li-ion Battery Parameters in Time Domain](/20260510-20260608/2605.28901v1-identifiability-of-low-frequency-li-ion-battery-parameters-in-time-domain)  
-   标签：评分：9.0/10、query:lfp-soc
-   evidence：基于BMS数据辨识低频ECM参数，为等效电路模型SOC估计提供支撑。
+- 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Neural Spectral Element Methods for stiff multiphysics PDEs with electrochemical transport benchmarks](/202606/08/2606.02335v1-neural-spectral-element-methods-for-stiff-multiphysics-pdes-with-electrochemical-transport-benchmarks)  
+   标签：评分：7.0/10、query:lfp-soc
+   evidence：求解电化学输运PDE，对物理电池模型至关重要；方法学可用于SOC估计
+2. [Fixed-Time Dynamic Landing of Quadrotors using Adaptive Unscented Kalman Filtering and Nonlinear Model Predictive Control](/202606/08/2606.02658v1-fixed-time-dynamic-landing-of-quadrotors-using-adaptive-unscented-kalman-filtering-and-nonlinear-model-predictive-control)  
+   标签：评分：7.0/10、query:lfp-soc
+   evidence：采用在线更新噪声统计的自适应无迹卡尔曼滤波
+3. [Hybrid Adaptive Kalman Filtering for Data-Efficient Joint Tracking and Classification](/202606/08/2606.02767v1-hybrid-adaptive-kalman-filtering-for-data-efficient-joint-tracking-and-classification)  
+   标签：评分：6.0/10、query:lfp-soc
+   evidence：提出一种自监督混合自适应卡尔曼滤波器，可学习系统动力学和过程噪声协方差的校正，适用于SOC估计
 
 
 <div class="dpr-home-promo-card">
