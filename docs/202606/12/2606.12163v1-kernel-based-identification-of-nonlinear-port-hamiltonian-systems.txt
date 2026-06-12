@@ -1,0 +1,1799 @@
+Title: Kernel-based identification of nonlinear port-Hamiltonian systems
+
+URL Source: https://arxiv.org/pdf/2606.12163v1
+
+Published Time: Thu, 11 Jun 2026 01:23:54 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+> 1
+
+# Kernel-based identification of nonlinear port-Hamiltonian systems 
+
+Brayan M. Shali and Henk J. van Waarde 
+
+Abstract —Port-Hamiltonian systems provide a structured framework for modeling physical systems by explicitly captur-ing their energy storage, dissipation, and exchange. However, deriving such models often requires detailed physical insight and precise knowledge of system parameters, which may not be available in practice. In this paper, we propose a kernel-based framework for the identification of port-Hamiltonian systems from input-state-output data. In contrast to conventional parametric approaches, the maps defining the port-Hamiltonian system are represented in suitably chosen reproducing kernel Hilbert spaces. This leads to an infinite-dimensional optimization problem over the corresponding function spaces. Our main result establishes a representer theorem that reduces this problem to a tractable finite-dimensional one. Since the reduced problem is non-convex, we further provide an algorithm for its solution and prove its convergence. 
+
+I. I NTRODUCTION 
+
+Port-Hamiltonian systems provide a unifying framework to model real-world physical systems by capturing their energy storage, dissipation, and exchange in a structured way [1]. Their modular, energy-based formulation makes them espe-cially powerful for representing interconnected multi-domain systems while guaranteeing consistency with physical laws [2]. At the core of port-Hamiltonian models lies the property of passivity, which guarantees their stability and enables robust control design through energy shaping and damping injection [3], [4]. However, deriving such models often requires deep insight into the system’s physics and precise knowledge of its parameters, which can be challenging in practice. In this context, a data-driven approach can play a complementary role by enabling the estimation of relevant structures and parameters directly from data. We take such an approach in this paper by proposing a framework for identifying nonlinear port-Hamiltonian systems from input-state-output data. Identification of port-Hamiltonian systems has received con-siderable attention in recent years. Most contributions in the control community focus on the linear case, e.g., [5], [6], [7], [8], [9]. The approach in [5] consists of two steps: an unstructured system is identified from input-output data and subsequently approximated by a port-Hamiltonian system. In            
+
+> B. M. Shali is with the Department of Electrical Engineering (ESAT), KU Leuven, Leuven, Belgium. Email: brayan.shali@kuleuven.be
+> H. J. van Waarde is with the Bernoulli Institute for Mathematics, Computer Science, and Artificial Intelligence, University of Groningen, Groningen, The Netherlands. Email: h.j.van.waarde@rug.nl
+> B. M. Shali acknowledges financial support from the European Re-search Council under the Advanced ERC Grant Agreement SpikyControl (n.101054323). H. J. van Waarde acknowledges financial support from the Dutch Research Council under the NWO Talent Programme Veni Agreement (VI.Veni.22.335).
+
+[6] and [7], the system is identified directly from frequency-response data, with [7] additionally accounting for measure-ment noise. In [8], direct identification from input-state-output data is achieved via dynamic mode decomposition [10] under the assumption that the Hamiltonian is known a priori . Finally, [9] provides a comprehensive treatment of the single-input-single-output case. In contrast to these works, we consider the identification of 
+
+nonlinear port-Hamiltonian systems and adopt a kernel-based 
+
+approach. Kernel-based methods have emerged as a popular framework for system identification [11], [12], [13], [14]. In this framework, identification is formulated as a function or operator estimation problem in a reproducing kernel Hilbert space (RKHS) [15]. Kernel-based methods are particularly well suited for modeling nonlinear functions due to their expressive power and flexibility [16], [17]. Furthermore, al-though the resulting estimation problems are typically infinite-dimensional, computational tractability is retained due to the celebrated representer theorem, which reduces them to finite-dimensional problems depending only on the data. While kernel-based methods are well suited for identifying nonlinear models, accurate interpolation of the observed data alone does not guarantee that the resulting models are physi-cally interpretable or accurate outside the observed operating regime. This motivates the incorporation of physical properties and structure into the model and identification procedure. In the kernel-based literature, several works incorporate proper-ties such as stability [18], positivity [19], [20], (incremental) dissipativity [21], and fading memory [22]. Related ideas also appear in our previous work [23], where nonnegativity of the input-output operator is imposed as a necessary condition for passivity, and in [24], which considers kernel-based estimation of the frequency response of a strictly passive linear system. In this work, we incorporate a port-Hamiltonian structure directly into a kernel-based identification framework. This presents several challenges. First, the Hamiltonian must be identified from data on its gradient rather than from di-rect function evaluations. Second, the dissipative structure must satisfy a nonnegativity constraint, which is inherently nonlinear and therefore cannot be handled within standard RKHS formulations. To address these challenges, we model the Hamiltonian and input maps in suitable RKHSs, while the interconnection and dissipation structure are modeled in a sum-of-squares fashion [25], [26]. Our main contributions are twofold. First, we establish a representer theorem for the resulting infinite-dimensional estimation problem, allowing it to be reduced to a finite-dimensional one. Second, since the reduced problem is nonconvex, we propose a solution 
+
+> arXiv:2606.12163v1 [math.OC] 10 Jun 2026 2
+
+algorithm and prove its convergence. The relevance of the proposed framework extends beyond system identification to control design. Models that accurately reproduce observed data may still fail to capture properties that are important for controller synthesis, which has motivated a growing interest in so-called identification for control [27]. A related line of work considers the direct synthesis of controllers from data, thereby bypassing the identification step altogether, see [28], [29], [30] for examples in the kernel-based setting. Although control is not considered explicitly in the present paper, the proposed identification framework produces port-Hamiltonian models that are passive by construction. This enables the use of a broad range of passivity-based control techniques and provides a natural starting point for robust control design. As an example, [31] employs a kernel-based framework for passive controllers, where passivity guarantees closed-loop stability while the controller parameters are opti-mized for performance. Our work is also related to recent developments in physics-informed machine learning [32], where learning methods are designed to respect underlying physical structure. In particular, there has been significant interest in incorporating Hamilto-nian and port-Hamiltonian structures [33]. Examples include Gaussian-process models of Hamiltonian systems [34] and kernel-based approaches for learning Hamiltonian vector fields [35]. A particularly influential development is the introduction of Hamiltonian neural networks (HNNs) [36], which have since been extended to account for external inputs [37] and dissipation [38]. Building on these developments, various learning methods for full port-Hamiltonian systems have been proposed in [39], [40], [41], [42]. In contrast to the present work, these methods rely on finite-dimensional parameteriza-tions, whereas we adopt a kernel-based formulation. The remainder of this paper is organized as follows. Sec-tion II introduces notation and relevant preliminaries. Sec-tion III formulates the identification problem as an optimiza-tion problem. Section IV presents our first main result, namely, a representer theorem for this optimization problem. Section V presents our second main result, namely, an algorithm for solving the resulting finite-dimensional problem and a proof of its convergence. Section VI illustrates the results with a simple example, while Section VII concludes the paper. The appendix contains several technical results from RKHS theory that are used throughout the paper. II. N OTATION AND PRELIMINARIES 
+
+We use mostly standard notation. We denote the set of positive integers by N, set of real numbers by R, and the set of nonnegative real numbers by R+. For n ∈ N, we denote the set {1, . . . , n } by [n]. We denote the Cartesian product of sets X and Y by X × Y , and the n-times Cartesian product of 
+
+X with itself by Xn. We denote the set of real n × p matrices by Rn×p, and the set of real n × n symmetric matrices by 
+
+Sn. We denote the smallest eigenvalue of a symmetric matrix 
+
+X ∈ Sn by λmin (X). We denote the matrix obtained by vertically concatenating the matrices Xi ∈ Rni×p, i ∈ [N ],by col( X1, . . . , X N ) ∈ R(PNi=1 ni)×p.Consider a differentiable map H : Rn → R. We denote the partial derivative of H with respect to the i-th component by 
+
+∂iH : Rn → R, and the vector of partial derivatives (gradient) by ∂H : Rn → Rn. Consider a differentiable map of two variables h : Rn × Rn → R. We denote the partial derivative of h with respect to the i-th component of the first variable by 
+
+∂f
+
+> i
+
+h : Rn × Rn → R, and the gradient with respect to the first variable by ∂fh : Rn × Rn → Rn. Similarly, we denote the partial derivative of h with respect to the i-th component of the second variable by ∂s 
+
+> i
+
+h : Rn × Rn → R, and the gradient with respect to the second variable by ∂sh : Rn × Rn → Rn.
+
+A. Hilbert spaces 
+
+Given a Hilbert space W, we denote the inner product by 
+
+⟨· , ·⟩ W and the induced norm by ∥·∥ W . We often omit the subscript when the space is clear from the context. Given another Hilbert space V, we denote the Banach space of bounded linear operators from W to V by B(W, V) and the corresponding operator norm by ∥·∥ . We use the shorthand notation B(W) = B(W, W). We denote the adjoint of 
+
+Q ∈ B(W, V) by Q∗ ∈ B(V, W). The operator Q ∈ B(W)
+
+is nonnegative if ⟨Gw, w ⟩ ≥ 0 for all w ∈ W . We denote the subset of nonnegative operators by B(W)+ ⊂ B(W). Given an operator Q ∈ B(W), we write Q ≥ 0 to indicate that 
+
+Q is nonnegative and self-adjoint, i.e, Q = Q∗ ∈ B(W)+.In the case where W = Rn and, thus, B(W) = Rn×n, this means that Q ≥ 0 if Q is symmetric positive semidefinite. Note that an operator Q ∈ B(W) is nonnegative if and only if Q + Q∗ ≥ 0. Given self-adjoint operators A, B ∈ B(W),we write A ≥ B or B ≤ A to indicate that A − B ≥ 0.Suppose that W is separable and the vectors wi, i ∈ N, form an orthonormal basis. We say that Q ∈ B(W) is a Hilbert-Schmidt operator if its Hilbert-Schmidt norm 
+
+∥Q∥2 
+
+> H
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+∥Qw i∥2 
+
+> W
+
+(1) is finite. We denote the subset of Hilbert-Schmidt operators by 
+
+H (W) ⊂ B(W), and the subset of of nonnegative Hilbert-Schmidt operators by H (W)+ ⊂ H (W).
+
+B. Matrix-valued maps and convexity 
+
+Consider a differentiable map A : Rn → Rp×p. We denote the partial derivative of A with respect to the i-th component by ∂iA : Rn → Rp×p. The gradient of A is the operator-valued map ∂A : Rn → B(Rn, Rp×p) given by 
+
+∂A (x)y =
+
+> n
+
+X
+
+> i=1
+
+∂iA(x)yi (2) for all x, y ∈ Rn, where yi is the i-th component of y. The 
+
+linearization of A around ¯x ∈ Rn is given by the map 
+
+x 7 → A(¯ x) + ∂A (¯ x)( x − ¯x) (3) We say that A has a pointwise property if A(x) has this property for all x ∈ Rn, e.g., A is pointwise symmetric if 3
+
+A(x) is symmetric for all x ∈ Rn. A pointwise symmetric A
+
+is positive semidefinite convex (psd-convex) if 
+
+A((1 − λ)x1 + λx 2) ≤ (1 − λ)A(x1) + λA (x2) (4) for all x1, x 2 ∈ Rn and λ ∈ [0 , 1] . Examples of psd-convex maps include A(x) = x⊤x and A(x) = xx ⊤. We say that A
+
+is psd-concave if −A is psd-convex. Note that affine maps are both psd-convex and psd-concave, the finite sum of psd-convex maps is psd-convex, and the composition of a psd-convex map and an affine map is psd-convex. If A is psd-convex, then its linearization around ¯x ∈ Rn is an underestimation of A, i.e., 
+
+A(¯ x) + ∂A (¯ x)( x − ¯x) ≤ A(x) (5) for all x ∈ Rn, see [43, Lemma 2.2]. If p = 1 , i.e., A is scalar-valued, then the definition of psd-convexity coincides with the usual definition of convexity. In this case, we say that A is strongly convex with convexity parameter ρ > 0 if the map x 7 → A(x) − 12 ρ∥x∥2 is convex. Finally, we note that the definitions above extend to any matrix-valued map 
+
+A : V → Rp×p where V is a finite-dimensional Hilbert space and, thus, isometrically isomorphic to Rn. In particular, they extend to any V that can be written as the Cartesian product of spaces of the form Rn×m and spaces of the form Rn.III. P ROBLEM FORMULATION 
+
+We consider the problem of identifying a (nonlinear) port-Hamiltonian system from input-state data. In particular, we consider an input-state-output port-Hamiltonian system 
+
+˙x = ( J(x) − R(x)) ∂H (x) + G(x)u, (6a) 
+
+y = G(x)⊤∂H (x), (6b) with input u ∈ Rm, state x ∈ Rn, and output y ∈ Rm.Here, J : Rn → Rn×n is a pointwise skew-symmetric map that describes the lossless interconnection structure, while 
+
+R : Rn → Rn×n is a pointwise symmetric and nonnegative map that describes the dissipative resistive structure. The map 
+
+H : Rn → R is referred to as the Hamiltonian and represents the stored energy in the system, while G : Rn → Rn×m is the input (port) map that describes how the external input enters the state dynamics and how the output is paired with the effort variables of the energy-storing elements. It is well-known that port-Hamiltonian systems are cyclo-passive in general and passive if the Hamiltonian H is bounded from below, see [4, Section 6.1] for details. In the context of this paper, it is useful to reformulate the dynamics (6a) as 
+
+˙x = −F (x) ∂H ∂x (x) + G(x)u, (7) where F : Rn → Rn×n is pointwise nonnegative. To see that the two formulations are equivalent, note that 
+
+F (x) = −J(x) + R(x) (8) is nonnegative if J(x) = −J(x)⊤ and R(x) ≥ 0. Conversely, if F (x) is nonnegative, then 
+
+J(x) = 12
+
+ F (x)⊤ − F (x) , (9) 
+
+R(x) = 12
+
+ F (x)⊤ + F (x) , (10) are such that J(x)⊤ = −J(x) and R(x) ≥ 0.Now, suppose that we are given a data set 
+
+(xi, ˙xi, u i) ∈ Rn × Rn × Rm, i ∈ [N ], (11) consisting of N ∈ N samples of the state, state derivative and input of an unknown port-Hamiltonian system. At a high-level, we consider the problem of identifying a system of the form (7) that fits the data well. In other words, we want to find 
+
+H : Rn → R, G : Rn → Rn×m and pointwise nonnegative 
+
+F : Rn → Rn×n such that the data misfit 
+
+L(F, H, G ) = 
+
+> N
+
+X
+
+> i=1
+
+∥ ˙xi + F (xi)∂H (xi) − G(xi)ui∥2 (12) is small. We formalize what small means by introducing an appropriate cost functional in the next section. For simplicity of exposition, we assume that m = 1 so that 
+
+G : Rn → Rn. The case where m > 1 follows by considering the components of u as separate inputs such that 
+
+G(x)u =
+
+> m
+
+X
+
+> i=1
+
+Gi(x)ui, (13) where ui is the i-th component of u and Gi : Rn → Rn. We also note that we can also incorporate data on the output by augmenting the data misfit. In particular, if we also have N
+
+samples of the output yi ∈ Rm, i ∈ [N ], then the augmented data misfit contains the additional term 
+
+> N
+
+X
+
+> i=1
+
+∥yi − G(xi)⊤∂H (xi)∥2. (14) Further details can be found in Remark 2 and Remark 5. IV. R EPRESENTER THEOREM 
+
+In this section, we provide a partial solution to the problem stated in the last section. We do this by leveraging the theory of reproducing kernel Hilbert spaces. First, we formalize the problem statement by formulating an appropriate infinite-dimensional constrained optimization problem. Then, as the main result in this section, we obtain a representer theorem for the latter that reduces it to a finite-dimensional constrained optimization problem. Although finite-dimensional, this prob-lem is nonconvex and, thus, nontrivial to solve. Therefore, the next section is devoted to providing an algorithm to compute a solution. Our approach to solving the problem leverages the theory of reproducing kernel Hilbert spaces. The relevant background on this theory can be found in the appendix. In particular, we model H : Rn → R as a map from a reproducing kernel Hilbert space H with kernel h : Rn × Rn → R, and 
+
+G : Rn → Rn as a map from a reproducing kernel Hilbert space G with kernel g : Rn ×Rn → Rn×n. We make no special assumptions on the spaces H and G, or, equivalently, the kernels h and g. However, we note that the particular choice of kernels matters as it (partially) determines the subclass of port-Hamiltonian systems that are used to fit the data. For example, we can ensure that the identified system is passive 4
+
+by choosing a kernel h which guarantees that the identified map H is bounded from below, see Remark 3. In the meantime, note that we cannot naively model a pointwise nonnegative map F : Rn → Rn×n as an arbitrary member of a reproducing kernel Hilbert space. This is because pointwise nonnegative maps are not preserved under negative scalar multiplication, hence no vector space can consist of only pointwise nonnegative maps. Instead, we take a different approach inspired by the sum-of-squares idea introduced in [25] how the output is paired with the energy variables, and further developed in [23] for operator-valued kernels, see Appendix C for details. To this end, consider a feature map ϕ : Rn → B(Rn, W),where W is a Hilbert space, and let f : Rn × Rn → B(Rn) be the corresponding kernel, i.e., f(x, y ) = ϕ(x)∗ϕ(y). We model a pointwise nonnegative map F : Rn → Rn×n as 
+
+F = ϕ(·)∗Qϕ (·), (15) where Q ∈ H (W) is nonnegative, that is, Q ∈ H (W)+.The map F is pointwise nonnegative because 
+
+⟨F (x)ξ, ξ ⟩Rn = ⟨Qϕ (x)ξ, ϕ (x)ξ⟩W ≥ 0 (16) for all x, ξ ∈ Rn, where we used the fact that Q is nonnegative. 
+
+Remark 1: The properties of the model classes considered above depend strongly on the choice of kernel. The problem of selecting an appropriate kernel is beyond the scope of this paper. Nevertheless, we briefly recall several notions of universality that characterize the approximation capabilities of the resulting model classes. A kernel (or feature map) is called 
+
+universal if any continuous function can be approximated to arbitrary precision on compact sets by functions from its associated RKHS [16]. A kernel is called differentially universal if any continuously differentiable function and its derivatives can be approximated in the same sense by functions from its associated RKHS and their derivatives [44]. The Gaussian kernel is a well-known example of a differentially universal kernel. Moreover, the model class (15) is universal for pointwise nonnegative continuous maps whenever the feature map is universal, that is, any continuous pointwise nonnegative map can be approximated in the sense above by a map of the form (15). This is shown in [25] for scalar-valued maps, and in [26] for symmetric-valued maps. With the models of F , H and G established, our goal is to find (Q, H, G ) ∈ H (W)+ × H × G such that the data misfit L(F, H, G ) is small, where F is given by (15). More precisely, we consider the regularized least squares problem 
+
+min L(F, H, G ) + α∥Q∥2 
+
+> H
+
++ β∥H∥2 
+
+> H
+
++ γ∥G∥2
+
+> G
+
+s.t. (Q, H, G ) ∈ H (W)+ × H × G and (15) holds , (17) where α > 0, β > 0 and γ > 0. Here, the first term promotes small misfit L(F, H, G ), i.e., a good fit of the data. The other terms promote small norms ∥Q∥H , ∥H∥H and ∥G∥G , which is interpreted as low complexity of the maps F , H and G,respectively. The parameters α, β and γ regulate the balance between good fit of the data and model complexity. Note that (17) is an infinite-dimensional constrained op-timization problem, which is difficult (if at all possible) to solve directly. Fortunately, the following representer theorem reduces it to a finite-dimensional problem and, thus, provides a path to a tractable solution. 
+
+Theorem 1: Problem (17) admits a minimizer of the form 
+
+Q =
+
+> N
+
+X
+
+> i,j =1
+
+ϕ(xi)Mij ϕ(xj )∗, Mij ∈ Rn×n, (18a) 
+
+H =
+
+> N
+
+X
+
+> i=1
+
+∂sh(·, x i)⊤ci, ci ∈ Rn, (18b) 
+
+G =
+
+> N
+
+X
+
+> i=1
+
+g(·, x i)vi, vi ∈ Rn (18c) where the block matrix 
+
+M =
+
+
+
+M11 · · · M1N
+
+... . . . ...
+
+MN 1 · · · MN N 
+
+ ∈ RnN ×nN (19) is nonnegative. Furthermore, the map 
+
+F =
+
+> N
+
+X
+
+> i,j =1
+
+f(·, x i)Mij f(·, x j )⊤, (20) is such that F = ϕ(·)∗Qϕ (·).
+
+Proof: Let ¯Q ⊂ H (W)+ be the subset of operators of the form (18a), where the block matrix in (19) is nonnegative. Similarly, let ¯H ⊂ H and ¯G ⊂ H be the subspaces of maps of the form (18b) and (18c), respectively. Moreover, let the map 
+
+c : H (W)+ × H × G → R+ be the cost of (17), that is, 
+
+c(Q, H, G ) = L(F, H, G ) + α∥Q∥2 
+
+> H
+
++ β∥H∥2 
+
+> H
+
++ γ∥G∥2
+
+> G
+
+where F = ϕ(·)∗Qϕ (·). Let (Q0, H 0, g 0) ∈ ¯Q × ¯H × ¯G be arbitrary and let ¯Q0, ¯H0 and ¯G0 be the closed and bounded subsets of Q ∈ ¯Q, H ∈ ¯H and G ∈ ¯G, respectively, such that 
+
+α∥Q∥H ≤ c0, β∥H∥H ≤ c0 and γ∥G∥G ≤ c0, where 
+
+c0 = c(Q0, H 0, g 0). (21) We will show that the problem 
+
+min c(Q, H, G )
+
+s.t. (Q, H, G ) ∈ ¯Q0 × ¯H0 × ¯G0
+
+(22) has a minimizer that is also a minimizer of (17). First, note that c is nonnegative and continuous in 
+
+(Q, H, G ). Moreover, ¯Q0 × ¯H0 × ¯G0 is a closed and bounded subset of a finite-dimensional vector space, hence it is com-pact. By the extreme value theorem, this implies that (22) has a minimizer. Let ( ¯Q0, ¯H0, ¯g0) be a minimizer of (22) and let 
+
+(Q, H, G ) ∈ H (W)+ × H × G be arbitrary. Our goal is to show that 
+
+c( ¯Q0, ¯H0, ¯g0) ≤ c(Q, H, G ). (23) In view of Lemma A.2, Lemma A.5, and Lemma A.9, there exist ( ¯Q, ¯H, ¯G) ∈ ¯Q × ¯H × ¯G such that 
+
+c( ¯Q, ¯H, ¯G) ≤ c(Q, H, G ) (24) If c( ¯Q, ¯H, ¯G) ≤ c0, then α∥ ¯Q∥H ≤ c0, β∥ ¯H∥H ≤ c0 and 
+
+γ∥ ¯G∥G ≤ c0, hence ( ¯Q, ¯H, ¯G) ∈ ¯Q0 × ¯H0 × ¯G0 and, thus, 
+
+c( ¯Q0, ¯H0, ¯g0) ≤ c( ¯Q, ¯H, ¯G) (25) 5
+
+by definition of ( ¯Q0, ¯H0, ¯g0). If c0 < c ( ¯Q, ¯H, ¯G), then 
+
+c( ¯Q0, ¯H0, ¯g0) < c ( ¯Q, ¯H, ¯G) (26) because (Q0, H 0, g 0) ∈ ¯Q0 × ¯H0 × ¯G0, hence 
+
+c( ¯Q0, ¯H0, ¯g0) ≤ c(Q0, H 0, g 0) = c0. (27) Combining (24), (25) and (26) yields (23), which shows that ( ¯Q0, ¯H0, ¯g0) is indeed a minimizer of (17). Note that 
+
+( ¯Q0, ¯H0, ¯g0) ∈ ¯Q× ¯H× ¯G, hence ¯Q0, ¯H0 and ¯g0 are of the form (18a), (18b) and (18c), respectively, where the block matrix in (19) is nonnegative. Finally, (20) follows from the fact that 
+
+ϕ(·)∗ϕ(xi) = f(·, x i) for all i ∈ [N ].Theorem 1 implies that we can solve (17) by substituting (18) and solving for the coefficients Mij ∈ Rn×n, ci ∈ Rn,
+
+vi ∈ Rn, i, j ∈ [N ], under the constraint that the block matrix in (19) is nonnegative. To this end, let 
+
+F = col( F1, . . . , FN ) ∈ RnN ×nN (28) be the Gram matrix associated with f,
+
+H = col( H1, . . . , HN ) ∈ RnN ×nN (29) be the partial derivative Gram matrix associated with h, and 
+
+G = col( G1, . . . , GN ) ∈ RnN ×nN (30) be the Gram matrix associated with g, where all three Gram matrices are associated with the data xi ∈ Rn, i ∈ [N ]. We refer to (94), (112) and (131) in the appendix for the definitions of these Gram matrices. Here, we use them to obtain the following corollary of Theorem 1. 
+
+Corollary 2: Problem (17) has a minimizer of the form (18) which can be found by solving 
+
+min ¯L(M, c, v ) + α tr( FM FM ⊤) + βc ⊤Hc + γv ⊤Gv
+
+s.t. M ∈ RnN ×nN  
+
+> +
+
+, c ∈ RnN , v ∈ RnN 
+
+(31) where 
+
+¯L(M, c, v ) = 
+
+> N
+
+X
+
+> i=1
+
+∥ ˙xi + FiM F⊤ 
+
+> i
+
+Hic − uiGiv∥2 (32) 
+
+Proof: Let Q ∈ H (W)+, H ∈ H and G ∈ G be of the form in Theorem 1. As shown in the appendix, it follows that 
+
+G(xi) = Giv, ∥G∥2 
+
+> G
+
+= v⊤Gv (33) see (93) and the preceding discussion. Similarly, 
+
+∂H (xi) = Hic, ∥H∥H = c⊤Hc (34) see (110) and Lemma A.8, while 
+
+F (xi) = FiM F⊤ 
+
+> i
+
+, ∥Q∥2 
+
+> H
+
+= tr( FM FM ⊤) (35) see (130) and Lemma A.11. This implies that 
+
+L(F, H, G ) = ¯L(M, c, v ) (36) and the original problem (17) reduces to (31). Although problem (31) is finite-dimensional, it is not convex because of the (nonlinear) terms FiM F⊤ 
+
+> i
+
+Hic, i ∈ [N ], in 
+
+¯L(M, c, v ). This means that solving (31) is nontrivial and requires additional effort. 
+
+Remark 2: We can also incorporate data of the output of the system. Suppose that, in addition to (11), we have N
+
+samples of the output yi ∈ R, i ∈ [N ]. To incorporate this, we add the term PNi=1 ∥yi − G(xi)⊤∂H (xi)∥2 to the data misfit L(F, H, G ). It is straightforward to show that Theorem 1 remains valid, while the cost in (31) acquires the additional term PNi=1 ∥yi − v⊤G⊤ 
+
+> i
+
+Hic∥2. The remaining results can also be adapted to incorporate output data, see Remark 5. 
+
+Remark 3: Port-Hamiltonian systems are cyclo-passive, i.e., the internal energy of the system (the Hamiltonian) does not increase on closed trajectories of the state. More precisely, if the state trajectory is such that x(t0) = x(t1) for some 
+
+t0, t 1 ∈ R, then H(x(t0)) ≤ H(x(t1)) . If the Hamiltonian is bounded from below, then the system is passive, i.e., the internal energy of the system does not increase on any 
+
+trajectory of the state. In view of Theorem 1, the Hamiltonian obtained by solving problem (17) is bounded from below if the partial derivative kernel sections ∂s 
+
+> j
+
+h(·, x ) are bounded from below for all x ∈ Rn and j ∈ [n]. In other words, we can ensure that the identified system is passive by choosing a kernel h whose partial derivative kernel sections are bounded from below. This is the case for, e.g., the Gaussian kernel. V. O PTIMIZATION ALGORITHM 
+
+In this section, we present an algorithm that provides a tractable solution to problem (31) and, thus, to the problem considered in this paper. The algorithm follows the general approach of [43], where the authors consider a class of (nonconvex) optimization problems with convex cost and psd-convex-concave matrix inequality constraints. The key idea is to solve the problem by successively solving subproblems obtained by linearizing the concave part of the constraints. This renders each subproblem convex and therefore tractable using standard convex optimization techniques. Although [43, Theorem 4.3] establishes convergence of this algorithm under a set of technical assumptions, these are difficult to verify for the problem considered here. Instead, we provide a direct convergence proof based on [45, Theorem 3.1]. 
+
+A. Problem reformulation 
+
+We first show that (31) can be reformulated as a problem with a convex cost and psd-convex-concave matrix inequality constraints. The only nonconvex term in the cost of (31) is ¯L(M, c, v ). We can move this term to the constraints by introducing appropriate auxiliary variables pi ∈ R, i ∈ [N ].In particular, problem (31) is equivalent to 
+
+min 
+
+> N
+
+X
+
+> i=1
+
+p2 
+
+> i
+
++ α tr( FM FM ⊤) + βc ⊤Hc + γv ⊤Gv
+
+s.t. ∥ ˙xi + FiM F⊤ 
+
+> i
+
+Hic − uiGiv∥2 ≤ p2 
+
+> i
+
+, i ∈ [N ],M + M ⊤ ≥ 0
+
+(37) where, for ease of notation, we have omitted the constraints 
+
+M ∈ RnN ×nN , c ∈ RnN , v ∈ RnN , pi ∈ R, i ∈ [N ]. The 
+
+i-th constraint is equivalent to 
+
+piI ˙xi + FiM F⊤ 
+
+> i
+
+Hic − uiGiv
+
+∗ pi
+
+
+
+≥ 0 (38) 6
+
+by the Schur complement characterization of positive semidef-initeness, hence (37) is an optimization problem with convex cost and matrix inequality constraints. The constraint (38) is biaffine and can therefore be written as a psd-convex-concave matrix inequality. To see this, define the linear map Xi : RnN ×nN → R(n+1) ×(n+1) by 
+
+Xi(M ) = 
+
+FiM ⊤F⊤ 
+
+> i
+
+00 0
+
+
+
+, (39) the linear map Yi : RnN → R(n+1) ×(n+1) by 
+
+Yi(c) = 
+
+0 Hic
+
+0 0
+
+
+
+, (40) and the affine map Zi : RnN → Sn+1 by 
+
+Zi(v) = 
+
+ 0 ˙xi − uiGiv
+
+˙x⊤ 
+
+> i
+
+− uiv⊤G⊤ 
+
+> i
+
+0
+
+
+
+. (41) With these definitions, the constraint (38) can be written as 
+
+Xi(M )⊤Yi(c) + Yi(c)⊤Xi(M ) + Zi(v) + piI ≥ 0. (42) Note that 
+
+X⊤Y + Y ⊤X = X⊤X + Y ⊤Y − (X − Y )⊤(X − Y ) (43) for all X, Y ∈ R(n+1) ×(n+1) , and the maps 
+
+(X, Y ) 7 → X⊤X + Y ⊤Y, (44) 
+
+(X, Y ) 7 → (X − Y )⊤(X − Y ) (45) are psd-convex, see, e.g., [43, Lemma 3.1]. Now, define the map Ai : RnN ×nN × RnN → Sn+1 by 
+
+Ai(M, c ) = Xi(M )⊤Xi(M ) + Yi(c)⊤Yi(c) (46) and the map Bi : RnN ×nN × RnN → Sn+1 by 
+
+Bi(M, c ) = ( Xi(M ) − Yi(c)) ⊤(Xi(M ) − Yi(c)) (47) Note that Ai and Bi are psd-convex since Xi and Yi are linear, and the maps in (44) and (45) are psd-convex. Moreover, (42) can be written as 
+
+Bi(M, c ) − Ai(M, c ) − Zi(v) − piI ≤ 0 (48) and, thus, problem (37) is equivalent to 
+
+min f (p, M, c, v )
+
+s.t. M + M ⊤ ≥ 0 and (48) holds for all i ∈ [N ] (49) where f : RN × RnN ×nN × RnN × RnN → R is given by 
+
+f (p, M, c, v ) = p⊤p + α tr( FM FM ⊤) + βc ⊤Hc + γv ⊤Gv, 
+
+and p ∈ RN is the vector whose i-th entry is pi. Note that 
+
+f is convex because F, H and G are positive semidefinite, see Remark A.1. Since Zi is affine, it is also psd-convex. Therefore, Ai(M, c ) + Zi(v) + piI is psd-convex and (48) defines a psd-convex-concave matrix inequality constraint. 
+
+B. Iterative algorithm 
+
+We solve the nonconvex problem (49) by an iterative algorithm in which each step consists of solving a convex subproblem obtained by linearizing the concave part of the constraints. Specifically, let (pk, M k, c k, v k) denote the k-th iterate of the algorithm. The linearization of Ai around this point is given by 
+
+Aki (M, c ) = Ai(M k, c k) + ∂A i(M k, c k)( M − M k, c − ck)
+
+It is straightforward to verify that 
+
+∂A i(M k, c k)( M, c ) = Xi(M )⊤Xi(M k) + Xi(M k)⊤Xi(M )+ Yi(c)⊤Yi(ck) + Yi(ck)⊤Yi(c),
+
+hence ∂A i(M k, c k)( M k, c k) = 2 Ai(M k, c k) and, thus, 
+
+Aki (M, c ) = −Ai(M k, c k) + ∂A i(M k, c k)( M, c ). (50) The k-th subproblem is obtained by replacing Ai in (48) with its linearization Aki , resulting in the convex constraint 
+
+Bi(M, c ) − Aki (M, c ) − Zi(v) − piI ≤ 0. (51) The latter is equivalent to the affine matrix inequality 
+
+Aki (M, c ) + Zi(v) + piI Xi(M )⊤ − Yi(c)⊤
+
+Xi(M ) − Yi(c) I
+
+
+
+≥ 0 (52) by the Schur complement characterization of negative semidef-initeness. The next iterate (pk+1 , M k+1 , c k+1 , v k+1 ) is ob-tained by solving the (convex) k-th subproblem 
+
+min f (p, M, c, v )
+
+s.t. M + M ⊤ ≥ 0 and (52) holds for all i ∈ [N ]. (53) The constraints in this subproblem are affine matrix inequali-ties, whereas the cost function is convex quadratic. Indeed, in view of Remark A.1, the cost f (p, M, c, v ) can be written as 
+
+
+
+p
+
+vec( M )
+
+cv
+
+ 
+
+> ⊤
+
+
+
+I 0 0 00 αF ⊗ F 0 00 0 βH 00 0 0 γG
+
+
+
+p
+
+vec( M )
+
+cv
+
+ .
+
+where we recall that H, G, F and, thus, F ⊗ F are positive semidefinite. Consequently, the k-th subproblem (53) can be reformulated as a linear semidefinite program. 
+
+Remark 4: The k-th subproblem is easily seen to be strictly feasible. Indeed, M +M ⊤ > 0 for M = I, while the inequality (52), equivalently (51), can be made strict by choosing pi > 0
+
+sufficiently large, i ∈ [N ]. Consequently, since f is convex, continuous and bounded from below, the k-th subproblem has at least one minimizer for any (pk, M k, c k, v k). In particular, this means that the iteration is well-defined for any initial guess 
+
+(p0, M 0, c 0, v 0). If, in addition, f is strongly convex, i.e., F,
+
+H and G are invertible, then the k-th subproblem has a unique 
+
+minimizer for any (pk, M k, c k, v k).Although not strictly necessary, we may choose the initial guess (p0, M 0, c 0, v 0) to be a strictly feasible point of the original problem (49), i.e., M 0 + ( M 0)⊤ > 0 and 
+
+Bi(M 0, c 0) − Ai(M 0, c 0) − Zi(v0) − p0 
+
+> i
+
+I < 0 (54) 7
+
+for all i ∈ [N ]. The latter is equivalent to 
+
+∥ ˙xi + FiM 0F⊤ 
+
+> i
+
+Hic0 − uiGiv0∥2 < p 0 
+
+> i
+
+, (55) for all i ∈ [N ], hence we can take, e.g., 
+
+M 0 = I, c 0 = 0 , v 0 = 0 , p 0 
+
+> i
+
+= ∥ ˙xi∥2 + 1 , i ∈ [N ]. (56) This leads to the following summary of the iterative algorithm for solving problem (49). 
+
+Algorithm 1 Solving problem (49)  
+
+> 1:
+
+Define Xi, Yi, Zi, Ai and Bi according to (39), (40), (41), (46) and (47), respectively, for all i ∈ [N ]. 
+
+> 2:
+
+Choose (p0, M 0, c 0, v 0) such that M 0 + ( M 0)⊤ > 0 and 
+
+∥ ˙xi + FiM 0F⊤ 
+
+> i
+
+Hic0 − uiGiv0∥2 < p 0
+
+> i
+
+for all i ∈ [N ]. 
+
+> 3:
+
+Initialize k = 0 and choose a tolerance ε > 0. 
+
+> 4:
+
+Define Aki according to (50) for all i ∈ [N ]. 
+
+> 5:
+
+Solve (53) to obtain (pk+1 , M k+1 , c k+1 , v k+1 ). 
+
+> 6:
+
+Stop if 
+
+∥(pk+1 , M k+1 , c k+1 , v k+1 ) − (pk, M k, c k, v k)∥ < ε.  
+
+> 7:
+
+Set k = k + 1 and return to Step 4. 
+
+Remark 5: We can modify Algorithm 1 to incorporate output data. Building on the modifications in Remark 2, we introduce auxiliary variables ˆpi ∈ R, i ∈ [N ], so that the modified problem (37) contains the additional term PNi=1 ˆp2 
+
+> i
+
+in the cost, as well as the additional constraints ∥yi − v⊤G⊤ 
+
+> i
+
+Hic∥2 ≤ ˆp2 
+
+> i
+
+,
+
+i ∈ [N ]. Although these constraints are not convex, they can be expressed as biaffine matrix inequalities, which can be reformulated as psd-convex–concave matrix inequalities. To this end, let ˆXi(v), ˆYi(c) ∈ R(n+1) ×2, i ∈ [N ], be given by 
+
+ˆXi(v) = 
+
+Giv 00 0
+
+
+
+, ˆYi(c) = 
+
+0 Hiv
+
+0 0
+
+
+
+, (57) and let ˆZ ∈ R2×2, i ∈ [N ], be given by 
+
+ˆZi =
+
+ 0 −yi
+
+−yi 0
+
+
+
+(58) Then, the additional constraints in (37) are equivalent to 
+
+ˆXi(v)⊤ ˆYi(c) + ˆYi(c)⊤ ˆXi(v) + ˆZi + ˆ piI ≥ 0. (59) This corresponds to adding the constraints 
+
+ ˆAki (v, c ) + ˆZi + ˆ piI ˆXi(v)⊤ − ˆYi(c)⊤
+
+ˆXi(v) − ˆYi(c) I
+
+
+
+≥ 0, i ∈ [N ],
+
+to the k-th subproblem (53), where 
+
+ˆAki (v, c ) = − ˆAi(vk, c k) + ∂ ˆAi(vk, c k)( v, c ) (60) is the linearization of 
+
+ˆAi(v, c ) = ˆXi(v)⊤ ˆXi(v) + ˆYi(c)⊤ ˆYi(c) (61) whose derivative is given by 
+
+∂ ˆAi(vk, c k)( v, c ) = ˆXi(v)⊤ ˆXi(vk) + ˆXi(vk)⊤ ˆXi(v)+ ˆYi(c)⊤ ˆYi(ck) + ˆYi(ck)⊤ ˆYi(c).
+
+Naturally, we also need to add the term PNi=1 ˆp2 
+
+> i
+
+to the cost of the k-th subproblem. 
+
+C. Convergence analysis 
+
+We now prove that the sequence (pk, M k, c k, v k), k ∈ N,generated by Algorithm 1 converges to a stationary point of (49). We do this under the assumption that the Gram matrices F, H and G are invertible and, thus, positive definite. This ensures that the cost function f is strongly convex with convexity parameter 
+
+ρf = min  1, αλ min (F)2, βλ min (H), γλ min (G) > 0. (62) where we used the fact that λmin (F ⊗ F) = λmin (F)2. In particular, this means that the k-th subproblem (53) has a 
+
+unique minimizer for any (pk, M k, c k, v k), see Remark 4. We prove convergence of Algorithm 1 by rewriting it as a fixed-point iteration and applying [45, Theorem 3.1]. Define 
+
+Θ = RN × RnN ×nN × RnN × RnN (63) and let θk = ( pk, M k, c k, v k) ∈ Θ for all k ∈ { 0} ∪ N. Note that problem (49) can be rewritten as 
+
+min  
+
+> θ∈Θ
+
+f (θ) s.t. B(θ) − A(θ) ≤ 0, (64) where the maps A, B : Θ → S(n+1) N +nN are psd-convex. In particular, for θ = ( p, M, c, v ), A(θ) is the block diagonal matrix with Ai(M, c )+ Zi(v)+ piI, i ∈ [N ], and M +M ⊤ on the block diagonal, and B(θ) is the block diagonal matrix with 
+
+Bi(M, c ), i ∈ [N ], and 0 ∈ RnN ×nN on the block diagonal. Next, consider the set-valued map C : Θ ⇒ Θ given by 
+
+C(θ) = {ϑ ∈ Θ | B(ϑ) − A(θ) − ∂A (θ)( ϑ − θ) ≤ 0 } .
+
+Note that C(θk) coincides with the constraint set of the k-th subproblem (53), which is strictly feasible for any θk ∈ Θ, see Remark 4. Therefore, C(θ) is a nonempty, closed, and convex set for all θ ∈ Θ, hence the map S : Θ → Θ given by 
+
+S(θ) = arg min 
+
+> ϑ∈C(θ)
+
+f (ϑ),
+
+is well-defined because f is strongly convex . By construction, the iterates satisfy θk+1 = S(θk), that is, Algorithm 1 can be written as the fixed-point iteration generated by the map S.To apply [45, Theorem 3.1], we first restrict the map S to the nonempty compact subset 
+
+¯Θ = θ ∈ Θ θ ∈ C(θ), f (θ) ≤ f (θ0) . (65) The condition θ ∈ C(θ) is equivalent to B(θ) − A(θ) ≤ 0,that is, θ is feasible for problem (64). Therefore, ¯Θ consists of all feasible points of (64) whose cost does not exceed that of the initial iterate θ0. Note that ¯Θ is nonempty because 
+
+θ0 is feasible, and compact because f is strongly convex. The application of [45, Theorem 3.1] then requires that the following conditions are satisfied: C1) S is uniformly continuous on ¯Θ;C2) S is such that S(θ) ∈ ¯Θ for all θ ∈ ¯Θ;C3) S is strictly monotone with respect to f on ¯Θ, that is, 
+
+f (S(θ)) < f (θ) for all θ ∈ ¯Θ such that S(θ)̸ = θ.We first establish the last two conditions. 
+
+Lemma 3: The following statements hold: 1) S(θ) ∈ C(S(θ)) for all θ ∈ Θ;8
+
+2) f (S(θ)) ≤ f (ϑ) − 12 ρf ∥ϑ − S(θ)∥2 for all ϑ ∈ C(θ).Moreover, conditions C2) and C3) are satisfied. 
+
+Proof: Let θ ∈ Θ. Since A is psd-convex, its linearization is an underestimation, hence 
+
+B(ϑ) − A(ϑ) ≤ B(ϑ) − A(θ) − ∂A (θ)( ϑ − θ), (66) and, thus, ϑ ∈ C(ϑ) for all ϑ ∈ C(θ). Then, S(θ) ∈ C(S(θ)) 
+
+because S(θ) ∈ C(θ) by definition of S, i.e., the first statement holds. Now, let ϑ ∈ C(θ). Note that ϑλ = λϑ + (1 − λ)S(θ)
+
+satisfies ϑλ ∈ C(θ) and 
+
+f (S(θ)) ≤ f (ϑλ) ≤ λf (ϑ) + (1 − λ)f (S(θ)) 
+
+− 12 ρf λ(1 − λ)∥ϑ − S(θ)∥2 (67) for all λ ∈ [0 , 1] , where the first inequality follows from the definition of S and the second follows from the strong convexity of f . Dividing by λ > 0 and rearranging yields 
+
+f (S(θ)) ≤ f (ϑ) − 12 ρf (1 − λ)∥ϑ − S(θ)∥2 (68) for all λ ∈ (0 , 1] . Taking the limit as λ → 0 shows that the second statement holds. Now, let θ ∈ ¯Θ. This implies θ ∈ C(θ) and the second statement yields f (S(θ)) < f (θ) when S(θ)̸ = θ, i.e., C3) is satisfied. Moreover, the first statement yields S(θ) ∈ C(S(θ)) ,while the second yields f (S(θ)) ≤ f (θ) ≤ f (θ0), hence 
+
+S(θ) ∈ ¯Θ, i.e., C2) is also satisfied. Only condition C1) remains to be established. Loosely speaking, we need to show that S(θ′) is “close” to S(θ)
+
+whenever θ′ is “close” to θ. Our approach is as follows. We first show that there exists ϑ ∈ Θ that is simultaneously in the interior of C(θ) and “close” to S(θ). We then show that ϑ is in C(θ′) when θ′ is “close” to θ. Due to Lemma 3, this allows us to show that ϑ is “close” to S(θ′), hence, by the triangle inequality, that S(θ′) is “close” to S(θ).We begin by showing that there exists ¯ϑ ∈ Θ that is in the interior of C(θ) for all θ ∈ ¯Θ. Let D : Θ × Θ → SN (n+1)+ nN 
+
+be given by 
+
+D(ϑ, θ ) = B(ϑ) − A(θ) − ∂A (θ)( ϑ − θ) (69) and note that ϑ ∈ C(θ) if and only if D(ϑ, θ ) ≤ 0.
+
+Lemma 4: There exists ¯ϑ ∈ Θ such that D( ¯ϑ, θ ) ≤ − I for all θ ∈ ¯Θ.
+
+Proof: Let ϑ = ( p, M, c, v ). Recall that C(θk) coincides with the constraint set of the k-th subproblem (53). In partic-ular, D(ϑ, θ k) ≤ − I if and only if M + M ⊤ ≥ I and 
+
+Bi(M, c ) − Aki (M, c ) − Zi(v) − piI ≤ − I (70) for all i ∈ [N ]. In the following, we treat 
+
+θk = ( pk, M k, c k, v k)
+
+as a variable. Since ¯Θ is compact and Aki (I, 0) is a polynomial in θk there exists ¯Ai ∈ Sn+1 such that Aki (I, 0) ≥ ¯Ai for all 
+
+θk ∈ ¯Θ. Choose ¯pi ∈ R, i ∈ [N ], large enough so that 
+
+Bi(I, 0) − ¯Ai − Zi(0) − ¯piI ≤ − I (71) for all i ∈ [N ], and let ¯p ∈ Rn be the vector whose i-th entry is 
+
+¯pi. It follows that ¯ϑ = (¯ p, I, 0, 0) is such that D( ¯ϑ, θ k) ≤ − I
+
+for all θk ∈ ¯Θ, as desired. Let ¯ϑ ∈ Θ be as in Lemma 4. Since ¯Θ is bounded, there exists μ ≥ ∥ ¯ϑ∥ such that ∥ϑ∥ ≤ μ for all ϑ ∈ ¯Θ. Let Θμ ⊂ Θ
+
+be the ball of radius μ. The following lemma shows that, for all θ ∈ ¯Θ, there exists ϑ ∈ Θμ that is simultaneously in the interior of C(θ) and “close” to S(θ).
+
+Lemma 5: For all ε ∈ (0 , 1] and θ ∈ ¯Θ, there exists ϑ ∈ Θμ
+
+such that D(ϑ, θ ) ≤ − εI and ∥ϑ − S(θ)∥ ≤ 2εμ .
+
+Proof: Let ε ∈ (0 , 1] and θ ∈ ¯Θ. Since D is psd-convex in the first variable, ϑλ = λ ¯ϑ + (1 − λ)S(θ) satisfies 
+
+D(ϑλ, θ ) ≤ λD ( ¯ϑ, θ ) + (1 − λ)D(S(θ), θ ) ≤ − λI 
+
+for all λ ∈ [0 , 1] , where we used the fact that D( ¯ϑ, θ ) ≤ − I,see Lemma 4, and D(S(θ), θ ) ≤ 0 because S(θ) ∈ C(θ) by definition of S. Since S(θ) ∈ ¯Θ ⊂ ¯Θμ, we also have that 
+
+∥ϑλ − S(θ)∥ ≤ λ(∥ ¯ϑ∥ + ∥S(θ)∥) ≤ 2λμ (72) hence we can take ϑ = ϑλ ∈ ¯Θμ for λ = ε ∈ (0 , 1] .We are now ready to establish condition C1). 
+
+Lemma 6: The map S is uniformly continuous on ¯Θ.
+
+Proof: Since f and D are continuously differentiable, they are Lipschitz continuous on the compact subsets Θμ and 
+
+Θμ × Θμ, i.e., there exist LD > 0 and Lf > 0 such that 
+
+|f (θ) − f (θ′)| ≤ Lf ∥θ − θ′∥ (73) 
+
+∥D(ϑ, θ ) − D(ϑ, θ ′)∥ ≤ LD ∥θ − θ′∥ (74) for all ϑ, θ, θ ′ ∈ Θμ. Since D maps to symmetric matrices, (74) implies that 
+
+D(ϑ, θ ) − D(ϑ, θ ′) ≤ LD ∥θ − θ′∥I (75) for all ϑ, θ, θ ′ ∈ Θμ.Let ε > 0 be arbitrary. Take δ > 0 such that δL D ≤ 1, and 
+
+θ, θ ′ ∈ ¯Θ such that ∥θ−θ′∥ < δ . Without loss of generality, we assume that f (S(θ)) ≤ f (S(θ′)) . By Lemma 5, there exists 
+
+ϑ ∈ Θμ such that D(ϑ, θ ) ≤ − δL D I and 
+
+∥ϑ − S(θ)∥ ≤ 2δL D μ (76) Consequently, we obtain 
+
+D(ϑ, θ ′) ≤ D(ϑ, θ ) + δL D I ≤ 0 (77) where the first inequality follows from (75). This implies that 
+
+ϑ ∈ C(θ′) and, thus, f (ϑ) ≥ f (S(θ′)) . Using this, we obtain 
+
+f (ϑ) − f (S(θ′)) ≤ f (ϑ) − f (S(θ)) ≤ 2δμL f LD
+
+where the first inequality follows from the assumption that 
+
+f (S(θ)) ≤ f (S(θ′)) , and the second from (73) and (76). Then, Lemma 3 implies that 
+
+12 ρf ∥ϑ − S(θ′)∥2 ≤ f (ϑ) − f (S(θ′)) ≤ 2δμL f LD (78) Using (76), (78) and the triangle inequality, we obtain 
+
+∥S(θ) − S(θ′)∥ ≤ 2δμL D + 2 
+
+s
+
+δμ Lf
+
+ρf
+
+LD (79) 9
+
+which is smaller than ε for sufficiently small δ > 0. This shows that S is uniformly continuous of ¯Θ, as desired. Finally, we can prove the convergence of the algorithm. 
+
+Theorem 7: Suppose that the Gram matrices F, H and G are invertible. The sequence (pk, M k, c k, v k), k ∈ N, converges to a stationary point or to a continuum of stationary points of problem (64). 
+
+Proof: Due to Lemma 3 and Lemma 6, the three con-ditions of [45, Theorem 3.1] are satisfied. It follows that all accumulation points of θk, k ∈ N, are fixed points of S, and 
+
+∥θk+1 − θk∥ → 0 and f (θk) → f (θ∗) as k → ∞ , where 
+
+θ∗ is a fixed point of S. Furthermore, either θk, k ∈ N,converges or its accumulation points, which are fixed points of 
+
+S, form a continuum. It remains to show that the fixed points of S are stationary points of problem (64). To this end, the generalized first-order conditions for problem (64) state that θ
+
+is a stationary point if and only if B(θ) − A(θ) ≤ 0 and there exists Λ ∈ S(n+2) N such that Λ ≥ 0 and 
+
+∂f (θ) + ( ∂B (θ) − ∂A (θ)) ∗ Λ = 0 , (80) 
+
+tr (( B(θ) − A(θ))Λ) = 0 , (81) see [43], [46]. At the same time, by definition, S(θ) is a stationary point of the problem 
+
+min  
+
+> ϑ∈Θ
+
+f (ϑ) s.t. D(ϑ, θ ) ≤ 0, (82) which is the case if and only if D(S(θ), θ ) ≤ 0 and there exists Λ ∈ S(n+2) N such that Λ ≥ 0 and 
+
+∂f (S(θ)) + ( ∂B (S(θ)) − ∂A (θ)) ∗ Λ = 0 , (83) 
+
+tr ( D(S(θ), θ )Λ) = 0 , (84) where we used the fact that the partial derivative of D(ϑ, θ )
+
+with respect to ϑ is given by ∂B (ϑ) − ∂A (θ). Note that 
+
+D(θ, θ ) = B(θ) − A(θ), hence S(θ) = θ if and only if θ
+
+is a stationary point of problem (64), as desired. 
+
+Remark 6: The assumption that f is strongly convex is essential in proving the convergence of Algorithm 1. However, we can avoid making the assumption that F, H and G are invertible by appropriately restricting the spaces in which we search for M , v and c. For example, suppose that G is not invertible. Let T1 be an orthogonal matrix whose columns form a basis for im G, and let T2 be an orthogonal matrix whose columns form a basis for ker G. Since G is symmetric, it follows that T ⊤ 
+
+> 2
+
+G = 0 and GT2 = 0. Furthermore, the matrix T = [T1 T2] is square and invertible, hence 
+
+v ∈ RnN can be written as v = T1v1 + T2v2 for some 
+
+v1 ∈ Rrank G and v2 ∈ RnN −rank G. Note that v appears in (49) only as part of the products v⊤Gv and Gv. By writing 
+
+v as above, these products reduce to v⊤ 
+
+> 1
+
+G1v1 and T1G1v1,where G1 = T ⊤ 
+
+> 1
+
+GT1 is invertible and, thus, positive definite. Therefore, by making appropriate modifications in (49), we can optimize over v1 instead of v and, thus, ensure that the cost 
+
+f is strongly convex in v1. We can make similar modifications if the matrices H and F are also not invertible. VI. ILLUSTRATIVE EXAMPLE 
+
+In this section, we demonstrate our results with an il-lustrative example. Consider one-port circuit consisting of a capacitor, inductor and resistor connected in series. Suppose that the capacitor is linear, i.e., q = Cv C for some constant 
+
+C ∈ R, where q is the charge of the capacitor and vC is the voltage across it. On the other hand, suppose that the inductor and resistor are nonlinear, i.e., ϕ = L(i) and vR = R(i)i
+
+for some functions L : R → R and R : R → R, where ϕ
+
+is the magnetic flux of the inductor, vR is the voltage across the resistor, and i is the current through the port. The port is described by a port-Hamiltonian system with input given by the voltage v across the port, and output given by the current 
+
+i through the port, namely, 
+
+ ˙q
+
+˙ϕ
+
+
+
+=
+
+ 0 1
+
+−1 −R(L−1(ϕ)) 
+
+  q/C L−1(ϕ)
+
+
+
++
+
+01
+
+
+
+v, i = 0 1  q/C L−1(ϕ)
+
+
+
+The latter is of the form (7) with u = v, x = ( q, ϕ ),
+
+F (q, ϕ ) = 
+
+0 −11 R(L−1(ϕ)) 
+
+
+
+, G(q, ϕ ) = 
+
+01
+
+
+
+,
+
+and Hamiltonian H given by the total energy 
+
+H(q, ϕ ) = q2
+
+2C +
+
+Z
+
+L−1(ϕ) d ϕ. (85) Here, we have implicitly assumed that L is invertible, at least in some region of interest. Suppose that true system has C = 1 , R(i) = 0 .1 + i2 and 
+
+L(i) = tanh i. We would like to obtain approximations of the true F , H and G based on data of the form (11). To this end, we model F , H and G as described in the beginning of Section IV with (Gaussian) kernels 
+
+f(x, y ) = e 
+
+> ∥x−y∥22σ2
+> F
+
+I, h(x, y ) = e 
+
+> ∥x−y∥22σ2
+> H
+
+, g(x, y ) = e 
+
+> ∥x−y∥22σ2
+> G
+
+I, 
+
+where I is the 2 × 2 identity matrix, and σF , σ H , σ G > 0
+
+are parameters (the standard deviations of the Gaussians). We collect N = 16 data points by sampling a state trajectory cor-responding to a 30 second piecewise constant input trajectory with 1 second intervals of random values in [−0.1, 0.1] The state trajectory and the state data are shown in Figure 1. The state derivative data is obtained by evaluating the vector field of the true system at the state data, but we note that we could also approximate it from the state trajectory. The solution produced by our algorithm has a data misfit of approximately 4.2 · 10 −3. Figure 2 shows an example output trajectory corresponding to an input trajectory of the same type as the one used for data collection. We see that, although the misfit is fairly small, the approximated trajectory is significantly different from the true one. We attribute this to two factors. First, the optimization problem that we solve is nonconvex, hence it generally has multiple local minima. Second, the model class is overly expressive, especially when using universal kernels. Indeed, the input map G can fit the data well on its own, that is, for nonzero input data, we can find G such that ˙xi ≈ G(xi)ui for all i ∈ [N ]. Consequently, the proposed algorithm likely converges to a suboptimal local minimum. Neither of these factors is present if we do not impose any structure and simply model the vector field and 10             
+
+> −0.200.2
+> −0.2
+> 0
+> 0.2
+> q
+> ϕ
+> Fig. 1. Sampled state trajectory corresponding to a 30 second piecewise constant input with 1 second intervals of random values in [−0.1,0.1] .
+> 0510 15 20
+> −0.2
+> 0
+> 0.2
+> t
+> y
+> Fig. 2. Example output trajectories corresponding to a 30 second piecewise constant input with 1 second intervals of random values in [−0.1,0.1] : true (solid, black), unstructured approximation (dashed, blue), port-Hamiltonian approximation (dashed-dotted, teal), port-Hamiltonian approximation with additional structural assumptions (dash-dot-dotted, red).
+
+output maps as belonging to an RKHS. And, indeed, we see that the unstructured approximation in Figure 2 performs much better than the port-Hamiltonian one. We have only imposed that the system is port-Hamiltonian, i.e., of the form (7). However, our framework allows us to naturally incorporate additional prior knowledge by further restricting the structure of the port-Hamiltonian system. For instance, in this circuit example, the interconnection structure implies that the skew-symmetric part of F and the input map 
+
+G are known. Specifically, we can assume that 
+
+F (·) = 
+
+ 0 1
+
+−1 0
+
+
+
++ Fs(·), G(·) = 
+
+01
+
+
+
+(86)          
+
+> −0.200.2
+> 0
+> 0.1
+> q
+> H(q, ϕ )
+> Fig. 3. Sections of the Hamiltonians: true (black, solid), approximated (teal, dash-dotted), and approximated under additional structural assumptions (red, dash-dot-dotted) at ϕ= 0 (bottom) and ϕ= 0 .2(top)
+
+where Fs : R2 → R2×2 is pointwise symmetric and nonneg-ative (resistive structure). In other words, we only need to model the symmetric part of F , which we do as 
+
+Fs(·) = ϕ(·)∗Qsϕ(·) (87) where Qs ∈ H (W) is nonnegative and self-adjoint . It is straightforward to incorporate these additional assumptions to obtain a modified representer theorem and an appropriately adapted algorithm. The solution produced by the modified algorithm has a data misfit of approximately 2.9 · 10 −6. In contrast to the previous port-Hamiltonian approximation, the data misfit is significantly reduced, and the approximated output trajectory in Figure 2 closely matches the true trajectory over the entire time horizon. While the resulting approximation is not substantially more accurate than the unstructured RKHS model in terms of trajec-tory prediction, it achieves comparable performance while re-taining a physically meaningful decomposition. This is further illustrated in Figure 3, where the approximated Hamiltonian under the additional structural assumptions closely matches the true Hamiltonian, in contrast to the previous approximated Hamiltonian, which exhibits a significant discrepancy. The accurate recovery of the Hamiltonian is particularly valuable, as it yields an interpretable energy function that enables stability analysis and control design. In fact, since the ker-nel was chosen as a Gaussian, we are guaranteed that the approximated Hamiltonian is bounded from below and, thus, the approximated port-Hamiltonian system is passive. VII. C ONCLUSION 
+
+We proposed a kernel-based framework for the identification of nonlinear port-Hamiltonian systems from input-state-output data. We modeled the Hamiltonian and input maps in RKHSs and represented the interconnection and dissipation structure in a kernel-based sum-of-squares form. We formulated the identification problem as an infinite-dimensional optimization problem over these model classes. As our first main result, we established a representer theorem that reduces this problem to a finite-dimensional one. As our second main result, we developed an iterative solution algorithm for the resulting nonconvex optimization problem and proved its convergence. We also illustrated our results with an example, where we saw that the flexibility of the model classes and the nonconvexity of the estimation problem can lead to suboptimal solutions. At the same time, we saw that incorporating addi-tional prior knowledge is straightforward and can significantly improve the quality of the identified models. Future work will investigate the influence of the kernel choice on the resulting approximation and explore how the port-Hamiltonian structure of the identified models can be exploited in control-oriented applications. APPENDIX 
+
+In this appendix, we introduce some of the theory of reproducing kernel Hilbert spaces (RKHS’s) that is relevant to the discussion in this paper. One of the most attractive features of the this theory is that certain function (operator) 11 
+
+estimation problems have computationally tractable solutions due to the representer theorem . More specifically, the repre-senter theorem states that the minimizers of a particular class of optimization problems over an RKHS belong to a finite-dimensional subspace of the RKHS. Therefore, these typically infinite-dimensional problems can be solved by solving an associated finite-dimensional problem. This appendix is split into three subsections, each with a representer theorem as the main result. First we present the standard theory of RKHS’s, including kernels, the reproducing property, the Gram matrix, feature maps, and the classic repre-senter theorem. Second, we present results concerning partial derivatives in RKHS’s, namely, we prove a partial derivative reproducing property and a representer theorem in the case where the cost of the optimization problem depends on partial derivative data. Third, we present an approach to modelling pointwise nonnegative maps and prove a representer theorem in the case where the decision variable of the optimization problem is restricted to be a pointwise nonnegative map. 
+
+A. Reproducing kernel Hilbert spaces 
+
+We start by discussing the standard theory of RKHS’s. We refer to [15] for a treatment of the case where the kernel is scalar-valued, and [47] for the extension to the general case. We also refer to the accessible technical report [48]. Consider a Hilbert space G of operators G : Rn → Rp. We say that G is a reproducing kernel Hilbert space if it admits a reproducing kernel, defined below. 
+
+Definition A.1: A map g : Rn×Rn → Rp×p is a reproducing kernel (or, simply, kernel ) for G if: 1) g(·, x )v ∈ G for all x ∈ Rn, v ∈ Rp;2) ⟨G(x), v ⟩Rp = ⟨G, g(·, x )v⟩G for all x ∈ Rn, v ∈ Rp,and G ∈ G .The second property in Definition A.1 is referred to as the 
+
+reproducing property . The interpretation of the reproducing property is clearer in the case where the kernel is scalar-valued, i.e., p = 1 . In this case, the reproducing property states that 
+
+G(x) = ⟨G, g(·, x )⟩G for all G ∈ G and x ∈ Rn. The operator 
+
+g(·, x ) ∈ G is called a kernel section , hence the reproducing property states that the inner product of an operator and a kernel section at a given point reproduces the value of the operator at that point. This implies that the point evaluation functionals in an RKHS are continuous . In fact, that latter is often used as the defining property of an RKHS. The class of reproducing kernels is completely characterized by two properties, namely, symmetry and positive semidefi-niteness, defined below. 
+
+Definition A.2: The map g : Rn × Rn → Rp×p is: 1) symmetric if g(x, y )⊤ = g(y, x ) for all x, y ∈ Rn;2) positive semidefinite if 
+
+> N
+
+X
+
+> i=1
+
+⟨vi, g(xi, x j )vj ⟩ ≥ 0 (88) for all N ∈ N, xi ∈ Rn and vi ∈ Rp, i ∈ [N ].Any reproducing kernel needs to be symmetric and positive semidefinite due to the reproducing property. More notably, the converse also holds and is known as the Moore-Aronszajn theorem [49], see [47] for the extension to the general case. The properties of symmetry and positive semidefiniteness of the map g : Rn × Rn → Rn×n can be expressed using the so-called Gram matrix . Given N ∈ N and xi ∈ Rn, i ∈ [N ],we define the Gram matrix G ∈ RpN ×pN as 
+
+G =
+
+
+
+g(x1, x 1) · · · g(x1, x n)
+
+... . . . ...
+
+g(xn, x 1) · · · g(xn, x n)
+
+ , (89) Then, (88) reads 
+
+⟨G(v1, . . . , v n), (v1, . . . , v n)⟩RpN ≥ 0, (90) hence the map g is symmetric and positive semidefinite if and only if, for all N ∈ N and xi ∈ Rn, i ∈ [N ], the corresponding Gram matrix G in (89) is symmetric positive semi-definite. Symmetric positive semidefinite maps g : Rn ×Rn → Rp×p
+
+can be defined via an auxiliary Hilbert space W and a map 
+
+ϕ : Rn → B(Rp, W) by setting g(x, y ) = ϕ(x)∗ϕ(y) for all 
+
+x, y ∈ Rn. The space W is referred to as a feature space and the map ϕ as a feature map . The following proposition, see [50, Theorem 7], states that each symmetric positive semidefinite map has an associated feature map and vice versa. 
+
+Proposition A.1: The map g : Rn × Rn → Rp×p is symmetric and positive semidefinite if and only if there exists a Hilbert space W and a feature map ϕ : Rn → B(Rp, W)
+
+such that g(x, y ) = ϕ(x)∗ϕ(y) for all x, y ∈ Rn.The feature map is central in developing kernel-based algorithms and can allow for simpler analysis. Namely, it can be shown that the reproducing kernel Hilbert space G with reproducing kernel g : Rn × Rn → Rp×p and associated feature map ϕ : Rn → B(Rp, W) consists of operators of the form G = ϕ(·)∗w, where w belongs to the closure of 
+
+span {ϕ(x)v | x ∈ Rn, v ∈ Rp } ⊂ W , and ∥G∥G = ∥w∥W .We refer to [48, Theorem 5 and Theorem 6] for a proof of this statement in the case where the kernel is scalar-valued. The proof in the general case follows similar reasoning. As mentioned at the beginning of this appendix, an attractive feature of the theory of RKHS’s is that certain function estimation problems have computationally tractable solutions. In particular, let xi ∈ Rn, i ∈ [N ], and consider the problem 
+
+min  
+
+> G∈G
+
+L(G(x1), . . . , G (xN )) + α∥G∥G , (91) where α > 0 and L : ( Rp)N → R+ is a continuous loss function. In the context of estimating a function from data, the term L(G(x1), . . . , G (xN )) measures the data misfit, while 
+
+∥G∥G measures the complexity of G and acts as a regularizer. Although G is typically infinite-dimensional, the minimizer of (91) belongs to a finite-dimensional subspace of G. This is the content of the representer theorem [47, Theorem 4.2], which follows from the following technical lemma. 
+
+Lemma A.2: Let xi ∈ Rn, i ∈ [N ]. For all G ∈ G , there exist vi ∈ Rn, i ∈ [N ], such that the map 
+
+¯G =
+
+> N
+
+X
+
+> i=1
+
+g(·, x i)vi (92) satisfies ¯G(xi) = G(xi), i ∈ [N ], and ∥ ¯G∥G ≤ ∥ G∥G .12 
+
+Then, the representer theorem states the following. 
+
+Proposition A.3: Let xi ∈ Rn, i ∈ [N ]. Suppose that α > 0
+
+and L : ( Rp)N → R+ is continuous. Then, problem (91) has a minimizer of the form (92). As a a consequence of the representer theorem, we can solve (91) by substituting G of the form (92), and solving for the coefficient vectors vi ∈ Rp, i ∈ [N ]. This yields a finite-dimensional optimization problem that can be compactly expressed using the Gram matrix. Namely, we can show that any operator G of the form (92) satisfies 
+
+G(xi) = Giv, ∥G∥2 
+
+> G
+
+= v⊤Gv, (93) where v = col( v1, . . . , v N ), Gi ∈ Rn×nN is given by 
+
+Gi = g(xi, x 1) · · · g(xi, x N ) (94) for all i ∈ [N ], and G = col( G1, . . . , GN ) is the Gram matrix associated with g and xi ∈ Rn, i ∈ [N ]. Consequently, a minimizer of (91) can be obtained by solving 
+
+min 
+
+> v∈RpN
+
+L(G1v, . . . , GN v) + αv ⊤Gv (95) and substituting the resulting minimizer in (92). 
+
+B. Partial derivatives in reproducing kernel Hilbert spaces 
+
+Next, we discuss an extension of the standard theory of RKHS’s that deals with partial derivatives. In particular, we show that RKHS’s whose kernels are (sufficiently) differ-entiable have a partial derivative reproducing property. This allows us to obtain a representer theorem for a class of optimization problems where the cost depends on partial derivative data. The latter is essential for the solution of the problem considered in this paper since the data misfit (12) depends on the partial derivatives of the Hamiltonian H. The results in this subsection can be found in [51]. The authors of [51] consider operators whose domain is a compact subset of Rn. Here, we consider the extension to operators whose domain is the whole space Rn. Although this extension is fairly straightforward, we still provide the relevant proofs for the sake of completeness. Throughout this subsection, we consider an RKHS H with a scalar-valued kernel h : Rn × Rn → R (the notation is chosen to be consistent with the notation in the main body of this paper). We are interested in solving an optimization problem of the form (91), where the cost depends on values of the 
+
+partial derivatives of an operator H ∈ H . For this problem to be well-posed, the operators in H must be differentiable, which leads to the following proposition. 
+
+Proposition A.4: Suppose that h is twice continuously dif-ferentiable. Then, the following statements hold for all i ∈ [n]:1) ∂s 
+
+> i
+
+h(·, y ) ∈ H for all y ∈ Rn;2) ∂iH(y) = ⟨H, ∂ s 
+
+> i
+
+h(·, y )⟩H for all H ∈ H and y ∈ Rn.
+
+Proof: Let i ∈ [N ] and y ∈ Rn. For each λ > 0, the map 
+
+hλ = h(·, y + λe i) − h(·, y )
+
+λ (96) is such that hλ ∈ H and 
+
+lim  
+
+> λ→0
+
+hλ(x) = ∂s 
+
+> i
+
+h(x, y ) (97) for all x ∈ Rn. The reproducing property implies that 
+
+∥hλ∥2 
+
+> H
+
+= hλ(y + λe i) − hλ(y)
+
+λ . (98) Since h is twice continuously differentiable, it follows that 
+
+lim 
+
+> λ→0
+
+∥hλ∥2 
+
+> H
+
+= ∂ihλ(y) = ∂f
+
+> i
+
+∂s 
+
+> i
+
+h(y, y ), (99) hence the set {hλ | 0 < λ ≤ δ } ⊂ H is bounded for suffi-ciently small δ > 0. Every bounded sequence in a Hilbert space has a weakly convergent subsequence. This follows from the Eberlein-Smulian theorem [52, Theorem 13.1], where we note that the unit ball in H is weakly compact because Hilbert spaces are reflexive [52, Theorem 4.2]. Therefore, there exists a sequence λk > 0, k ∈ N, that converges to 0, while the sequence hλk , k ∈ N, converges weakly to some h ∈ H , i.e., 
+
+lim  
+
+> k→∞
+
+⟨hλk , H ⟩H = ⟨h, H ⟩H (100) for all H ∈ H . Taking H = h(·, x ) yields 
+
+lim  
+
+> k→∞
+
+hλk (x) = h(x) (101) for all x ∈ Rn. Since λk → 0 as k → ∞ , (97) and (101) imply that ∂s 
+
+> i
+
+h(·, y ) = h ∈ H . Finally, we note that 
+
+lim  
+
+> k→∞
+
+⟨hλk , H ⟩H = lim 
+
+> k→∞
+
+H(y + λkei) − H(y)
+
+λk
+
+= ∂iH(y)
+
+for all H ∈ H , hence (100) yields 
+
+∂iH(y) = ⟨∂s 
+
+> i
+
+h(·, y ), H ⟩H = ⟨H, ∂ s 
+
+> i
+
+h(·, y )⟩H (102) for all H ∈ H , which concludes the proof. Recall the defining properties of the reproducing kernel h
+
+of the RKHS H, namely, all kernel sections of h belong to H
+
+and the reproducing property holds. Proposition A.4 tells us that analogous properties hold for partial derivatives, namely, all partial derivative kernel sections of h belong to H and a partial derivative reproducing property holds. In fact, this partial derivative reproducing property implicitly shows that the operators in H are differentiable, i.e., ∂iH(y) exists for all i ∈ [N ], H ∈ H , and y ∈ Rn. Furthermore, it allows us to obtain a representer theorem for optimization problems where the cost depends on partial derivative data. To this end, consider the following technical lemma. 
+
+Lemma A.5: Let xi ∈ Rn, i ∈ [N ]. For all H ∈ H , there exist ci ∈ Rn, i ∈ [N ], such that the map 
+
+¯H =
+
+> N
+
+X
+
+> i=1
+
+∂sh(·, x i)⊤ci ∈ H (103) satisfies ∂ ¯H(xi) = ∂H (xi), i ∈ [N ], and ∥ ¯H∥H ≤ ∥ H∥H.
+
+Proof: Consider the finite-dimensional subspace 
+
+¯H = span ∂s 
+
+> j
+
+h(·, x i) i ∈ [N ], j ∈ [n] ⊂ H , (104) and its orthogonal complement ¯H⊥ ⊂ H . Write H = ¯H + ¯H⊥,where ¯H ∈ ¯H and ¯H⊥ ∈ ¯H⊥, and note that 
+
+∂j H(xi) = H, ∂ s 
+
+> j
+
+h(·, x i) = ¯H, ∂ s 
+
+> j
+
+h(·, x i) = ∂j ¯H(xi)
+
+for all j ∈ [n] and i ∈ [N ]. Furthermore, we have that 
+
+∥H∥H = ∥ ¯H∥H + ∥ ¯H⊥∥H, (105) 13 
+
+hence ∥ ¯H∥ ≤ ∥ H∥. Since ¯H ∈ ¯H, we can write 
+
+¯H =
+
+> N
+
+X
+
+> i=1
+> n
+
+X
+
+> j=1
+
+∂s 
+
+> j
+
+h(·, x i)cij (106) where cij ∈ R for all i ∈ [N ] and j ∈ [n]. The latter can be compactly written as in (103), which concludes the proof. The following representer theorem is a special case of [51, Theorem 2], which we prove for the sake of completeness. 
+
+Proposition A.6: Let xi ∈ Rn, i ∈ [N ]. Suppose that β > 0
+
+and L : ( Rn)N → R+ is continuous. Then, the problem 
+
+min  
+
+> H∈H
+
+L(∂H (x1), . . . , ∂H (xN )) + β∥H∥H, (107) has a minimizer of the form (103). 
+
+Proof: Let the subspace ¯H ⊂ H be given by (104), and the map c : H → R+ be given by 
+
+c(H) = L(∂H (x1), . . . , ∂H (xN )) + β∥H∥H. (108) Let H0 ∈ ¯H be arbitrary and ¯H0 be the closed and bounded subset of operators H ∈ ¯H such that β∥H∥H ≤ c(H0). Note that ¯H0 is compact because ¯H is finite-dimensional. Let 
+
+¯H0 = arg min  
+
+> H∈¯H0
+
+c(H), (109) which exists because c is continuous and bounded from below, and ¯H0 is compact. We claim that ¯H0 is a minimizer of (107). Indeed, due to Lemma A.5, for all H ∈ H , there exists ¯H ∈ ¯H
+
+such that c( ¯H) ≤ c(H). If c( ¯H) ≤ c(H0), then, in particular, 
+
+β∥ ¯H∥ ≤ c(H0), hence ¯H ∈ ¯H0 and, thus, c( ¯H0) ≤ c( ¯H) by definition of ¯H0. On the other hand, if c(H0) < c ( ¯H), then 
+
+c( ¯H0) < c ( ¯H) because H0 ∈ ¯H0 and, thus, c( ¯H0) ≤ c(H0).It follows that c( ¯H0) ≤ c(H) for all H ∈ H , hence ¯H0 is a minimizer of (107). Since ¯H0 ∈ ¯H, it is indeed of the form (103), which concludes the proof. Just as the classical representer theorem, the representer theorem stated in Proposition A.6 provides a tractable solution to (107), where a minimizer can be obtained by substituting 
+
+H of the form (103) and solving for the coefficient vectors 
+
+ci ∈ Rn, i ∈ [N ]. To obtain the resulting finite-dimensional problem, note that, if H is of the form (103), then 
+
+∂H (xi) = 
+
+> N
+
+X
+
+> j=1
+
+Hij cj = Hic, (110) for all i ∈ [N ], where Hij ∈ Rn×n is given by 
+
+Hij =
+
+
+
+∂f
+
+> 1
+
+∂s
+
+> 1
+
+h(xi, x j ) · · · ∂f
+
+> 1
+
+∂f
+
+> n
+
+h(xi, x j )
+
+... . . . ...
+
+∂f
+
+> n
+
+∂s
+
+> 1
+
+h(xi, x j ) · · · ∂f
+
+> n
+
+∂f
+
+> n
+
+h(xi, x j )
+
+ (111) for all i, j ∈ [N ], c = col( c1, · · · , c n), and 
+
+Hi = Hi1 · · · HiN 
+
+ (112) for all i ∈ [N ]. Let H = col( H1, . . . , HN ). We refer to H
+
+as the partial derivative Gram matrix associated with h and 
+
+xi ∈ Rn, i ∈ [N ]. This is because H can be seen as the Gram matrix associated with a reproducing kernel H obtained from the partial derivatives of h, as shown below. 
+
+Proposition A.7: The map H : Rn × Rn → Rn×n given by 
+
+H(x, y ) = 
+
+
+
+∂f
+
+> 1
+
+∂s
+
+> 1
+
+h(x, y ) · · · ∂f
+
+> 1
+
+∂f
+
+> n
+
+h(x, y )
+
+... . . . ...
+
+∂f
+
+> n
+
+∂s
+
+> 1
+
+h(x, y ) · · · ∂f
+
+> n
+
+∂f
+
+> n
+
+h(x, y )
+
+ , (113) is symmetric and positive semidefinite. 
+
+Proof: In view of Proposition A.1, it is enough to show that there exists a feature map ϕ : Rn → B(Rn, H) such that 
+
+H(x, y ) = ϕ(x)∗ϕ(y). To this end, let ϕ be such that 
+
+ϕ(x)v = ∂sh(·, x )⊤v =
+
+> n
+
+X
+
+> i=1
+
+∂s 
+
+> i
+
+h(·, x )vi, (114) for all x, v ∈ Rn, where vi ∈ R is the i-th entry of v. Note that ϕ(x)v ∈ H due to the first item in Proposition A.4. Due to the second item, we have that 
+
+⟨H, ϕ (x)v⟩H =
+
+> n
+
+X
+
+> i=1
+
+∂iH(x)vi = ⟨∂H (x), v ⟩Rn (115) for all H ∈ H and x, v ∈ Rn, hence ϕ(x)∗H = ∂H (x) for all x ∈ Rn and H ∈ H . This implies that 
+
+ϕ(x)∗ϕ(y)v =
+
+> n
+
+X
+
+> i=1
+
+∂f∂s 
+
+> i
+
+h(x, y )vi = H(x, y )v (116) for all x, y, v ∈ Rn, and, thus, H(x, y ) = ϕ(x)∗ϕ(y).Proposition A.7 shows that H is a reproducing kernel. Note that Hij = H(xi, x j ) for all i, j ∈ [N ], hence H is the Gram matrix associated with H and xi ∈ Rn, i ∈ [n], This implies that H is positive semidefinite. Furthermore, we have the following result regarding the norm of H.
+
+Lemma A.8: If H ∈ H is of the form (103), then 
+
+∥H∥2 
+
+> H
+
+= c⊤Hc. (117) 
+
+Proof: Let the feature map ϕ : Rn → B(Rn, H) be defined as in the proof of Proposition A.7. Note that we can write H = PNi=1 ϕ(xi)ci, which implies that 
+
+⟨H, H ⟩H =
+
+> n
+
+X
+
+> i,j =1
+
+⟨ϕ(xi)ci, ϕ (xj )cj ⟩H =
+
+> n
+
+X
+
+> i,j =1
+
+c⊤ 
+
+> i
+
+Hij cj ,
+
+because ϕ(xi)∗ϕ(xj ) = H(xi, x j ) = Hij for all i, j ∈ [N ]. It is easily seen that the latter is equivalent to (117). Finally, using (110) and (117), we conclude that a minimizer of (107) can be obtained by solving 
+
+min 
+
+> c∈RnN
+
+L(H1c, . . . , HN c) + βc ⊤Hc, (118) and substituting the resulting minimizer in (103). 
+
+C. Pointwise nonnegative maps 
+
+In this subsection, we leverage the theory of RKHS’s to model pointwise nonnegative maps. We also prove a repre-senter theorem for a class of optimization problems of the form (91) where the decision variable is constrained to be a pointwise nonnegative map from this model class. The results in this section are an extension of the results in [25], where only scalar-valued maps are considered, and [26], where only pointwise nonnegative and symmetric maps are considered. 14 
+
+We also refer to our previous work [23], where we consider nonnegative input-output operators. Consider the map F : Rn → Rp×p. It is easily seen that there exist maps li, r i : Rn → Rp, i ∈ [p], such that 
+
+F =
+
+> p
+
+X
+
+> i=1
+
+li(·)ri(·)⊤. (119) Indeed, one can take li(x) ∈ Rp to be the i-th column of F (x),and ri(x) ∈ Rp to be the i-th standard basis vector. We can model F via li, r i, i ∈ [p], which can be modeled as maps in an RKHS. Let F be an RKHS with kernel f : Rn × Rn → Rp×p
+
+and feature map ϕ : Rn → B(Rp, W), where W is a Hilbert space. Recall that F consists of maps of the form ϕ(·)∗w,where w ∈ W . Consequently, we can write li = ϕ(·)∗ui and 
+
+ri = ϕ(·)∗vi for some vi, u i ∈ W , i ∈ [p], which results in 
+
+F = ϕ(·)∗
+
+> p
+
+X
+
+> i=1
+
+uiv∗
+
+> i
+
+!
+
+ϕ(·). (120) The latter can be compactly written as 
+
+F = ϕ(·)∗Qϕ (·), (121) where Q = Ppi=1 uiv∗ 
+
+> i
+
+∈ B(W) has finite rank and is, thus, a Hilbert-Schmidt operator, i.e., Q ∈ H (W). Note that F is pointwise nonnegative if Q is nonnegative since 
+
+⟨F (x)v, v ⟩Rp = ⟨Qϕ (x)v, ϕ (x)v⟩W ≥ 0 (122) for all x ∈ Rn and v ∈ Rp. Therefore, we can model a pointwise nonnegative map F as in (121) with Q ∈ H (W)+.This model class is highly expressive. In particular, if the feature map ϕ is universal, then any continuous pointwise nonnegative map F can be approximated arbitrarily well on compact subsets of Rn. This has already been established for pointwise nonnegative scalar-valued maps in [25] and pointwise symmetric and nonnegative matrix-valued maps in [26]. Extending these results to the case at hand, i.e., without pointwise symmetry, is fairly straightforward but outside of the scope of this paper. Instead, we prove yet another representer theorem using the following technical lemma. 
+
+Lemma A.9: Let xi ∈ Rn, i ∈ [N ]. For all Q ∈ H (W),there exist Mij ∈ Rp×p, i, j ∈ [N ], such that the operator 
+
+¯Q =
+
+> N
+
+X
+
+> i,j =1
+
+ϕ(xi)Mij ϕ(xj )∗ (123) satisfies ϕ(xi)∗ ¯Qϕ (xi) = ϕ(xi)∗Qϕ (xi) for all i ∈ [N ], and 
+
+∥ ¯Q∥H = ∥Q∥H . Furthermore, if Q is nonnegative, then ¯Q
+
+is nonnegative and the block matrix 
+
+M =
+
+
+
+M11 · · · M1N
+
+... . . . ...
+
+MN 1 · · · MN N 
+
+ (124) is nonnegative. 
+
+Proof: Let Π ∈ B(W) be the orthogonal projection onto the finite-dimensional subspace ¯W = PNi=1 im ϕ(xi) ⊂ W ,and define ¯Q = Π QΠ. Note that Π = Π ∗ and Πϕ(xi) = ϕ(xi)
+
+for all i ∈ [N ], hence ϕ(xi)∗ ¯Qϕ (xi) = ϕ(xi)∗ ¯Qϕ (xi) for all i ∈ [N ]. Moreover, the composition of a Hilbert-Schmidt operator and a bounded operator is also a Hilbert-Schmidt operator [52, p.267], hence ¯Q ∈ H (W) and 
+
+∥ ¯Q∥H ≤ ∥ Π∥2∥Q∥H = ∥Q∥H , (125) where ∥Π∥ = 1 because Π is an orthogonal projection. As shown in [23, Lemma 3], there exist Mij ∈ Rp×p, i, j ∈ [N ]
+
+such that (123) holds. Furthermore, ¯Q and the block matrix in (124) are nonnegative if Q is nonnegative. We obtain the following representer theorem for optimiza-tion problems over pointwise nonnegative maps. 
+
+Proposition A.10: Let xi ∈ Rn, i ∈ [N ]. Suppose that γ > 0
+
+and L : ( Rn)N → R+ is continuous. Then, the problem 
+
+min L(F (x1), . . . , F (xN )) + γ∥Q∥2 
+
+> H
+
+,
+
+s.t. Q ∈ H (W)+ and F = ϕ(·)∗Qϕ (·) (126) has a minimizer of the form (123), where the block matrix in (124) is nonnegative. Furthermore, the map 
+
+¯F =
+
+> N
+
+X
+
+> i,j =1
+
+f(·, x i)Mij f(·, x j )⊤, (127) is such that ¯F = ϕ(·)∗ ¯Qϕ (·).
+
+Proof: Let ¯Q be the subset of operators of the form (123), where the block matrix in (124) is nonnegative. The latter implies that the operators in ¯Q are nonnegative. With this in mind, let the map c : H (W)+ → R+ be given by 
+
+c(Q) = L(F (x1), . . . , F (xN )) + γ∥Q∥H , (128) where F = ϕ(·)∗Qϕ (·). Let Q0 ∈ ¯Q be arbitrary and let ¯Q0
+
+be the closed and bounded subset of operators Q ∈ ¯Q such that γ∥Q∥H ≤ c(Q0). Note that ¯Q0 is compact because ¯Q is a subset of a finite-dimensional subspace. Let 
+
+¯Q0 = arg min  
+
+> Q∈¯Q0
+
+c(Q), (129) which exists because c is continuous and bounded from below, and ¯Q0 is compact. We claim that ¯Q0 is a minimizer of (126). Due to Lemma A.9, for all Q ∈ H (W)+, there exists ¯Q ∈ ¯Q
+
+such that c( ¯Q) ≤ c(Q). If c( ¯Q) ≤ c(Q0), then, in particular, 
+
+γ∥ ¯Q∥ ≤ c(Q0), hence ¯Q ∈ ¯Q0, and, thus, c( ¯Q0) ≤ c( ¯Q) by definition of ¯Q0. On the other hand, if c(Q0) < c ( ¯Q), then 
+
+c( ¯Q0) < c ( ¯Q) because Q0 ∈ ¯Q0 and, thus, c( ¯Q0) ≤ c(Q0). It follows that c( ¯Q0) ≤ c(Q) for all Q ∈ H (W)+, hence ¯Q0 is a minimizer of (126). Since ¯Q0 ∈ ¯Q, it is indeed of the form (103), which concludes the proof. Finally, (127) follows from the fact that ϕ(·)∗ϕ(xi) = f(·, x i) for all i ∈ [N ].Like the previous representer theorems, the representer the-orem stated in Proposition A.10 provides a tractable solution to (126), where a minimizer can be obtained by substituting 
+
+Q of the form (123) and solving for coefficient matrices 
+
+Mij ∈ Rp×p, i, j ∈ [N ]. The resulting finite-dimensional problem can be compactly expressed using the Gram matrix. In particular, if F is of the form (127), then 
+
+F (xi) = FiM F⊤ 
+
+> i
+
+(130) for all i ∈ [N ], where M is given by (124) and 
+
+Fi = f(xi, x 1) · · · f(xi, x N ) (131) 15 
+
+is the i-th block row of the Gram matrix F = col( F1, . . . , FN )
+
+associated with f and xi ∈ Rn, i ∈ [N ]. We also have the following result regarding the Hilbert-Schmidt norm of (123). 
+
+Lemma A.11: If Q ∈ H (W) is of the form (127), then 
+
+∥Q∥2 
+
+> H
+
+= tr( FM FM ⊤), (132) where M is given by (124). 
+
+Proof: Let the operator Φ ∈ B(RpN , W) be given by 
+
+Φ( z) = 
+
+> N
+
+X
+
+> i=1
+
+ϕ(xi)zi (133) where zi ∈ Rp, i ∈ [N ], and z = col( z1, . . . , z N ). We can write Q = Φ M Φ∗, which is easily verified using the block operator notation 
+
+Φ = ϕ(x1) · · · ϕ(xN ) . (134) Let wi, i ∈ [k], be an orthonormal basis for the finite-dimensional subspace im Φ ⊂ W , and extend it to an or-thonormal basis wi, i ∈ N, for the whole space W. Note that 
+
+⟨Φc, w i⟩ = 0 for all c ∈ RpN and i > k , hence Φ∗wi = 0 for all i > k . Consequently, we obtain 
+
+∥Q∥2 
+
+> H
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+∥Qw i∥2 
+
+> W
+
+=
+
+> k
+
+X
+
+> i=1
+
+∥ΦM Φ∗wi∥2 
+
+> W
+
+(135) Now, for all i ∈ [k], there exists ci ∈ RpN such that wi = Φ ci.Since ⟨wi, w j ⟩W = 0 for all i̸ = j, it follows that 
+
+⟨Φci, Φcj ⟩ = ⟨ci, Fcj ⟩ = ⟨F 12 ci, F 12 cj ⟩ = 0 (136) where we used the fact that Φ∗Φ = F is symmetric positive semidefinite, hence there exists a symmetric positive semidef-inite F 12 ∈ RpN ×pN such that F 12 F 12 = F. Similarly, since 
+
+∥wi∥2 
+
+> W
+
+= 1 for all i ∈ N, it follows that ∥F 12 ci∥RpN = 1 for all i ∈ [k]. In other words, the vectors vi = F 12 ci ∈ RpN ,
+
+i ∈ [k], are orthonormal. Note that k is the rank of Φ, which equals the rank of F and, thus F 12 . This implies that vi, i ∈ [k]
+
+form an orthonormal basis for the subspace im F 12 ⊂ RpN ,which can be extended to an orthonormal basis vi ∈ RpN ,
+
+i ∈ [nP ], for the whole space RpN . Since F 12 is symmetric, this basis is such that F 12 vi = 0 for all i > k .With this in mind, since Φ∗Φ = F = F 12 F 12 , and wi = Φ ci
+
+and vi = F 12 ci for all i ∈ [k], it follows that 
+
+∥ΦM Φ∗wi∥2 
+
+> W
+
+= ⟨ΦM Fci, ΦM Fci⟩W = ∥F 12 M F 12 vi∥2
+
+> RpN
+
+for all i ∈ [k]. This implies that 
+
+∥Q∥H =
+
+> k
+
+X
+
+> i=1
+
+∥ΦM Φ∗wi∥2 
+
+> W
+
+=
+
+> k
+
+X
+
+> i=1
+
+∥F 12 M F 12 vi∥2 
+
+> RpN
+
+, (137) Since F 12 vi = 0 for all i > k , we can write 
+
+∥Q∥H =
+
+> nP
+
+X
+
+> i=1
+
+∥F 12 M F 12 vi∥2 
+
+> RpN
+
+= ∥F 12 M F 12 ∥2 
+
+> H
+
+, (138) Recall that the Hilbert-Schmidt norm of a matrix is simply the Frobenius norm, hence 
+
+∥F 12 M F 12 ∥2 
+
+> H
+
+= tr( F 12 M FM ⊤F 12 ) = tr( FM FM ⊤),
+
+where we used the fact that tr( AB ) = tr( BA ) for all matrices 
+
+A and B of appropriate sizes. 
+
+Remark A.1: It can be shown that 
+
+tr( FM FM ⊤) = vec( M )⊤(F ⊗ F)vec( M ), (139) where ⊗ is the Kronecker product. Since F is positive semidefinite, it follows that F ⊗ F is positive semidefinite, which immediately shows that tr( FM FM ⊤) is convex in M .Moreover, if F is invertible, then tr( FM FM ⊤) is strongly convex with convexity parameter λmin (F ⊗ F) = λmin (F)2.Finally, using (130) and (132), we conclude that a minimizer of (126) can be obtained by solving 
+
+min   
+
+> M∈RpN ×pN
+> +
+
+L(F1M F⊤ 
+
+> 1
+
+, . . . , FN M F⊤ 
+
+> N
+
+) + γ tr( FM FM ⊤),
+
+and substituting the resulting minimizer in (127). REFERENCES [1] A. van der Schaft and D. Jeltsema, “Port-Hamiltonian systems theory: An introductory overview,” Foundations and Trends in Systems and Control , vol. 1, no. 2, pp. 173–378, 2014. [2] D. Jeltsema and J. M. Scherpen, “Multidomain modeling of nonlinear networks and systems,” IEEE Control Systems Magazine , vol. 29, no. 4, pp. 28–59, 2009. [3] F. D¨ orfler, J. K. Johnsen, and F. Allg¨ ower, “An introduction to inter-connection and damping assignment passivity-based control in process engineering,” Journal of Process Control , vol. 19, no. 9, pp. 1413–1426, 2009. [4] A. J. van der Schaft, L2-Gain and Passivity Techniques in Nonlinear Control . Springer International Publishing, 2017. [5] K. Cherifi, V. Mehrmann, and K. Hariche, “Numerical methods to compute a minimal realization of a port-Hamiltonian system.” arXiv:1903.07042, 2019. [6] P. Benner, P. Goyal, and P. Van Dooren, “Identification of port-Hamiltonian systems from frequency response data,” Systems & Control Letters , vol. 143, p. 104741, 2020. [7] P. Schwerdtner, “Port-Hamiltonian system identification from noisy frequency tesponse data.” arXiv:2106.11355, 2021. [8] R. Morandin, J. Nicodemus, and B. Unger, “Port-Hamiltonian dynamic mode decomposition,” SIAM Journal on Scientific Computing , vol. 45, no. 4, pp. A1690–A1710, 2023. [9] J.-P. Ortega and D. Yin, “Learnability of linear port-Hamiltonian sys-tems,” Journal of Machine Learning Research , vol. 25, no. 68, pp. 1–56, 2024. [10] J. N. Kutz, S. L. Brunton, B. W. Brunton, and J. L. Proctor, Dynamic Mode Decomposition: Data-Driven Modeling of Complex Systems .SIAM, 2016. [11] G. Pillonetto and G. De Nicolao, “A new kernel-based approach for linear system identification,” Automatica , vol. 46, no. 1, pp. 81–93, 2010. [12] G. Pillonetto, F. Dinuzzo, T. Chen, G. De Nicolao, and L. Ljung, “Kernel methods in system identification, machine learning and function estimation: A survey,” Automatica , vol. 50, no. 3, pp. 657–682, 2014. [13] F. Dinuzzo, “Kernels for linear time invariant system identification,” 
+
+SIAM Journal on Control and Optimization , vol. 53, no. 5, pp. 3299– 3317, 2015. [14] L. Ljung, T. Chen, and B. Mu, “A shift in paradigm for system identification,” International Journal of Control , vol. 93, no. 2, pp. 173– 180, 2020. [15] V. I. Paulsen and M. Raghupathi, An Introduction to the Theory of Reproducing Kernel Hilbert Spaces . Cambridge University Press, 2016. [16] C. A. Micchelli, Y. Xu, and H. Zhang, “Universal kernels,” Journal of Machine Learning Research , vol. 7, no. 95, pp. 2651–2667, 2006. [17] M. Lazar, “A universal reproducing kernel Hilbert space for learning nonlinear systems operators.” arXiv:2412.18360, 2024. [18] G. Pillonetto and A. Chiuso, “Identification of stable linear systems via the sequential stabilizing spline algorithm,” IFAC-PapersOnLine , vol. 51, no. 15, pp. 19–24, 2018. [19] C. Grussler, J. Umenberger, and I. R. Manchester, “Identification of externally positive systems,” in IEEE Conference on Decision and Control , pp. 6549–6554, 2017. 16 
+
+[20] M. Khosravi and R. S. Smith, “Kernel-based identification of positive systems,” in Proceedings of the IEEE Conference on Decision and Control , pp. 1740–1745, 2019. [21] H. J. van Waarde and R. Sepulchre, “Kernel-based models for system analysis,” IEEE Transactions on Automatic Control , vol. 68, no. 9, pp. 5317–5332, 2023. [22] Y. Huo, T. Chaffey, and R. Sepulchre, “Kernel modeling of fading memory systems,” IEEE Transactions on Automatic Control , vol. 71, no. 3, pp. 2046–2052, 2026. [23] B. M. Shali and H. J. van Waarde, “Towards a representer theorem for identification of passive systems,” in Proceedings of the IEEE Conference on Decision and Control , pp. 8760–8765, 2024. [24] S. Ebrahimkhani and J. Lataire, “Kernel-based estimation of frequency response function of strictly passive systems,” IEEE Control Systems Letters , pp. 1–1, 2025. [25] U. Marteau-Ferey, F. Bach, and A. Rudi, “Non-parametric models for non-negative functions,” in Proceedings of the 34th International Conference on Neural Information Processing Systems , 2020. [26] B. Muzellec, F. Bach, and A. Rudi, “Learning psd-valued functions using kernel sums-of-squares.” arXiv:2111.11306, 2022. [27] M. Gevers, “Identification for control: From the early achievements to the revival of experiment design*,” European Journal of Control , vol. 11, no. 4–5, pp. 335–352, 2005. [28] Z. Hu, C. De Persis, and P. Tesi, “Learning controllers from data via kernel-based interpolation,” in Proceedings of the IEEE Conference on Decision and Control , pp. 8509–8514, 2023. [29] L. Huang, J. Lygeros, and F. D¨ orfler, “Robust and kernelized data-enabled predictive control for nonlinear systems,” IEEE Transactions on Control Systems Technology , vol. 32, no. 2, pp. 611–624, 2024. [30] T. de Jong, S. Weiland, and M. Lazar, “A kernelized operator approach to nonlinear data-enabled predictive control.” arXiv:2501.17500, 2025. [31] Z. Wang and F. Forni, “Passive nonlinear FIR filters for data-driven control.” arXiv:2508.05279, 2025. [32] G. E. Karniadakis, I. G. Kevrekidis, L. Lu, P. Perdikaris, S. Wang, and L. Yang, “Physics-informed machine learning,” Nature Reviews Physics ,vol. 3, no. 6, pp. 422–440, 2021. [33] K. Cherifi, “An overview on recent machine learning techniques for port-Hamiltonian systems,” Physica D: Nonlinear Phenomena , vol. 411, p. 132620, 2020. [34] T. Bertalan, F. Dietrich, I. Mezi´ c, and I. G. Kevrekidis, “On learning Hamiltonian systems from data,” Chaos: An Interdisciplinary Journal of Nonlinear Science , vol. 29, no. 12, 2019. [35] T. Smith and O. Egeland, “Learning Hamiltonian dynamics with repro-ducing kernel Hilbert spaces and random features,” European Journal of Control , vol. 80, p. 101128, 2024. [36] S. Greydanus, M. Dzamba, and J. Yosinski, “Hamiltonian neural net-works,” in Proceedings of the 33rd International Conference on Neural Information Processing Systems , Curran Associates Inc., 2019. [37] Y. D. Zhong, B. Dey, and A. Chakraborty, “Symplectic ODE-Net: Learn-ing Hamiltonian dynamics with control,” in International Conference on Learning Representations , 2020. [38] S. Holmsen, S. Eidnes, and S. Riemer-Sørensen, “Pseudo-Hamiltonian system identification,” Journal of Computational Dynamics , vol. 11, no. 1, pp. 59–91, 2024. [39] S. A. Desai, M. Mattheakis, D. Sondak, P. Protopapas, and S. J. Roberts, “Port-Hamiltonian neural networks for learning explicit time-dependent dynamical systems,” Physical Review E , vol. 104, no. 3, p. 034312, 2021. [40] T. Beckers, J. Seidman, P. Perdikaris, and G. J. Pappas, “Gaussian pro-cess port-Hamiltonian systems: Bayesian learning with physics prior,” in 
+
+Proceedings of the IEEE Conference on Decision and Control , pp. 1447– 1453, IEEE, 2022. [41] S. Moradi, G. I. Beintema, N. Jaensson, R. T´ oth, and M. Schoukens, “Port-Hamiltonian neural networks with output error noise models.” arXiv:2502.14432, 2025. [42] K. Cherifi, A. El Messaoudi, H. Gernandt, and M. Roschkowski, “Non-linear port-Hamiltonian system identification from input-state-output data,” 2025. [43] Q. Tran Dinh, S. Gumussoy, W. Michiels, and M. Diehl, “Combining convex–concave decompositions and linearization approaches for solv-ing bmis, with application to static output feedback,” IEEE Transactions on Automatic Control , vol. 57, no. 6, pp. 1377–1390, 2012. [44] J. C. Guella, “Operator-valued positive definite kernels and differentiable universality,” Analysis and Applications , vol. 20, no. 04, pp. 681–735, 2022. [45] R. Meyer, “Sufficient conditions for the convergence of monotonic math-ematical programming algorithms,” Journal of Computer and System Sciences , vol. 12, no. 1, pp. 108–121, 1976. [46] A. Shapiro, “First and second order analysis of nonlinear semidefinite programs,” Mathematical Programming , vol. 77, no. 1, pp. 301–320, 1997. [47] C. A. Micchelli and M. Pontil, “On Learning Vector-Valued Functions,” 
+
+Neural Computation , vol. 17, no. 1, pp. 177–204, 2005. [48] Y. Kalnishkan, “An introduction to kernel methods,” Technical Report, available at https://cml.rhul.ac.uk/publications/files/tr0901.pdf , 2009. [49] N. Aronszajn, “Theory of reproducing kernels,” Transactions of the American Mathematical Society , vol. 68, no. 3, pp. 337–404, 1950. [50] H. J. van Waarde and R. Sepulchre, “Kernel-based models for system analysis.” arXiv:2110.11735, 2021. [51] D.-X. Zhou, “Derivative reproducing properties for kernel methods in learning theory,” Journal of Computational and Applied Mathematics ,vol. 220, no. 1, pp. 456–463, 2008. [52] J. B. Conway, A Course in Functional Analysis . Springer New York, 2007. 
+
+Brayan M. Shali received the M.Sc. degree (summa cum laude) and the Ph.D. degree in applied mathe-matics from the University of Groningen, Gronin-gen, The Netherlands, in 2019 and 2023, respec-tively. He is currently a Postdoctoral Researcher with KU Leuven, Leuven, Belgium. His research interests include mathematical systems theory, contract-based design, networks of dynamical systems, and physics-informed modeling and identification. 
+
+Henk J. van Waarde is an assistant professor in the Bernoulli Institute for Mathematics, Computer Science and Artificial Intelligence at the University of Groningen in The Netherlands. During 2020-2021 he was a postdoctoral researcher, first at the University of Cambridge, UK, and later at ETH Z¨ urich, Switzerland. He obtained the Ph.D. degree 
+
+cum laude in Applied Mathematics from the Univer-sity of Groningen in 2020. He was also a visiting researcher at University of Washington, Seattle in 2019-2020. His research interests include learning and data-driven control, system identification and identifiability, networks of dynamical systems, and robust and optimal control. Dr. van Waarde is the recipient of the 2025 SIAM Activity Group on Control and Systems Theory Prize. He serves as an Associate Editor of the IEEE Control Systems Letters.

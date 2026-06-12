@@ -1,8 +1,8 @@
 {
   "label": "2026-06-12",
   "date": "2026-06-12",
-  "generated_at": "2026-06-12T00:34:26",
-  "count": 1,
+  "generated_at": "2026-06-12T23:15:29",
+  "count": 3,
   "papers": [
     {
       "paper_id": "202606/12/2606.12000v1-physics-guided-residual-kalman-learning-for-state-of-charge-estimation-of-lithium-iron-phosphate-batteries",
@@ -16,6 +16,36 @@
       "tldr": "磷酸铁锂电池荷电状态估计因平坦OCV-SOC曲线、温度敏感及初始化误差而颇具挑战。本文提出物理引导的残差卡尔曼学习框架PRKL，融合单粒子模型扩展卡尔曼滤波与GRU残差学习器。在宽温域、多工况和最大20%初始偏差下，PRKL将全局平均RMSE降至1.19%，较纯物理EKF降低77%。该框架证实电化学状态信息能有效引导残差学习，提升递归SOC精度，并为跨工况、老化及嵌入式部署验证奠定基础。",
       "tags": "query:lfp-soc",
       "abstract_en": "Accurate state of charge (SOC) estimation of lithium iron phosphate (LFP) batteries remains challenging because of their flat open-circuit-voltage (OCV)-SOC characteristics, temperature-dependent dynamics, and sensitivity to initialization errors. Here, we propose a physics-guided residual Kalman learning (PRKL) framework for electrochemical-model-based SOC estimation. PRKL combines a control-oriented single-particle-model-based extended Kalman filter (EKF), which provides recursive physical state propagation, with a gated recurrent unit (GRU) residual learner that compensates structured EKF errors using electrochemical states and measurement features. The framework is evaluated on a public graphite/LFP dataset covering three dynamic drive cycles, eight temperatures from -10 to 50 degrees C, and initialization offsets up to 20 percent. Using dynamic stress test (DST) and federal urban driving schedule (FUDS) cycles for training and the supplemental federal test procedure (US06) cycle for cross-profile testing within the same cell dataset, PRKL achieves a global average root mean square error (RMSE) of 1.19 percent, corresponding to a 77 percent reduction relative to the physics-only EKF. These results show that electrochemical state information can guide residual learning and improve recursive SOC estimation for LFP batteries. The present validation supports cross-profile robustness within the studied dataset and provides a basis for future cross-cell, ageing-aware, and embedded-platform validation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/12/2606.10971v1-resilient-navigation-for-autonomous-farm-robots-by-leveraging-jerk-augmented-models-with-imu-only-disturbance-rejection",
+      "section": "quick",
+      "title_en": "Resilient Navigation for Autonomous Farm Robots by Leveraging Jerk-Augmented Models with IMU-Only Disturbance Rejection",
+      "authors": "Batu Candan, Mohammed Atallah, Simone Servadio, Saeed Arabi",
+      "date": "2026-06-09",
+      "pdf": "https://arxiv.org/pdf/2606.10971v1",
+      "score": "7.0",
+      "evidence": "提出一种具有多重调节因子的自适应扩展卡尔曼滤波器用于鲁棒状态估计",
+      "tldr": "自主农业机器人在复杂地形中常因传感器中断和高频振动导致导航精度下降。本文提出一种加加速度增强模型与多重调节因子自适应扩展卡尔曼滤波相结合的鲁棒导航算法，动态调整测量协方差以抑制干扰。实际测试表明，该方法能显著降低3D位置均方根误差，提升航位推算能力，为农业机器人提供高韧性自主导航方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Precise state estimation for navigation of autonomous agricultural robots is often compromised by sensor outages (GNSS/LiDAR/Visual) and high-frequency vibrations inherent in off-road environments. This paper proposes a robust navigation algorithm based on a jerk-augmented Extended Kalman Filter (EKF) integrated with a Multiple Tuning Factor (MTF) adaptation method. Unlike standard EKF approaches that assume constant measurement noise, our method dynamically adjusts the measurement covariance matrix in real-time, allowing the system to cope with sudden disturbances and sensor outliers. We evaluate the algorithm using real-world data from a Salin247 autonomous robot. Results demonstrate that jerk-augmentation combined with MTF adaptation significantly reduces 3D position Root Mean Square Error (RMSE) compared to baseline EKF models, providing superior dead-reckoning capabilities.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/12/2606.12163v1-kernel-based-identification-of-nonlinear-port-hamiltonian-systems",
+      "section": "quick",
+      "title_en": "Kernel-based identification of nonlinear port-Hamiltonian systems",
+      "authors": "Brayan M. Shali, Henk J. van Waarde",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.12163v1",
+      "score": "6.0",
+      "evidence": "能量模型辨识可应用于电池等效电路建模",
+      "tldr": "端口哈密顿系统为解释物理系统能量行为提供结构化范式，但传统建模依赖精确先验知识，现实中难以获取。本文提出核方法辨识策略，将能量存储、耗散及端口映射置于再生核希尔伯特空间，形成无穷维函数估计问题；利用表示定理转化为有限维非凸优化，并证明求解算法的收敛性。该框架直接从输入状态输出数据学习，绕过参数化假设，显著降低对物理洞察的依赖，为非线性物理系统数据驱动辨识提供理论保证与灵活工具。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Port-Hamiltonian systems provide a structured framework for modeling physical systems by explicitly capturing their energy storage, dissipation, and exchange. However, deriving such models often requires detailed physical insight and precise knowledge of system parameters, which may not be available in practice. In this paper, we propose a kernel-based framework for the identification of port-Hamiltonian systems from input-state-output data. In contrast to conventional parametric approaches, the maps defining the port-Hamiltonian system are represented in suitably chosen reproducing kernel Hilbert spaces. This leads to an infinite-dimensional optimization problem over the corresponding function spaces. Our main result establishes a representer theorem that reduces this problem to a tractable finite-dimensional one. Since the reduced problem is non-convex, we further provide an algorithm for its solution and prove its convergence.",
       "source": "arxiv",
       "selection_source": "fresh_fetch"
     }

@@ -1,15 +1,15 @@
 {
   "mode": "standard",
-  "generated_at": "2026-06-12T00:32:23.157019+00:00",
+  "generated_at": "2026-06-12T23:13:15.049811+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
     "deep_divecandidates": 1,
     "deep_cap": 6,
     "deep_selected": 1,
-    "quick_candidates": 0,
+    "quick_candidates": 2,
     "quick_skim_target": 11,
-    "quick_selected": 0
+    "quick_selected": 2
   },
   "deep_dive": [
     {
@@ -36,13 +36,13 @@
         "query:lfp-soc"
       ],
       "llm_score": 10.0,
-      "llm_evidence_en": "Proposes physics-guided residual Kalman learning for state-of-charge estimation of lithium iron phosphate batteries.",
-      "llm_evidence_cn": "提出用于磷酸铁锂电池荷电状态估计的物理引导残差卡尔曼学习方法。",
-      "llm_evidence": "提出用于磷酸铁锂电池荷电状态估计的物理引导残差卡尔曼学习方法。",
-      "canonical_evidence": "提出用于磷酸铁锂电池荷电状态估计的物理引导残差卡尔曼学习方法。",
-      "llm_tldr_en": "Proposes a physics-guided residual Kalman learning framework for SOC estimation of LFP batteries, combining an EKF with a GRU residual learner to handle flat OCV-SOC and temperature effects, validated on a public dataset.",
-      "llm_tldr_cn": "针对磷酸铁锂电池因开路电压平坦、温度敏感和初始化误差导致荷电状态估计精度不高的问题，提出一种物理引导残差卡尔曼学习框架。该方法将基于简化电化学模型的扩展卡尔曼滤波器与门控循环单元残差学习器相结合，利用电化学状态和测量特征补偿滤波器结构化误差。在公开的石墨/LFP数据集上的实验验证了方法的有效性，为高精度电池管理提供了新途径。",
-      "llm_tldr": "针对磷酸铁锂电池因开路电压平坦、温度敏感和初始化误差导致荷电状态估计精度不高的问题，提出一种物理引导残差卡尔曼学习框架。该方法将基于简化电化学模型的扩展卡尔曼滤波器与门控循环单元残差学习器相结合，利用电化学状态和测量特征补偿滤波器结构化误差。在公开的石墨/LFP数据集上的实验验证了方法的有效性，为高精度电池管理提供了新途径。",
+      "llm_evidence_en": "proposes physics-guided residual Kalman learning for LFP battery SOC estimation",
+      "llm_evidence_cn": "提出物理引导残差卡尔曼学习用于磷酸铁锂电池SOC估计",
+      "llm_evidence": "提出物理引导残差卡尔曼学习用于磷酸铁锂电池SOC估计",
+      "canonical_evidence": "提出物理引导残差卡尔曼学习用于磷酸铁锂电池SOC估计",
+      "llm_tldr_en": "Addresses LFP SOC estimation challenges via a framework combining a single-particle model EKF with a GRU residual learner, achieving high accuracy on a public dataset.",
+      "llm_tldr_cn": "该工作针对磷酸铁锂电池荷电状态估计中开路电压曲线平坦、温度敏感和初始化误差等难题，提出物理引导的残差卡尔曼学习方法。该方法采用基于单粒子模型的扩展卡尔曼滤波进行物理状态递推，并利用门控循环单元残差学习器补偿结构化估计误差。在涵盖多温度多倍率的公开数据集上验证，结果表明所提框架显著提升了SOC估计精度和鲁棒性，为电池管理系统中可靠状态估计提供了新方案。",
+      "llm_tldr": "该工作针对磷酸铁锂电池荷电状态估计中开路电压曲线平坦、温度敏感和初始化误差等难题，提出物理引导的残差卡尔曼学习方法。该方法采用基于单粒子模型的扩展卡尔曼滤波进行物理状态递推，并利用门控循环单元残差学习器补偿结构化估计误差。在涵盖多温度多倍率的公开数据集上验证，结果表明所提框架显著提升了SOC估计精度和鲁棒性，为电池管理系统中可靠状态估计提供了新方案。",
       "llm_tags": [
         "query:lfp-soc"
       ],
@@ -52,5 +52,81 @@
       "selection_source": "fresh_fetch"
     }
   ],
-  "quick_skim": []
+  "quick_skim": [
+    {
+      "id": "2606.10971v1",
+      "source": "arxiv",
+      "title": "Resilient Navigation for Autonomous Farm Robots by Leveraging Jerk-Augmented Models with IMU-Only Disturbance Rejection",
+      "abstract": "Precise state estimation for navigation of autonomous agricultural robots is often compromised by sensor outages (GNSS/LiDAR/Visual) and high-frequency vibrations inherent in off-road environments. This paper proposes a robust navigation algorithm based on a jerk-augmented Extended Kalman Filter (EKF) integrated with a Multiple Tuning Factor (MTF) adaptation method. Unlike standard EKF approaches that assume constant measurement noise, our method dynamically adjusts the measurement covariance matrix in real-time, allowing the system to cope with sudden disturbances and sensor outliers. We evaluate the algorithm using real-world data from a Salin247 autonomous robot. Results demonstrate that jerk-augmentation combined with MTF adaptation significantly reduces 3D position Root Mean Square Error (RMSE) compared to baseline EKF models, providing superior dead-reckoning capabilities.",
+      "authors": [
+        "Batu Candan",
+        "Mohammed Atallah",
+        "Simone Servadio",
+        "Saeed Arabi"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "eess.SY"
+      ],
+      "published": "2026-06-09T15:12:12+00:00",
+      "link": "https://arxiv.org/pdf/2606.10971v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Proposes an adaptive Extended Kalman Filter with multiple tuning factors for robust state estimation",
+      "llm_evidence_cn": "提出一种具有多重调节因子的自适应扩展卡尔曼滤波器用于鲁棒状态估计",
+      "llm_evidence": "提出一种具有多重调节因子的自适应扩展卡尔曼滤波器用于鲁棒状态估计",
+      "canonical_evidence": "提出一种具有多重调节因子的自适应扩展卡尔曼滤波器用于鲁棒状态估计",
+      "llm_tldr_en": "This paper proposes a jerk-augmented Extended Kalman Filter with real-time noise covariance adaptation for robust navigation state estimation, which could be adapted to battery SOC estimation.",
+      "llm_tldr_cn": "该论文提出一种加加速度增强的扩展卡尔曼滤波器，通过实时调整测量噪声协方差实现鲁棒的状态估计，适用于自主机器人导航，其自适应滤波方法可迁移至电池荷电状态估计。",
+      "llm_tldr": "该论文提出一种加加速度增强的扩展卡尔曼滤波器，通过实时调整测量噪声协方差实现鲁棒的状态估计，适用于自主机器人导航，其自适应滤波方法可迁移至电池荷电状态估计。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.12163v1",
+      "source": "arxiv",
+      "title": "Kernel-based identification of nonlinear port-Hamiltonian systems",
+      "abstract": "Port-Hamiltonian systems provide a structured framework for modeling physical systems by explicitly capturing their energy storage, dissipation, and exchange. However, deriving such models often requires detailed physical insight and precise knowledge of system parameters, which may not be available in practice. In this paper, we propose a kernel-based framework for the identification of port-Hamiltonian systems from input-state-output data. In contrast to conventional parametric approaches, the maps defining the port-Hamiltonian system are represented in suitably chosen reproducing kernel Hilbert spaces. This leads to an infinite-dimensional optimization problem over the corresponding function spaces. Our main result establishes a representer theorem that reduces this problem to a tractable finite-dimensional one. Since the reduced problem is non-convex, we further provide an algorithm for its solution and prove its convergence.",
+      "authors": [
+        "Brayan M. Shali",
+        "Henk J. van Waarde"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-06-10T14:48:41+00:00",
+      "link": "https://arxiv.org/pdf/2606.12163v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "identification of energy-based models applicable to equivalent circuit battery models",
+      "llm_evidence_cn": "能量模型辨识可应用于电池等效电路建模",
+      "llm_evidence": "能量模型辨识可应用于电池等效电路建模",
+      "canonical_evidence": "能量模型辨识可应用于电池等效电路建模",
+      "llm_tldr_en": "Kernel-based framework for identifying nonlinear port-Hamiltonian systems from data, with a representer theorem enabling practical model learning, applicable to energy storage system modeling.",
+      "llm_tldr_cn": "本文解决了缺乏先验知识时端口哈密顿系统的辨识难题。提出核基辨识框架，将系统映射表示为再生核希尔伯特空间中的函数，利用数据驱动方式学习非线性动力学。关键结果为表示定理，使得无限维优化问题可解。该方法为电池等能源系统的等效电路建模提供了新的数据驱动工具，可支撑后续状态观测器设计。",
+      "llm_tldr": "本文解决了缺乏先验知识时端口哈密顿系统的辨识难题。提出核基辨识框架，将系统映射表示为再生核希尔伯特空间中的函数，利用数据驱动方式学习非线性动力学。关键结果为表示定理，使得无限维优化问题可解。该方法为电池等能源系统的等效电路建模提供了新的数据驱动工具，可支撑后续状态观测器设计。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
 }

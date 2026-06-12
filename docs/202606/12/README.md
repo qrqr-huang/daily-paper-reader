@@ -1,20 +1,21 @@
 # 日报 · 2026-06-12
 
-- 生成时间：2026-06-12 00:34:17 UTC
-- 当次推荐总数：1
+- 生成时间：2026-06-12 23:15:23 UTC
+- 当次推荐总数：3
 - 精读区：1
-- 速读区：0
+- 速读区：2
 
 ## 今日简报（AI）
-今日精读一篇电池状态估计新作，用物理引导残差卡尔曼学习破解磷酸铁锂电池SOC估算难题。  
-核心亮点：物理模型与数据驱动残差校正深度融合，在宽温度与复杂工况下实现极高精度。  
-建议：对新能源与AI跨界融合感兴趣的读者，可直接研读其物理引导的残差建模思想，极具落地启发。
+⚡今日拾取三篇硬核研究，主打“物理引导+学习”的精准状态估算。
+📌 最值得看：物理引导残差卡尔曼学习将锂电池荷电状态估计误差大幅压降；四肢机器人仅靠IMU扰动抑制也能稳健导航。
+🔍 下一步不妨关注：如何把这类“物理+数据”融合方法迁移到你手头的实时预测任务里。
 
 ## 精读区
 1. [Physics-guided residual Kalman learning for state-of-charge estimation of lithium iron phosphate batteries](/202606/12/2606.12000v1-physics-guided-residual-kalman-learning-for-state-of-charge-estimation-of-lithium-iron-phosphate-batteries) （10.0/10）
 
 ## 速读区
-- 本次无速读推荐。
+1. [Resilient Navigation for Autonomous Farm Robots by Leveraging Jerk-Augmented Models with IMU-Only Disturbance Rejection](/202606/12/2606.10971v1-resilient-navigation-for-autonomous-farm-robots-by-leveraging-jerk-augmented-models-with-imu-only-disturbance-rejection) （7.0/10）
+2. [Kernel-based identification of nonlinear port-Hamiltonian systems](/202606/12/2606.12163v1-kernel-based-identification-of-nonlinear-port-hamiltonian-systems) （6.0/10）
 
 ---
 使用键盘方向键可在日报/论文之间快速切换。

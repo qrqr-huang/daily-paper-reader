@@ -1,0 +1,403 @@
+Title: Resilient Navigation for Autonomous Farm Robots by Leveraging Jerk-Augmented Models with IMU-Only Disturbance Rejection
+
+URL Source: https://arxiv.org/pdf/2606.10971v1
+
+Published Time: Wed, 10 Jun 2026 01:28:51 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Resilient Navigation for Autonomous Farm Robots by Leveraging Jerk-Augmented Models with IMU-Only Disturbance Rejection 
+
+Batu Candan 1, Mohammed Atallah 2, Simone Servadio 3 and Saeed Arabi 4
+
+Abstract — Precise state estimation for navigation of au-tonomous agricultural robots is often compromised by sensor outages (GNSS/LiDAR/Visual) and high-frequency vibrations inherent in off-road environments. This paper proposes a robust navigation algorithm based on a jerk-augmented Extended Kalman Filter (EKF) integrated with a Multiple Tuning Factor (MTF) adaptation method. Unlike standard EKF approaches that assume constant measurement noise, our method dynami-cally adjusts the measurement covariance matrix in real-time, allowing the system to cope with sudden disturbances and sensor outliers. We evaluate the algorithm using real-world data from a Salin247 autonomous robot. Results demonstrate that jerk-augmentation combined with MTF adaptation signif-icantly reduces 3D position Root Mean Square Error (RMSE) compared to baseline EKF models, providing superior dead-reckoning capabilities. 
+
+I. INTRODUCTION The growing global demand for sustainable agricultural production, coupled with labor shortages and the need for high operational precision, has accelerated the adoption of autonomous agricultural vehicles and robots. These systems are increasingly tasked with operations such as weeding, spraying, harvesting, and monitoring, where precise nav-igation is essential. The fundamental challenge, however, remains the reliable and accurate navigation of such vehicles in complex, dynamic, and unstructured agricultural environ-ments [1]. To overcome these constraints, researchers have explored several autonomous navigation strategies, including GNSS, LiDAR, inertial sensors, and camera-based machine vision [2]. However, those systems are susceptible to signal degradation or loss due to tree canopies, farm structures, or adverse atmospheric conditions. Moreover, agricultural terrain is inherently uneven. The resulting mechanical vi-brations and impulsive shocks create noisy inertial data, especially on accelerometers, which can mislead standard Kalman filtering applications [3]. Many studies focus on integrating low-cost GNSS/IMU systems using standard 6-state or 9-state EKF models [4], [5]. While these provide a baseline for mild conditions, they rely heavily on the assumption of constant velocity or constant 
+
+> *The work of this project has been funded by the Seed Grant Award for Digital and Precision Agriculture at Iowa State University under grant number PG114523.
+> 1Batu Candan, PhD Candidate, Iowa State University, Ames, IA 50011, USA,
+> 2Mohammed Atallah, PhD Candidate, Iowa State University, Ames, IA 50011, USA,
+> 3Dr. Simone Servadio, Assistant Professor, Iowa State University, Ames, IA 50011, USA,
+> 4Saeed Arabi is the founder and software lead, Salin247, Boone, IA 50036, USA
+
+acceleration between IMU samples. As demonstrated in our results, these models suffer from lag and cumulative error when the robot encounters impulsive terrain disturbances or sudden torque changes, as they lack the higher-order derivative, jerk, necessary to model the rate of change of acceleration. Moreover, to handle the unpredictable nature of farm environments, several researchers have proposed Adaptive EKFs (AEKF). However, most existing adaptive methods use a scalar tuning factor that scales the entire measurement covariance matrix ( R) or process noise matrix (Q) uniformly [6]–[9]. Those recent adaptive methods use various different strategies. For instance, Liu et al. [10] implemented innovation-based adaptive estimation methods [11]–[13], such as the Sage-Husa filter, to statistically tune the measurement noise covariance. Other researchers adopted federated Kalman Filter (FKF) methodology to improve fault tolerance. These systems uti-lize an information distribution factor, often denoted as βi, to distribute the fused global information back [14]. However, again, the factor βi scales the entire covariance matrix of a local filter uniformly. Consequently, it lacks the abil-ity required to handle axis-specific disturbances. Similarly, fuzzy-logic based adaptation schemes have been explored to dynamically adjust filter gain based on heuristic rules [15]–[17]. However, a critical limitation in these approaches is their reliance on a scalar tuning. These methods scale the entire measurement covariance matrix uniformly. These “all-or-nothing” approaches are sub-optimal for multi-axis agricultural robots; for example, a vertical impact caused by a soil rut may corrupt the vertical accelerometer data, but the lateral data often remains valid. Scaling the entire matrix forces the filter to discard useful lateral information, reducing overall precision. While some methodologies attempt to map noise effects onto the space domain or divide uncertainties across mul-tiple models to improve trackability [18], [19], they often lack directional specificity. To address these limitations, this work proposes a resilient navigation framework tailored for agricultural robotics. First, our approach incorporates jerk into the state vector to accurately model the rate of change of acceleration, mitigating the lag caused by sudden terrain disturbances. Second, we introduce an axis-specific, mea-surement noise covariance adaptation based on the analysis of residuals at each time step. By dynamically and indepen-dently adjusting the covariance along each axis, the proposed filter isolates localized disturbances without discarding valid sensory data from the unaffected axes, thereby maintaining robust and precise navigation in unstructured environments. 
+
+> arXiv:2606.10971v1 [cs.RO] 9 Jun 2026
+
+II. PRELIMINARIES This section outlines the foundational components of the proposed navigation framework. We first describe the au-tonomous agricultural platform used for validation, followed by the mathematical formulation of the attitude representa-tion and sensor models. Finally, we derive the process and measurement models for the baseline KF structure, identify-ing the specific limitations in handling external accelerations that our proposed method addresses. 
+
+A. Salin247 Autonomous Farming Robot 
+
+The experimental validation was conducted using the Salin247 autonomous agricultural robot, a modular platform designed to address soil compaction and labor shortages in precision farming. As illustrated in Fig. 1, the vehicle con-sists of a light-weight, fully autonomous, electric-powered chassis that attaches easily to customizable implements such as planters, cultivators, and spot-sprayers. Unlike traditional heavy tractors, the Salin247 platform utilizes a distributed propulsion system with four independently driven electric track units. This 4-wheel independent drive (4WID) configu-ration allows for precise differential steering and high torque delivery at low speeds, which is essential for maintaining traction on uneven agricultural terrain [20].  
+
+> Fig. 1. Salin247 autonomous agricultural robot [20]
+
+B. Attitude Representation 
+
+Reliable navigation for autonomous agricultural platforms requires an accurate representation of the vehicle’s orienta-tion. Common attitude representations include Euler angles and quaternions; however, in this study, we use the Direct Cosine Matrix (DCM) representation to avoid the singulari-ties associated with Euler angles during steep maneuvers on uneven terrain. Furthermore, for 2-D dominant farm navi-gation, DCM is more parameter-efficient than quaternions, which possess redundant parameters. Defining S and I as the sensor and inertial coordinate frames, let ISΩ (simplified here as Ω) denote the DCM that relates the sensor frame to the inertial frame. Adopting the standard Z-Y-X Euler angle rotation sequence, we first define the individual Direction Cosine Matrices (DCMs). The rotations around the X, Y, and Z axes are parameterized by the roll ( γ), pitch ( β ), and yaw ( α) angles, respectively. Letting c and s abbreviate the cosine and sine functions, the fundamental rotation matrices are formulated as: 
+
+Rz(α) = 
+
+cα −sα 0
+
+sα cα 00 0 1
+
+ , (1) 
+
+Ry(β ) = 
+
+ cβ 0 sβ
+
+0 1 0
+
+−sβ 0 cβ
+
+ , (2) 
+
+Rx(γ) = 
+
+1 0 00 cγ −sγ
+
+0 sγ cγ
+
+ . (3) The composite rotation matrix, Ω, is formed by multi-plying these individual matrices in the RzRyRx sequence as follows. Note that while this formulation adopts the standard Z-Y-X (or 3-2-1) Euler angle rotation sequence, it is just one of twelve possible rotation orders, which can be selected based on the specific kinematic requirements of the system. 
+
+Ω = Rz(α)Ry(β )Rx(γ) (4) The two-axis attitude or tilt angles (roll and pitch) required for gravity compensation can be extracted solely from the third row of Ω.
+
+γ = tan −1
+
+ Ω32 
+
+Ω33 
+
+
+
+, (5) 
+
+β = tan −1
+
+ −Ω31 
+
+q
+
+Ω232 + Ω233 
+
+ . (6) Letting Ωi j denote the (i, j)-th element of Ω, we define the state vector x for this formulation using the matrix’s third row: 
+
+x = ΩT e =
+
+Ω31 
+
+Ω32 
+
+Ω33 
+
+ , (7) where e = [ 0 0 1 ]T . This specific Euler sequence introduces a kinematic singularity when Ω31 = ±1, which is avoided provided the platform’s pitch angle remains bounded away from ±90 ◦.
+
+C. Sensor Models 
+
+The raw measurements from the gyroscope (yG) and accelerometer ( yA) are given by: 
+
+yG = Sω + nG, (8) 
+
+yA = Sa + Sg + nA, (9) where the S superscript denotes the sensor frame. The terms Sω and Sa represent the true angular velocity and external acceleration, respectively, while the gravity vector is represented with Sg. The variables nG and nA denote zero-mean white Gaussian sensor noises, which are uncorrelated. For brevity, the S superscript is omitted in subsequent sec-tions. While sensors often exhibit bias drift, we assume the system is stabilized after a warm-up period. So, the proposed algorithm does not consider biases in line with the author’s previous work [21]. 
+
+D. Kalman Filter Process Model 
+
+The system state is propagated using the following discrete-time transition: 
+
+x− 
+
+> t
+
+= Φt−1xt−1 + wt−1, (10) 
+
+Φ is the state transition matrix, and w is the process model noise, which is white Gaussian with zero mean. This propa-gation’s first-order approximation for the rotation matrix with gyroscope measurements is shown as, 
+
+Ωt = Ωt−1 (I3 + ∆t eωt−1) . (11) Here, ∆t denotes the sampling interval, and eωt−1 represents the skew-symmetric matrix constructed from the gyroscope measurements at time t − 1. Based on (11), the a priori state vector propagates according to: 
+
+x− 
+
+> t
+
+= ( I3 − ∆teyG,t−1) xt−1 + ∆t(−ext−1)nG. (12) From this relationship, we can extract the state transition matrix, and the process noise vector, as follows: 
+
+Φt−1 = I3 − ∆teyG,t−1, (13) 
+
+wt−1 = ∆t(−ext−1)nG. (14) Applying the expected value to the process noise times its transpose yields the process noise covariance matrix: 
+
+Qt−1 = E[wt−1wT t−1] = −∆t2ext−1ΣGext−1. (15) In this expression, ΣG stands for the gyroscope measurement noise covariance. Assuming isotropic noise characteristics with variance σ 2 
+
+> G
+
+across all three axes, this matrix is defined as ΣG = σ 2
+
+> G
+
+I3.
+
+E. Kalman Filter Measurement Model 
+
+The system utilizes the standard measurement model: 
+
+zt = Hx t + vt , (16) where zt represents the measurement vector, H is the obser-vation matrix, and vt denotes the zero-mean white Gaussian measurement noise. To isolate the components of this model, we decouple the acceleration term from (10) into two distinct equations: 
+
+a− 
+
+> t
+
+= at−1, (17) 
+
+εt = at − a− 
+
+> t
+
+. (18) Replacing the body-frame gravity vector with the product of the states and norm of the gravity vector ( g = 9.81 m/s 2), we restructure (9) as: 
+
+yA,t − at−1 = gxt + εt + nA. (19) Matching (19) to (16) establishes our model parameters: 
+
+zt = yA,t − at−1, (20) 
+
+H = gI3, (21) 
+
+vt = εt + nA. (22) The uncorrelated noise terms εt and nA form the noise covariance matrix of the measurement: 
+
+Mt = E[vt vTt ] = Σacc + RA, (23) Assuming isotropic accelerometer noise, RA is modeled as 
+
+σ 2 
+
+> A
+
+I3. However, the time-varying modeling error covariance, 
+
+Σacc , cannot be calculated analytically because the true ex-ternal acceleration is unknown during sampling. We address this issue in the following methodology. III. METHODOLOGY This section outlines the approach for tuning the mea-surement noise covariance matrix. The proposed algorithm employs an adaptive tuning strategy with innovation tracking, inspired by the concepts in [22], [23], allowing the filter to dynamically adjust to unmodeled external accelerations. Within the Kalman filtering formulation, the innovation sequence, et , is represented as 
+
+et = zt − Hx − 
+
+> t
+
+, (24) with x− 
+
+> t
+
+the prior state estimate, form the a priori distribution after the prediction step. Whenever a measurement is heavily influenced by an outlier realization of the process noise, the predicted measurement covariance must be appropriately accounted for in the covariance evaluation to avoid a mea-surement update that is too confident in the observations, which would drive the estimate to high errors. Indeed, when external accelerations or disturbances occur, the magnitude of the innovation vector increases sharply, and the Kalman gain must be reduced accordingly. Therefore, the innovation covariance has an added term that increases its trace when-ever needed: ˆCet = HP − 
+
+> t
+
+HT + ˆΣacc + RA, (25) Thus, the denominator of the Kalman gain increases when poor measurements, such as outliers with high residual, are obtained: 
+
+Kt = P− 
+
+> t
+
+HT (HP − 
+
+> t
+
+HT + ˆΣacc + RA)−1, (26) with P− 
+
+> t
+
+being the prior covariance matrix obtained after time propagation, while ˆ Σacc indicates the best estimate for the 
+
+Σacc matrix given in (23). The true unknown measurement covariance ˆCet must be estimated recursively at each mea-surement acquisition by inferring its value from the residuals. Indeed, after reaching steady-state operations, if the trace of the squared residual breaks the threshold 
+
+tr (et eTt ) ≥ tr (HP − 
+
+> t
+
+HT + ˆΣacc + RA). (27) evaluated theoretically from the Kalman filtering formula-tion, it means there is an additional external acceleration acting on the measurement model, and the filtering pro-cess must be done in an adaptive fashion to counteract the higher noise level. To guarantee a rapid response to dynamic disturbances, the detection condition utilizes only the instantaneous measurement residual at time t, rather than a time-averaged innovation covariance. 
+
+A. Multiple Tuning Factor Adaptation 
+
+The innovation covariance can be redefined as ˆCet = 1
+
+μ
+
+> k
+
+# ∑
+
+> j=k−μ+1
+
+e jeTj , (28) which indicates an approximation of the expected value operator via a finite sum of samples. This formulation can be restated to write the condition for estimating the ˆ Σacc ,1
+
+μ
+
+> k
+
+# ∑
+
+> j=k−μ+1
+
+e jeTj = HP − 
+
+> t
+
+HT + St + RA. (29) Defining St as a tuning matrix of MTFs and μ as the inno-vation covariance moving window size (fixed at 1 herein), we can rearrange the expression to solve for St :
+
+St = 1
+
+μ
+
+> k
+
+# ∑
+
+> j=k−μ+1
+
+e jeTj − Ht P− 
+
+> t
+
+HTt − RA. (30) When the condition in (27) holds, the elements of St corre-sponding to the accelerated axes dynamically adjust, thereby efficiently tuning the measurement noise covariance. The final acceleration covariance estimate, ˆ Σacc , is thus given by: ˆΣacc = diag (s1, s2, s3), (31) 
+
+si = max {0, Sii } , i = 1, 2, 3. (32) Here, Sii is the i-th diagonal entry of S. During external disturbances, S inflates the covariance matrix appropriately; absent such acceleration, the diagonal terms revert to zero for standard operation. 
+
+B. Jerk-Augmented EKF Architecture 
+
+To address the high-frequency disturbances inherent in agricultural environments, we implement an EKF with a jerk-augmented state space. This formulation allows the filter to account for the rate of change of acceleration, providing robustness against sudden terrain-induced shocks and uneven soil densities. 
+
+1) State Vector and Input: The state vector xk ∈ R9
+
+comprises the 3D position p, velocity v, and jerk j in the East-North-Up (ENU) frame: 
+
+xk = pTk vTk jTk
+
+T (33) The control input uk is the specific force measured by the IMU, transformed into the ENU frame and gravity-compensated: 
+
+uk = Ωabody + genu (34) 
+
+2) Time Update (Prediction): The state is propagated using a kinematic model where the input acceleration drives position and velocity, while jerk is modeled as a random walk process. The discrete-time prediction equations are: 
+
+xk|k−1 = Fkxk−1|k−1 + Bkuk (35) 
+
+Pk|k−1 = FkPk−1|k−1FTk + Qk (36) Matching the third-order Taylor expansion for position, the state transition matrix Fk and input matrix Bk are defined as: 
+
+Fk =
+
+
+
+I3 ∆tI3 ∆t3 
+
+> 6
+
+I3
+
+03 I3 ∆t2 
+
+> 2
+
+I3
+
+03 03 I3
+
+ , Bk =
+
+ 
+
+> ∆t2
+> 2
+
+I3
+
+∆tI3
+
+03
+
+ (37) 
+
+3) Measurement Update (Correction): The filter updates the state estimate using a GNSS position and odometry velocity measurements. The measurement vector is zk =[pTgnss , vTgnss ]T . The update equations are: 
+
+yk = zk − Hx k|k−1 (38) 
+
+Sk = HP k|k−1HT + Rgnss ,k (39) 
+
+Kk = Pk|k−1HT S−1 
+
+> k
+
+(40) 
+
+xk|k = xk|k−1 + Kkyk (41) 
+
+Pk|k = Pk|k−1 − KkSkKTk (42) The observation matrix H maps the state to the available po-sition and velocity measurements, leaving jerk unobserved: 
+
+H =
+
+I3 03 03
+
+03 I3 03
+
+
+
+(43) Critically, the measurement noise covariance Rgps ,k is con-structed as a block-diagonal matrix: 
+
+Rgnss ,k = blkdiag (Rpos ,k, Rvel ,k) (44) Here, Rpos ,k and Rvel ,k are the time-varying covariances provided by the GNSS receiver indicating signal quality. IV. EXPERIMENTAL SETUP To validate the efficacy of the proposed navigation frame-work, a series of field experiments were conducted using Salin247’s commercial autonomous agricultural platform. This section details the hardware configuration, the data acquisition process in unstructured farm environments, and the quantitative metrics used to benchmark the proposed jerk-augmented MTF-EKF against the standard baseline method. 
+
+A. Experimental Hardware 
+
+Field validation was conducted using an autonomous agri-cultural robot developed by Salin247. The platform is a four-wheel independent drive (4WID) electric vehicle designed for precision tasks such as seeding, spraying, planting, and crop monitoring in unstructured off-road farm environments. The primary navigation sensor suite consists of a Fixposition Vision-RTK 2 sensor, which provides:  
+
+> •
+
+Global positioning via dual-antenna GNSS.  
+
+> •
+
+Inertial measurements from an internal IMU.  
+
+> •
+
+Visual odometry cues (fused internally by the sensor). Ground truth for validation was established using the sensor’s high-precision RTK-fixed solution fused with visual odom-etry, which offers centimeter-level accuracy under open-sky conditions. 
+
+B. Data Collection and Processing 
+
+Data was recorded using the Robot Operating System (ROS) middleware. The dataset, stored in .bag format, captures the vehicle executing typical agricultural maneuvers, including straight-line tracking on uneven soil and sharp headland turns. Key topics extracted for post-processing include:  
+
+> •
+
+/fixposition/poiimu : Raw angular velocity and linear acceleration sampled at 100 Hz.  
+
+> •
+
+/fixposition/gnss1 : Latitude, longitude, and co-variance estimates for the measurement update steps.  
+
+> •
+
+/fixposition/odometry : Used as the reference ground truth for error analysis. The proposed jerk-augmented MTF-EKF was implemented in MATLAB and compared against a baseline 6-state (Position-Velocity) EKF. Both filters utilized the same IMU inputs and GNSS measurement updates to ensure a fair comparison of the kinematic modeling effects. 
+
+C. Performance Metrics 
+
+To evaluate the resilience of the proposed method, we computed the RMSE for both the 3-D position and 3-D velocity estimates over a 150-second test trajectory. The total 3-D RMSE is defined as: 
+
+RMSE pos =
+
+s
+
+1
+
+N
+
+> N
+
+# ∑
+
+> k=1
+
+|pest ,k − ptrue ,k|2 (45) V. RESULTS The performance of the MTF methodology in the adap-tive Kalman filter is illustrated in Fig. 2. The left column displays the time history of the estimated roll and pitch angles compared against the ground truth solution. The filter demonstrates stable tracking of the vehicle’s tilt, even during the high-vibration intervals characteristic of agricul-tural terrain. The quantitative accuracy is summarized in the bar chart (Fig. 2, right), showing RMSE of 0.0051 radians for roll and 0.0076 radians for pitch. These low error margins confirm that the gravity compensation mechanism effectively isolates the specific force vector, providing a reliable orientation estimate for the subsequent navigation stage. This capability is further visualized in Fig. 3, which compares the raw accelerometer measurements against the estimated body acceleration, which is compensated against external acceleration/disturbances. As shown, the adaptive filter successfully decouples the high-frequency dynamic motion from the quasi-static gravity vector. The performance of the proposed method can be attributed to the jerk state’s ability to absorb high-frequency process noise. As shown in the position error norm analysis (Fig. 4), the baseline EKF exhibits “spikes” in position error whenever the robot encounters a surface irregularity (e.g.,   
+
+> Fig. 2. Estimation performance of tilt angles using MTF methodology
+> Fig. 3. Visual representation of external acceleration compensation
+
+at t = 45s and t = 90s as shown in Fig. 5). In contrast, the jerk-augmented filter effectively predicts the rate of change of acceleration, allowing the MTF adaptation to distinguish between sensor noise and true vehicle dynamics. This results in a smoother estimated trajectory that adheres closer to the RTK ground truth, confirming the hypothesis that higher-order kinematic modeling is essential for robust agricultural navigation. Finally, Fig. 6 summarizes the importance of jerk augmentation with MTF adaptation, showing that EKF with jerk augmentation achieves centimeter-level positional accuracy. Fig. 7 presents the 2-D trajectory estimation results in the ENU frame. The left panel shows the global path of the Salin247 robot during a 150-second field test. While the baseline EKF (blue dashed line) drifts noticeably during turns and uneven terrain segments, the jerk-augmented MTF-EKF (red dash-dot line) maintains a tight lock on the ground truth trajectory (black solid line). The zoomed inset in Fig. 7 highlights a specific instance of disturbance rejection. At these coordinates, the robot encountered a surface irregularity that caused a sudden acceleration spike. The baseline filter, constrained by its constant-acceleration assumption, overshot the turn. In contrast, the jerk-augmented filter successfully Fig. 4. Position error norm analysis   
+
+> Fig. 5. Close-up view of position error norm analysis
+> Fig. 6. Bar chart RMSE summary for EKF methodologies
+
+absorbed the impulsive force, resulting in a trajectory that is physically consistent with the robot’s actual motion. This superior tracking capability is further validated by the reduc-tion in total position RMSE shown in the accompanying bar chart.  
+
+> Fig. 7. 2-D trajectory estimation performance comparison between baseline and jerk-augmented EKFs
+
+VI. CONCLUSION This paper presented a robust navigation framework for autonomous agricultural robots operating in harsh environ-ments that might face sensor outages. By augmenting the standard kinematic state space with a jerk process model, the proposed filter effectively captures the high-frequency dynamics and impulsive forces inherent in off-road terrain. Furthermore, the integration of a novel MTF adaptive mech-anism allows the system to adjust the measurement noise covariance, selectively isolating sensor axes corrupted by vibration or impact. Experimental validation on the Salin247 platform demon-strated that the jerk-augmented MTF-EKF reduces 3-D posi-tion RMSE more than ten times compared to a baseline EKF. The results confirm that accounting for the rate of change of acceleration is critical for minimizing lag and drift during dynamic maneuvers. Future work will focus on integrating visual odometry cues into the MTF framework to further en-hance resilience during extended sensor outages. Moreover, coupling these robust state estimates with advanced control strategies, such as model predictive controllers, enables high-precision trajectory tracking and active disturbance rejection in closed-loop operation. ACKNOWLEDGEMENT The authors would like to thank Salin247 Inc. for sup-porting this research. We specifically extend our gratitude to the engineering team for providing access to the autonomous agricultural robot platform and for their assistance with the field data collection. This collaboration was instrumental in validating the proposed algorithms in a real-world agricul-tural environment. The work of this project has been funded by the Seed Grant Award for Digital and Precision Agriculture at Iowa State University under grant number PG114523. REFERENCES [1] Q. Liu, R. Yu, H. Suo, Y. Cai, L. Chen, and H. Jiang, “Autonomous Driving in Agricultural Machinery: Advancing the Frontier of Preci-sion Agriculture,” Actuators , vol. 14, no. 9, p. 464, 2025. [2] Y. Bai, B. Zhang, N. Xu, J. Zhou, J. Shi, and Z. Diao, “Vision-based navigation and guidance for agricultural autonomous vehicles and robots: A review,” Comput. Electron. Agric. , vol. 205, p. 107584, 2023. [3] H. Mousazadeh, “A technical review on navigation systems of agricul-tural autonomous off-road vehicles,” J. Terramechanics , vol. 50, no. 3, pp. 211–232, 2013. [4] Farahan, S. B., Machado, J. J. M., de Almeida, F. G., and Tavares, J. M. R. S. (2022). 9-DOF IMU-Based Attitude and Heading Estimation Using an Extended Kalman Filter with Bias Consideration. Sensors, 22(9), 3416. https://doi.org/10.3390/s22093416 [5] Kaczmarek A., Rohm W., Klingbeil L., and Tch´ orzewski J. (2022). Experimental 2D extended Kalman filter sensor fusion for low-cost GNSS/IMU/Odometers precise positioning system. Measurement. Volume 193. https://doi.org/10.1016/j.measurement.2022.110963. [6] H. Elsayed, A. El-Mowafy, A. Allahvirdi-Zadeh, K. Wang, and X. Mi, “A Combination of Classification Robust Adaptive Kalman Filter with PPP-RTK to Improve Fault Detection for Integrity Monitoring of Autonomous Vehicles,” Remote Sens. , vol. 17, no. 2, p. 284, 2025. [7] B. Candan, and S. Servadio. “Adaptive Relative Pose Estimation Framework with Dual Noise Tuning for Safe Approaching Maneu-vers.” Proceedings of the 2025 AAS/AIAA Astrodynamics Specialist Conference, Boston, MA, 10-14 August 2025, no. AAS 25-909. [8] M. Lv, H. Wei, X. Fu, W. Wang, and D. Zhou, “A Loosely Cou-pled Extended Kalman Filter Algorithm for Agricultural Scene-Based Multi-Sensor Fusion,” Front. Plant Sci. , vol. 13, p. 849260, 2022. [9] A. Leanza, R. Galati, A. Ugenti, E. Cavallo, and G. Reina, “Where am I heading? A robust approach for orientation estimation of autonomous agricultural robots,” Comput. Electron. Agric. , vol. 210, p. 107888, 2023. [10] Liu, K., Zhao, W., Sun, B., Wu, P., Zhu, D., and Zhang, P. (2019). Application of Updated Sage–Husa Adaptive Kalman Filter in the Navigation of a Translational Sprinkler Irrigation Machine. Water, 11(6), 1269. https://doi.org/10.3390/w11061269 [11] Qinghan Hu, Zhengqiang Fan, Xihai Zhang, Na Sun, Xuefeng Li, Quan Qiu, Robust localization and tracking control of high-clearance robot system servicing high-throughput wheat phenotyping, Comput-ers and Electronics in Agriculture, Volume 229, 2025, 109793, ISSN 0168-1699, https://doi.org/10.1016/j.compag.2024.109793. [12] Jia W, Tian Y, Duan H, et al. Autonomous navigation con-trol based on improved adaptive filtering for agricultural robot. International Journal of Advanced Robotic Systems. 2020;17(4). doi:10.1177/1729881420925357 [13] M. Marshall and H. Lipkin, ”Adaptive Kalman Filter Control Law for Visual Servoing,” 2016 International Conference on Collaboration Technologies and Systems (CTS), Orlando, FL, USA, 2016, pp. 379-386, doi: 10.1109/CTS.2016.0074. [14] Liao, J.; Wang, Y.; Yin, J.; Bi, L.; Zhang, S.; Zhou, H.; Zhu, D. An integrated navigation method based on an adaptive federal Kalman filter for a rice transplanter. Trans. ASABE 2021, 64, 389–399. (doi: 10.13031/trans.13682) [15] F. Yan, S. Li, E. Zhang, and Q. Chen, ”An Intelligent Adaptive Kalman Filter for Integrated Navigation Systems,” in IEEE Access, vol. 8, pp. 213306-213317, 2020, doi: 10.1109/ACCESS.2020.3040433. [16] Zhou, Z., Huang, Y., and Sun, J. (2025). Migratory Bird-Inspired Adaptive Kalman Filtering for Robust Navigation of Autonomous Agricultural Planters in Unstructured Terrains. Biomimetics, 10(8), 543. https://doi.org/10.3390/biomimetics10080543 [17] Shichao Li, Man Zhang, Yuhan Ji, Zhenqian Zhang, Ruyue Cao, Bin Chen, Han Li, Yanxin Yin, Agricultural machinery GNSS/IMU-integrated navigation based on fuzzy adaptive finite impulse re-sponse Kalman filtering algorithm, Computers and Electronics in Agriculture, Volume 191, 2021, 106524, ISSN 0168-1699, https://doi.org/10.1016/j.compag.2021.106524. [18] S. Servadio, “Likelihood Scouting Via Map Inversion for A Posterior-Sampled Particle Filter,” IEEE Transactions on Aerospace and Elec-tronic Systems, 2024. https://doi.org/10.1109/TAES.2024.3446757 [19] S. Servadio, and R. Zanetti, “Differential Algebra-Based Multiple Gaussians Particle Filter for Orbit Determination,” Journal of Opti-mization Theory and Applications, vol. 191, pp. 459–485, December 2021. https://doi.org/10.1007/s10957-021-01934-8 [20] Salin 247 Inc., “Autonomous Electric Farm Equipment,” [Online]. Available: https://salin247.com/. [Accessed: Feb. 09, 2026]. [21] B. Candan and H. E. Soken, “Robust Attitude Estimation Using IMU-Only Measurements,” IEEE Trans. Instrum. Meas. , vol. 70, pp. 1–9, 2021. [22] B. Candan and S. Servadio, “Relative Pose Estimation of an Unco-operative Target with Camera Marker Detection,” Aerospace , vol. 12, no. 5, p. 425, 2025. [23] B. Candan, “Design of attitude estimation algorithms for inertial sensors only measurement scenarios,” Master’s thesis, Middle East Technical University, 2022.
