@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-12",
+  "date": "2026-06-12",
+  "generated_at": "2026-06-12T00:34:26",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/12/2606.12000v1-physics-guided-residual-kalman-learning-for-state-of-charge-estimation-of-lithium-iron-phosphate-batteries",
+      "section": "deep",
+      "title_en": "Physics-guided residual Kalman learning for state-of-charge estimation of lithium iron phosphate batteries",
+      "authors": "Feng Guo, Luis D. Couto, Khiem Trad, Ru Hong, Guangdi Hu, Mohammadhosein Safari",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.12000v1",
+      "score": "10.0",
+      "evidence": "提出用于磷酸铁锂电池荷电状态估计的物理引导残差卡尔曼学习方法。",
+      "tldr": "磷酸铁锂电池荷电状态估计因平坦OCV-SOC曲线、温度敏感及初始化误差而颇具挑战。本文提出物理引导的残差卡尔曼学习框架PRKL，融合单粒子模型扩展卡尔曼滤波与GRU残差学习器。在宽温域、多工况和最大20%初始偏差下，PRKL将全局平均RMSE降至1.19%，较纯物理EKF降低77%。该框架证实电化学状态信息能有效引导残差学习，提升递归SOC精度，并为跨工况、老化及嵌入式部署验证奠定基础。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Accurate state of charge (SOC) estimation of lithium iron phosphate (LFP) batteries remains challenging because of their flat open-circuit-voltage (OCV)-SOC characteristics, temperature-dependent dynamics, and sensitivity to initialization errors. Here, we propose a physics-guided residual Kalman learning (PRKL) framework for electrochemical-model-based SOC estimation. PRKL combines a control-oriented single-particle-model-based extended Kalman filter (EKF), which provides recursive physical state propagation, with a gated recurrent unit (GRU) residual learner that compensates structured EKF errors using electrochemical states and measurement features. The framework is evaluated on a public graphite/LFP dataset covering three dynamic drive cycles, eight temperatures from -10 to 50 degrees C, and initialization offsets up to 20 percent. Using dynamic stress test (DST) and federal urban driving schedule (FUDS) cycles for training and the supplemental federal test procedure (US06) cycle for cross-profile testing within the same cell dataset, PRKL achieves a global average root mean square error (RMSE) of 1.19 percent, corresponding to a 77 percent reduction relative to the physics-only EKF. These results show that electrochemical state information can guide residual learning and improve recursive SOC estimation for LFP batteries. The present validation supports cross-profile robustness within the studied dataset and provides a basis for future cross-cell, ageing-aware, and embedded-platform validation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
