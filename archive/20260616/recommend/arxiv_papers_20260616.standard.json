@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-16T00:33:27.319302+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.14195v1",
+      "source": "arxiv",
+      "title": "Structured Noise Adaptation for Sequential Bayesian Filtering with Embedded Latent Transfer Operators",
+      "abstract": "Kalman filters based on the Embedded Latent Transfer Operators (ELTO) emerge as novel statistical tools for sequential state estimation. However, a critical limitation stems from their use of simplified noise models, which fail to dynamically adapt to non-stationary processes. To address this limitation, we introduce an ELTO-based Bayesian filtering approach with a new structured parameterization for the filter's noise model. This parameterization enables structured noise adaptation, which couples the data-driven learning of an optimal time-invariant noise model with dynamic parameter adaptation that responds to changes in dynamics within non-stationary processes. Empirical results show that our structured noise adaptation improves the filter's dynamic state estimation performance in noisy, time-varying environments.",
+      "authors": [
+        "Naichang Ke",
+        "Pongpisit Thanasutives",
+        "Yoshinobu Kawahara"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "math.OC"
+      ],
+      "published": "2026-06-12T07:28:54+00:00",
+      "link": "https://arxiv.org/pdf/2606.14195v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Introduces an adaptive Kalman filtering approach with structured noise adaptation for sequential state estimation.",
+      "llm_evidence_cn": "引入了一种具有结构化噪声自适应的自适应卡尔曼滤波方法，用于序列状态估计。",
+      "llm_evidence": "引入了一种具有结构化噪声自适应的自适应卡尔曼滤波方法，用于序列状态估计。",
+      "canonical_evidence": "引入了一种具有结构化噪声自适应的自适应卡尔曼滤波方法，用于序列状态估计。",
+      "llm_tldr_en": "Addresses the limitation of simplified noise models in ELTO-based Kalman filters for non-stationary processes by introducing structured noise adaptation that couples data-driven optimal time-invariant noise learning with dynamic parameter adaptation, demonstrating improved state estimation accuracy and robustness in empirical studies.",
+      "llm_tldr_cn": "针对基于ELTO的卡尔曼滤波器在非平稳过程中因噪声模型简化而适应性不足的问题，本文提出一种结构化噪声自适应贝叶斯滤波方法。该方法通过引入结构化参数化，将数据驱动的时不变最优噪声模型学习与动态参数自适应相结合，使滤波器能实时响应动态变化。实验结果显示，所提方法在多个非平稳场景下显著提升了状态估计精度与鲁棒性，为自适应卡尔曼滤波在复杂环境下的应用提供了新思路。",
+      "llm_tldr": "针对基于ELTO的卡尔曼滤波器在非平稳过程中因噪声模型简化而适应性不足的问题，本文提出一种结构化噪声自适应贝叶斯滤波方法。该方法通过引入结构化参数化，将数据驱动的时不变最优噪声模型学习与动态参数自适应相结合，使滤波器能实时响应动态变化。实验结果显示，所提方法在多个非平稳场景下显著提升了状态估计精度与鲁棒性，为自适应卡尔曼滤波在复杂环境下的应用提供了新思路。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

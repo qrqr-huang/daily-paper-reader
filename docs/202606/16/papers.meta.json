@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-16",
+  "date": "2026-06-16",
+  "generated_at": "2026-06-16T00:34:39",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/16/2606.14195v1-structured-noise-adaptation-for-sequential-bayesian-filtering-with-embedded-latent-transfer-operators",
+      "section": "quick",
+      "title_en": "Structured Noise Adaptation for Sequential Bayesian Filtering with Embedded Latent Transfer Operators",
+      "authors": "Naichang Ke, Pongpisit Thanasutives, Yoshinobu Kawahara",
+      "date": "2026-06-12",
+      "pdf": "https://arxiv.org/pdf/2606.14195v1",
+      "score": "6.0",
+      "evidence": "引入了一种具有结构化噪声自适应的自适应卡尔曼滤波方法，用于序列状态估计。",
+      "tldr": "基于嵌入式潜传递算子（ELTO）的卡尔曼滤波器在序列状态估计中展现出潜力，但其简化噪声模型无法适应非平稳过程。针对该局限，本研究提出一种结构化噪声自适应方法，通过结构化参数化耦合数据驱动的最优时间恒定噪声模型与动态参数适配机制，使滤波器能够响应动态变化。实验表明，该方法显著提升了在噪声、时变环境中的动态状态估计性能，为复杂系统状态估计提供了更鲁棒的方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Kalman filters based on the Embedded Latent Transfer Operators (ELTO) emerge as novel statistical tools for sequential state estimation. However, a critical limitation stems from their use of simplified noise models, which fail to dynamically adapt to non-stationary processes. To address this limitation, we introduce an ELTO-based Bayesian filtering approach with a new structured parameterization for the filter's noise model. This parameterization enables structured noise adaptation, which couples the data-driven learning of an optimal time-invariant noise model with dynamic parameter adaptation that responds to changes in dynamics within non-stationary processes. Empirical results show that our structured noise adaptation improves the filter's dynamic state estimation performance in noisy, time-varying environments.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
