@@ -6,26 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-16
-- 运行时间：2026-06-16 00:34:29 UTC
+- 最新运行日期：2026-06-17
+- 运行时间：2026-06-17 00:30:15 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：0
 - 精读区：0
-- 速读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-今日速读一篇关于序列贝叶斯滤波中结构化噪声自适应的论文（评分6.0），聚焦隐式转移算子的嵌入学习。  
-关键结论：用结构化潜变量建模噪声动态，可提升滤波在非平稳环境下的鲁棒性。  
-关注噪声建模策略的读者，可留意其“潜转移算子”如何解耦状态与噪声演化。
-- 详情：[/202606/16/README](/202606/16/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202606/17/README](/202606/17/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Structured Noise Adaptation for Sequential Bayesian Filtering with Embedded Latent Transfer Operators](/202606/16/2606.14195v1-structured-noise-adaptation-for-sequential-bayesian-filtering-with-embedded-latent-transfer-operators)  
-   标签：评分：6.0/10、query:lfp-soc
-   evidence：引入了一种具有结构化噪声自适应的自适应卡尔曼滤波方法，用于序列状态估计。
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
