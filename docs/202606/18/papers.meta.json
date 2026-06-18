@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-18",
+  "date": "2026-06-18",
+  "generated_at": "2026-06-18T00:14:10",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/18/2606.17382v1-automated-estimation-of-equivalent-circuit-model-from-impedances-with-long-short-term-memory",
+      "section": "quick",
+      "title_en": "Automated Estimation of Equivalent Circuit Model from Impedances with Long Short-Term Memory",
+      "authors": "Ryoma Iki, Motoya Furugori, Noboru Katayama",
+      "date": "2026-06-16",
+      "pdf": "https://arxiv.org/pdf/2606.17382v1",
+      "score": "7.0",
+      "evidence": "使用LSTM从EIS自动估计ECM，直接适用于电池SOC估计",
+      "tldr": "电化学阻抗谱(EIS)分析依赖等效电路模型(ECM)选择，但传统方法需专家判断且难以自动化。本文提出基于LSTM和卷积特征提取的网络，将阻抗谱直接生成为电路拓扑符号串，无需拟合和预设规模。在100,000组合成数据上，方法在77.8%情形将正确拓扑排首位，前五召回率达98.8%，且单次估计仅17.8毫秒。该成果实现了快速直接拓扑生成，向全自动ECM估计迈出关键一步。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Electrochemical Impedance Spectroscopy (EIS) is a widely used, non-destructive technique for characterizing electrochemical systems, and its analysis typically relies on fitting the measured spectra to an Equivalent Circuit Model (ECM). Selecting an appropriate ECM, however, remains a major bottleneck: knowledge-based selection requires expert judgment and is difficult to reproduce, while existing automated approaches either choose from a fixed set of candidate circuits or, in the case of Gene Expression Programming, require repeated equivalent-circuit fitting and a predetermined circuit scale. Here, we propose a machine learning method that estimates an ECM directly from an impedance spectrum by representing the circuit as a serialized string of symbols and generating this string with a Long Short-Term Memory (LSTM) network coupled to a convolutional feature extractor. Because the LSTM inherently handles variable-length sequences, the method produces the circuit topology directly, without any fitting during estimation nor prior assumption for the number of elements. A fourth-root transformation of the impedance is introduced to emphasize the mid-frequency features essential for distinguishing circuits, and an adaptive beam search yields multiple ranked candidates. Evaluated on 100,000 synthetic datasets generated from 119 circuit topologies with 1% added noise on impedances, the method identified the correct topology as the most probable ECM in 77.8% of cases and among the top five candidates in 98.8% of cases, with an average estimation time of 17.8 milliseconds per dataset - several orders of magnitude faster than reported fitting-based approaches. These results indicate that direct topology generation with a neural network is a promising route toward fully automated, expert-independent ECM estimation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/18/2606.16057v1-a-smart-scheduled-hybrid-ssh-ekf-fgo-state-estimation",
+      "section": "quick",
+      "title_en": "A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation",
+      "authors": "Eric Levi, Soosan Beheshti",
+      "date": "2026-06-14",
+      "pdf": "https://arxiv.org/pdf/2606.16057v1",
+      "score": "6.0",
+      "evidence": "提出可应用于电池SOC估计的EKF-FGO混合状态估计框架",
+      "tldr": "在机器人状态估计中，滤波方法实时高效但存在累积漂移，因子图优化提供全局一致性却计算开销大，优化调度的设计潜力常被忽略。本文设计智能调度混合EKF-FGO框架，通过EKF传播状态并定期触发批量优化，固定求解器开销，将优化调度作为独立实验变量加以分析。平面SLAM仿真表明，调度时机直接影响预优化漂移、瞬态误差及运行时间，存在能以少量计算成本保留大部分全局优化增益的操作区间。该发现凸显优化调度是混合估计设计中一个被忽视的关键因素，为工程实践提供了新的权衡视角。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Reliable state estimation in robotics and control re quires balancing estimation accuracy against computational cost. While filtering-based methods such as the Extended Kalman Filter (EKF) provide efficient real-time updates, and optimisation based formulations using factor graphs improve global consistency, the role of optimisation scheduling is often treated implicitly rather than examined as an explicit design variable. This paper presents an experimental study that explicitly isolates optimisation scheduling using a Smart Scheduled Hybrid (SSH) EKF-FGO framework as a controlled testbed. By combining EKF-based state propagation with periodically invoked batch optimisation and holding solver structure and effort fixed, the main contribution of this work is the experimental characterisation of optimisation scheduling as an independent design variable governing the trade-off between intermediate estimation accuracy and computational cost. Simulation results in a planar SLAM environment show that scheduling strongly influences pre optimisation drift, transient error behaviour, and runtime. In particular, the results identify operating regimes in which most of the benefit of global optimisation can be retained at a fraction of the computational cost, highlighting optimisation scheduling as an under-explored yet critical consideration in hybrid state estimation systems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

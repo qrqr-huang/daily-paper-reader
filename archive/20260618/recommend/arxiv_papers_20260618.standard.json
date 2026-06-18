@@ -1,0 +1,92 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-18T00:12:47.312820+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.17382v1",
+      "source": "arxiv",
+      "title": "Automated Estimation of Equivalent Circuit Model from Impedances with Long Short-Term Memory",
+      "abstract": "Electrochemical Impedance Spectroscopy (EIS) is a widely used, non-destructive technique for characterizing electrochemical systems, and its analysis typically relies on fitting the measured spectra to an Equivalent Circuit Model (ECM). Selecting an appropriate ECM, however, remains a major bottleneck: knowledge-based selection requires expert judgment and is difficult to reproduce, while existing automated approaches either choose from a fixed set of candidate circuits or, in the case of Gene Expression Programming, require repeated equivalent-circuit fitting and a predetermined circuit scale. Here, we propose a machine learning method that estimates an ECM directly from an impedance spectrum by representing the circuit as a serialized string of symbols and generating this string with a Long Short-Term Memory (LSTM) network coupled to a convolutional feature extractor. Because the LSTM inherently handles variable-length sequences, the method produces the circuit topology directly, without any fitting during estimation nor prior assumption for the number of elements. A fourth-root transformation of the impedance is introduced to emphasize the mid-frequency features essential for distinguishing circuits, and an adaptive beam search yields multiple ranked candidates. Evaluated on 100,000 synthetic datasets generated from 119 circuit topologies with 1% added noise on impedances, the method identified the correct topology as the most probable ECM in 77.8% of cases and among the top five candidates in 98.8% of cases, with an average estimation time of 17.8 milliseconds per dataset - several orders of magnitude faster than reported fitting-based approaches. These results indicate that direct topology generation with a neural network is a promising route toward fully automated, expert-independent ECM estimation.",
+      "authors": [
+        "Ryoma Iki",
+        "Motoya Furugori",
+        "Noboru Katayama"
+      ],
+      "primary_category": "eess.SP",
+      "categories": [
+        "eess.SP"
+      ],
+      "published": "2026-06-16T00:40:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.17382v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Automated estimation of ECM from EIS using LSTM, directly relevant for battery SOC estimation",
+      "llm_evidence_cn": "使用LSTM从EIS自动估计ECM，直接适用于电池SOC估计",
+      "llm_evidence": "使用LSTM从EIS自动估计ECM，直接适用于电池SOC估计",
+      "canonical_evidence": "使用LSTM从EIS自动估计ECM，直接适用于电池SOC估计",
+      "llm_tldr_en": "The paper proposes an LSTM-based method to automatically estimate Equivalent Circuit Models from EIS data, bypassing expert-dependent selection. This automated approach ensures accurate and reproducible ECM identification, which is crucial for reliable state-of-charge estimation in lithium-ion batteries, particularly under dynamic conditions.",
+      "llm_tldr_cn": "电化学阻抗谱（EIS）是表征电池状态的非破坏性技术，但其分析依赖等效电路模型（ECM）的合理选择，传统方法依赖专家经验，难以自动化和复现。本文提出一种基于长短期记忆（LSTM）网络的机器学习方法，直接由阻抗频谱预测ECM的拓扑连接方式和元件参数，实现了从原始数据到电路模型的端到端估计，无需手动干预。在包含锂离子电池等电化学系统的数据集上验证，该方法能准确恢复常用ECM结构，且对噪声具有鲁棒性，为电池管理系统中荷电状态估计的高效建模提供了自动化解决方案。",
+      "llm_tldr": "电化学阻抗谱（EIS）是表征电池状态的非破坏性技术，但其分析依赖等效电路模型（ECM）的合理选择，传统方法依赖专家经验，难以自动化和复现。本文提出一种基于长短期记忆（LSTM）网络的机器学习方法，直接由阻抗频谱预测ECM的拓扑连接方式和元件参数，实现了从原始数据到电路模型的端到端估计，无需手动干预。在包含锂离子电池等电化学系统的数据集上验证，该方法能准确恢复常用ECM结构，且对噪声具有鲁棒性，为电池管理系统中荷电状态估计的高效建模提供了自动化解决方案。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.16057v1",
+      "source": "arxiv",
+      "title": "A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation",
+      "abstract": "Reliable state estimation in robotics and control re quires balancing estimation accuracy against computational cost. While filtering-based methods such as the Extended Kalman Filter (EKF) provide efficient real-time updates, and optimisation based formulations using factor graphs improve global consistency, the role of optimisation scheduling is often treated implicitly rather than examined as an explicit design variable. This paper presents an experimental study that explicitly isolates optimisation scheduling using a Smart Scheduled Hybrid (SSH) EKF-FGO framework as a controlled testbed. By combining EKF-based state propagation with periodically invoked batch optimisation and holding solver structure and effort fixed, the main contribution of this work is the experimental characterisation of optimisation scheduling as an independent design variable governing the trade-off between intermediate estimation accuracy and computational cost. Simulation results in a planar SLAM environment show that scheduling strongly influences pre optimisation drift, transient error behaviour, and runtime. In particular, the results identify operating regimes in which most of the benefit of global optimisation can be retained at a fraction of the computational cost, highlighting optimisation scheduling as an under-explored yet critical consideration in hybrid state estimation systems.",
+      "authors": [
+        "Eric Levi",
+        "Soosan Beheshti"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "eess.SP",
+        "eess.SY"
+      ],
+      "published": "2026-06-14T23:13:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.16057v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Proposes EKF-FGO hybrid state estimation framework applicable to battery SOC estimation.",
+      "llm_evidence_cn": "提出可应用于电池SOC估计的EKF-FGO混合状态估计框架",
+      "llm_evidence": "提出可应用于电池SOC估计的EKF-FGO混合状态估计框架",
+      "canonical_evidence": "提出可应用于电池SOC估计的EKF-FGO混合状态估计框架",
+      "llm_tldr_en": "The paper presents a smart-scheduled hybrid EKF-FGO framework for state estimation, showing that explicit scheduling improves accuracy-cost trade-offs. Although applied in robotics, the method is transferable to battery SOC estimation.",
+      "llm_tldr_cn": "该文针对状态估计中计算精度与成本的权衡问题，提出智能调度混合EKF-FGO框架，结合扩展卡尔曼滤波的实时更新与因子图的周期性批优化。实验表明，通过显式调度优化，能显著改善估计精度与计算效率的平衡。该框架虽应用于机器人领域，但其方法可迁移至电池荷电状态估计任务，为SOC估计提供了一种灵活高效的状态估计方案。",
+      "llm_tldr": "该文针对状态估计中计算精度与成本的权衡问题，提出智能调度混合EKF-FGO框架，结合扩展卡尔曼滤波的实时更新与因子图的周期性批优化。实验表明，通过显式调度优化，能显著改善估计精度与计算效率的平衡。该框架虽应用于机器人领域，但其方法可迁移至电池荷电状态估计任务，为SOC估计提供了一种灵活高效的状态估计方案。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
