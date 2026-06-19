@@ -1,16 +1,56 @@
 {
   "mode": "standard",
-  "generated_at": "2026-06-19T00:55:17.471996+00:00",
+  "generated_at": "2026-06-19T23:03:16.994608+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
     "deep_divecandidates": 0,
     "deep_cap": 6,
     "deep_selected": 0,
-    "quick_candidates": 0,
+    "quick_candidates": 1,
     "quick_skim_target": 11,
-    "quick_selected": 0
+    "quick_selected": 1
   },
   "deep_dive": [],
-  "quick_skim": []
+  "quick_skim": [
+    {
+      "id": "2606.20053v1",
+      "source": "arxiv",
+      "title": "Comparative Study of Neural Surrogate Architectures for Autoregressive Prediction of Internal Battery States",
+      "abstract": "The Doyle-Fuller-Newman (DFN) model resolves internal electrochemical states in lithium-ion batteries with high fidelity. However, the numerical solution of its governing equations is computationally prohibitive for real-time deployment, limiting scalability from individual cells to pack and fleet-scale applications. While machine learning surrogates can substantially reduce inference latency through GPU acceleration, most existing approaches learn solution approximations tied to specific operating conditions rather than learning generalizable state-evolution dynamics. This work presents a systematic comparison of four neural network architectures (MLP, ResNet, U-Net, FNO) formulated as autoregressive state-transition operators that predict full DFN internal states across a wide range of operating conditions. To ensure a controlled architectural comparison, all models are trained under a unified framework using multi-step unrolling and current-conditioning, isolating the impact of spatial inductive bias. Results demonstrate that the U-Net's multi-scale feature hierarchy achieves a mean final-step nRMSE of 3% averaged across all internal state variables after 300-step autoregressive rollouts, while providing a 5.38x speed-up over the numerical solver. These findings highlight spatial inductive bias as a critical determinant of surrogate performance, advancing the development of surrogates for internal state observability for next-generation battery management systems and digital twins.",
+      "authors": [
+        "Gihyun Lee",
+        "Thorben Menne",
+        "Simon Olma",
+        "Jakob Hilgert",
+        "Sangyoung Park"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-18T10:27:36+00:00",
+      "link": "https://arxiv.org/pdf/2606.20053v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Predicts internal battery states including SOC using neural surrogates for real-time lithium-ion battery applications",
+      "llm_evidence_cn": "使用神经代理模型预测锂离子电池内部状态（包括SOC），适用于实时应用",
+      "llm_evidence": "使用神经代理模型预测锂离子电池内部状态（包括SOC），适用于实时应用",
+      "canonical_evidence": "使用神经代理模型预测锂离子电池内部状态（包括SOC），适用于实时应用",
+      "llm_tldr_en": "This paper compares neural network architectures (MLP, ResNet, U-Net, FNO) as autoregressive surrogates for the Doyle-Fuller-Newman model to enable fast prediction of internal battery states like lithium concentration, potentially benefiting real-time SOC estimation in battery management systems.",
+      "llm_tldr_cn": "本文比较了多种神经网络架构（MLP、ResNet、U-Net、FNO）作为Doyle-Fuller-Newman模型的自回归代理，以实现锂离子电池内部状态（如锂浓度）的快速预测。该方法显著降低了计算成本，有望用于电池管理系统的实时SOC估计，为电池状态监测提供了高效工具。",
+      "llm_tldr": "本文比较了多种神经网络架构（MLP、ResNet、U-Net、FNO）作为Doyle-Fuller-Newman模型的自回归代理，以实现锂离子电池内部状态（如锂浓度）的快速预测。该方法显著降低了计算成本，有望用于电池管理系统的实时SOC估计，为电池状态监测提供了高效工具。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
 }

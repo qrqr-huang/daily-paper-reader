@@ -1,8 +1,24 @@
 {
   "label": "2026-06-19",
   "date": "2026-06-19",
-  "generated_at": "2026-06-19T00:55:17",
-  "count": 0,
-  "papers": [],
+  "generated_at": "2026-06-19T23:04:15",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/19/2606.20053v1-comparative-study-of-neural-surrogate-architectures-for-autoregressive-prediction-of-internal-battery-states",
+      "section": "quick",
+      "title_en": "Comparative Study of Neural Surrogate Architectures for Autoregressive Prediction of Internal Battery States",
+      "authors": "Gihyun Lee, Thorben Menne, Simon Olma, Jakob Hilgert, Sangyoung Park",
+      "date": "2026-06-18",
+      "pdf": "https://arxiv.org/pdf/2606.20053v1",
+      "score": "7.0",
+      "evidence": "使用神经代理模型预测锂离子电池内部状态（包括SOC），适用于实时应用",
+      "tldr": "DFN模型虽能高保真解析锂离子电池内部电化学状态，但数值解算力过高，难以从单电池扩展到电池包和车队级实时应用。现有机器学习替代模型大多学习特定工况下的解逼近，缺乏学习普适状态演化动态的能力。本工作系统比较了四种神经网络架构（MLP、ResNet、U-Net、FNO）作为自回归状态转移算子，在统一多步展开和电流条件化训练框架下预测全DFN内部状态。U-Net凭借多尺度特征层次，在300步自回归后平均nRMSE为3%，并提供5.38倍加速。研究揭示空间归纳偏置是决定替代模型性能的关键，推动了面向下一代电池管理系统和数字孪生的内部状态可观性发展。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "The Doyle-Fuller-Newman (DFN) model resolves internal electrochemical states in lithium-ion batteries with high fidelity. However, the numerical solution of its governing equations is computationally prohibitive for real-time deployment, limiting scalability from individual cells to pack and fleet-scale applications. While machine learning surrogates can substantially reduce inference latency through GPU acceleration, most existing approaches learn solution approximations tied to specific operating conditions rather than learning generalizable state-evolution dynamics. This work presents a systematic comparison of four neural network architectures (MLP, ResNet, U-Net, FNO) formulated as autoregressive state-transition operators that predict full DFN internal states across a wide range of operating conditions. To ensure a controlled architectural comparison, all models are trained under a unified framework using multi-step unrolling and current-conditioning, isolating the impact of spatial inductive bias. Results demonstrate that the U-Net's multi-scale feature hierarchy achieves a mean final-step nRMSE of 3% averaged across all internal state variables after 300-step autoregressive rollouts, while providing a 5.38x speed-up over the numerical solver. These findings highlight spatial inductive bias as a critical determinant of surrogate performance, advancing the development of surrogates for internal state observability for next-generation battery management systems and digital twins.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
   "errors": []
 }
