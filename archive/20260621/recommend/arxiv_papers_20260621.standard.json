@@ -1,0 +1,54 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-21T23:17:18.142680+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2606.16057v2",
+      "source": "arxiv",
+      "title": "A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation",
+      "abstract": "Reliable state estimation in robotics and control re quires balancing estimation accuracy against computational cost. While filtering-based methods such as the Extended Kalman Filter (EKF) provide efficient real-time updates, and optimisation based formulations using factor graphs improve global consistency, the role of optimisation scheduling is often treated implicitly rather than examined as an explicit design variable. This paper presents an experimental study that explicitly isolates optimisation scheduling using a Smart Scheduled Hybrid (SSH) EKF-FGO framework as a controlled testbed. By combining EKF-based state propagation with periodically invoked batch optimisation and holding solver structure and effort fixed, the main contribution of this work is the experimental characterisation of optimisation scheduling as an independent design variable governing the trade-off between intermediate estimation accuracy and computational cost. Simulation results in a planar SLAM environment show that scheduling strongly influences pre optimisation drift, transient error behaviour, and runtime. In particular, the results identify operating regimes in which most of the benefit of global optimisation can be retained at a fraction of the computational cost, highlighting optimisation scheduling as an under-explored yet critical consideration in hybrid state estimation systems.",
+      "authors": [
+        "Eric Levy",
+        "Soosan Beheshti"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "eess.SP",
+        "eess.SY"
+      ],
+      "published": "2026-06-14T23:13:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.16057v2",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "EKF-based state estimation framework applicable to battery SOC estimation",
+      "llm_evidence_cn": "基于EKF的状态估计框架可应用于电池SOC估计",
+      "llm_evidence": "基于EKF的状态估计框架可应用于电池SOC估计",
+      "canonical_evidence": "基于EKF的状态估计框架可应用于电池SOC估计",
+      "llm_tldr_en": "This paper proposes a smart-scheduled hybrid EKF-FGO approach that balances state estimation accuracy and computational cost, with potential for application in battery state of charge estimation.",
+      "llm_tldr_cn": "该文针对状态估计中精度与计算成本的平衡问题，提出智能调度混合扩展卡尔曼滤波-因子图优化(EKF-FGO)框架。通过将EKF实时更新与定期批优化相结合，并显式控制优化调度，在固定求解器下评估调度策略的影响。实验表明该方法在保持实时性的同时提升了全局一致性，为机器人及类似系统(如电池管理系统)中的状态估计提供了灵活高效的解决方案。",
+      "llm_tldr": "该文针对状态估计中精度与计算成本的平衡问题，提出智能调度混合扩展卡尔曼滤波-因子图优化(EKF-FGO)框架。通过将EKF实时更新与定期批优化相结合，并显式控制优化调度，在固定求解器下评估调度策略的影响。实验表明该方法在保持实时性的同时提升了全局一致性，为机器人及类似系统(如电池管理系统)中的状态估计提供了灵活高效的解决方案。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

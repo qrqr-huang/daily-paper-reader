@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-21",
+  "date": "2026-06-21",
+  "generated_at": "2026-06-21T23:18:17",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/21/2606.16057v2-a-smart-scheduled-hybrid-ssh-ekf-fgo-state-estimation",
+      "section": "deep",
+      "title_en": "A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation",
+      "authors": "Eric Levy, Soosan Beheshti",
+      "date": "2026-06-14",
+      "pdf": "https://arxiv.org/pdf/2606.16057v2",
+      "score": "8.0",
+      "evidence": "基于EKF的状态估计框架可应用于电池SOC估计",
+      "tldr": "在需要平衡精度与计算代价的状态估计中，混合EKF滤波与因子图优化的方法常将优化调度视为隐式因素，而非独立设计变量。本研究以智能调度混合EKF-FGO框架为测试床，固定求解结构，集中实验分析优化调度对精度与成本的影响。结果表明调度策略显著影响预优化漂移、瞬态误差和运行时间，并存在以极小计算代价保留大部分全局优化收益的工作区间。该工作突显了优化调度作为关键设计变量的重要性，为高效混合估计系统设计提供了实证依据。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Reliable state estimation in robotics and control re quires balancing estimation accuracy against computational cost. While filtering-based methods such as the Extended Kalman Filter (EKF) provide efficient real-time updates, and optimisation based formulations using factor graphs improve global consistency, the role of optimisation scheduling is often treated implicitly rather than examined as an explicit design variable. This paper presents an experimental study that explicitly isolates optimisation scheduling using a Smart Scheduled Hybrid (SSH) EKF-FGO framework as a controlled testbed. By combining EKF-based state propagation with periodically invoked batch optimisation and holding solver structure and effort fixed, the main contribution of this work is the experimental characterisation of optimisation scheduling as an independent design variable governing the trade-off between intermediate estimation accuracy and computational cost. Simulation results in a planar SLAM environment show that scheduling strongly influences pre optimisation drift, transient error behaviour, and runtime. In particular, the results identify operating regimes in which most of the benefit of global optimisation can be retained at a fraction of the computational cost, highlighting optimisation scheduling as an under-explored yet critical consideration in hybrid state estimation systems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

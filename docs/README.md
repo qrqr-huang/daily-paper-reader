@@ -6,23 +6,23 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-20
-- 运行时间：2026-06-20 23:19:14 UTC
+- 最新运行日期：2026-06-21
+- 运行时间：2026-06-21 23:18:10 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：1
 - 速读区：0
 
 ### 今日简报（AI）
-今天只精读了一篇将卡尔曼滤波极致压缩到边缘NPU上的论文，堪称实时追踪的“瘦身术”。  
-最值得关注的是它用轻量级架构把功耗压到极低，让传感器端也能跑复杂的状态估计。  
-下一步可以跟踪这种“算法-硬件协同设计”思路，看看能不能迁移到你手上的IMU或视觉检测项目里。
-- 详情：[/202606/20/README](/202606/20/README)
+今日精读一篇提出智能调度混合EKF-FGO新框架的论文，该系统能动态切换滤波器与因子图优化以兼顾实时性与精度。  
+最值得关注的是智能调度策略让状态估计在计算资源受限下仍保持高鲁棒性，以及EKF与FGO协同的误差补偿机制。  
+建议读者关注此类融合方法在自动驾驶或机器人实时定位中的落地潜力，尤其可尝试对比纯滤波方案的实际收益。
+- 详情：[/202606/21/README](/202606/21/README)
 
 ### 精读区论文标签
-1. [KATANA: A Fast, Low-Power Mapping of Kalman Filters onto Edge NPUs for Real-Time Tracking](/202606/20/2606.14992v1-katana-a-fast-low-power-mapping-of-kalman-filters-onto-edge-npus-for-real-time-tracking)  
+1. [A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation](/202606/21/2606.16057v2-a-smart-scheduled-hybrid-ssh-ekf-fgo-state-estimation)  
    标签：评分：8.0/10、query:lfp-soc
-   evidence：将卡尔曼滤波器映射到边缘NPU，实现低功耗实时状态估计，可直接用于SOC估计。
+   evidence：基于EKF的状态估计框架可应用于电池SOC估计
 
 ### 速读区论文标签
 - 本次无速读推荐。

@@ -1,0 +1,280 @@
+Title: A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation
+
+URL Source: https://arxiv.org/pdf/2606.16057v2
+
+Published Time: Fri, 19 Jun 2026 01:15:55 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# A Smart-Scheduled Hybrid EKF–FGO State Estimation 
+
+Eric Levy 
+
+Electrical, Computer, and Biomedical Engineering Toronto Metropolitan University 
+
+Toronto, ON, Canada eric.j.levy@torontomu.ca 0009-0004-2724-7668 
+
+Soosan Beheshti 
+
+Electrical, Computer, and Biomedical Engineering Toronto Metropolitan University 
+
+Toronto, ON, Canada soosan@torontomu.ca 0000-0001-7161-5887 
+
+Abstract —Reliable state estimation in robotics requires bal-ancing estimation accuracy with computational cost. Filtering-based methods such as the Extended Kalman Filter (EKF) provide efficient real-time updates but accumulate drift due to linearisation. In contrast, optimisation-based approaches using factor graph optimisation (FGO) improve global consistency at higher computational cost. This paper investigates optimisation scheduling as an explicit design variable in hybrid estimation systems. We introduce a scheduled hybrid EKF–FGO framework in which recursive filtering is performed at every time step, while batch optimisation is invoked periodically. By fixing the solver structure and effort, the framework enables controlled analysis of scheduling effects. Simulation results in a planar SLAM setting show that scheduling strongly influences pre-optimisation drift and computational cost. In particular, we observe an asymmetric trade-off: drift increases gradually with longer scheduling intervals, while computational cost decreases rapidly. This leads to operating regimes in which most of the benefits of global optimisation are retained at a fraction of the cost. These findings highlight optimisation scheduling as a key and under explored design dimension in hybrid state estimation systems. 
+
+Index Terms —State estimation, Simultaneous Localisation and Mapping (SLAM), Factor Graph Optimisation, Extended Kalman Filter, optimisation scheduling 
+
+I. I NTRODUCTION 
+
+State estimation under uncertainty requires inferring system states from noisy measurements while operating under limited computational resources. In many estimation pipelines, this creates a fundamental trade-off between estimation accuracy and computational cost, particularly when combining fast recursive updates with more expensive global optimisation. Simultaneous Localisation and Mapping (SLAM) provides a representative setting in which this trade-off is clearly exposed. Filtering-based approaches such as the Extended Kalman filter (EKF) enable efficient online estimation but accumulate drift due to linearisation error. Optimisation-based approaches using factor graph optimization (FGO) improve global consistency by jointly refining multiple states, at the cost of increased computational demand. While these characteristics are well understood, the tempo-ral organisation of estimation and optimisation—specifically, when global optimisation should be invoked—has received comparatively little systematic analysis. In practice, optimi-sation scheduling is often treated as an implicit design choice rather than an explicit variable that can be analysed and tuned. Hybrid estimation strategies that combine filtering and opti-misation offer a natural framework for exploring this question. By interleaving fast recursive estimation with periodic batch optimisation, such approaches expose scheduling as a tunable design parameter rather than a fixed implementation choice. However, the effect of scheduling on estimator behaviour, transient error dynamics, and computational cost remains insufficiently characterised. This work investigates optimisation scheduling as an ex-plicit design variable in hybrid state estimation systems. To facilitate this study, we introduce a scheduled hybrid EKF– FGO estimation framework in which recursive filtering and batch optimisation are coupled through explicit bidirectional information exchange and controlled optimisation scheduling. While motivated by SLAM, the analysis is not specific to SLAM itself; rather, SLAM provides a familiar context in which scheduling effects are readily observable. Through simulation experiments, we show that scheduling plays a central role in shaping estimator behaviour, revealing a structured trade-off between intermediate estimation accuracy and computational cost. The primary contribution of this work is the experimental characterisation of optimisation scheduling as a mechanism for navigating this trade space between filtering and batch optimisation. II. B ACKGROUND AND MOTIVATION 
+
+Early work in state estimation and SLAM established filtering-based approaches such as the EKF as a practical solution for recursive estimation from noisy sensor data [1]– [6]. EKF-based methods are attractive due to their relatively low computational cost and low-latency state estimates, but reliance on first-order linearisation introduces well-known limitations, including estimator inconsistency and the accu-mulation of drift over time [5], [9], [10]. Optimisation-based formulations address many of these lim-itations by casting state estimation as a maximum a posteriori (MAP) inference problem over a factor graph, solved via non-linear least-squares optimisation. Such approaches have been 
+
+> arXiv:2606.16057v2 [cs.RO] 18 Jun 2026
+
+widely adopted in both batch and incremental SLAM systems [7], [8], [11]–[14], and achieve improved global consistency and reduced drift compared to filtering-based methods. These benefits come at the cost of increased computational demand, particularly when large windows of past states are repeatedly re-optimised [11]. Incremental methods such as iSAM2 [8] address compu-tational efficiency through architectural innovations including variable reordering and Bayes tree factorization, but represent a different point in the design space than the scheduling question examined here. The present work treats schedul-ing as an orthogonal concern: given any batch optimisation capability, how frequently should it be invoked, indepen-dent of solver architecture. Hybrid and sliding-window es-timation strategies combine filtering-based propagation with intermittent optimisation to balance real-time performance with global consistency [15]–[20]. Sliding-window estimators maintain a bounded horizon of recent states while marginal-ising older variables to control computational complexity [16], [17]. In many such systems, optimisation scheduling and filter–optimiser interaction are treated implicitly as fixed design choices rather than explicit objects of study. As a result, the effect of optimisation scheduling on estimator behaviour, including drift correction, transient error dynamics, and computational cost, remains underexplored. These observations motivate the approach taken in this work. Rather than proposing a new SLAM algorithm, we introduce a hybrid EKF–FGO framework designed to make the interaction between filtering and optimisation explicit and experimentally controllable. By injecting the EKF belief as a Gaussian prior factor within the optimisation problem and treating the optimisation schedule as an independent design variable, the proposed framework enables systematic investi-gation of scheduling effects. SLAM serves as a motivating ap-plication, but the questions addressed here arise more broadly in hybrid state estimation systems. III. S MART SCHEDULED HYBRID EKF–FGO E STIMATION 
+
+FRAMEWORK 
+
+This section presents the Smart Scheduled Hybrid (SSH) EKF–FGO estimation framework introduced in this work. The framework is designed to make the interaction between recur-sive filtering and batch optimisation explicit and experimen-tally controllable, with particular emphasis on optimisation scheduling. 
+
+A. EKF Belief Representation 
+
+At each time step t, the EKF maintains a Gaussian belief over the system state, summarised by a mean vector μt
+
+and a covariance matrix Pt, representing the estimated state and its associated uncertainty. The EKF belief arises from standard prediction and measurement update steps applied to a nonlinear state–space model with Gaussian noise. In this work, μt and Pt are treated as sufficient statistics of the EKF belief and are explicitly reused within the proposed hybrid estimation framework. 
+
+B. Factor Graph Formulation 
+
+In the factor graph formulation, state estimation is cast as a maximum a posteriori (MAP) inference problem over a set of state variables. Let 
+
+X = {x0, x 1, . . . , x T , ℓ 1, . . . , ℓ M } (1) denote the collection of robot poses over a finite time horizon 
+
+T and a map of M landmarks. Probabilistic constraints on these variables are represented by factors encoding motion, measurement, or prior information. The MAP estimate of the global state is obtained by minimising the sum of squared residuals induced by all factors, 
+
+X ∗ = arg min 
+
+> X
+
+X
+
+> i
+
+∥ρi(X )∥2Σ−1
+
+> i
+
+, (2) where each residual ρi(·) corresponds to a factor with co-variance Σi. This formulation is retained unchanged in the proposed hybrid framework, allowing the effects of scheduling and estimator interaction to be examined independently of solver design. 
+
+C. Smart Scheduled Hybrid (SSH) EKF–FGO Framework 
+
+The proposed SSH EKF–FGO framework combines re-cursive filtering and batch optimisation through explicit es-timator scheduling. The EKF provides efficient step-by-step propagation of a local estimate, while FGO is invoked peri-odically to enforce global consistency. Importantly, the SSH framework modifies when optimisation is performed and how it is initialised, without altering the underlying optimisation algorithm. 
+
+1) Scheduling Strategy: Let W denote the optimisation scheduling interval. The EKF runs at every time step, pro-ducing a rolling estimate (μt, P t). Full graph optimisation is triggered only at discrete time steps 
+
+t ∈ { W, 2W, 3W, . . . },
+
+with intermediate state estimates propagated exclusively by the EKF. At each optimisation event, a factor graph is constructed over the current optimisation window and augmented with an EKF-derived prior. In this study, the scheduling interval 
+
+W is fixed for each experiment to isolate scheduling effects; adaptive or state-dependent scheduling strategies are left for future work. 
+
+2) EKF Prior Residual and Factor: At each optimisation event, the EKF estimate is incorporated into the factor graph as a unary prior on the current pose variable xt,
+
+ρprior (xt) = xt − μt, (3) with corresponding factor 
+
+φprior (xt) ≜ ρprior (xt)⊤(αP t)−1ρprior (xt), (4) where Pt is the EKF covariance matrix and α > 0 controls the strength of the prior. Smaller values of α enforce stronger adherence to the EKF estimate, while larger values recover behaviour closer to classical batch FGO. Algorithm 1 Smart Scheduled Hybrid (SSH) EKF–FGO Scheduling Framework  
+
+> 1:
+
+Input: Initial state estimate ˆx0, covariance P0 
+
+> 2:
+
+Input: Control inputs {ut}, observations {zt} 
+
+> 3:
+
+Input: Sliding window length W , GN iterations K 
+
+> 4:
+
+for t = 1 to T do  
+
+> 5:
+
+EKF Prediction:  
+
+> 6:
+
+ˆxt|t−1 ← f (ˆ xt−1, u t) 
+
+> 7:
+
+Pt|t−1 ← FtPt−1F ⊤ 
+
+> t
+
++ Qt 
+
+> 8:
+
+EKF Update:  
+
+> 9:
+
+ˆxt ← ˆxt|t−1 + Kt(zt − h(ˆ xt|t−1))  
+
+> 10:
+
+Pt ← (I − KtHt)Pt|t−1 
+
+> 11:
+
+if t mod W = 0 then  
+
+> 12:
+
+Construct factor graph over window [t − W + 1 , t ] 
+
+> 13:
+
+Add motion and measurement factors  
+
+> 14:
+
+Add EKF prior factor (ˆ xt, P t) 
+
+> 15:
+
+Run Gauss–Newton optimisation for K iterations  
+
+> 16:
+
+Extract optimised state estimates  
+
+> 17:
+
+end if  
+
+> 18:
+
+end for  
+
+> 19:
+
+Output: Estimated state trajectory {ˆxt}
+
+3) Hybrid Optimisation Problem: With the EKF prior in-cluded, the hybrid optimisation problem takes the form 
+
+X ∗ = arg min 
+
+> X
+
+X
+
+> i
+
+φi(X ) + φprior (xt)
+
+!
+
+, (5) where φi(X ) denotes the motion and measurement factors defined in the factor graph formulation. The resulting objec-tive remains a nonlinear least-squares problem and is solved using the Gauss–Newton (GN) method for a fixed number of iterations K.
+
+4) Interaction Between EKF and FGO: Following opti-misation, the EKF is reinitialised using the optimised state to maintain consistency between filtering and optimisation. From a scheduling perspective, the framework exposes two mechanisms governing estimator behaviour: the scheduling interval W , which determines how frequently global cor-rections occur, and EKF propagation, which governs error accumulation between optimisation events. These interactions form the basis of the experimental analysis presented in the results section. IV. E XPERIMENTAL SETUP 
+
+This section describes the experimental configuration used to evaluate the proposed hybrid EKF-FGO scheduling frame-work. All experiments are conducted in simulation to allow controlled variation of scheduling parameters and direct com-parison between estimation methods under identical condi-tions. 
+
+A. Simulation Environment 
+
+We consider a planar SLAM scenario in which a robot moves through a static environment containing a fixed set of landmarks. The robot follows a predefined smooth circular trajectory with constant curvature and radius R. In all exper-iments, the trajectory radius is fixed at R = 1 m, resulting in a motion profile with uniform turning rate. This choice provides a controlled setting for analysing scheduling effects under consistent geometric conditions. Since curvature directly influences error accumulation during propagation, the reported results correspond to this specific motion regime; evaluating the effect of varying trajectory curvature is left for future work. 
+
+B. Estimators and Parameters 
+
+Three estimators are evaluated: 1) EKF, which performs recursive joint estimation of robot poses and landmark positions. 2) Classical Factor Graph Optimisation, which performs periodic batch optimisation over the SLAM state without filtering-based propagation between optimisation events. 3) SSH EKF-FGO, which combines EKF-based propa-gation with periodically scheduled graph optimisation using an EKF-derived prior. All the estimators use the same motion model, observation model, and noise covariances. The EKF prior scaling param-eter α was held fixed at 0.5 for all experiments; sensitivity to 
+
+α is left for future work. For FGO-based methods, the GN solver is run for a fixed number of iterations K in all cases. This constraint ensures that observed differences in estimation accuracy and computational cost arise from scheduling and estimator structure rather than differences in solver effort. 
+
+C. Scheduling Configuration 
+
+For the classical FGO and hybrid EKF-FGO methods, the optimisation is executed periodically according to ascheduling interval W optimisation is triggered at time steps 
+
+t ∈ { W, 2W, 3W, ... }. Between optimisation events the EKF propagates state estimates at every time step for the EKF and hybrid methods, where the classical FGO baseline propagates state estimates using the motion model alone. In the hybrid framework, the EKF estimate (μt, P t) at each scheduling time is incorporated into the factor graph as a prior factor, with covariance scaled by the fixed parameter α. To study the effect of estimator scheduling, experiments are conducted over a range of scheduling intervals W , while holding the solver iteration count K fixed. In all experiments reported in this paper, the EKF is reinitialised with the optimised pose estimate at each scheduling event, ensuring consistency between the filtering and optimisation components. 
+
+D. Evaluation Metrics 
+
+Estimator performance is evaluated using metrics designed to capture both accuracy and scheduling effects. To quantify estimation accuracy, we measure pose error with respect to ground truth over the duration of each experiment. In addition, to explicitly characterise the effect of estimator scheduling, we introduce a pre-optimisation drift metric, defined as the pose error accumulated immediately prior to each optimisation event. This metric reflects how far an estimator is allowed to drift before a global correction is applied and provides a Fig. 1. Block diagram of the hybrid EKF–FGO estimator. Control inputs ut and landmark observations zt,j are processed at every time step by the EKF to produce a rolling state estimate (μt, P t) used for online pose estimation. A scheduler triggers factor graph construction and FGO optimization every W    
+
+> steps, using the same motion and measurement data together with an EKF-derived prior (μt, αP t). The resulting batch estimate X∗is used to reinitialize the EKF, providing feedback between filtering and batch optimization.
+
+0 100 200 300 400 
+
+Scheduling Interval W
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+> Pre-Optimisation Drift [m]
+
+Hybrid EKF--FGO 
+
+Odometry-only (Pure FGO)  
+
+> Fig. 2. Average pre-optimisation drift as a function of scheduling interval W
+> for the circular trajectory. The odometry-only curve corresponds to a classical batch FGO configuration in which state propagation is performed using the motion model alone, with a single batch optimisation at the final time step. The hybrid EKF–FGO estimator consistently achieves substantially lower drift across all scheduling intervals.
+
+direct insight into the interaction between propagation strategy and optimisation frequency. Pre-optimisation drift is reported alongside post-optimisation accuracy and computational cost to provide a comprehensive view of estimator behaviour under different scheduling configurations. V. R ESULTS 
+
+This section evaluates the proposed EKF-FGO hybrid esti-mator under varying optimisation scheduling intervals using a circular trajectory. All experiments are conducted with identi-cal system models, noise parameter, and solver iteration limits. Performance differences therefore arise solely from estimator 0 100 200 300 400 
+
+Scheduling Interval W
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0    
+
+> Normalised Compute Cost [--]
+> Fig. 3. Normalized computational cost per time step for the hybrid EKF– FGO estimator as a function of scheduling interval W. Cost is measured as average wall-clock optimisation time per step and normalised by the slowest configuration, yielding a dimensionless quantity independent of hardware.
+
+structure and scheduling. The primary focus of this evaluation is pre-optimisation drift, which quantifies the amount of pose error accumulated between optimisation events and directly reflects intermediate estimator behaviour. This metric enables direct comparison between the hybrid estimator and a batch baseline that performs a single optimisation at the end of the trajectory. 
+
+A. Pre-Optimisation Drift Reduction 
+
+Figure 2 compares average pre-optimisation drift as a func-tion of scheduling interval W for the hybrid estimator and the odometry-only baseline. The odometry curve corresponds to a classical batch FGO formulation in which the state is propagated without filtering and optimised only once at TABLE I PRE -OPTIMISATION DRIFT , DRIFT REDUCTION , AND NORMALISED COMPUTATIONAL COST FOR CIRCULAR TRAJECTORIES UNDER VARYING SCHEDULING INTERVALS W.                                                                        
+
+> WHybrid Pre-Opt Odom Pre-Opt Drift Reduction Norm. Compute ATE Hybrid ATE Odom Drift [m] Drift [m] [%] Cost [–] [m] [m] 20.052 0.413 87.3 1.000 0.050 0.484 50.051 0.413 87.8 0.345 0.050 0.484 10 0.050 0.413 87.9 0.171 0.050 0.484 15 0.048 0.412 88.3 0.111 0.052 0.484 20 0.049 0.413 88.3 0.087 0.050 0.484 30 0.059 0.409 85.5 0.051 0.052 0.484 50 0.054 0.413 86.9 0.039 0.050 0.484 100 0.063 0.413 84.8 0.027 0.050 0.484 200 0.101 0.413 75.5 0.017 0.050 0.484 400 0.118 0.413 71.4 0.008 0.050 0.484
+
+the final time step. Consequently, its pre-optimisation drift represents the total error accumulated prior to that final batch optimisation and is effectively independent of W . Across all tested scheduling intervals, the hybrid estimator exhibits substantially lower pre-optimisation drift than the odometry-only baseline. For scheduling intervals up to W = 50 , hybrid drift remains below approximately 0.06 m, corresponding to an 80-90% reduction relative to the odometry baseline. Even for very infrequent optimisation, such as W = 200 , hybrid drift remains three to four times lower than odometry-only propagation. These results demonstrate that EKF-based prop-agation provides a strong constraint on error growth between optimisation events, significantly reducing intermediate drift even when global optimisation is performed rarely. 
+
+B. Effects of Scheduling Interval 
+
+As the scheduling interval increases, hybrid pre-optimisation drift increases gradually, reflecting longer periods of EKF-only propagation between optimisation events. Importantly, this increase is smooth and monotonic, indicating stable interaction between filtering and batch optimisation under the corrected implementation. While larger values of W permit greater drift accumulation, the hybrid estimator consistently maintains drift well below the odometry-only baseline for all tested schedules. This behaviour highlights the robustness of the hybrid approach across a wide range of scheduling intervals and confirms that the EKF provides meaningful intermediate accuracy even when optimisation frequency is significantly reduced. This behaviour can be interpreted through the differing roles of filtering and optimisation in the hybrid framework. EKF-based propagation provides locally consistent updates that limit the rate of error growth between optimisation events, leading to gradual accumulation of drift as the scheduling interval increases. In contrast, the computational cost of batch optimisation depends on both the number of variables in the optimisation window and the frequency of optimisation. As the scheduling interval increases, optimisation is invoked less frequently, resulting in a rapid reduction in computational cost. This difference in scaling explains the observed asymmetry: drift increases gradually with scheduling interval, while com-putational cost decreases rapidly. 
+
+C. Final Trajectory Accuracy 
+
+Table I reports final absolute trajectory error (ATE) for all estimators. Final ATE for the hybrid estimator remains nearly constant across all scheduling intervals and closely matches the accuracy of classical batch FGO. In contrast, odometry-only propagation results in substantially higher final error. These results indicate that scheduling primarily affects intermediate estimation behaviour rather than final accuracy, provided that at least one batch optimisation is performed. The hybrid framework therefore achieves EKF-level stability during propagation while retaining FGO-level accuracy after optimisation. 
+
+D. Computation Implications 
+
+Increasing the scheduling interval reduces the frequency of batch optimisation and leads to substantial reductions in computational cost. When combined with the observed drift behaviour, the results reveal a favourable operating regime in which most of the drift reduction benefit of frequent optimisation is retained at a fraction of the computational cost. In particular, moderate scheduling intervals (e.g. W ∈
+
+[10 , 50] ) achieve pre-optimisation drift reductions exceeding 85% relative to odometry-only propagation, while allowing optimisation frequency and corresponding computational load to be reduced by more than an order of magnitude. This behaviour arises from a strongly asymmetric trade-off: pre-optimisation drift grows gradually with increasing W , whereas computational cost decreases rapidly, resulting in a wide range of scheduling intervals that offer favourable accuracy– efficiency balance. 
+
+E. Summary of Results 
+
+These results demonstrate that hybrid EKF-FGO scheduling provides effective drift reduction (up to 90%) relative to odometry-only propagation while enabling substantial com-putational savings, with performance degrading smoothly as optimization frequency decreases. Final trajectory accuracy remains comparable to pure FGO and largely independent of scheduling interval. The findings confirm that scheduling provides a practical and effective mechanism for balancing estimation accuracy and computational efficiency, exposing a design dimension that can be tuned to application-specific performance requirements. VI. C ONCLUSION 
+
+In this paper we examined the effects of estimator schedul-ing on accuracy and computational cost in batch-based state estimation systems motivated by SLAM backends. Rather than proposing a new inference algorithm, the work focused on experimentally characterising how the frequency of batch optimisation influences the intermediate error growth and runtime, and on identifying regimes in which accuracy can be preserved while significantly reducing computational effort. To enable this analysis, the SSH EKF-FGO framework was used as a practical evaluation tool. In this setup, recursive filtering provides efficient state propagation between optimisa-tion events, while periodic batch optimisation enforces global consistency. This hybrid structure is not intended to replace established incremental solvers, but rather to facilitate con-trolled experiments on scheduling behaviour and intermediate estimation performance. Experimental results on a circular trajectory show that EKF-based propagation substantially reduces pre-optimisation drift relative to an odometry-only baseline across all tested scheduling intervals, achieving reductions of approximately 70-90%. At the same time, final trajectory accuracy remains comparable to pure batch optimisation, while computational cost decreases rapidly as optimisation frequency is reduced. These results demonstrate that scheduling has a pronounced effect on intermediate estimation behaviour, even when final accuracy is largely unchanged. Overall, the findings highlight estimator scheduling as an important and often under-explored design dimension in batch-based state estimation systems. By explicitly evaluating the trade-off between intermediate accuracy and computational cost, this work provides practical insights into how optimi-sation frequency can be chosen to balance performance and efficiency. Future work will extend this analysis to more complex trajectories, longer horizons, and adaptive scheduling strategies that respond to uncertainty or motion dynamics. REFERENCES [1] H. Durrant-Whyte and T. Bailey, “Simultaneous localization and map-ping (SLAM): Part I — The essential algorithms,” IEEE Robotics & Automation Magazine , vol. 13, no. 2, pp. 99–110, June 2006. [2] T. Bailey and H. Durrant-Whyte, “Simultaneous localization and map-ping (SLAM): Part II — State of the art,” IEEE Robotics & Automation Magazine , vol. 13, no. 3, pp. 108–117, Sept. 2006. [3] J. J. Leonard and H. F. Durrant-Whyte, “Mobile robot localization by tracking geometric beacons,” IEEE Transactions on Robotics and Automation , vol. 7, no. 3, pp. 376–382, June 1991. [4] S. Thrun, W. Burgard, and D. Fox, Probabilistic Robotics . Cambridge, MA, USA: MIT Press, 2005. [5] G. P. Huang, A. I. Mourikis, and S. I. Roumeliotis, “Observability-based rules for designing consistent EKF SLAM estimators,” International Journal of Robotics Research , vol. 29, no. 5, pp. 502–528, Apr. 2010. [6] F. Dellaert and M. Kaess, “Square root SAM: Simultaneous localization and mapping via square root information smoothing,” International Journal of Robotics Research , vol. 25, no. 12, pp. 1181–1203, Dec. 2006. [7] M. Kaess, A. Ranganathan, and F. Dellaert, “iSAM: Incremental smooth-ing and mapping,” IEEE Transactions on Robotics , vol. 24, no. 6, pp. 1365–1378, Dec. 2008. [8] M. Kaess, H. Johannsson, R. Roberts, V. Ila, J. J. Leonard, and F. Dellaert, “iSAM2: Incremental smoothing and mapping using the Bayes tree,” International Journal of Robotics Research , vol. 31, no. 2, pp. 216–235, Feb. 2012. [9] G. Grisetti, R. Kümmerle, C. Stachniss, and W. Burgard, “A tutorial on graph-based SLAM,” IEEE Intelligent Transportation Systems Mag-azine , vol. 2, no. 4, pp. 31–43, Winter 2010. [10] F. Dellaert, “Factor graphs and GTSAM: A hands-on introduction,” Georgia Institute of Technology, Tech. Rep., 2012. [11] R. Kümmerle, G. Grisetti, H. Strasdat, K. Konolige, and W. Burgard, “g2o: A general framework for graph optimization,” in Proc. IEEE Int. Conf. on Robotics and Automation (ICRA) , Shanghai, China, 2011, pp. 3607–3613. [12] A. I. Mourikis and S. I. Roumeliotis, “A multi-state constraint Kalman filter for vision-aided inertial navigation,” in Proc. IEEE Int. Conf. on Robotics and Automation (ICRA) , Rome, Italy, 2007, pp. 3565–3572. [13] A. I. Mourikis, N. Trawny, S. I. Roumeliotis, A. E. Johnson, A. Ansar, and L. Matthies, “Vision-aided inertial navigation for spacecraft entry, descent, and landing,” IEEE Transactions on Robotics , vol. 25, no. 2, pp. 264–280, Apr. 2009. [14] J. Dong-Si and A. I. Mourikis, “Motion tracking with fixed-lag smooth-ing: Algorithm consistency and convergence analysis,” in Proc. IEEE Int. Conf. on Robotics and Automation (ICRA) , Shanghai, China, 2011, pp. 5655–5662. [15] G. P. Huang, M. Kaess, and J. J. Leonard, “Consistent sparsification for graph optimization,” in Proc. European Conf. on Mobile Robots (ECMR) , Barcelona, Spain, 2013. [16] Y. C. Chiu, M. Kaess, V. Ila, H. Johannsson, and F. Dellaert, “Probabilis-tic vision-based SLAM with point and line features,” in Proc. IEEE Int. Conf. on Robotics and Automation (ICRA) , Karlsruhe, Germany, 2013. [17] H. Strasdat, J. M. M. Montiel, and A. J. Davison, “Real-time monoc-ular SLAM: Why filter?” in Proc. IEEE Int. Conf. on Robotics and Automation (ICRA) , Anchorage, AK, USA, 2010, pp. 2657–2664. [18] J. Sturm, N. Engelhard, F. Endres, W. Burgard, and D. Cremers, “A benchmark for the evaluation of RGB-D SLAM systems,” in Proc. IEEE/RSJ Int. Conf. on Intelligent Robots and Systems (IROS) , Vilam-oura, Portugal, 2012. [19] W. Burgard, M. Moors, D. Fox, R. Simmons, and S. Thrun, “Collab-orative multi-robot exploration,” in Proc. IEEE Int. Conf. on Robotics and Automation (ICRA) , San Francisco, CA, USA, 2000. [20] C. Stachniss, G. Grisetti, and W. Burgard, Probabilistic Methods for Mobile Robot Navigation , Lecture Notes, University of Freiburg, 2014.
