@@ -1,0 +1,600 @@
+Title: Autonomous End-to-End SOH Prediction Services for Battery Systems via Temporal-Contrastive Representation Learning
+
+URL Source: https://arxiv.org/pdf/2606.16434v1
+
+Published Time: Tue, 16 Jun 2026 01:57:52 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Autonomous End-to-End SOH Prediction Services for Battery Systems via Temporal-Contrastive Representation Learning 
+
+Junting Wen 1, Dan Li 1 ⋆, Qihao Quan 1, Xiwen Wang 1, Hang Yang 1, Zhaohong Meng 1, Zigui Jiang 1, Changlin Yang 2, Tianle Liu 3, Diego Muñoz-Carpintero 5,and Jian Lou 1 
+
+> 1
+
+School of Software Engineering, Sun Yat-sen University, Zhuhai 519082, China 
+
+{lidan263, louj5, jiangzg3}@mail.sysu.edu.cn  
+
+> 2
+
+Tianneng Battery Group Co., Ltd, Zhejiang, China 
+
+yangcl02@tn-ess.com  
+
+> 3
+
+School of Communication Engineering, Hangzhou Dianzi University, China 
+
+tianle@hdu.edu.cn  
+
+> 4
+
+Institute of Engineering Science, Universidad de O’Higgins, Rancagua, Chile 
+
+diego.munoz@uoh.cl 
+
+Abstract. Accurate state of health (SOH) estimation is a critical diag-nostic service for lithium-ion battery management. However, reliance on labor-intensive manual feature engineering and opaque black-box models hinders scalable industrial deployment. To address this, we introduce TC-SOH: a modular, plug-and-play service architecture for autonomous, end-to-end SOH prediction. TC-SOH employs a temporal-contrastive mecha-nism and a cross-window prediction pretext task to extract degradation-relevant representations directly from raw operational data. To improve transparency, we connect model efficacy with representation diagnos-tics: visualization, sensitivity analysis, redundancy analysis, bidirectional probing, future-SOH probing, and temporal shuffling show that learned features overlap with selected expert descriptors while retaining addi-tional SOH-relevant variation, and that ordered temporal context im-proves subsequent-SOH prediction. Across four public datasets, TC-SOH outperforms the considered physics-informed and data-driven baselines, reducing MAPE by 1.91 times and RMSE by 2.13 times. 
+
+Keywords: State of health (SOH) estimation · Temporal contrastive learning · Deep representation learning · Interpretability analysis 
+
+1 Introduction 
+
+In modern energy services, lithium-ion batteries (LIBs) function as the founda-tional physical assets for electric mobility, portable electronics, and grid-scale  
+
+> ⋆
+
+Corresponding author.  
+
+> arXiv:2606.16434v1 [cs.LG] 15 Jun 2026 2J. Wen et al.
+
+energy storage. Their ubiquitous deployment is driven by their capacity to de-liver high-quality energy services, characterized by superior energy density, power density, and extended lifecycle durability [40]. Driven by the demand for uninterrupted energy services, the lithium-ion bat-tery market is projected to reach USD 221.16 billion by 2030 (12.19% CAGR) [23], necessitating robust, lifecycle-spanning asset management. However, main-taining consistent service delivery is challenged by progressive asset degradation. As complex aging mechanisms compromise service reliability [19] and opera-tional safety [1], developing highly reliable battery health diagnostic services is imperative, which empowers modern Battery Management Systems (BMS) to proactively mitigate risks and maximize the lifecycle value of these energy assets. Within this service-oriented framework, SOH serves as the core quantitative metric for diagnosis, defined by the ratio of current to initial capacity. Typically, an 80% SOH marks the asset’s retirement from its primary role [35]. Although full charge-discharge cycles offer accurate capacity measurement via ampere-hour integration [4], such tests cause unacceptable service disruptions, induce further asset degradation [2], and are impractical in dynamic environments. Therefore, to meet the industrial demand for continuous, automated SOH diagnostics, mod-ern management protocols must extract actionable insights from partial routine data, entirely avoiding disruptive complete charge-discharge profiles. While data-driven methodologies serve as powerful computational engines for modern SOH diagnostic services [25, 26], their scalable industrial deploy-ment is fundamentally bottlenecked by two critical barriers. First, the efficacy of these service architectures relies heavily on labor-intensive, bespoke feature engi-neering [38]. Because indirect health indicators—such as state of charge (SOC), thermal variations, and ohmic resistance [13, 18, 27, 34]—are highly sensitive to fluctuating operational conditions, conventional extraction methods inevitably discard subtle, non-linear degradation dynamics [24, 41], while arbitrarily ex-panding feature sets merely inflates computational overhead [37]. Second, the opaque, "black-box" nature of deep learning models creates a profound trust deficit between the diagnostic service and industrial end-users. When anomalies occur, the inability to trace data-driven predictions back to physical electrochem-ical root causes compromises service transparency and reliability. Ultimately, this lack of interpretability severely limits the practical adoption of these AI-driven diagnostic services in rigorous, safety-critical asset management environments. Representation Learning [3] enhances service scalability by autonomously distilling compact embeddings from raw operational data, decoupling SOH di-agnostics from rigid, manual priors [36]. Crucially, deep architectures capture the subtle, non-linear degradation dynamics that conventional extraction methods frequently discard as transient noise. This automated approach isolates invari-ant health features that remain robust across fluctuating environmental condi-tions, while simultaneously mitigating the computational overhead that typically plagues arbitrarily expanded, hand-crafted feature sets. However, despite achiev-ing high predictive accuracy, deep architectures like autoencoders [12] produce opaque latent spaces. This lack of geometric interpretation regarding degradation TC-SOH: Temporal-Contrastive SOH Prediction 3
+
+trajectories destroys transparency, severely limiting deployment in safety-critical asset management [29, 39]. To rebuild end-user trust in safety-critical environments, an SOH service should not only predict accurately but also explain what its representation con-tributes. Unlike standard physics-informed models [17], our analysis explicitly diagnoses the learned representation: whether it tracks smooth degradation tra-jectories, remains sensitive in early SOH regimes, overlaps with physical de-scriptors without being exhausted by them, and whether its temporal context predicts subsequent SOH only when cycle order is preserved. This diagnostic view aligns model capability with the reliability requirements of industrial asset management. Addressing the urgent need for scalable asset management, we introduce TC-SOH: a cross-disciplinary plug-and-play diagnostic service architecture. Op-erating as an end-to-end, modular service plug-in, TC-SOH integrates into exist-ing BMS frameworks while reducing labor-intensive manual feature engineering. By combining temporal-contrastive learning with cross-window prediction proxy tasks, the module extracts non-linear aging evolution from raw operational data and summarizes ordered cycle history into temporal context. We further evaluate this context through a diagnostic chain of visualization, sensitivity, redundancy, probing, future-SOH probing, and temporal shuffling, thereby linking predictive efficacy to interpretable representation behavior. The main contributions are summarized as follows: 
+
+– Plug-and-Play Diagnostic Framework: We propose an end-to-end TC-SOH service framework that uses temporal-contrastive learning and cross-window prediction to extract non-linear aging dynamics from routine CC-CV data, reducing reliance on manual feature engineering. 
+
+– Service Trust and Transparency: We establish a diagnostic interpreta-tion chain combining trajectory visualization, early-stage sensitivity checks, redundancy analysis, bidirectional probing, future-SOH probing, and tem-poral shuffling to show how learned features relate to physical descriptors and how TC context contributes ordered-history information. 
+
+– Service Efficacy and Robustness: Validation on four large-scale datasets confirms TC-SOH’s operational efficacy and transferability. It outperforms the considered data-driven and physics-hybrid baselines under the repeated battery-level protocol, reducing MAPE by 1.91x and RMSE by 2.13x. 
+
+2 Data description 
+
+We evaluate TC-SOH on four widely used public benchmarks (XJTU [32], TJU [42], HUST [21], and MIT [28]), covering 386 batteries with diverse chemistries, operating temperatures, and charging/discharging protocols. Table 1 summarizes the main dataset attributes, while the text below highlights the complementary role of each benchmark. 
+
+MIT and HUST. MIT and HUST form a controlled pair of LFP benchmarks because both use the same A123 cell model with the same nominal capacity. 4 J. Wen et al.                            
+
+> Dataset HUST MIT XJTU TJU (Batch 1) TJU (Batch 2) TJU (Batch 3)
+> Subset 1-10 1-3 1–6 123Nominal capacity (mAh) 1100 1100 2000 3500 3500 2500 Cut-off voltage (V) 2.0–3.6 2.0–3.6 2.5–4.2 2.65–4.2 2.5–4.2 2.5–4.2 Experiment temperature ( °C) 30 30 Room temperature 25,35,45 25,35,45 25
+
+Table 1. Summary of Battery Information 
+
+MIT emphasizes charging diversity through one-step and two-step fast-charging policies, whereas HUST keeps the environmental setting fixed at 30 ◦C and varies the discharge conditions. This pairing helps separate charging-driven variation from discharge-driven variation. 
+
+XJTU. XJTU contains LISHEN NCM523 cells cycled at room temperature under six operating subsets. The charging protocol is fixed for the first five sub-sets, while the discharge side covers fixed-current, random-current, and satellite GEO walking profiles. This design makes XJTU a protocol-rich benchmark for testing whether the learned representation remains stable under changing usage patterns. 
+
+TJU. TJU is the most heterogeneous dataset in our study, spanning NCA, NCM, and NCM+NCA cells, temperatures from 25 to 45 ◦C, and C-rates from 0.25 to 4.0 C. Its broad chemistry and operating range provides a strong stress test for robustness across cross-domain conditions. 
+
+3 Methods 
+
+This section describes the data processing workflow, the battery degradation process, and the TC-SOH framework, detailing the design of each module and the data augmentation techniques. 
+
+3.1 Selection of CC-CV phase 
+
+Battery aging is driven by irreversible side reactions, including electrode material loss and cathode structural degradation [30]. Although a full cycle comprises CC charging, CV charging, relaxation, and discharge, we specifically utilize raw data from the CC-CV stage for feature extraction. This selection is motivated by three factors: First, the CC-CV stage provides the highest contribution to SOH predic-tion accuracy in the experiment of [20]. Second, this stage are readily accessible and widely recorded in real-world applications, ensuring the framework’s practi-cal utility. Finally, selecting data prior to full charge minimizes the influence of variable cycling conditions and external factors [32], which is critical for ensuring that learned features represent intrinsic battery characteristics rather than spe-cific experimental protocols [9]. This selection enhances the model’s robustness and generalizability across diverse battery chemistries and charging/discharging profiles. 
+
+3.2 Framework 
+
+The battery aging process is a multifaceted phenomenon involving complex elec-trochemical reactions influenced by battery chemistry, operational conditions, TC-SOH: Temporal-Contrastive SOH Prediction 5
+
+and degradation stages. While traditional empirical models approximate capac-ity fade as a univariate function of time or cycle count, they often lack generaliz-ability across diverse protocols [5]. Formally, we define the degradation trajectory as an estimation function SOH = f (x), where x denotes an information-rich fea-ture vector derived from raw battery data. To optimize both feature extraction and functional approximation, we propose the TC-SOH framework. As illus-trated in Figure 1, the architecture comprises three integrated components: 1. CNN Module f (·): Leverages the robust data fusion capabilities of 1D-CNNs to transform raw electrical signals from individual cycles into high-dimensional latent representations. 2. TC Module g(·): Enhances the discriminative power of these features by performing a cross-prediction task on augmented temporal sequences, thereby enforcing the learning of sequential degradation dynamics. 3. Output Module o(·): A linear layer that maps the refined temporal repre-sentations to the final SOH value. By decoupling complex feature learning from the regression task, TC-SOH achieves superior reliability, accuracy, and generalizability in SOH estimation across het-erogeneous datasets. Raw Operational Data  
+
+> X∈ ℝ ୐×େ
+
+V
+
+I
+
+T 
+
+> Labor-intensive Manual
+> Feature Engineering
+> Bypassing
+> CCCV Stage
+> (i) Data Preprocessing
+> Encoder
+> Learned
+> Representation
+> 𝐶
+> T
+> Strong
+> Augmentation
+> Weak
+> Augmentation
+> Seq-
+> Transformer  𝐶 ଵ
+> 𝐶 ଵ𝐶 ୘𝐶 ୲
+
+…… …
+
+> 𝐶 ୘𝐶 ୲
+
+…… … 
+
+> 𝑇 ୭ୠୱୣ୰୴ୟ୲୧୭୬
+> 𝐶 ୘ାଵ 𝐶 ୘ା୏
+
+……  
+
+> 𝐶 ୘ାଵ 𝐶 ୘ା୏
+
+……  
+
+> Learned
+> Representation
+> Traditional
+> Electrochemical
+> Indicators Bidirectional
+> Probing
+> Redundancy
+> Analysis
+> Black Box
+> Interpretability
+> (iii) Reliable diagnostic service
+> (ii) Automated Feature Extraction
+> TC Module
+> ℒ୮୰ୣୢ୧ୡ୲୧୭୬
+> 𝐶
+> C: channels
+> T: window length
+
+Fig. 1. Overview of TC-SOH framework 
+
+3.3 Design Principles 
+
+The feature extractor f (·) employs a 1D-CNN architecture [15] to map raw electrical signals (xcurrent , x voltage , x soc ) from a single CC-CV cycle into a high-dimensional representation zc. The temporal window size of the convolution serves as a key tunable hyperparameter. Inspired by [8], the Temporal Con-trastive (TC) module g(·) executes a cross-prediction task via a sequence trans-former [31]. It summarizes a sequence of consecutive cycle representations z≤t
+
+into a context vector ct to predict subsequent representations zt+1 , . . . , z t+K .6 J. Wen et al. 
+
+We model the mutual information between context ct and target zt+K using a log-bilinear model: 
+
+fk(zt+K , c t) = exp ( Wk(ct)T zt+K ),
+
+where Wk is a linear mapping of ct to the dimension of zt+K . The contrastive loss is formulated as: 
+
+LsT C = − 1
+
+K
+
+X k = 1 K log exp(( Wk(cst )) T zwt+k)
+
+P 
+
+> n∈Nt,k
+
+exp(( Wk(cst )) T zwn ) (1) 
+
+LwT C = − 1
+
+K
+
+X k = 1 K log exp(( Wk(cwt )) T zst+k)
+
+P 
+
+> n∈Nt,k
+
+exp(( Wk(cwt )) T zsn) (2) where Nt,k denotes other samples in the mini-batch. This formulation maximizes the similarity between the predicted and true representations while minimizing similarity with negative samples, thereby enhancing the encoder’s discriminative capability. The window length ω determines the span of consecutive cycles in each training sequence, directly influencing context summarization and contrastive learning.The overall training objective combines prediction and contrastive losses into a joint optimization problem: 
+
+L = Lpred + λLcon , (3) where λ is empirically set to 0.6 to balance the contrastive term. This joint formulation enforces temporal consistency across cycles, effectively functioning as an auto-regressive prediction task. 
+
+3.4 Augmentation 
+
+We apply augmentation to the learned representations rather than raw signals to prevent encoding bias. Given the sensitivity of contrastive learning to aug-mentation selection [6], particularly for time-series [33], we specifically adopt jitter and scaling while excluding permutation. The augmentation intensity is regulated via hyperparameters to optimize the trade-off between accuracy and generalization. 
+
+4 Results and Analysis 
+
+4.1 Experiment Setups 
+
+To rigorously evaluate performance, we benchmark TC-SOH against the consid-ered Physics-Informed Neural Network (PINN) [32] and a baseline Manual-MLP trained on 16 expert-defined features from the PINN4SOH processed datasets, thereby isolating the efficacy of our automatic feature extraction against physics-guided and manual engineering approaches. PINN and Manual-MLP are eval-uated under the same strict paired protocol: held-out test batteries are fixed TC-SOH: Temporal-Contrastive SOH Prediction 70.80 0.85 0.90 0.95 1.00 
+
+> True SOH
+> 0.80
+> 0.85
+> 0.90
+> 0.95
+> 1.00
+> Predictions
+> Predictions (n=7960)
+> Perfect Prediction
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> Absolute error
+
+(a) XJTU 0.75 0.80 0.85 0.90 0.95 1.00  
+
+> True SOH
+> 0.75
+> 0.80
+> 0.85
+> 0.90
+> 0.95
+> 1.00
+> Predictions
+> Predictions (n=37630)
+> Perfect Prediction
+> 0.005
+> 0.010
+> 0.015
+> 0.020
+> 0.025
+> 0.030
+> Absolute error
+
+(b) HUST 0.75 0.80 0.85 0.90 0.95 1.00  
+
+> True SOH
+> 0.75
+> 0.80
+> 0.85
+> 0.90
+> 0.95
+> 1.00
+> Predictions
+> Predictions (n=67740)
+> Perfect Prediction
+> 0.025
+> 0.050
+> 0.075
+> 0.100
+> 0.125
+> 0.150
+> 0.175
+> 0.200
+> Absolute error
+
+(c) TJU 0.90 0.92 0.94 0.96 0.98 1.00  
+
+> True SOH
+> 0.90
+> 0.92
+> 0.94
+> 0.96
+> 0.98
+> 1.00
+> Predictions
+> Predictions (n=103430)
+> Perfect Prediction
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.05
+> Absolute error
+
+(d) MIT 
+
+Fig. 2. SOH estimation visualization. Points near the diagonal indicate better performance. 
+
+before any window extraction, five-fold cross-validation is performed only on the remaining training/validation batteries, and the protocol is repeated over five paired seeds. The exact held-out test battery IDs for all subsets are provided in the supplementary material. Internally, we conducted ablation studies on the en-coder architecture f (·)–examining MLP, LSTM, and CNN variants–to optimize the balance between temporal dependency modeling and local feature fusion. 
+
+4.2 SOH Estimation 
+
+Table 2 compares the SOH estimation results of our model against the considered manual-feature and automated baselines (CNN, MLP). To avoid leakage from overlapping cycle windows, all splits are constructed at the battery level before window generation; repeated folds and random seeds are treated as matched evaluation units rather than independent window-level samples. Evaluated via RMSE and MAPE, the proposed temporal-contrastive predictors achieve the lowest mean errors on most dataset–metric pairs, including HUST with Auto-LSTM at 0.102 ±0.020 % MAPE and 0.0011 ±0.0002 RMSE. The visualization of these results is shown in Fig. 2. Furthermore, ablation studies confirm that the TC module significantly enhances performance by capturing intra- and inter-cycle dynamics. 
+
+4.3 Data Efficiency and Cross-Domain Adaptation Small-Sample Efficiency Data-driven SOH models often require many batter-ies for stable training [16]. We therefore train TC-SOH with only 1–4 batteries. Across XJTU, HUST, and MIT (Fig. 3), four batteries already approximate full-data performance, indicating that temporal-contrastive representations reduce data dependence. 
+
+Cross-Domain Adaptation Ladder We evaluate cross-domain adaptability with a compact five-rung ladder: source-only , FT-1bat , FT-2bat , Mix-1bat , and 
+
+Mix-2bat . The TC module g(·) is frozen during transfer, while the encoder f (·)
+
+is adapted with one or two target batteries or jointly trained with source–target mixtures. Fig. 4 shows that source-only prediction fails under large domain shifts (RMSE ≥ 0.39), while one or two target batteries reduce errors by one to two 8 J. Wen et al. 
+
+Table 2. Main results under repeated battery-level splits. Values are reported as mean ±std across repeated seeds after averaging the five folds and all subsets within each dataset. MAPE is given in percent; RMSE is reported in the original SOH scale. The lowest mean error in each dataset is highlighted in bold. 
+
+Method MIT XJTU TJU HUST 
+
+MAPE (%) 
+
+Auto-CNN 0.150 ±0.025 0.609 ±0.251 0.815 ±0.016 0.333 ±0.090 
+
+Auto-MLP 0.213 ±0.030 0.907 ±0.288 1.376 ±0.016 1.709 ±1.688 
+
+Auto-LSTM 0.071 ±0.013 0.334 ±0.002 1.051 ±0.031 0.102 ±0.020 
+
+PINN 0.788 ±0.029 1.016 ±0.040 1.365 ±0.045 0.868 ±0.021 
+
+Manual-MLP 0.795 ±0.009 1.266 ±0.024 1.443 ±0.065 1.729 ±0.036 
+
+RMSE 
+
+Auto-CNN 0.0021 ±0.0003 0.0100 ±0.0066 0.0144 ±0.0002 0.0031 ±0.0008 
+
+Auto-MLP 0.0028 ±0.0004 0.0141 ±0.0081 0.0188 ±0.0001 0.0154 ±0.0154 
+
+Auto-LSTM 0.0012 ±0.0001 0.0051 ±0.0000 0.0158 ±0.0003 0.0011 ±0.0002 
+
+PINN 0.0102 ±0.0004 0.0124 ±0.0005 0.0144 ±0.0004 0.0100 ±0.0003 
+
+Manual-MLP 0.0103 ±0.0002 0.0153 ±0.0002 0.0155 ±0.0006 0.0226 ±0.0005 
+
+orders of magnitude. Mixture training is most stable, reducing all six transfer pairs below 0.012 RMSE, which suggests rapid adaptation when the encoder learns source–target structure jointly. 
+
+4.4 Representation Analysis 
+
+We organize the representation analysis as a progressive diagnostic chain. Visu-alization first checks whether embeddings form smooth degradation trajectories; sensitivity then asks whether they remain responsive in healthy and early-decay regimes where SOH changes are weak. Redundancy and probing analyses test whether this gain merely repackages hand-crafted descriptors or also contains residual SOH-relevant information. Finally, future-SOH probing and temporal shuffling evaluate whether the history-conditioned context ct = g(z≤t) predicts later SOH through ordered cycle history rather than current-cycle readout alone. All reported results derive from the XJTU dataset (subset 1) under fixed charge-discharge protocols. 
+
+Feature visualization We use t-SNE [22] to project (cycles, 256) embeddings. Fig. 5 shows smoother degradation trajectories for TC-SOH than for manual features, indicating stronger temporal continuity in the learned representation. This is the entry point of the diagnostic chain: adjacent cycles should move coherently as the cell ages rather than producing unstable pointwise embeddings; the next check asks whether this continuity also reflects weak early degradation. TC-SOH: Temporal-Contrastive SOH Prediction 9HUST XJTU MIT 
+
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> MAPE (%)
+> 1.756%
+> 1 Bat
+> 1.057%
+> 1 Bat
+> 1.38%
+> 1 Bat
+> 1.208%
+> 2 Bat
+> 0.892%
+> 2 Bat
+> 0.33%
+> 2 Bat
+> 0.364%
+> 3 Bat
+> 0.934%
+> 3 Bat
+> 0.274%
+> 3 Bat
+> 0.22%
+> 4 Bat
+> 0.782%
+> 4 Bat
+> 0.17%
+> 4 Bat
+> 0.21%
+> Full
+> 0.718%
+> Full
+> 0.086%
+> Full
+
+Fig. 3. Comparison of MAPE values under different training samples. Mod-els are trained with 1-4 batteries respectively and tested on the test set. The “Full” represents model performance when trained on the entire available dataset. 
+
+Table 3. Ablation study results of different fusion strategies.                                        
+
+> Method w/o Ortho w/ Ortho Method w/o Ortho w/ Ortho MAPE RMSE MAPE RMSE MAPE RMSE MAPE RMSE Concat 0.514 0.0058 0.505 0.0057 DepCA 0.657 0.0071 0.589 0.0062 Gated 0.348 0.0056 0.359 0.0055 Physic Only 0.609 0.0097 ––SE-Block 0.353 0.0070 0.423 0.0083 Deep Only 0.289 0.0033 0.285 0.0032
+
+Sensitivity Analysis As an early-stage sensitivity check, we divide cycles into healthy (SOH > 0.95 ), early decay ( 0.90 ≤ SOH ≤ 0.95 ), middle decay ( 0.80 ≤
+
+SOH < 0.90 ), and late/failure (SOH < 0.80 ) regimes. In the nearly flat healthy regime, the same MLP predictor drops from 7.87 × 10 −5 MSE with manual fea-tures to 1.06 × 10 −5 with learned features; the CNN readout further reaches 
+
+3.50 × 10 −6. A similar advantage in early decay suggests that TC-SOH cap-tures weak degradation cues before severe SOH drops dominate the signal. This narrows the interpretation from merely smooth trajectories to measurable early-stage degradation sensitivity. 
+
+Redundancy Analysis A simple explanation for the sensitivity result is that the encoder merely reproduces selected manual descriptors in smoother form. We therefore fuse manual descriptors with latent features using concatenation, Gated Fusion, SE-Block [11], and DepCA [14]. The deep-only stream remains strongest, while all fusion variants and the physics-only stream are weaker. Thus, the selected descriptors are largely redundant with TC-SOH representations: useful physically, but not complementary to the learned stream. This rules out feature fusion as the source of the main gain and motivates a more direct feature-space probe. 
+
+Probing Analysis Redundancy analysis shows that manual descriptors do not improve the predictor, but not how the two feature spaces overlap. We therefore 10 J. Wen et al. SO FT-1 FT-2 Mix-1 Mix-2 
+
+> 0.001
+> 0.01
+> 0.10
+> 1
+> RMSE (log scale)
+> 0.432
+> 0.0020
+
+(a) XJTU b1 -> MIT b1     
+
+> SO FT-1 FT-2 Mix-1 Mix-2
+> 0.793
+> 0.0050
+
+(b) MIT b1 -> XJTU b1     
+
+> SO FT-1 FT-2 Mix-1 Mix-2
+> 0.390
+> 0.0020
+
+(c) XJTU b1 -> MIT b3     
+
+> SO FT-1 FT-2 Mix-1 Mix-2
+> 0.001
+> 0.01
+> 0.10
+> 1
+> RMSE (log scale)  0.983
+> 0.0020
+
+(d) TJU NCM/NCA -> MIT b3     
+
+> SO FT-1 FT-2 Mix-1 Mix-2
+> 0.944
+> 0.0020
+
+(e) HUST b1 -> MIT b1     
+
+> SO FT-1 FT-2 Mix-1 Mix-2
+> 0.814
+> 0.011
+
+(f) HUST b1 -> XJTU b1 
+
+Fig. 4. Adaptation ladder. RMSE (log scale) across strategies. Source-only fails catastrophically; a single target battery recovers performance; mixture training achieves the lowest errors. 40 20 0 20 40 
+
+> 40
+> 20
+> 0
+> 20
+> 40
+> Automatic Extraction
+> 0
+> 200
+> 400
+> 600
+> 800
+> 1000
+> 1200
+> 1400
+> Cycle Index
+
+(a) TC-SOH 40 20 0 20 40  
+
+> 60
+> 40
+> 20
+> 0
+> 20
+> 40
+> Manual Features
+> 0
+> 200
+> 400
+> 600
+> 800
+> 1000
+> 1200
+> 1400
+> Cycle Index
+
+(b) Manual Features 
+
+Fig. 5. t-SNE Visualization on HUST. Comparison between (a) automatically learned representations and (b) manual features. 
+
+adapt diagnostic probing from NLP [7]. Frozen deep features reconstruct capacity and energy with R2 > 0.99 and voltage variance with R2 = 0 .88 , showing overlap with expert descriptors. Conversely, manual features recover the dominant latent component but leave residual variation in the secondary PLS component. Thus, the latent space is physically interpretable, yet not exhausted by selected hand-crafted indicators. The remaining question is temporal: whether TC uses the ordered history of such embeddings to support later SOH prediction. 
+
+Future-SOH Probing and Temporal Shuffling The feature-level analyses leave one final question: whether the TC module organizes cycle embeddings into a state that predicts beyond current-SOH fitting. Since ct already aggregates hidden representations from cycles 1 to t, we freeze the trained encoder–TC stack and train small ridge probes ˆyt+k = q(rt) for k ∈ { 1, 5, 10 , 20 }, comparing manual features, zt = f (xt), ablated contexts, and ct = g(z≤t). This is stricter TC-SOH: Temporal-Contrastive SOH Prediction 11 
+
+Table 4. Probing analysis: forward/reverse probing and SOH estimation with different feature sets.                                              
+
+> Probing Task ( R2)SOH Estimation
+> Deep →Physics Physics →Deep Feature Set Dim. R2RMSE Mean Volt. 0.999 PLS Dim 1 0.974 Raw Physics 50.985 0.0057 Energy 0.999 PLS Dim 2 0.863 Full Deep 128 0.999 0.0016
+> CC Time 0.999 ––PCA Dim 1 10.822 0.0199 Capacity 0.997 ––PCA Dim 1-10 10 0.999 0.0018 Volt. Var. 0.875 ––PLS Dim 1 10.986 0.0055
+
+than current-SOH probing: because SOH is temporally smooth, a representation can fit the present cycle while failing to encode the degradation state needed several cycles ahead. Temporal shuffling/reversal before g(·) provides the order test: if unordered feature statistics were sufficient, destroying cycle order would preserve most of the signal; degradation under shuffled or reversed prefixes indicates that TC uses the direction and accumulation of history. 
+
+Table 5. Future-SOH probing on held-out cycles. Values are RMSE for probes trained on frozen representations.                           
+
+> Representation SOH t+1 SOH t+5 SOH t+10 SOH t+20
+> Manual features 0.00747 0.00874 0.01029 0.01554 Single-cycle zt0.00506 0.00502 0.00556 0.00765 w/o TC context 0.01370 0.00542 0.00619 0.00852 Shuffled context 0.05078 0.05090 0.05063 0.05009
+> TC context ct0.00439 0.00430 0.00467 0.00580
+
+Table 5 completes the diagnostic chain: TC context is the most predictive representation for future SOH, paired bootstrap tests confirm positive gains over zt, and order-destroying controls weaken the probe. The gain therefore cannot be explained by smooth geometry, early sensitivity, or manual-feature recovery alone; it depends on the ordered temporal context learned by TC. In practical terms, the TC module contributes by compressing the prefix z≤t into a degradation state that is both more informative than a single-cycle embedding and more useful than unordered temporal statistics. This is why the final claim is not simply that learned features are accurate, but that ordered temporal context provides additional information for subsequent SOH estimation. 
+
+5 Conclusion 
+
+Manual feature pipelines for SOH estimation can become brittle under vary-ing operating conditions [10]. TC-SOH addresses this challenge with temporal-contrastive representation learning that extracts degradation-relevant features directly from charging data. Across 386 batteries from four public datasets, TC-SOH achieves competitive and often improved SOH estimation performance over 12 J. Wen et al. 
+
+the considered baselines, while also showing favorable robustness in transfer and low-data settings. Under a battery-level multi-seed evaluation protocol designed to reduce leakage risk [9], these results support TC-SOH as a practical end-to-end alternative to hand-crafted feature design. Representation diagnostics further indicate that the learned features recover substantial information from selected physical descriptors while retaining additional SOH-relevant predictive variation, and that ordered temporal context improves subsequent-SOH pre-diction. Future work should connect these diagnostic findings with controlled electrochemical stress tests and broader baseline families. 
+
+References 
+
+1. Adebanjo, I.T., Eko, J., Agbeyegbe, A.G., Yuk, S.F., Cowart, S.V., Nagelli, E.A., Burpo, F.J., Tran, D.T., Allen, J.L., Bhattarai, N., et al.: A comprehensive review of lithium-ion battery components degradation and operational considerations: a safety perspective. Energy Advances (2025) 2. Barré, A., Deguilhem, B., Grolleau, S., Gérard, M., Suard, F., Riu, D.: A review on lithium-ion battery ageing mechanisms and estimations for automotive applica-tions. Journal of Power Sources 241 , 680–689 (2013). https://doi.org/https:// doi.org/10.1016/j.jpowsour.2013.05.040 , https://www.sciencedirect.com/ science/article/pii/S0378775313008185 
+
+3. Bengio, Y., Courville, A., Vincent, P.: Representation learning: A review and new perspectives (2014), https://arxiv.org/abs/1206.5538 
+
+4. Cao, Z., Gao, W., Fu, Y., Kurdkandi, N.V., Mi, C.: A general framework for lithium-ion battery state of health estimation: From laboratory tests to machine learning with transferability across domains. Applied Energy 381 , 125086 (2025). 
+
+https://doi.org/https://doi.org/10.1016/j.apenergy.2024.125086 , https: //www.sciencedirect.com/science/article/pii/S030626192402470X 
+
+5. Chen, C., Pecht, M.: Prognostics of lithium-ion batteries using model-based and data-driven methods. In: Proceedings of the IEEE 2012 Prognostics and System Health Management Conference (PHM-2012 Beijing). pp. 1–6 (2012). https:// doi.org/10.1109/PHM.2012.6228850 
+
+6. Chen, T., Kornblith, S., Norouzi, M., Hinton, G.: A simple framework for con-trastive learning of visual representations (2020), https://arxiv.org/abs/2002. 05709 
+
+7. Conneau, A., Kruszewski, G., Lample, G., Barrault, L., Baroni, M.: What you can cram into a single vector: Probing sentence embeddings for linguistic properties (2018), https://arxiv.org/abs/1805.01070 
+
+8. Eldele, E., Ragab, M., Chen, Z., Wu, M., Kwoh, C.K., Li, X., Guan, C.: Self-supervised contrastive representation learning for semi-supervised time-series clas-sification. IEEE Transactions on Pattern Analysis and Machine Intelligence 45 (12), 15604–15618 (Dec 2023). https://doi.org/10.1109/tpami.2023.3308189 , http: //dx.doi.org/10.1109/TPAMI.2023.3308189 
+
+9. Geslin, A., van Vlijmen, B., Cui, X., Bhargava, A., Asinger, P.A., Braatz, R.D., Chueh, W.C.: Selecting the appropriate features in battery life-time predictions. Joule 7(9), 1956–1965 (2023). https://doi.org/https: //doi.org/10.1016/j.joule.2023.07.021 , https://www.sciencedirect.com/ science/article/pii/S2542435123003197 TC-SOH: Temporal-Contrastive SOH Prediction 13 10. Gupta, S., Mishra, P.K.: Estimation of soc, soh and rul of li-ion battery: A review. In: 2023 5th International Conference on Energy, Power and Environment: Towards Flexible Green Energy Technologies (ICEPE). pp. 1–6 (2023). https://doi.org/ 10.1109/ICEPE57949.2023.10201510 
+
+11. Hu, J., Shen, L., Albanie, S., Sun, G., Wu, E.: Squeeze-and-excitation networks (2019), https://arxiv.org/abs/1709.01507 
+
+12. Jiang, Y., Chen, Y., Yang, F., Peng, W.: State of health estimation of lithium-ion battery with automatic feature extraction and self-attention learning mecha-nism. Journal of Power Sources 556 , 232466 (2023). https://doi.org/https:// doi.org/10.1016/j.jpowsour.2022.232466 , https://www.sciencedirect.com/ science/article/pii/S0378775322014434 
+
+13. Khodadadi Sadabadi, K., Jin, X., Rizzoni, G.: Prediction of remaining useful life for a composite electrode lithium ion battery cell using an electrochemical model to estimate the state of health. Journal of Power Sources 481 , 228861 (2021). 
+
+https://doi.org/https://doi.org/10.1016/j.jpowsour.2020.228861 , https: //www.sciencedirect.com/science/article/pii/S0378775320311654 
+
+14. Kim, J., Hahn, S.J., Hwang, Y., Lee, J., Lee, S.: Cafo: Feature-centric explanation on time series classification. In: Proceedings of the 30th ACM SIGKDD Confer-ence on Knowledge Discovery and Data Mining. p. 1372–1382. KDD ’24, ACM (Aug 2024). https://doi.org/10.1145/3637528.3671724 , http://dx.doi.org/ 10.1145/3637528.3671724 
+
+15. Kiranyaz, S., Avci, O., Abdeljaber, O., Ince, T., Gabbouj, M., In-man, D.J.: 1d convolutional neural networks and applications: A sur-vey. Mechanical Systems and Signal Processing 151 , 107398 (2021). 
+
+https://doi.org/https://doi.org/10.1016/j.ymssp.2020.107398 , https: //www.sciencedirect.com/science/article/pii/S0888327020307846 
+
+16. Kraljevski, I., Ju, Y.C., Ivanov, D., Tschöpe, C., Wolff, M.: How to do machine learning with small data? – a review from an industrial perspective (2023), https: //arxiv.org/abs/2311.07126 
+
+17. Krishnapriyan, A.S., Gholami, A., Zhe, S., Kirby, R.M., Mahoney, M.W.: Char-acterizing possible failure modes in physics-informed neural networks (2021), 
+
+https://arxiv.org/abs/2109.01050 
+
+18. Li, M., Xu, W., Zhang, S., Liu, L., Hussain, A., Hu, E., Zhang, J., Mao, Z., Chen, Z.: State of health estimation and battery management: A review of health indicators, models and machine learning. Materials 18 (1) (2025). https://doi.org/10.3390/ ma18010145 , https://www.mdpi.com/1996-1944/18/1/145 
+
+19. Li, Q., Song, R., Wei, Y.: A review of state-of-health estimation for lithium-ion battery packs. Journal of Energy Storage 118 , 116078 (2025). https://doi.org/https://doi.org/10.1016/j.est.2025.116078 ,
+
+https://www.sciencedirect.com/science/article/pii/S2352152X25007911 
+
+20. Lyu, G., Zhang, H., Miao, Q.: An interpretable state of health estimation method for lithium-ion batteries based on multi-category and multi-stage features. Energy 283 , 129067 (2023). https://doi.org/https://doi.org/10.1016/j. energy.2023.129067 , https://www.sciencedirect.com/science/article/pii/ S0360544223024611 
+
+21. Ma, G., Xu, S., Jiang, B., Cheng, C., Yang, X., Shen, Y., Yang, T., Huang, Y., Ding, H., Yuan, Y.: Real-time personalized health status prediction of lithium-ion batteries using deep transfer learning. Energy & Environmental Science 15 (10), 4083–4094 (2022). https://doi.org/10.1039/D2EE01676A , https://doi.org/10. 1039/D2EE01676A 14 J. Wen et al. 22. van der Maaten, L., Hinton, G.: Visualizing data using t-sne. Journal of Ma-chine Learning Research 9(86), 2579–2605 (2008), http://jmlr.org/papers/v9/ vandermaaten08a.html 
+
+23. Markets, R.: Lithium-ion battery market by type, power capacity, application -global forecast 2025-2030 (2024), https://www.researchandmarkets.com/report/ lithium-ion-battery#tag-pos-1 
+
+24. Mu, G., Wei, Q., Xu, Y., Li, J., Zhang, H., Yang, F., Zhang, J., Li, Q.: State of health estimation of lithium-ion batteries based on feature optimization and data-driven models. Energy 316 , 134578 (2025). https://doi.org/https: //doi.org/10.1016/j.energy.2025.134578 , https://www.sciencedirect.com/ science/article/pii/S0360544225002208 
+
+25. Ni, Y., Song, K., Pei, L., Li, X., Wang, T., Zhang, H., Zhu, C., Xu, J.: State-of-health estimation and knee point identification of lithium-ion battery based on data-driven and mechanism model. Applied Energy 385 , 125539 (2025). 
+
+https://doi.org/https://doi.org/10.1016/j.apenergy.2025.125539 , https: //www.sciencedirect.com/science/article/pii/S0306261925002697 
+
+26. Ren, Y., Tang, T., Jiang, F., Xia, Q., Zhu, X., Sun, B., Yang, D., Feng, Q., Qian, C.: A novel state of health estimation method for lithium-ion battery pack based on cross generative adversarial networks. Applied Energy 377 , 124385 (2025). 
+
+https://doi.org/https://doi.org/10.1016/j.apenergy.2024.124385 , https: //www.sciencedirect.com/science/article/pii/S0306261924017689 
+
+27. S, H.: Lithium-ion battery state of health estimation using intelligent methods. Franklin Open 10 , 100237 (2025). https://doi.org/https: //doi.org/10.1016/j.fraope.2025.100237 , https://www.sciencedirect. com/science/article/pii/S2773186325000271 
+
+28. Severson, K.A., Attia, P.M., Jin, N., Perkins, N., Jiang, B., Yang, Z., Chen, M.H., Aykol, M., Herring, P.K., Fraggedakis, D., Bazant, M.Z., Harris, S.J., Chueh, W.C., Braatz, R.D.: Data-driven prediction of battery cycle life before capacity degra-dation. Nature Energy 4(5), 383–391 (May 2019). https://doi.org/10.1038/ s41560-019-0356-8 , https://doi.org/10.1038/s41560-019-0356-8 
+
+29. Shao, B., Zhong, J., Tian, J., Li, Y., Chen, X., Dou, W., Liao, Q., Lai, C., Lu, T., Xie, J.: State-of-health estimation of lithium-ion batteries based on electro-chemical impedance spectroscopy features and fusion interpretable deep learn-ing framework. Energies 18 (6) (2025). https://doi.org/10.3390/en18061385 ,
+
+https://www.mdpi.com/1996-1073/18/6/1385 
+
+30. Tang, R., Xu, Y., Dong, J., Shi, Q., Yan, K., Guan, Y., Lu, Y., Su, Y., Liu, J., Zhao, F., Jin, Y., Li, N., Su, Y., Wu, F., Chen, L.: Thermal-overdischarge coupling induced aging mechanisms in lifepo4 batteries: insights from multi-scale electrochemical and material diagnostics. Applied Energy 401 , 126870 (2025). 
+
+https://doi.org/https://doi.org/10.1016/j.apenergy.2025.126870 , https: //www.sciencedirect.com/science/article/pii/S0306261925016009 
+
+31. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, L., Polosukhin, I.: Attention is all you need (2023), https://arxiv.org/abs/1706. 03762 
+
+32. Wang, F., Zhai, Z., Zhao, Z., Di, Y., Chen, X.: Physics-informed neural network for lithium-ion battery degradation stable modeling and prognosis 15 (1), 4332. https: //doi.org/10.1038/s41467-024-48779-z , https://www.nature.com/articles/ s41467-024-48779-z 
+
+33. Wen, Q., Sun, L., Yang, F., Song, X., Gao, J., Wang, X., Xu, H.: Time se-ries data augmentation for deep learning: A survey. In: Proceedings of the TC-SOH: Temporal-Contrastive SOH Prediction 15 Thirtieth International Joint Conference on Artificial Intelligence. p. 4653–4660. IJCAI-2021, International Joint Conferences on Artificial Intelligence Organiza-tion (Aug 2021). https://doi.org/10.24963/ijcai.2021/631 , http://dx.doi. org/10.24963/ijcai.2021/631 
+
+34. Wu, Y., Jossen, A.: Entropy-induced temperature variation as a new in-dicator for state of health estimation of lithium-ion cells. Electrochimica Acta 276 , 370–376 (2018). https://doi.org/https://doi.org/10.1016/j. electacta.2018.04.203 , https://www.sciencedirect.com/science/article/ pii/S0013468618309885 
+
+35. Xia, F., Wang, K., Chen, J.: State of health and remaining useful life prediction of lithium-ion batteries based on a disturbance-free in-cremental capacity and differential voltage analysis method. Journal of Energy Storage 64 , 107161 (2023). https://doi.org/https://doi.org/10. 1016/j.est.2023.107161 , https://www.sciencedirect.com/science/article/ pii/S2352152X23005583 
+
+36. Xiang, Y., Fan, W., Zhu, J., Wei, X., Dai, H.: Semi-supervised deep learn-ing for lithium-ion battery state-of-health estimation using dynamic discharge profiles. Cell Reports Physical Science 5(1), 101763 (2024). https://doi.org/ https://doi.org/10.1016/j.xcrp.2023.101763 , https://www.sciencedirect. com/science/article/pii/S2666386423006082 
+
+37. Xiong, R., Sun, Y., Wang, C., Tian, J., Chen, X., Li, H., Zhang, Q.: A data-driven method for extracting aging features to accurately predict the battery health. Energy Storage Materials 57 , 460–470 (2023). https://doi.org/https://doi. org/10.1016/j.ensm.2023.02.034 , https://www.sciencedirect.com/science/ article/pii/S2405829723000946 
+
+38. Xu, Q., Wang, X., Ye, H., Gong, L., Tan, P., Pan, T.: An accurate state of health estimation method for lithium-ion batteries based on expansion force analy-sis. Energy 325 , 136155 (2025). https://doi.org/https://doi.org/10.1016/j. energy.2025.136155 , https://www.sciencedirect.com/science/article/pii/ S0360544225017979 
+
+39. Ye, J., Xie, Q., Lin, M., Wu, J.: A method for estimating the state of health of lithium-ion batteries based on physics-informed neural network. Energy 294 , 130828 (2024). https://doi.org/https://doi.org/10.1016/j. energy.2024.130828 , https://www.sciencedirect.com/science/article/pii/ S0360544224006005 
+
+40. Zaghib, K., Dontigny, M., Guerfi, A., Charest, P., Rodrigues, I., Mauger, A., Julien, C.: Safe and fast-charging li-ion battery with long shelf life for power applications. Journal of Power Sources 196 (8), 3949–3954 (2011). https://doi.org/https:// doi.org/10.1016/j.jpowsour.2010.11.093 , https://www.sciencedirect.com/ science/article/pii/S0378775310020847 
+
+41. Zeng, C., Xu, C., Li, H., Wang, K.: A novel ensemble learning model for state of health estimation of lithium-ion batteries. Journal of Power Sources 638 , 236608 (2025). https://doi.org/https://doi.org/10.1016/j.jpowsour.2025.236608 ,
+
+https://www.sciencedirect.com/science/article/pii/S0378775325004446 
+
+42. Zhu, J., Wang, Y., Huang, Y., Bhushan Gopaluni, R., Cao, Y., Heere, M., Mühlbauer, M.J., Mereacre, L., Dai, H., Liu, X., Senyshyn, A., Wei, X., Knapp, M., Ehrenberg, H.: Data-driven capacity estimation of commercial lithium-ion batteries from voltage relaxation. Nature Communications 13 (1), 2261 (Apr 2022). https://doi.org/10.1038/s41467-022-29837-w , https://doi.org/ 10.1038/s41467-022-29837-w

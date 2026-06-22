@@ -6,26 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-21
-- 运行时间：2026-06-21 23:18:10 UTC
+- 最新运行日期：2026-06-22
+- 运行时间：2026-06-22 23:32:21 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：1
-- 速读区：0
+- 本次总论文数：2
+- 精读区：0
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读一篇提出智能调度混合EKF-FGO新框架的论文，该系统能动态切换滤波器与因子图优化以兼顾实时性与精度。  
-最值得关注的是智能调度策略让状态估计在计算资源受限下仍保持高鲁棒性，以及EKF与FGO协同的误差补偿机制。  
-建议读者关注此类融合方法在自动驾驶或机器人实时定位中的落地潜力，尤其可尝试对比纯滤波方案的实际收益。
-- 详情：[/202606/21/README](/202606/21/README)
+今日速读两篇电池前沿论文，聚焦量子算法模拟阴极极化子动力学与自监督寿命预测。  
+量子模拟打开电极材料微观黑箱，时序对比学习实现端到端电池健康评估。  
+想抓住下一代电池技术？盯紧材料量子建模与数据驱动运维这两个交叉点。
+- 详情：[/202606/22/README](/202606/22/README)
 
 ### 精读区论文标签
-1. [A Smart-Scheduled Hybrid (SSH) EKF-FGO State Estimation](/202606/21/2606.16057v2-a-smart-scheduled-hybrid-ssh-ekf-fgo-state-estimation)  
-   标签：评分：8.0/10、query:lfp-soc
-   evidence：基于EKF的状态估计框架可应用于电池SOC估计
+- 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Quantum Algorithm for Open-System Battery Cathodes by Modeling Multiple Strongly Coupled Holstein Polarons with Chain-Mapped Caldeira-Leggett Dynamics](/202606/22/2606.16017v1-quantum-algorithm-for-open-system-battery-cathodes-by-modeling-multiple-strongly-coupled-holstein-polarons-with-chain-mapped-caldeira-leggett-dynamics)  
+   标签：评分：6.0/10、query:lfp-soc
+   evidence：开发量子算法预测电池阴极开路电压，这对于荷电状态估计至关重要。
+2. [Autonomous End-to-End SOH Prediction Services for Battery Systems via Temporal-Contrastive Representation Learning](/202606/22/2606.16434v1-autonomous-end-to-end-soh-prediction-services-for-battery-systems-via-temporal-contrastive-representation-learning)  
+   标签：评分：6.0/10、query:lfp-soc
+   evidence：使用对比表示学习的端到端SOH预测，可应用于SOC估计
 
 
 <div class="dpr-home-promo-card">
