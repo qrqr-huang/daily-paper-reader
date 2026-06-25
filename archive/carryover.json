@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-06-24T23:12:03.029515+00:00",
-  "updated_date": "20260624",
+  "generated_at": "2026-06-25T23:29:51.069450+00:00",
+  "updated_date": "20260625",
   "carryover_days": 9,
   "tag_states": {
     "lfp-soc": {
-      "updated_date": "20260624",
+      "updated_date": "20260625",
       "carryover_days": 9,
       "items": []
     }
