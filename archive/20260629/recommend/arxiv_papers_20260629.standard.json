@@ -1,0 +1,52 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-29T22:51:06.963740+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 11,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2606.28220v1",
+      "source": "arxiv",
+      "title": "Physics-Informed Neural Network with Transfer Learning for State Estimation in Lithium-Ion Batteries using the Single Particle Model with Electrolyte",
+      "abstract": "Physics-informed neural networks (PINNs) have emerged as a powerful tool for solving nonlinear partial differential equations (PDEs), including battery electrochemical models. They typically en-force conservation laws within the loss function to ensure physically consistent solutions. Tradi-tional numerical methods such as finite difference, finite volume, and finite element techniques, re-ly on discretization and can be computationally expensive for nonlinear systems. To address this challenge, PINNs offer improved scalability, particularly for reduced-order models like the single particle model with electrolyte (SPMe). The SPMe describes lithium-ion battery dynamics through coupled diffusion, transport, reaction kinetics, and voltage equations. Despite these advantages, training SPMe-based PINNs from scratch for different battery chemistries or operating conditions is demanding and often leads to slow convergence. To overcome this limitation, this work introduces a transfer learning framework for SPMe-PINNs. The model is first pretrained to learn general elec-trochemical dynamics and then adapted to a target battery by transferring weights, freezing se-lected layers, and fine tuning the remaining parameters, including estimating key electrochemical variables. Validation using PyBaMM demonstrates accurate voltage prediction, indicating that the proposed approach preserves electrochemical consistency while reducing training time and ena-bling efficient generalization across batteries.",
+      "authors": [
+        "Gift Modekwe",
+        "Qiugang Lu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-26T16:11:00+00:00",
+      "link": "https://arxiv.org/pdf/2606.28220v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "PINN with transfer learning for state estimation in Li-ion batteries",
+      "llm_evidence_cn": "结合迁移学习的PINN用于锂离子电池状态估计",
+      "llm_evidence": "结合迁移学习的PINN用于锂离子电池状态估计",
+      "canonical_evidence": "结合迁移学习的PINN用于锂离子电池状态估计",
+      "llm_tldr_en": "Proposes a physics-informed neural network with transfer learning for efficient state estimation in lithium-ion batteries using the SPMe model, reducing computational cost significantly.",
+      "llm_tldr_cn": "针对锂离子电池电化学模型数值求解计算量大，传统方法难以扩展的问题，本文提出结合迁移学习的物理信息神经网络（PINN）方法，利用含电解质的单粒子模型（SPMe）进行状态估计。该方法将物理守恒律嵌入损失函数，并通过迁移学习加速训练，实验表明能有效求解SPMe方程，为电池状态估计提供了一种高效、可扩展的替代方案。",
+      "llm_tldr": "针对锂离子电池电化学模型数值求解计算量大，传统方法难以扩展的问题，本文提出结合迁移学习的物理信息神经网络（PINN）方法，利用含电解质的单粒子模型（SPMe）进行状态估计。该方法将物理守恒律嵌入损失函数，并通过迁移学习加速训练，实验表明能有效求解SPMe方程，为电池状态估计提供了一种高效、可扩展的替代方案。",
+      "llm_tags": [
+        "query:lfp-soc:composite"
+      ],
+      "matched_query_tag": "query:lfp-soc:composite",
+      "matched_query_text": "Papers central to 请帮我找关于锂离子电池荷电状态估计的文章，最好是关于高倍率放电，磷酸铁锂电池, especially work that connects or combines: state of charge estimation for lithium ion batteries; lithium iron phosphate battery state of charge estimation; high-rate discharge conditions for battery state of charge; battery management system state of charge estimation; equivalent circuit model for SOC estimation; adaptive Kalman filter for SOC estimation; Find papers on state of charge estimation for lithium iron phosphate batteries under high rate discharge conditions; I need articles about state of charge estimation techniques considering high rate cycling of LiFePO4 batteries; Retrieve research on battery state of charge estimation during fast discharge of lithium ion batteries; Look for studies on the effect of high discharge rates on state of charge accuracy for LFP batteries.",
+      "matched_requirement_id": "req-composite-lfp-soc",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
