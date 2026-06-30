@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-30",
+  "date": "2026-06-30",
+  "generated_at": "2026-06-30T23:59:46",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/30/2606.28220v1-physics-informed-neural-network-with-transfer-learning-for-state-estimation-in-lithium-ion-batteries-using-the-single-particle-model-with-electrolyte",
+      "section": "deep",
+      "title_en": "Physics-Informed Neural Network with Transfer Learning for State Estimation in Lithium-Ion Batteries using the Single Particle Model with Electrolyte",
+      "authors": "Gift Modekwe, Qiugang Lu",
+      "date": "2026-06-26",
+      "pdf": "https://arxiv.org/pdf/2606.28220v1",
+      "score": "9.0",
+      "evidence": "利用物理信息神经网络和单粒子模型进行锂离子电池状态估计",
+      "tldr": "锂离子电池状态估计中，单颗粒电解液模型(SPMe)耦合扩散、传输、反应动力学等非线性偏微分方程，传统数值方法求解计算量大，物理信息神经网络(PINN)虽可提高可扩展性，但针对不同化学体系或工况从头训练收敛缓慢。为此，提出一种基于SPMe的PINN迁移学习框架：先预训练网络学习通用电化学动态，然后通过权重迁移、部分层冻结和微调剩余参数，快速适配目标电池并估计关键电化学变量。在PyBaMM平台验证，电压预测准确，训练时间显著缩短，保持了电化学一致性，实现跨电池高效泛化。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Physics-informed neural networks (PINNs) have emerged as a powerful tool for solving nonlinear partial differential equations (PDEs), including battery electrochemical models. They typically en-force conservation laws within the loss function to ensure physically consistent solutions. Tradi-tional numerical methods such as finite difference, finite volume, and finite element techniques, re-ly on discretization and can be computationally expensive for nonlinear systems. To address this challenge, PINNs offer improved scalability, particularly for reduced-order models like the single particle model with electrolyte (SPMe). The SPMe describes lithium-ion battery dynamics through coupled diffusion, transport, reaction kinetics, and voltage equations. Despite these advantages, training SPMe-based PINNs from scratch for different battery chemistries or operating conditions is demanding and often leads to slow convergence. To overcome this limitation, this work introduces a transfer learning framework for SPMe-PINNs. The model is first pretrained to learn general elec-trochemical dynamics and then adapted to a target battery by transferring weights, freezing se-lected layers, and fine tuning the remaining parameters, including estimating key electrochemical variables. Validation using PyBaMM demonstrates accurate voltage prediction, indicating that the proposed approach preserves electrochemical consistency while reducing training time and ena-bling efficient generalization across batteries.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/30/2606.28507v1-rapid-and-robust-parameter-estimation-for-electrochemical-battery-models-via-bolt-a-batch-optimized-local-to-global-technique",
+      "section": "quick",
+      "title_en": "Rapid and robust parameter estimation for electrochemical battery models via BOLT: A batch-optimized local-to-global technique",
+      "authors": "Feng Guo, Luis D. Couto, Keivan Haghverdi, Khiem Trad, Grietus Mulder",
+      "date": "2026-06-26",
+      "pdf": "https://arxiv.org/pdf/2606.28507v1",
+      "score": "7.0",
+      "evidence": "电化学电池模型参数估计，支撑状态估计",
+      "tldr": "电化学电池模型参数估计传统方法计算成本高且运行间变异性大。本文提出BOLT技术，结合多样化候选初始化、批并行信赖域反射局部精化、JIT加速模型评估和多工况一致性筛选。在商用18650 NMC电池多工况测试中，BOLT(32)平均电压误差仅12.4±0.1 mV，每轮约2万次模型调用、耗时约9秒，且重复运行稳定。合成数据验证表明参数恢复平均绝对相对误差低于0.6%，抗噪性强。BOLT为BMS参数更新、控制数字孪生和梯次利用筛选提供了高效实用的校准框架。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Accurate and efficient parameter estimation is essential for applying electrochemical battery models in simulation, state estimation, control, and repeated model updating. However, conventional optimization methods, such as particle swarm optimization (PSO) and genetic algorithms (GA), often require many model evaluations and show considerable run-to-run variability, limiting their use in time-sensitive calibration scenarios. This study proposes a Batch-Optimized Local-to-Global Technique (BOLT) for rapid and robust parameter estimation of electrochemical battery models. BOLT combines diversified candidate initialization, batch-parallel trust-region reflective (TRF) local refinement, JIT-accelerated model evaluation, and multi-condition consistency screening within a unified calibration workflow. Comparative experiments based on a grouped single-particle model and measured data from a commercial 18650 NMC lithium-ion cell show that BOLT achieves a favorable trade-off among voltage-response accuracy, computational efficiency, and repeated-run stability. BOLT(32) achieves an average mean absolute error of \\(12.4 \\pm 0.1\\) mV over five operating conditions, requiring only \\(20636 \\pm 3081\\) model calls and \\(8.97 \\pm 1.20\\) s per run. Synthetic-data validation with a known parameter vector in the grouped SPM formulation further shows that BOLT recovers the reference parameter vector under model-consistent conditions and remains robust under 1--3 mV voltage-noise perturbations, with the mean parameter absolute relative error below \\(0.6\\%\\). These results indicate that BOLT provides a practical calibration framework for BMS parameter updating, control-oriented battery digital twins, and second-life battery screening.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

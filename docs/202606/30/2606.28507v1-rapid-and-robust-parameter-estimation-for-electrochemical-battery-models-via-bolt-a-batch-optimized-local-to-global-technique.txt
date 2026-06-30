@@ -1,0 +1,1118 @@
+Title: Rapid and robust parameter estimation for electrochemical battery models via BOLT: A batch-optimized local-to-global technique
+
+URL Source: https://arxiv.org/pdf/2606.28507v1
+
+Published Time: Tue, 30 Jun 2026 00:10:05 GMT
+
+Number of Pages: 42
+
+Markdown Content:
+# Rapid and Robust Parameter Estimation for Electrochemical Battery Models via BOLT: A Batch-Optimized Local-to-Global Technique ⋆
+
+Feng Guo a,b,c, ∗, Luis D. Couto a,b , Keivan Haghverdi a,b,d , Khiem Trad a,b ,Grietus Mulder a,b 
+
+> a
+
+VITO, Boeretang 200, Mol, 2400, Belgium 
+
+> b
+
+EnergyVille, Thor Park 8310, Genk, 3600, Belgium 
+
+> c
+
+Institute for Materials Research (IUMAT), Hasselt University, Martelarenlaan 42, Hasselt, 3500, Belgium 
+
+> d
+
+Institute of Physical Chemistry, RWTH Aachen University, Aachen, 2074, Germany 
+
+Abstract 
+
+Accurate and efficient parameter estimation is essential for applying elec-trochemical battery models in simulation, state estimation, control, and re-peated model updating. However, conventional optimization methods, such as particle swarm optimization (PSO) and genetic algorithms (GA), often re-quire many model evaluations and show considerable run-to-run variability, limiting their use in time-sensitive calibration scenarios. This study proposes a Batch-Optimized Local-to-Global Technique (BOLT) for rapid and robust parameter estimation of electrochemical battery models. BOLT combines di-versified candidate initialization, batch-parallel trust-region reflective (TRF) local refinement, JIT-accelerated model evaluation, and multi-condition con-sistency screening within a unified calibration workflow. Comparative exper-iments based on a grouped single-particle model and measured data from a commercial 18650 NMC lithium-ion cell show that BOLT achieves a favor-able trade-off among voltage-response accuracy, computational efficiency, and 
+
+> ⋆
+
+This is the authors’ accepted manuscript. Applied Energy , 2026, Article 128307, doi: https://doi.org/10.1016/j.apenergy.2026.128307. The definitive published ver-sion is available on ScienceDirect at https://www.sciencedirect.com/science/article/pii/ S030626192600961X. Please cite the published version. © 2026 Elsevier Ltd. This manuscript version is made available under the CC BY-NC-ND 4.0 license: https: //creativecommons.org/licenses/by-nc-nd/4.0/. 
+
+> ∗
+
+Corresponding author. 
+
+> arXiv:2606.28507v1 [eess.SY] 26 Jun 2026
+
+repeated-run stability. BOLT(32) achieves an average mean absolute error of 12 .4 ± 0.1 mV over five operating conditions, requiring only 20636 ± 3081 
+
+model calls and 8.97 ± 1.20 s per run. Synthetic-data validation with a known parameter vector in the grouped SPM formulation further shows that BOLT recovers the reference parameter vector under model-consistent con-ditions and remains robust under 1–3 mV voltage-noise perturbations, with the mean parameter absolute relative error below 0.6% . These results indi-cate that BOLT provides a practical calibration framework for BMS param-eter updating, control-oriented battery digital twins, and second-life battery screening. 
+
+Keywords: 
+
+Electrochemical model, Battery parameter estimation, Single Particle Model, Lithium-ion batteries 
+
+1. Introduction 
+
+Lithium-ion batteries have become key electrochemical energy storage units in electric vehicles, portable electronics, and stationary energy storage systems [1, 2, 3, 4]. As application demands continue to increase, battery models are expected to support not only terminal-voltage prediction, but also high-fidelity simulation, state estimation, fault diagnosis, control, and lifecycle management [5, 6, 7, 8, 9]. In particular, the rapid development of digital twins [10, 11, 12] and world-model-related intelligent frameworks [13] is further increasing the demand for accurate and computationally ef-ficient physics-based battery models. Among the available modeling ap-proaches, electrochemical models are particularly attractive because they can describe internal reaction and transport mechanisms and therefore provide richer physical interpretability than conventional equivalent circuit models (ECMs) [14, 15, 16]. However, the practical deployment of electrochemical models remains strongly constrained by parameter estimation, which is often computationally demanding, ill-conditioned, and difficult to perform robustly across repeated runs [17, 18, 19, 20]. Electrochemical battery models generally refer to the Pseudo-Two-Dimensional (P2D) model and its simplified variants [21]. Common reduced-order forms derived from the P2D framework include the Single Particle Model with elec-trolyte (SPMe) [22] and the Single Particle Model (SPM) [23]. Compared with ECMs, these models incorporate internal physicochemical states such 2as lithium concentration distributions and electrode reaction kinetics, which makes them more suitable for advanced battery management tasks requir-ing physical consistency and interpretability [24]. However, this advantage comes at the price of a substantially larger and more coupled parameter set. Some parameters require destructive characterization procedures, such as cell disassembly or half-cell measurements, whereas others cannot be di-rectly measured at all [25, 26, 27]. As a result, parameter estimation based on measurable current–voltage–temperature data has become a central problem in electrochemical model deployment. Yet because electrochemical models are highly over-parameterized, the identification problem often suffers from non-uniqueness, meaning that distinct parameter sets may produce similar output behavior [28]. Together with the high computational burden of re-peated model simulation, this makes fast, stable, and practically deployable parameter estimation a persistent challenge. A first major line of research relies on local gradient-based or least-squares-type methods for electrochemical model parameter estimation [29]. Such methods are attractive because they are generally efficient and can converge rapidly once initialized near a good solution. However, their per-formance is strongly dependent on the initial guess, and in the nonconvex parameter landscape of electrochemical models they may converge to poor local minima. Therefore, although local solvers are computationally appeal-ing, their repeated-run robustness is often insufficient for practical calibration tasks where reliable parameter estimation must be obtained repeatedly under limited time budgets. A second major line of research uses population-based metaheuristic op-timization methods, such as particle swarm optimization (PSO), genetic al-gorithms (GA), and their variants [30, 31]. Our previous work compared several classical methods and showed that PSO provided relatively favorable performance in terms of stability and accuracy among the tested baselines [32]. Other studies have introduced increasingly sophisticated metaheuris-tics. For example, Tian et al. used a Two-Population Grey Wolf Optimiza-tion method for P2D parameter identification, but the reported optimization required about 12 hours [33]. Huang et al. proposed a multi-step Cuckoo Particle Swarm Optimization method for SPMe parameter estimation, but the total computational cost was not clearly reported [34]. These studies demonstrate that stronger global search can improve calibration quality, but they also reveal an important limitation: population-based methods typi-cally require a large number of repeated battery model evaluations, which 3leads to high computational cost and limits their practicality in repeated or time-sensitive calibration scenarios. A third line of work seeks to accelerate parameter estimation through sur-rogate modeling or machine learning. Kim et al. introduced a deep Bayesian neural network for electrochemical model parameter estimation [35]. Wang et al. proposed a classification-model-assisted Bayesian optimization strategy that improved estimation accuracy relative to PSO and GA while reducing computation time compared with GA [36]. Zhang et al. developed a multi-step meta-modeling genetic algorithm in which a neural network surrogate is trained to predict voltage responses and then used to accelerate optimiza-tion [37]. More broadly, Li et al. compared 78 metaheuristic algorithms and proposed a modified Teaching-Learning-Based Optimization approach with improved stability and runtime [18]. These studies clearly indicate that com-putational acceleration is possible. However, many surrogate- or learning-assisted approaches introduce additional workflow complexity, such as surro-gate training, tuning, and reliability management. As a result, although they may reduce part of the computational burden, they do not always provide a simple and directly deployable repeated-calibration framework for electro-chemical battery models. Taken together, existing studies have improved electrochemical model pa-rameter estimation mainly by strengthening global search, accelerating model evaluation, or introducing surrogate assistance. However, a practical gap re-mains. Local gradient-based methods are computationally efficient but sensi-tive to initialization; population-based metaheuristics provide broader search capability but require many repeated model evaluations; and surrogate- or learning-assisted approaches can reduce part of the computational burden but often introduce additional training, tuning, and reliability-management com-plexity. Therefore, the literature still lacks a simple and practical calibration framework that can simultaneously provide fast computation, repeated-run robustness, and cross-condition consistency for deployment-oriented electro-chemical battery model calibration. To address this gap, this study proposes a Batch-Optimized Local-to-Global Technique (BOLT) for rapid and robust parameter estimation of elec-trochemical battery models. The core idea is to reallocate the computational budget from expensive population evolution to diversified local refinement and multi-condition candidate screening. Specifically, BOLT first generates multiple physically constrained candidate parameter vectors, refines them in-dependently using TRF-based local optimization, and then selects the final 4parameter set according to its averaged voltage error over multiple operat-ing conditions. This design aims to combine the computational efficiency of local solvers with the robustness of multi-candidate exploration and cross-condition screening. The main contributions of this work are fourfold. First, BOLT devel-ops a batch-optimized local-to-global calibration framework that combines diversified candidate initialization with TRF-based local refinement for elec-trochemical battery model parameter estimation. Second, a batch-parallel execution strategy is introduced to improve computational efficiency by dis-tributing independent local refinements across available vCPUs. Third, a multi-condition consistency screening mechanism is incorporated to select the candidate parameter set with the lowest averaged condition-wise voltage error, reducing dependence on a single fitting condition. Fourth, the eval-uation combines repeated-run analysis, candidate-number sensitivity analy-sis, measured-data comparison, and synthetic known-parameter tests with voltage-noise perturbations, thereby assessing both voltage-response accu-racy and parameter recovery capability. 
+
+2. Electrochemical model 
+
+This section introduces the SPM, presents its discretized grouped formu-lation, and defines the parameter set considered in the estimation problem. 52.1. SPM Fundamentals ～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+～～～～～～～～～～～～～～～～～～～～～～ 
+
+# Anode  Cathode Separator 
+
+# Li +
+
+# +-
+
+# 𝑪 𝒔 
+
+−(r,t)  𝑪 𝒔 
+
++(r,t) 
+
+# Li +
+
+# Electrolyte assumed uniform 
+
+> Figure 1: Schematic illustration of the SPM considered in this study.
+
+The electrochemical model employed in this study is the SPM (as shown in Figure 1), which is frequently adopted in research due to its relatively simple structure and ease of implementation. The proposed framework can also be extended to more complex electrochemical models. The solid-phase lithium concentration inside a representative spherical particle evolves according to 
+
+∂c s,i 
+
+∂t (r, t ) = Ds,i 
+
+r2
+
+∂∂r 
+
+
+
+r2 ∂c s,i 
+
+∂r (r, t )
+
+
+
+, (1) where i ∈ { p, n } denotes the positive ( p) and negative ( n) electrodes, cs,i is the solid-phase concentration, and Ds,i the diffusion coefficient. A spatially uniform initial concentration is assumed, i.e. cs,i (r, 0) = ci(0) .The boundary conditions accompanying (1) are 
+
+∂c s,i 
+
+∂r r=0 
+
+= 0 , (2) 
+
+∂c s,i 
+
+∂r r=Rs,i 
+
+= −ji(t)
+
+Ds,i 
+
+, (3) enforcing symmetry at the particle centre and prescribing the intercalation flux ji(t) at the particle surface, where Rs,i denotes the particle radius. 6The cell voltage predicted by the SPM reads 
+
+VSPM (t) = OCP p
+
+ ˜css,p (t) − OCP n
+
+ ˜css,n (t)
+
++ηp
+
+ ˜css,p (t), I (t) − ηn
+
+ ˜css,n (t), I (t) − R0 I(t), (4) where OCP i is the open-circuit potential of electrode i (expressions are given in Appendix A), ηi the surface over-potential, I(t) the applied current and R0
+
+a lumped ohmic resistance. The normalised surface stoichiometry is defined as 
+
+˜css,i (t) = css,i (t)
+
+cmax ,i 
+
+, (5) with css,i (t) = cs,i (Rs,i , t ) and cmax ,i the maximum solid-phase concentration. The over-potential for electrode i is given by 
+
+ηi
+
+ ˜css,i , I  = 2RT F sinh −1
+
+ 1∓ I
+
+2 ai Li j0,i (˜ css,i )
+
+
+
+, (6) where R is the universal gas constant, T the absolute temperature, F Fara-day’s constant, and the sign factor 1∓ equals −1 for the positive and +1 for the negative electrode. The exchange current density is 
+
+j0,i (˜ css,i ) = reef ,i cmax ,i 
+
+q
+
+ce ˜css,i 
+
+ 1 − ˜css,i 
+
+, (7) with reef ,i the reaction-rate constant and ce the electrolyte lithium-ion con-centration. Assuming a uniform reaction rate across the electrode thickness, the in-tercalation flux becomes 
+
+ji(t) = 1 ∓
+
+I(t)
+
+F a i Ai Li
+
+, (8) where Ai and Li are the electrode surface area and thickness, respectively. The specific surface area is evaluated from the solid-phase volume fraction 
+
+εs,i as 
+
+ai = 3 εs,i 
+
+Rs,i 
+
+. (9) Because R and F are physical constants and ce is normally fixed (e.g. 1000 mol m −3), they do not require estimation. Consequently, the parameter 7vector to be identified contains 17 elements: 
+
+Pall = Ds,n , D s,p , R s,n , R s,p , r eef ,n , r eef ,p ,An, A p, L n, L p, c max ,n , c max ,p ,εs,n , ε s,p , c n(0) , c p(0) , R 0
+
+.
+
+(10) Equation (10) gives the full physical parameterization of the SPM. In the following subsection, this formulation is rewritten using a parabolic-approximation-based grouped representation, which leads to a reduced pa-rameter set for the actual estimation problem. 
+
+2.2. Model Discretization 
+
+Due to the presence of partial differential equations (PDEs) in electro-chemical battery models (Eq. 1), the numerical method used to solve these PDEs can significantly affect the overall speed of parameter estimation. In this study, we adopt the parabolic approximation method to solve the elec-trochemical model. This approach offers a favorable balance between compu-tational efficiency and accuracy, making it particularly suitable for scenarios requiring rapid model evaluations [38]. The grouped SPM formulation used in this study is based on our previous work [39, 40]. For detailed model de-scriptions, readers are referred to our earlier publication [39]. The state-space representation and the parameters to be estimated are as follows: 
+
+˙χ(t) = ˜Aχ (t) + ˜Bu (t), χ(0) = SOC i(0) , (11) 
+
+ψ(t) = ˜Cχ (t) + ˜Du (t), (12) where the normalized state vector is defined as χ = χ⊤ 
+
+> p
+
+χ⊤
+
+> n
+
+⊤, with each subvector given by χi = ˜q1,i ˜q2,i 
+
+⊤, i ∈ { p, n } corresponds to the posi-tive and negative electrodes, respectively. The system input is the applied current u(t) = I(t), and the output vector ψ = ψ⊤ 
+
+> p
+
+ψ⊤
+
+> n
+
+⊤, where each 
+
+ψi = ˜cs,i ˜css,i 
+
+⊤. ˜css,i is the normalized surface lithium concentration, and 
+
+˜cs,i is the normalized average lithium concentration. The state matrices are structured as: 
+
+˜A = diag ( ˜Ap, ˜An), ˜B =  ˜B⊤ 
+
+> p
+
+˜B⊤
+
+> n
+
+⊤ , (13) 8with each electrode-specific block defined by: 
+
+˜Ai =
+
+ 0 030 
+
+αi
+
+−30 
+
+αi
+
+ , ˜Bi =
+
+
+
+1
+
+bi
+
+19 7bi
+
+ , (14) The corresponding output matrices are given by: 
+
+˜C = diag ( ˜Cp, ˜Cn), ˜D =  ˜D⊤ 
+
+> p
+
+˜D⊤
+
+> n
+
+⊤ , (15) where: 
+
+˜Ci =
+
+1 00 1
+
+
+
+, ˜Di =
+
+" 0
+
+αi
+
+105 bi
+
+#
+
+. (16) The grouped parameters are defined as αi = R2
+
+> s,i
+
+/D s,i and bi = F A iLiεs,i cmax ,i ,where bi represents the capacity-related grouped parameter of electrode i.Using the grouped formulation, the overpotential term in Eq. (6) can be rewritten as: 
+
+ηi(˜ css,i (t), I (t)) = 2RT F sinh −1 1∓I(t)6bidi
+
+p˜css,i (t)(1 − ˜css,i (t)) 
+
+!
+
+, (17) where: 
+
+di = reef ,i 
+
+√ce
+
+F R s,i 
+
+. (18) Consequently, the parameters requiring estimation are listed in Table 1. Accordingly, the actual estimation problem considered in this work is formulated in terms of the nine parameters in the grouped SPM formulation, as listed in Table 1. 9Table 1: Estimated parameters in the grouped SPM formulation and their physical mean-ing. 
+
+Symbol Description Unit 
+
+αn Negative electrode time constant s
+
+αp Positive electrode time constant s
+
+bn Negative electrode capacity C
+
+bp Positive electrode capacity C
+
+dn Negative electrode kinetic grouped parameter s·mol 1/2·m−5/2
+
+dp Positive electrode kinetic grouped parameter s·mol 1/2·m−5/2
+
+SOC n(0) Initial SOC of negative electrode -SOC p(0) Initial SOC of positive electrode -
+
+R0 Reference internal resistance Ω
+
+3. BOLT workflow and implementation 
+
+The proposed BOLT framework is designed to accelerate physics-based battery parameter estimation while improving robustness across repeated runs. As illustrated in Figure 2, an initial set of random parameter vectors is divided into batches and distributed across the available virtual CPUs. Each candidate is refined independently using the trf solver, while the battery model and objective evaluation routines are JIT-accelerated using Numba .After local refinement, all candidate solutions are screened using the mean absolute error averaged over multiple operating conditions, and the lowest-scoring candidate is selected as the final solution. The relationship among the total number of candidates N , the number of cores n, the batch index 
+
+j, and the screening metric MAE is summarized in Algorithm 1. The imple-mentation details are given below for reproducibility. 10 TRF TRF ··· TRF TRF 
+
+> ···
+
+Dispatch to vCPU 
+
+Total Candidates (N) 
+
+Number of vCPUs (n) 
+
+Numba -accelerated model 
+
+evaluation 
+
+One TRF solver per vCPU        
+
+> TRF TRF TRF TRF ···
+> TRF TRF ··· TRF TRF
+
+Create Batches 𝒢 !, 𝑗 = 1, … , 𝐽 
+
+Batch 𝒢 "
+
+> ···
+
+Batch 𝒢 # , J = N/n 
+
+> Randomly initialize parameters
+> within physical bounds
+
+𝜽 $ 
+
+> 𝒊
+
+∼ 𝓤 𝓑 , 𝒊 = 𝟏 , … , 𝑵 
+
+Step1: Initialization Step2: Batch -parallel 
+
+Local Refinement 
+
+Step3: Multi -condition 
+
+Screening & Selection 
+
+> ···
+> Parameter bounds
+
+ℬ Estimation data 𝓓 𝒇𝒊𝒕                   
+
+> Refined candidate :
+> parameter vector "𝜽 (𝒊 )
+> Screening conditions :
+> 𝓓 screening ={𝓒 𝓶 }𝓶 '𝟏
+> 𝑴
+> Condition -wise errors :
+> [𝑴𝑨𝑬 𝟏
+> 𝒊 ,…,𝑴𝑨𝑬 𝑴
+> 𝒊 ]
+> Average screening score :
+> MAE 𝒊
+> ←𝟏
+> 𝑴 1
+> 𝒎 '𝟏
+> 𝑴
+> MA Em
+> (𝒊 )
+> Final parameter set :
+> 𝜽 ⋆←𝐚𝐫𝐠 𝐦𝐢𝐧
+> 𝒊 MAE 𝒊
+
+Figure 2: Workflow of the proposed BOLT framework. Initial parameter vectors are ran-domly sampled within physically admissible bounds, divided into batches, and refined by parallel TRF solvers using the fitting data set. The refined candidates are then evaluated across multiple operating conditions, and the final parameter vector is selected by mini-mizing the averaged condition-wise voltage error. 
+
+Step 1 – Initialization. We first generate a set of N candidate parame-ter vectors {θ(i)0 } by sampling each component uniformly within its physically admissible bounds B. The candidates are then divided into J = N/n equally sized batches, where n denotes the number of available virtual CPU cores. This one-to-one mapping ensures that each core receives exactly one param-eter vector per scheduling cycle and helps avoid load imbalance. 
+
+Step 2 – Batch-parallel local refinement. Each batch Gj is executed as one parallel scheduling cycle over the available vCPUs. Within each batch, each initial vector θ(i)0 is dispatched to one vCPU and refined independently using the trf solver on the fitting data set Dfit . The local optimizer returns a refined parameter vector ˆθ(i)
+
+.
+
+Step 3 – Multi-condition screening and selection. All refined vec-tors are then assessed on the available current–voltage data set Dscreening =
+
+{C 1, . . . , CM }. For each operating condition Cm, a condition-specific mean 11 absolute error MAE (i) 
+
+> m
+
+is computed by comparing the simulated voltage re-sponse M ˆθ(i)
+
+, u k,m 
+
+ with the experimental trace yexp 
+
+> k,m
+
+. These M errors are averaged to obtain an overall screening score MAE (i) for each candidate. The vector with the lowest averaged score is selected as the final parameter set: 
+
+θ⋆ = arg min  
+
+> i
+
+MAE (i). (19) Here, the additional operating conditions are used as a candidate-screening criterion for solution selection, rather than as a strict held-out test set. This design reflects the parameter-estimation nature of the problem: unlike super-vised machine-learning training, electrochemical model calibration generally benefits from using as much informative current–voltage data as possible to reduce local overfitting and improve parameter identifiability. Therefore, the measured-data results should be interpreted as cross-condition consistency over the available operating-condition matrix, while independent parame-ter recoverability is examined separately through the synthetic-data tests in Section 4.3. Overall, BOLT combines two complementary ideas: multi-start local re-finement and efficient parallel execution. The multi-start strategy increases search diversity and reduces dependence on a single initial guess, while the batch-parallel structure enables simultaneous refinement of multiple candi-date solutions. After refinement, multi-condition screening is used to select the most consistent solution among the explored candidates. In addition to improving repeated-run robustness, BOLT is designed for computational efficiency. All trf instances are executed concurrently on multi-core CPUs. Moreover, the battery model evaluation is JIT-accelerated via Numba , which translates numerically intensive Python code into optimized machine instructions at runtime. The combined effect of parallel execution and JIT-accelerated model evaluation substantially reduces the computa-tional overhead of repeated parameter estimation. It should be emphasized that JIT acceleration is applied to the battery-model simulation and objective-function evaluation routines only. The inter-nal update mechanisms of TRF, PSO, and GA are not modified. This dis-tinction is important because the speed advantage of BOLT comes from both implementation-level acceleration of repeated model calls and algorithm-level reallocation of the computational budget from population evolution to par-allel local refinement and multi-condition candidate screening. 12 Algorithm 1 BOLT: Batch-Optimized Local-to-Global Technique 
+
+Require: model M, parameter bounds B, fitting data Dfit , screening data set Dscreening = {C m}Mm=1 , total candidates N , vCPU count n
+
+where Cm denotes the m-th screening condition and M is the total number of screening conditions 
+
+Ensure: selected parameter vector θ⋆
+
+Step 1 – Initialization  
+
+> 1:
+
+draw {θ(i)0 }Ni=1 ∼ U (B) 
+
+> 2:
+
+J ← N/n ▷ number of batches  
+
+> 3:
+
+partition {θ(i)0 } into batches G1, . . . , GJ
+
+Step 2 – Batch-parallel local optimization  
+
+> 4:
+
+for batch j ← 1 to J do  
+
+> 5:
+
+for all θ(i)0 ∈ G j do  
+
+> 6:
+
+ˆθ(i)
+
+← TRF  θ(i)0 , M, Dfit 
+
+ 
+
+> 7:
+
+end for  
+
+> 8:
+
+end for Step 3 – Multi-condition screening and selection  
+
+> 9:
+
+for all refined vector ˆθ(i)
+
+do  
+
+> 10:
+
+for m ← 1 to M do ▷ loop over all screening conditions  
+
+> 11:
+
+MAE (i) 
+
+> m
+
+← 1
+
+|C m|
+
+X
+
+> k
+
+yexp  
+
+> k,m
+
+− M  ˆθ(i)
+
+, u k,m 
+
+ 
+
+> 12:
+
+end for  
+
+> 13:
+
+MAE (i) ← 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+MAE (i) 
+
+> m
+> 14:
+
+end for  
+
+> 15:
+
+θ⋆ ← arg min  
+
+> i
+
+MAE (i) return θ⋆
+
+4. Results and discussion 
+
+In this section, we first describe the comparative experimental settings and then evaluate the proposed BOLT framework against the baseline PSO and GA methods. The discussion focuses on three aspects that are central to practical electrochemical model calibration: estimation accuracy, compu-tational efficiency, and repeated-run stability. 13 4.1. Comparative experimental settings 
+
+To evaluate the proposed BOLT method, we compare it with two widely used optimization approaches for electrochemical model parameter estima-tion: PSO and GA. All algorithms were implemented in Python and ex-ecuted on a Linux-based computation platform equipped with an Intel(R) Xeon(R) Gold 5120 CPU @ 2.20 GHz, 16 virtual CPUs, and 32 GB of mem-ory. PSO and GA were implemented using the corresponding modules from the scikit-opt library. The TRF solver used in BOLT was implemented via the least_squares function from scipy.optimize , with method=’trf’ .This solver is based on a trust-region subproblem with bound constraints, as formulated by Branch et al. [41]. 
+
+> Table 2: Hyperparameter settings for BOLT, PSO, and GA.
+
+Algorithm Hyperparameters BOLT (TRF) method=’trf’ , ftol=1e-8 , xtol=1e-8 , gtol=1e-8 ,
+
+max_nfev=50000 , n=16 
+
+PSO pop=100 , max_iter=500 , w=0.8 , c1=0.5 , c2=0.5 ,
+
+n_processes=16 
+
+GA size_pop=100 , max_iter=500 , prob_mut=0.001 ,
+
+precision=1e-8 , n_processes=16 
+
+The TRF tolerances in Table 2 follow the default tolerance level used by scipy.optimize.least_squares . No operating-condition-specific tun-ing was applied to the optimizer settings. The large value of max_nfev was used only as a safety upper bound to avoid premature termination by a fixed evaluation cap. Similarly, the batch configuration was determined by the available 16 virtual CPU cores; therefore, candidate numbers were selected as multiples of 16 so that the number of batches was an integer and the available parallel resources could be fully utilized. To improve fairness, PSO and GA were evaluated under both two-condition and five-condition settings. In the two-condition setting, only the 0.5C and 1C profiles were used during optimization. This choice was not arbitrary: our previous comparative study showed that, among several combinations of operating profiles, the 0.5C and 1C pair provided a favorable balance between estimation accuracy and computational efficiency for electrochem-ical battery model parameter estimation [42]. In the five-condition setting, 14 all five operating conditions (0.2C, 0.333C, 0.5C, 1C, and DST) were used during optimization. In addition, for PSO and GA, execution time was re-ported both without JIT acceleration and with JIT acceleration using the same Numba-accelerated battery model evaluation routines. In this way, the comparison better distinguishes algorithmic differences from implementation-level acceleration. The corresponding hyperparameter settings are summa-rized in Table 2, and the parameter ranges of the grouped SPM are given in Table 3 [39]. 
+
+> Table 3: Parameter ranges.
+
+Parameter Range Unit 
+
+αn [625, 7692] s
+
+αp [1.587, 2500] s
+
+dn [5.7 × 10 −5, 7.8 × 10 −4] s·mol 1/2·m−5/2
+
+dp [7.9 × 10 −5, 1.0 × 10 −3] s·mol 1/2·m−5/2
+
+bn [8352 , 12528 ] C
+
+bp [8352 , 12528 ] CSOC n(0) [0.8, 1.0] –SOC p(0) [0, 0.2] –
+
+R0 [0, 0.05] Ω
+
+In this study, a commercially available 18650 lithium-ion cell with an NMC cathode, a graphite anode, and a nominal capacity of 2.9 Ah was used. The grouped SPM described in Section 2 was used for all parame-ter estimation experiments. The test conditions included constant-current discharge at 0.2C, 0.333C, 0.5C, and 1C, together with a DST profile (see Figure 3). For BOLT, the 0.5C and 1C profiles were used in Step 2 for local parameter refinement, while the five-condition set was used in Step 3 as a candidate-screening criterion. This two-condition local-refinement design is consistent with the profile selection strategy identified in our previous study [42], which showed that the combination of the 0.5C and 1C profiles pro-vides a favorable trade-off between estimation accuracy and computational efficiency. For PSO and GA, both two-condition and five-condition optimiza-tion settings were examined explicitly, as described above. Each algorithm was independently run 50 times, and all reported results were computed from these 50 repeated runs. This repeated-run evaluation design makes it possible to assess not only estimation accuracy, but also computational efficiency and 15 repeated-run stability, all of which are critical for practical electrochemical model calibration. 16 0 2500 5000 7500 10000 12500 15000 17500 
+
+> 2.50
+> 2.75
+> 3.00
+> 3.25
+> 3.50
+> 3.75
+> 4.00
+> Voltage (V)
+
+(a)      
+
+> Condition
+> 0.2C
+> 0.333C
+> 0.5C
+> 1C
+> 02000 4000 6000 8000 10000
+> 8
+> 6
+> 4
+> 2
+> 0
+> 2
+> Current (A)
+
+(b)      
+
+> Current (A)
+> 02000 4000 6000 8000 10000
+
+Time (s) 
+
+> 2.50
+> 2.75
+> 3.00
+> 3.25
+> 3.50
+> 3.75
+> 4.00
+> 4.25
+> Voltage (V)
+
+(c) 
+
+> Voltage (V)
+
+Figure 3: Operating conditions considered in this study. (a) Measured terminal-voltage curves under four constant-current discharge conditions: 0.2C, 0.333C, 0.5C, and 1C. (b) Applied current profile of the DST. (c) Measured terminal-voltage response under the DST condition. 
+
+17 4.2. Effect of Total Candidate Number N
+
+We first examine the influence of the total candidate number N on the performance of the proposed BOLT framework. Figure 4 presents the MAE distributions obtained with N = 16 , 32 , 48 , 64 , and 80 , while Table 6 reports the corresponding summary statistics. These values were selected as integer multiples of the 16 available virtual CPUs, corresponding to 1, 2, 3, 4, and 5 batches, respectively. This configuration enables efficient batch-parallel execution of the candidate solutions. 16 32 48 64 80   
+
+> Total Candidates (N)
+> 0.0125
+> 0.0150
+> 0.0175
+> 0.0200
+> 0.0225
+> 0.0250
+> 0.0275
+> 0.0300
+> MAE(V)
+> Figure 4: Effect of the total candidate number Non the MAE distribution of the BOLT method over 50 repeated runs.
+
+As shown in Figure 4, the BOLT results with N = 16 exhibit visibly higher dispersion than the other settings, including several clear high-error outliers, whereas the distributions for N = 32 , 48 , 64 , and 80 are much more concentrated around approximately 0.012–0.013 V. This indicates that a single batch of candidates may not provide sufficient search diversity to consistently identify a low-error solution. Once the number of candidates is increased to N = 32 , the distribution contracts markedly, and further increases in N mainly reduce the already small residual variation rather than producing substantial additional gains. 18 This trend is consistent with the numerical results in Table 6. BOLT(16) yields 13 .0 ± 2.7 mV, whereas BOLT(32) already reaches 12 .4 ± 0.1 mV. Fur-ther increasing N to 48, 64, and 80 only reduces the average error slightly to approximately 12 .3±0.1 mV. Therefore, increasing N improves the probabil-ity of identifying a lower-error solution within the explored candidate pool, but this benefit gradually saturates once a sufficient level of search diversity has been achieved. From an efficiency perspective, the computational cost continues to in-crease with N because more local refinement tasks must be executed. How-ever, even at N = 80 , the total runtime remains only 22 .24 ± 2.17 s, which is still very small compared with the population-based baselines in Table 6. Taken together, these results show that the total candidate number controls the trade-off between search diversity and computational cost in BOLT. In the present study, N = 32 provides the most favorable balance among esti-mation accuracy, computational efficiency, and repeated-run stability. It is therefore selected as the representative BOLT configuration for the subse-quent comparisons with PSO and GA. 
+
+4.3. Synthetic parameter recoverability and noise robustness 
+
+The preceding real-data comparison demonstrates the practical advantage of BOLT in reproducing measured voltage responses across multiple operat-ing conditions. To isolate the behavior of the optimization workflow itself, an additional synthetic-data experiment was conducted to examine whether BOLT can recover a known parameter vector in the grouped SPM formu-lation under controlled conditions.This experiment is therefore interpreted as a parameter recoverability and noise-robustness test, rather than as an independent real-data validation. A reference parameter vector in the grouped SPM formulation was first used to generate synthetic voltage responses with the grouped SPM. Five operating profiles were considered, consistent with the main experimental setting: 0.2C, 0.333C, 0.5C, 1C, and DST. For the constant-current cases, synthetic current profiles were generated until the terminal voltage reached the cut-off voltage of 2.5 V, while the DST case used the measured current profile. In each BOLT run, the 0.5C and 1C profiles were used for local parameter refinement, while all five profiles were used for multi-condition consistency evaluation. Each BOLT run contained N = 32 randomly initial-ized local optimizations, and the whole procedure was repeated 30 times. 19 To examine robustness against voltage measurement noise, zero-mean white Gaussian noise with standard deviations of 1, 2, and 3 mV was added to the synthetic voltage signals. The noisy voltage signals were then used as the input for parameter estimation. After parameter estimation, the re-constructed voltage was compared with both the fitted voltage signal and the underlying clean synthetic voltage. Here, the fitted voltage denotes the clean synthetic voltage in the noiseless case and the noisy voltage in the noise-injected cases. For consistency with the main comparison, all voltage reconstruction errors in this subsection are reported using mean absolute error (MAE). For a target voltage signal ytar 
+
+> k,m
+
+, the condition-wise voltage MAE is defined as 
+
+MAE tar  
+
+> m
+
+= 1
+
+|C m|
+
+X
+
+> k∈C m
+
+ytar  
+
+> k,m
+
+− M 
+
+ˆθ, u k,m 
+
+
+
+, (20) where Cm denotes the m-th operating profile, uk,m is the applied current, and 
+
+M
+
+ˆθ, u k,m 
+
+
+
+is the voltage simulated using the estimated parameter vector. The average voltage MAE over the five operating profiles is then computed as 
+
+MAE tar = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+MAE tar  
+
+> m
+
+, M = 5 . (21) The parameter recovery error was evaluated using absolute relative er-ror (ARE), because the nine estimated parameters have different units and numerical scales. For the j-th parameter, ARE is defined as 
+
+ARE j =
+
+ˆθj − θref 
+
+> j
+
+θref 
+
+> j
+
+× 100% , (22) where θref  
+
+> j
+
+is the reference value and ˆθj is the corresponding estimated value. The mean parameter ARE is computed as 
+
+eθ = 1
+
+nθnθX
+
+> j=1
+
+ARE j , nθ = 9 . (23) 20 Table 4: Synthetic recoverability and noise robustness of BOLT(32) over the five operating profiles. Values are reported as mean ± standard deviation over 30 independent BOLT runs. 
+
+Noise Fitted MAE Clean MAE Mean param. ARE (mV) (mV) (mV) (%) 
+
+0 < 10 −10 < 10 −10 < 10 −9
+
+1 0.799 ± <10 −3 0.023 ± <10 −3 0.218 ± <10 −3
+
+2 1.597 ± <10 −3 0.028 ± <10 −3 0.424 ± <10 −3
+
+3 2.398 ± <10 −3 0.103 ± <10 −3 0.507 ± <10 −3
+
+ARE denotes absolute relative error. Fitted MAE is computed against the voltage used during estimation, while clean MAE is computed against the underlying noiseless synthetic voltage. Values in the noiseless case are below the displayed precision. 0 1 2 3  
+
+> Injected voltage noise (mV)
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> Voltage MAE (mV)
+> 0.799
+> 1.597
+> 2.398
+> 0.023 0.028 0.103
+> Fitted-voltage MAE
+> Clean-voltage MAE
+> Mean parameter ARE
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> Mean parameter ARE (%)
+> 0.218
+> 0.424
+> 0.507
+
+Figure 5: Synthetic recoverability and noise robustness of BOLT(32) over the five operating profiles. The bars show the voltage MAE with respect to the fitted voltage and the underlying clean synthetic voltage, while the line indicates the mean parameter ARE over 30 independent BOLT runs. 
+
+As shown in Table 4 and Figure 5, BOLT recovered the reference param-eter vector with numerical precision in the noiseless synthetic-data setting. Both the voltage MAE and the mean parameter ARE were essentially zero at the displayed precision. This result confirms the numerical self-consistency of the proposed workflow: when the voltage data are generated by the same grouped SPM and no measurement noise is present, BOLT can accurately 21 recover the given parameter vector in the grouped SPM formulation using only the 0.5C and 1C profiles for local refinement. When voltage noise was added, the fitted-voltage MAE increased approx-imately in proportion to the injected noise level. The fitted-voltage MAE val-ues were 0.799, 1.597, and 2.398 mV under 1, 2, and 3 mV noise, respectively. This trend is consistent with the expected behavior of zero-mean Gaussian noise, because the mean absolute deviation of a Gaussian noise signal is lower than its standard deviation. More importantly, when the reconstructed volt-age was compared with the underlying clean synthetic voltage, the MAE remained far below the injected noise level. The clean-voltage MAE was only 0.023 mV under 1 mV noise, 0.028 mV under 2 mV noise, and 0.103 mV under 3 mV noise. This indicates that BOLT does not simply overfit the added white noise; instead, it can still recover parameter sets that closely reproduce the underlying clean model response. The recovered parameter values are further summarized in Table 5. The estimates are reported as mean ± standard deviation over 30 independent BOLT runs. In the noiseless case, all estimated parameters were identical to the reference values at the displayed precision, and the standard devi-ations were also close to numerical precision. Under voltage-noise pertur-bations, the estimated parameters remained close to the reference values. Even under 3 mV voltage noise, the mean parameter ARE was only 0.507%. Across all tested noise levels, the mean parameter ARE remained below 0.6% ,which supports the parameter-recovery robustness of BOLT under millivolt-level voltage perturbations. The largest deviations appeared mainly in the positive-electrode kinetic grouped parameter dp, whereas the capacity-related parameters, initial stoichiometries, and ohmic resistance remained accurately recovered. 22 Table 5: Recovered parameters in the grouped SPM formulation under noiseless and noisy synthetic-data settings. Values are reported as mean ± standard deviation over 30 BOLT runs. 
+
+Parameter Noise Reference Recovered estimate ARE (%) (mV) mean ± std mean ± std 
+
+αn
+
+02746.771743 
+
+θref < 10 −9
+
+1 2746 .401268 ± 1.40 ×10 −5 0.0135 ± 5.09 ×10 −7
+
+2 2747 .309383 ± 4.51 ×10 −5 0.0196 ± 1.64 ×10 −6
+
+3 2746 .065877 ± 6.33 ×10 −5 0.0257 ± 2.30 ×10 −6
+
+αp
+
+01352.591585 
+
+θref < 10 −9
+
+1 1346 .799011 ± 1.28 ×10 −3 0.4283 ± 9.46 ×10 −5
+
+2 1338 .464239 ± 2.23 ×10 −3 1.0445 ± 1.65 ×10 −4
+
+3 1363 .279512 ± 3.32 ×10 −3 0.7902 ± 2.45 ×10 −4
+
+bn
+
+011033.60104 
+
+θref < 10 −9
+
+1 11031 .95155 ± 2.85 ×10 −5 0.0150 ± 2.59 ×10 −7
+
+2 11034 .94807 ± 4.53 ×10 −5 0.0122 ± 4.11 ×10 −7
+
+3 11026 .84710 ± 1.54 ×10 −4 0.0612 ± 1.39 ×10 −6
+
+bp
+
+010965.02498 
+
+θref < 10 −9
+
+1 10963 .74726 ± 3.04 ×10 −5 0.0117 ± 2.77 ×10 −7
+
+2 10965 .17623 ± 5.21 ×10 −5 0.0014 ± 4.75 ×10 −7
+
+3 10956 .73912 ± 1.38 ×10 −4 0.0756 ± 1.26 ×10 −6
+
+dn
+
+0
+
+7.6000 ×10 −5
+
+θref < 10 −9
+
+1 (7 .6190 ×10 −5) ± 2.07 ×10 −11 0.2504 ± 2.72 ×10 −5
+
+2 (7 .6014 ×10 −5) ± 3.79 ×10 −11 0.0188 ± 4.98 ×10 −5
+
+3 (7 .7036 ×10 −5) ± 5.10 ×10 −11 1.3627 ± 6.72 ×10 −5
+
+dp
+
+0
+
+6.2200 ×10 −4
+
+θref < 10 −9
+
+1 (6 .2902 ×10 −4) ± 1.13 ×10 −10 1.1291 ± 1.81 ×10 −5
+
+2 (6 .0777 ×10 −4) ± 2.34 ×10 −10 2.2881 ± 3.77 ×10 −5
+
+3 (6 .3489 ×10 −4) ± 8.56 ×10 −10 2.0726 ± 1.38 ×10 −4
+
+SOC n(0) 
+
+00.930129 
+
+θref < 10 −9
+
+1 0.930263 ± 2.61 ×10 −9 0.0144 ± 2.80 ×10 −7
+
+2 0.930016 ± 4.19 ×10 −9 0.0121 ± 4.51 ×10 −7
+
+3 0.930691 ± 1.32 ×10 −8 0.0604 ± 1.42 ×10 −6
+
+SOC p(0) 
+
+00.036550 
+
+θref < 10 −9
+
+1 0.036583 ± 8.54 ×10 −9 0.0905 ± 2.34 ×10 −5
+
+2 0.036579 ± 1.49 ×10 −8 0.0793 ± 4.07 ×10 −5
+
+3 0.036578 ± 2.21 ×10 −8 0.0768 ± 6.05 ×10 −5
+
+R0
+
+00.032005 
+
+θref < 10 −9
+
+1 0.032001 ± 7.54 ×10 −9 0.0119 ± 2.36 ×10 −5
+
+2 0.032114 ± 1.31 ×10 −8 0.3408 ± 4.09 ×10 −5
+
+3 0.031992 ± 2.01 ×10 −8 0.0407 ± 6.28 ×10 −5
+
+ARE denotes absolute relative error. For the 0 mV case, θref indicates that the recovered estimate is identical to the reference value at the displayed precision. The corresponding ARE values are below numerical precision and are therefore reported as < 10 −9%.
+
+Overall, the synthetic-data tests complement the real-data comparisons by separating the recoverability of the optimization workflow from model-structure mismatch and experimental uncertainty. The noiseless case con-firms that the BOLT implementation can recover the known parameter vector when the data are internally consistent with the model. The noise-injected cases further show that both the reconstructed clean-voltage response and the recovered parameters remain stable under realistic millivolt-level voltage 23 perturbations. Therefore, the larger errors observed in measured-data cali-bration are more likely associated with experimental noise, model-structure mismatch, and condition-to-condition inconsistencies, rather than with a fail-ure of the BOLT optimization procedure itself. 
+
+4.4. Overall Comparison with PSO and GA 
+
+Table 6 summarizes the statistical performance of the proposed BOLT method across different total candidate numbers, together with PSO and GA under both two-condition and five-condition settings. In this table, 
+
+BOLT( N ) denotes the BOLT variant executed with a total of N candi-date solutions. Avg_MAE denotes the average mean absolute error over the five operating conditions (0.2C, 0.333C, 0.5C, 1C, and DST), aggregated over 50 repeated runs. Battery model calls denote the total number of electrochemical model evaluations. For PSO and GA, the total number of model calls is 100 × 500 × 2 = 100 ,000 in the two-condition setting and 
+
+100 × 500 × 5 = 250 ,000 in the five-condition setting. Time denotes the wall-clock runtime for one complete optimization run, and Peak memory 
+
+denotes the maximum memory usage observed during one complete opti-mization run. To further assess computational resource requirements, per-run peak mem-ory usage was recorded during the optimization stage. Memory profiling was implemented in Python using the psutil library. For each profiling run, the resident set size (RSS) was sampled at 0.2-s intervals for the full pro-cess tree, including the main Python process and all parallel worker pro-cesses. The reported peak memory corresponds to the maximum total RSS observed during one complete optimization run. Before memory profiling, the Numba-compiled battery model was warmed up once to avoid count-ing one-time just-in-time compilation overhead as part of the optimization memory cost. For BOLT, memory results were obtained over 50 repeated profiling runs for each total candidate number. For PSO and GA, memory usage was also measured over 50 repeated runs under both two-condition and five-condition settings. 24 Table 6: Statistical results for BOLT with different total candidate numbers, compared with PSO and GA under two-condition and five-condition settings. Accuracy, per-run runtime, and per-run peak memory results are reported as mean ± std over 50 repeated runs. Peak memory denotes the peak process-tree RSS memory usage during one complete optimization run.                                                                                                                                   
+
+> Method Avg_MAE (mV) Model calls Time (s) Peak memory (MB)
+> BOLT(16) 13 .0±2.711101 ±2162 5.37 ±1.14 4564 .8±8.8
+> BOLT(32) 12 .4±0.120636 ±3081 8.97 ±1.20 4561 .6±3.8
+> BOLT(48) 12 .3±0.131660 ±3735 13 .49 ±1.92 4554 .3±4.4
+> BOLT(64) 12 .3±0.143188 ±5240 17 .88 ±1.83 4517 .1±8.1
+> BOLT(80) 12 .3±0.153424 ±5321 22 .24 ±2.17 4539 .6±8.7
+> PSO (2 cond.) 15 .4±1.8100000 ±0
+> without JIT: 3506 .84 ±56 .87
+> JIT: 255 .53 ±0.42 3930 .4±0.8
+> PSO (5 cond.) 14 .1±1.2250000 ±0
+> without JIT: 32291 .01 ±23 .50
+> JIT: 858 .88 ±2.48 3950 .2±2.4
+> GA (2 cond.) 14 .5±3.3100000 ±0
+> without JIT: 3594 .76 ±17 .90
+> JIT: 269 .28 ±0.60 3917 .7±1.0
+> GA (5 cond.) 13 .3±1.0250000 ±0
+> without JIT: 32782 .78 ±21 .46
+> JIT: 867 .92 ±1.56 3952 .8±1.3
+> BOLT( N): BOLT with total candidate number N. PSO/GA (2 cond.) use 0.5C and 1C during opti-mization. PSO/GA (5 cond.) use 0.2C, 0.333C, 0.5C, 1C, and DST during optimization. Avg_MAE denotes the average mean absolute error over five operating conditions. Model calls denote total electro-chemical model evaluations. Peak memory denotes the peak resident set size (RSS) of the full process tree, including the main process and all parallel worker processes, measured during the optimization stage.
+
+In terms of per-run computational efficiency, BOLT substantially reduced both the number of battery model evaluations and the wall-clock runtime compared with PSO and GA. Even when the total candidate number in-creased from 16 to 80, BOLT required fewer model calls than PSO and GA and completed the optimization within tens of seconds under the JIT-accelerated implementation. For example, BOLT(32) required only 20636 ±
+
+3081 model calls and 8.97 ± 1.20 s per run, whereas PSO and GA required 100,000–250,000 model calls and substantially longer runtime under the cor-responding settings. The peak memory usage of BOLT was slightly higher than that of PSO and GA, remaining around 4.5 GB across different total candidate numbers. For instance, BOLT(32) used 4561 .6 ± 3.8 MB, compared with 3930 .4 ± 0.8
+
+MB for PSO (2 cond.), 3950 .2 ± 2.4 MB for PSO (5 cond.), 3917 .7 ± 1.0
+
+MB for GA (2 cond.), and 3952 .8 ± 1.3 MB for GA (5 cond.). This mod-erate increase is mainly because BOLT performs multiple independent local least-squares optimizations in parallel, and each worker process maintains 25 solver-specific intermediate arrays. By contrast, PSO and GA mainly evalu-ate population candidates through the objective function, leading to slightly lower per-worker memory usage. For PSO and GA, increasing the number of optimization conditions from two to five led to only a modest increase in peak memory usage, indicating that memory consumption was affected by the larger objective-function workload but remained primarily governed by the number of concurrent worker processes. Importantly, the peak memory usage of BOLT remained nearly unchanged when the total candidate number increased from 16 to 80, because BOLT limits the number of concurrently executed workers to 16 and processes additional candidates in batches. Thus, increasing the total candidate number mainly increased runtime rather than peak memory consumption. Overall, BOLT introduces a moderate increase in peak memory usage but achieves substantially lower runtime and fewer model evaluations than PSO and GA. In addition, the tested configurations were evaluated on a workstation with 32 GB of RAM, and the measured peak memory usage remained well below the available memory capacity. Therefore, memory consumption was not the computational bottleneck in the present experiments. Figure 6 compares the overall MAE distributions of the five methods: BOLT(32), PSO (2 cond.), PSO (5 cond.), GA (2 cond.), and GA (5 cond.), denoted in the figure legend as BOLT(32), PSO2, PSO5, GA2, and GA5, respectively. The box plot shows that BOLT(32) has the lowest central error level and the tightest overall distribution, indicating stronger repeated-run stability than the compared PSO and GA settings. In contrast, PSO2 and GA2 display substantially broader spreads and more pronounced high-error outliers. PSO5 and GA5 improve relative to their two-condition counter-parts, but still remain above BOLT(32) in both median error and distribution width. 26 BOLT(32) PSO2 PSO5 GA2 GA5 
+
+> 0.015
+> 0.020
+> 0.025
+> 0.030
+> MAE (V)
+> Method
+> BOLT(32)
+> PSO2
+> PSO5
+> GA2
+> GA5 Figure 6: Overall MAE distributions of BOLT(32), PSO2, PSO5, GA2, and GA5 over 50 repeated runs. Here, PSO2/GA2 denote the two-condition setting (0.5C and 1C), whereas PSO5/GA5 denote the five-condition setting (0.2C, 0.333C, 0.5C, 1C, and DST).
+
+Three observations are particularly important. First, increasing the num-ber of operating conditions during optimization improves the performance of both PSO and GA. PSO (5 cond.) outperforms PSO (2 cond.), and GA (5 cond.) similarly outperforms GA (2 cond.), indicating that broader condition coverage improves the overall fitting quality across the available operating-condition set. However, this gain is achieved at the cost of a 2.5-fold increase in battery model calls, from 100,000 to 250,000. Second, JIT acceleration significantly reduces the runtime of PSO and GA as well. For example, PSO (2 cond.) is reduced from 3506 .84 ± 56 .87 sto 255 .53 ± 0.42 s, and GA (2 cond.) is reduced from 3594 .76 ± 17 .90 s to 
+
+269 .28 ± 0.60 s. Under the five-condition setting, JIT acceleration shortens the runtime of PSO and GA from more than 32,000 s to approximately 860 s. 27 Nevertheless, BOLT(32) still completes in only 8.97 ±1.20 s per run, making it roughly 28–30 times faster than the JIT-accelerated two-condition PSO/GA baselines and nearly two orders of magnitude faster than the JIT-accelerated five-condition settings. These results indicate that the efficiency advantage of BOLT cannot be attributed solely to implementation-level acceleration, but also to its lower number of model evaluations and its more efficient local-to-global calibration workflow. The speedup obtained by JIT acceleration is not strictly linear with the number of operating conditions. The total runtime contains fixed Python overhead, optimization-control overhead, and model-evaluation-dominated computation. When more operating conditions are included, a larger fraction of the workload is spent on repeated battery-model simulation and objective-function evaluation, where JIT acceleration is most effective. This explains why PSO and GA show a larger relative speedup in the five-condition setting than in the two-condition setting. Third, even under these more favorable and more harmonized compar-ison settings, BOLT(32) still achieves the most favorable overall balance among accuracy, repeated-run stability, and computational cost. In par-ticular, BOLT(32) reaches 12 .4 ± 0.1 mV, which is lower than PSO (2 cond.) (15 .4±1.8 mV), PSO (5 cond.) ( 14 .1±1.2 mV), GA (2 cond.) ( 14 .5±3.3 mV), and GA (5 cond.) ( 13 .3 ± 1.0 mV). At the same time, its runtime remains only 8.97 ± 1.20 s, far below even the JIT-accelerated PSO and GA baselines. It also requires only 20636 ± 3081 model calls, which is substantially lower than all PSO and GA settings. From a methodological perspective, this advantage can be attributed to the way BOLT allocates its computational budget. Instead of repeatedly evolving large populations across many iterations, BOLT performs a set of independent local refinements from diverse starting points and then applies multi-condition screening to select the most consistent candidate from the explored pool. This design reduces the number of required model evalua-tions while simultaneously improving the repeated-run stability of the final selected solution. Overall, the results show that the advantage of BOLT is not merely lower estimation error, but a more favorable joint trade-off among accuracy, computational efficiency, and repeated-run stability. Importantly, this advantage arises from the local-to-global calibration strategy of BOLT rather than from a single implementation-level acceleration technique, which makes the proposed framework particularly attractive for repeated electro-chemical model calibration tasks requiring both speed and robustness. 28 The role of the main BOLT design choices can also be interpreted from the preceding comparisons. The candidate-number analysis in Section 4.2 shows that increasing N from 16 to 32 substantially improves repeated-run stabil-ity, while further increases provide only marginal gains. The two-condition and five-condition PSO/GA comparisons show that using broader condition coverage improves consistency but greatly increases model calls. BOLT ex-ploits these observations by using only two informative profiles for local re-finement and then using the remaining conditions for candidate screening. Thus, the observed performance is not caused by a single component, but by the combined effect of diversified initialization, fast local TRF refinement, batch-parallel execution, and multi-condition screening. 
+
+4.5. Condition-wise Performance across Operating Conditions 
+
+To further examine condition-wise behavior, Figure 7 presents the MAE distributions under the five operating conditions (0.2C, 0.333C, 0.5C, 1C, and DST) for BOLT(32), PSO (2 cond.), PSO (5 cond.), GA (2 cond.), and GA (5 cond.). The figure explicitly shows the five operating conditions on the horizontal axis and the five compared methods in the legend. 29 0.2C 0.333C 0.5C 1C DST 
+
+> Test Conditions
+> 0.010
+> 0.015
+> 0.020
+> 0.025
+> 0.030
+> 0.035
+> 0.040
+> MAE (V)
+> Method
+> BOLT(32)
+> PSO2
+> PSO5
+> GA2
+> GA5
+
+Figure 7: Condition-wise MAE distributions of BOLT(32), PSO2, PSO5, GA2, and GA5 under the five operating conditions considered in this study: 0.2C, 0.333C, 0.5C, 1C, and DST. 
+
+To complement the distributional comparison in Figure 7, Table 7 reports the numerical condition-wise voltage MAE statistics under the five operating conditions. This table provides a direct voltage-error comparison between the measured terminal voltage and the model-predicted voltage under each condition, and therefore makes the condition-wise fitting performance more explicit. 30 Table 7: Condition-wise voltage MAE statistics under different operating conditions. Val-ues are reported as mean ± standard deviation over 50 independent runs. 
+
+Condition BOLT(32) PSO2 PSO5 GA2 GA5 
+
+0.2C 15 .3 ± 0.4 14 .6 ± 1.8 15 .1 ± 2.2 16 .4 ± 5.7 13 .8 ± 1.6
+
+0.333C 10 .6 ± 0.3 14 .8 ± 2.0 12 .0 ± 1.2 12 .7 ± 4.1 12 .4 ± 1.2
+
+0.5C 9.9 ± 0.2 16 .0 ± 1.9 12 .0 ± 0.9 12 .3 ± 2.8 13 .5 ± 1.3
+
+1C 10 .7 ± 0.3 15 .9 ± 1.8 12 .5 ± 1.4 12 .1 ± 2.0 14 .3 ± 1.1
+
+DST 15 .5 ± 0.3 15 .5 ± 2.4 19 .1 ± 5.1 19 .0 ± 4.1 12 .8 ± 1.2
+
+Avg. 12 .4 ± 0.1 15 .4 ± 1.8 14 .1 ± 1.2 14 .5 ± 3.3 13 .3 ± 1.0           
+
+> PSO2/GA2 denote the two-condition setting using 0.5C and 1C during optimization, whereas PSO5/GA5 denote the five-condition setting using 0.2C, 0.333C, 0.5C, 1C, and DST. The voltage MAE is computed between the measured terminal voltage and the model-predicted voltage under each operating condition. All values are reported in mV.
+
+As shown in Table 7, BOLT(32) achieves the lowest average voltage MAE across the five operating conditions, with an Avg. MAE of 12 .4 ± 0.1 mV. More importantly, BOLT(32) shows much smaller standard deviations than the PSO and GA baselines, indicating stronger repeated-run stability. At the condition level, BOLT(32) gives the best mean MAE under 0.333C, 0.5C, and 1C, and remains competitive under 0.2C and DST. Although GA5 achieves lower mean errors under 0.2C and DST, its average error over all five condi-tions remains higher than that of BOLT(32). Similarly, PSO5 improves the overall average error compared with PSO2, mainly by reducing the errors under 0.333C, 0.5C, and 1C, but it still exhibits a relatively large error and variance under the DST profile. These results are consistent with the box-plot distributions in Figure 7. Compared with the population-based baselines, BOLT(32) does not simply improve one specific operating condition; instead, it provides a more bal-anced condition-wise performance with substantially stronger run-to-run ro-bustness. This confirms that the proposed multi-start local refinement and multi-condition screening strategy can identify parameter sets that main-tain stable voltage-fitting accuracy across the available operating-condition matrix. The condition-wise results also clarify the role of condition coverage dur-ing optimization. The five-condition PSO and GA settings generally improve the average fitting accuracy compared with their two-condition counterparts, but this improvement is obtained at the cost of substantially higher model 31 calls and runtime, as reported in Table 6. In contrast, BOLT(32) uses only 0.5C and 1C for local refinement, while the additional operating conditions are used for candidate screening. Therefore, the results in Figure 7 and Ta-ble 7 should be interpreted as evidence of stronger cross-condition consistency rather than strict out-of-sample generalization. Under this interpretation, BOLT(32) provides a practical advantage by identifying parameter sets that remain accurate and stable across the available operating-condition matrix while requiring far lower computational cost than the five-condition PSO and GA baselines. Overall, Figure 7 and Table 7 lead to a consistent conclusion. The practi-cal value of BOLT lies not only in fast computation, but also in its ability to maintain stable voltage-fitting quality across repeated runs and multiple op-erating conditions. This combination of computational efficiency, repeated-run stability, and cross-condition consistency is particularly important for electrochemical model calibration tasks in which parameter estimation must be performed repeatedly and reliably. 
+
+4.6. Computational complexity, scalability, and deployment implications 
+
+The practical runtime of BOLT is determined not only by the total num-ber of electrochemical-model evaluations, but also by how the independent local-refinement tasks are scheduled across parallel workers. Therefore, the complexity discussion below focuses on the wall-clock cost under the batch-parallel execution structure used in BOLT, rather than only on the serial total computational work. In the following analysis, Mfit denotes the number of operating profiles in the fitting data set Dfit , and Mscreen denotes the number of operating profiles in the screening data set Dscreening = {C m}Mscreen  
+
+> m=1
+
+. Let N be the total number of initial candidate vectors, n the number of available virtual CPUs, and 
+
+J = ⌈N/n ⌉ the number of parallel scheduling batches. In the present study, 
+
+N is selected as an integer multiple of n = 16 , so J = N/n , and each batch contains exactly n candidates. The j-th batch is denoted by Gj . Let nθ be the dimension of the estimated parameter vector, Li the number of TRF iter-ations required by the i-th candidate, γTRF (nθ) the average model-evaluation factor per TRF iteration, and τsim (T ) the computational cost of one model simulation over a profile with T time steps. For finite-difference sensitivity calculations, γTRF (nθ) generally increases with nθ, because additional model evaluations are required to approximate the parameter sensitivities. 32 The local-refinement cost of the i-th candidate can be approximated as 
+
+T fit  
+
+> i
+
+= O
+
+"
+
+LiγTRF (nθ)
+
+> Mfit
+
+X
+
+> m=1
+
+τsim 
+
+ T fit 
+
+> m
+
+#
+
+, (24) where T fit  
+
+> m
+
+is the number of time steps in the m-th fitting profile. This expression accounts for the repeated model simulations required during TRF-based local refinement on Dfit .Because the candidates within each batch are refined in parallel, the wall-clock cost of one batch is governed by the slowest candidate in that batch rather than by the sum of all candidate costs. Therefore, the batch-parallel local-refinement wall-clock cost can be expressed as 
+
+Tlocal = O
+
+" JX
+
+> j=1
+
+max 
+
+> i∈G j
+
+LiγTRF (nθ)
+
+> Mfit
+
+X
+
+> m=1
+
+τsim 
+
+ T fit 
+
+> m
+
+!# 
+
+. (25) This equation explicitly reflects the parallel-computing advantage of BOLT. Under balanced convergence behavior across candidates, the local-refinement wall-clock cost scales approximately with the number of scheduling batches 
+
+J = N/n , rather than directly with the total number of candidates N . This is consistent with the implementation in which the tested candidate numbers 
+
+N = 16 , 32 , 48 , 64 , and 80 correspond to J = 1 , 2, 3, 4, and 5 complete batches on the 16-vCPU platform. After local refinement, all refined candidates are evaluated on the screen-ing data set Dscreening . This step only requires forward model simulations and does not involve repeated TRF iterations. Consistent with Algorithm 1, the conservative wall-clock cost of the screening step can be written as 
+
+Tscreen = O
+
+"
+
+N
+
+> Mscreen
+
+X
+
+> m=1
+
+τsim (T screen  
+
+> m
+
+)
+
+#
+
+, (26) where T screen  
+
+> m
+
+is the number of time steps in the m-th screening profile. There-fore, the overall wall-clock cost can be summarized as 
+
+TBOLT = Tlocal + Tscreen + Toverhead , (27) where Toverhead includes process scheduling, memory transfer, result collec-tion, and other implementation-level overheads. Because the local TRF re-finement requires repeated residual and sensitivity evaluations, it is usually 33 the dominant computational component. The screening step is comparatively cheaper because it only evaluates the already refined candidates through for-ward simulations. Because the model-evaluation cost may vary across operating profiles, the profile-wise summation form is retained in Eqs. (24)–(26), rather than assuming an identical average simulation cost for all profiles. In practice, the actual runtime is also affected by solver convergence variability across candidates, process scheduling, memory overhead, profile-length differences, and the efficiency of the Numba-accelerated model-evaluation routine. This analysis also explains the candidate-number settings used in Sec-tion 4.2. Since the platform provides n = 16 vCPUs, the tested values 
+
+N = 16 , 32 , 48 , 64 , and 80 correspond to complete parallel batches. This avoids incomplete final batches and improves utilization of the available com-puting resources. The sensitivity results show that increasing N from 16 to 32 substantially improves repeated-run stability, whereas further increases provide only marginal additional accuracy improvement at increased run-time. Therefore, N = 32 was selected as a practical balance between search diversity and computational cost. This complexity analysis further clarifies the scalability of BOLT. For higher-fidelity electrochemical models such as SPMe or P2D models, the same local-to-global idea can be applied in principle, but the absolute iden-tification time will inevitably increase because both τsim (T ) and the effective parameter dimension nθ are larger. Therefore, direct extension to parameter-intensive P2D models would likely require additional acceleration strategies, such as parameter grouping, sensitivity-based parameter reduction, reduced-order discretization, or surrogate-assisted pre-screening. The relative bene-fit of BOLT is expected to remain most pronounced when repeated model evaluations dominate the total computational cost and can be parallelized efficiently. From a deployment perspective, BOLT is mainly intended for rapid of-fline, cloud-side, or edge-side calibration rather than continuous execution on low-cost BMS microcontrollers. Once the parameters are identified, the resulting grouped SPM can be used in embedded BMS algorithms. Run-ning the complete BOLT workflow on an actual BMS chip would require additional implementation work, such as C/C++ translation, memory opti-mization, and possibly fixed-point or hardware-specific acceleration. For this reason, the present work should be viewed as a calibration framework sup-porting BMS parameter updating and control-oriented battery digital twins, 34 rather than as a fully embedded on-chip optimization implementation. 
+
+4.7. Limitations and implications 
+
+Although the present results demonstrate the practical advantages of BOLT on the grouped SPM and the tested 18650 NMC cell, several limi-tations should be noted. First, BOLT does not provide a formal guarantee of global convergence or parameter uniqueness. Electrochemical model calibra-tion is generally nonconvex, ill-conditioned, and potentially non-identifiable, because different parameter combinations may produce similar voltage re-sponses. Therefore, BOLT should be regarded as a practical calibration framework for improving repeated-run robustness and computational effi-ciency, rather than as a replacement for theoretical identifiability analy-sis. The synthetic known-parameter tests in Section 4.3 complement the measured-data comparison by examining parameter recoverability and noise robustness under controlled model-consistent conditions. Second, the measured-data results should be interpreted as cross-condition consistency over the available operating-condition matrix, rather than strict out-of-sample generalization. In BOLT, additional operating conditions are used for candidate screening because electrochemical parameter estimation benefits from informative current–voltage data to reduce profile-specific over-fitting and improve practical identifiability. Further validation on fully held-out profiles, different cells, ageing states, and chemistries is still needed. Third, the present validation is limited to a grouped SPM and one com-mercial 18650 NMC cell. The grouped SPM formulation improves compu-tational tractability for control-oriented calibration, but it does not imply complete recovery of all individual physical parameters in a full P2D model. Extension to SPMe or P2D models would require additional parameter group-ing, sensitivity-based parameter selection, reduced-order discretization, or other acceleration strategies. BOLT also differs from conventional multi-start optimization by combining batch-parallel local refinement with multi-condition screening, and differs from surrogate-assisted approaches by avoid-ing surrogate training while still relying on repeated electrochemical-model simulations. Finally, the practical efficiency of BOLT depends on the available com-puting resources and implementation. As discussed in Section 4.6, BOLT is mainly intended for rapid offline, cloud-side, or edge-side calibration rather than continuous execution on low-cost BMS microcontrollers. Despite these limitations, BOLT provides a fast, repeatable, and physically interpretable 35 calibration strategy for applications such as BMS parameter updating, control-oriented battery digital twins, and second-life battery screening. 
+
+5. Conclusion 
+
+This paper presents BOLT, a batch-optimized local-to-global calibration framework for rapid and robust parameter estimation of electrochemical bat-tery models. By combining efficient local refinement, diversified candidate exploration, and multi-condition consistency screening within a unified work-flow, BOLT addresses two major practical limitations of conventional ap-proaches: high computational cost and insufficient repeated-run robustness. Experimental results based on a commercial 18650 lithium-ion cell and the grouped SPM show that BOLT achieves a more favorable trade-off among es-timation accuracy, computational efficiency, and repeated-run stability than the PSO and GA baselines. In particular, BOLT(32) achieves an Avg_MAE of 12 .4 ± 0.1 mV while requiring only 20636 ± 3081 battery model calls and 
+
+8.97 ± 1.20 s per run. Even when PSO and GA are evaluated under more demanding settings and with JIT-accelerated model evaluation, BOLT still maintains lower error, tighter repeated-run distributions, and substantially shorter runtime. The synthetic-data validation further confirms the parameter recoverabil-ity of the proposed workflow under controlled conditions. In the noiseless case, BOLT recovers the known parameter vector at numerical precision. Under 1–3 mV voltage-noise perturbations, the reconstructed clean-voltage error remains far below the injected noise level, and the mean parameter ARE remains below 0.6%. The results further show that the total candidate number N plays an important role in the accuracy–efficiency trade-off of BOLT. In the present study, N = 32 provides the most favorable balance, while larger values of 
+
+N offer only marginal additional accuracy improvement at increased com-putational cost. This suggests that the proposed framework can be scaled in a controlled manner when more complex electrochemical models or larger parameter spaces are considered. Overall, BOLT provides a practical solution for fast, stable, and repeat-able electrochemical model calibration. Its ability to deliver low-error pa-rameter estimates within seconds makes it promising for applications requir-ing repeated and reliable calibration, including BMS parameter updating, 36 control-oriented battery digital twins, and second-life battery screening. Fu-ture work will extend the proposed framework to higher-fidelity electrochem-ical models, broader operating scenarios, and online parameter updating for embedded battery management applications. 
+
+Acknowledgments 
+
+This work was supported by the Research Foundation - Flanders (FWO) (grant numbers 1252326N). 
+
+Declaration of competing interest 
+
+The authors declare that they have no known competing financial inter-ests or personal relationships that could have appeared to influence the work reported in this paper. 
+
+Data availability 
+
+The electrochemical battery model implementation used in this study is available at https://github.com/FrankSuperG/CPG-SPMT .
+
+Author contribution 
+
+Feng Guo: Conceptualization, Methodology, Software, Formal analysis, Investigation, Visualization, Writing – original draft, Writing – review & editing. Luis D. Couto: Conceptualization, Writing – review & editing. Keivan Haghverdi: Writing – review & editing. Khiem Trad: Writing – review & editing. Grietus Mulder: Writing – review & editing. 
+
+References 
+
+[1] R. Xiong, W. Sun, Q. Yu, F. Sun, Research progress, challenges and prospects of fault diagnosis on battery system of electric vehicles, Ap-plied Energy 279 (2020) 115855. [2] Y. Wang, X. Zhang, K. Liu, Z. Wei, X. Hu, X. Tang, Z. Chen, System identification and state estimation of a reduced-order electrochemical model for lithium-ion batteries, Etransportation 18 (2023) 100295. [3] Y. Li, X. Gao, X. Feng, X. Han, J. Du, L. Lu, M. Ouyang, Parameter-independent error correction for potential measurements by reference electrode in lithium-ion batteries, Journal of Energy Chemistry 67 (2022) 34–45. 37 [4] Z. P. Cano, D. Banham, S. Ye, A. Hintennach, J. Lu, M. Fowler, Z. Chen, Batteries and fuel cells for emerging electric vehicle markets, Nature energy 3 (4) (2018) 279–289. [5] K. Haghverdi, D. L. Danilov, G. Mulder, L. D. Couto, F. Guo, R.-A. Eichel, Review of the safe operating area (soa) for batteries: Evolv-ing concepts and structured frameworks, Journal of Power Sources 652 (2025) 237483. [6] Q. Qi, W. Liu, Z. Deng, J. Li, Z. Song, X. Hu, Battery pack capacity estimation for electric vehicles based on enhanced machine learning and field data, Journal of Energy Chemistry 92 (2024) 605–618. [7] Z. M. Konz, B. M. Wirtz, A. Verma, T.-Y. Huang, H. K. Bergstrom, M. J. Crafton, D. E. Brown, E. J. McShane, A. M. Colclasure, B. D. McCloskey, High-throughput li plating quantification for fast-charging battery design, Nature Energy 8 (5) (2023) 450–461. [8] X. Hu, L. Xu, X. Lin, M. Pecht, Battery lifetime prognostics, Joule 4 (2) (2020) 310–346. [9] Y. Gao, C. Liu, S. Chen, X. Zhang, G. Fan, C. Zhu, Development and pa-rameterization of a control-oriented electrochemical model of lithium-ion batteries for battery-management-systems applications, Applied Energy 309 (2022) 118521. [10] M. Dubarry, D. Howey, B. Wu, Enabling battery digital twins at the industrial scale, Joule 7 (6) (2023) 1134–1144. [11] F. Naseri, S. Gil, C. Barbu, E. Cetkin, G. Yarimca, A. Jensen, P. G. Larsen, C. Gomes, Digital twin of electric vehicle battery systems: Com-prehensive review of the use cases, requirements, and platforms, Renew-able and Sustainable Energy Reviews 179 (2023) 113280. [12] J. Song, R. C. Ihuaenyi, J. Lim, Z. Wang, W. Li, R. Fang, A. K. Ghamsari, H. Xu, Y. M. Lee, J. Zhu, A microstructural electrochemo-mechanical model of high-nickel composite electrodes towards digital twins to bridge the particle and electrode-level characterizations, En-ergy & Environmental Science 18 (7) (2025) 3129–3147. 38 [13] D. Hafner, J. Pasukonis, J. Ba, T. Lillicrap, Mastering diverse control tasks through world models, Nature (2025) 1–7. [14] C. Zhu, J. Han, G. Fan, K. Li, B. Guo, X. Zhang, K. Liu, Reduced-order multi-particle model of lithium-ion batteries capturing electro-chemical heterogeneity at subzero temperatures, Applied Energy 410 (2026) 127488. [15] H. A. A. Ali, L. H. Raijmakers, K. Chayambuka, D. L. Danilov, P. H. Notten, R.-A. Eichel, A comparison between physics-based li-ion battery models, Electrochimica Acta 493 (2024) 144360. [16] M. Mama, E. Solai, T. Capurso, A. Danlos, S. Khelladi, Comprehen-sive review of multi-scale lithium-ion batteries modeling: From electro-chemical dynamics up to heat transfer in battery thermal management system, Energy Conversion and Management 325 (2025) 119223. [17] E. Miguel, G. L. Plett, M. S. Trimboli, L. Oca, U. Iraola, E. Bekaert, Re-view of computational parameter estimation methods for electrochemi-cal models, Journal of Energy Storage 44 (2021) 103388. [18] Y. Li, G. Liu, W. Deng, Z. Li, Comparative study on parameter identi-fication of an electrochemical model for lithium-ion batteries via meta-heuristic methods, Applied Energy 367 (2024) 123437. [19] S. Ding, Y. Li, H. Dai, L. Wang, X. He, Accurate model parameter identification to boost precise aging prediction of lithium-ion batteries: A review, Advanced Energy Materials 13 (39) (2023) 2301452. [20] X. Cai, C. Zhang, Z. Chen, L. Zhang, D. U. Sauer, W. Li, Characteri-zation and quantification of multi-field coupling in lithium-ion batteries under mechanical constraints, Journal of Energy Chemistry 95 (2024) 364–379. [21] T. F. Fuller, M. Doyle, J. Newman, Simulation and optimization of the dual lithium ion insertion cell, Journal of the electrochemical society 141 (1) (1994) 1. [22] S. G. Marquis, V. Sulzer, R. Timms, C. P. Please, S. J. Chapman, An asymptotic derivation of a single particle model with electrolyte, Journal of The Electrochemical Society 166 (15) (2019) A3693. 39 [23] B. S. Haran, B. N. Popov, R. E. White, Determination of the hydro-gen diffusion coefficient in metal hydrides by impedance spectroscopy, Journal of Power Sources 75 (1) (1998) 56–63. [24] F. Guo, L. D. Couto, G. Mulder, K. Trad, G. Hu, O. Capron, K. Haghverdi, A systematic review of electrochemical model-based lithium-ion battery state estimation in battery management systems, Journal of Energy Storage 101 (2024) 113850. [25] M. Ecker, T. K. D. Tran, P. Dechent, S. Käbitz, A. Warnecke, D. U. Sauer, Parameterization of a physico-chemical model of a lithium-ion battery: I. determination of parameters, Journal of The Electrochemical Society 162 (9) (2015) A1836. [26] J. Lu, T. Wu, K. Amine, State-of-the-art characterization techniques for advanced lithium-ion batteries, Nature Energy 2 (3) (2017) 1–13. [27] Q.-K. Wang, J.-N. Shen, Z.-F. Ma, Y.-J. He, Decoupling parameter estimation strategy based electrochemical-thermal coupled modeling method for large format lithium-ion batteries with internal tempera-ture experimental validation, Chemical Engineering Journal 424 (2021) 130308. [28] C. Rojas, L. Oca, I. Lopetegi, U. Iraola, J. Carrasco, A critical look at efficient parameter estimation methodologies of electrochemical models for lithium-ion cells, Journal of Energy Storage 80 (2024) 110384. [29] Z. Deng, H. Deng, L. Yang, Y. Cai, X. Zhao, Implementation of reduced-order physics-based model and multi-parameters identification strategy for lithium-ion battery, Energy 138 (2017) 509–519. [30] M. A. Rahman, S. Anwar, A. Izadian, Electrochemical model parameter identification of a lithium-ion battery using particle swarm optimization method, Journal of Power Sources 307 (2016) 86–97. [31] R. Xiong, L. Li, Z. Li, Q. Yu, H. Mu, An electrochemical model based degradation state identification method of lithium-ion battery for all-climate electric vehicles application, Applied energy 219 (2018) 264–275. [32] F. Guo, L. D. Couto, G. Thenaisie, Efficiency and optimality in electro-chemical battery model parameter identification: A comparative study 40 of estimation techniques, in: 2024 10th International Conference on Op-timization and Applications (ICOA), IEEE, 2024, pp. 1–6. [33] A. Tian, K. Dong, X.-G. Yang, Y. Wang, L. He, Y. Gao, J. Jiang, Physics-based parameter identification of an electrochemical model for lithium-ion batteries with two-population optimization method, Applied Energy 378 (2025) 124748. [34] S. Huang, N. Lin, Z. Wang, Z. Zhang, S. Wen, Y. Zhao, Q. Li, A novel data-driven method for online parameter identification of an electro-chemical model based on cuckoo search and particle swarm optimization algorithm, Journal of Power Sources 601 (2024) 234261. [35] M. Kim, H. Chun, J. Kim, K. Kim, J. Yu, T. Kim, S. Han, Data-efficient parameter identification of electrochemical lithium-ion battery model using deep bayesian harmony search, Applied Energy 254 (2019) 113644. [36] B.-C. Wang, Y.-B. He, J. Liu, B. Luo, Fast parameter identification of lithium-ion batteries via classification model-assisted bayesian optimiza-tion, Energy 288 (2024) 129667. [37] W. Zhang, Y. Xie, H. He, Z. Long, L. Zhuang, J. Zhou, Multi-physics coupling model parameter identification of lithium-ion battery based on data driven method and genetic algorithm, Energy 314 (2025) 134120. [38] F. Guo, L. D. Couto, Comparative performance analysis of numerical discretization methods for electrochemical model of lithium-ion batter-ies, Journal of Power Sources 650 (2025) 237365. [39] F. Guo, L. D. Couto, A control-oriented simplified single particle model with grouped parameter and sensitivity analysis for lithium-ion batter-ies, Journal of Power Sources 649 (2025) 237309. [40] F. Guo, L. D. Couto, Cpg-spmt: Control-oriented parameter-grouped single particle model with thermal effects for lithium-ion batteries, Com-puter Physics Communications (2026) 110075. [41] M. A. Branch, T. F. Coleman, Y. Li, A subspace, interior, and con-jugate gradient method for large-scale bound-constrained minimization problems, SIAM Journal on Scientific Computing 21 (1) (1999) 1–23. 41 [42] F. Guo, L. D. Couto, K. Trad, G. Mulder, K. Haghverdi, G. Thenaisie, Optimizing parameter estimation for electrochemical battery model: A comparative analysis of operating profiles on computational efficiency and accuracy, Journal of Power Sources 665 (2026) 239044. 42
