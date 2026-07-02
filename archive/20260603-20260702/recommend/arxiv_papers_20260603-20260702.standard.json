@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-02T02:30:33.328959+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2606.26363v1",
+      "source": "arxiv",
+      "title": "Bayesian Changepoint Detection for Smart Sensing of Battery Degradation: Cycle-Level Health Indicators and PyMC Implementation",
+      "abstract": "Reliable detection of the onset of accelerated degradation is central to safe and cost-efficient operation of lithium-ion batteries. This paper presents a Bayesian single-changepoint model applied to a simple but physically meaningful cycle-level health indicator (HI), defined as the ratio of charge time to discharge time. The indicator is computed directly from voltage-current telemetry typically available in battery management systems (BMS), without access to raw waveforms. The changepoint model is implemented in PyMC using Hamiltonian Monte Carlo and produces posterior distributions for onset time and pre/post-degradation slopes, together with posterior predictive checks. Experiments on an open 18650-cell remaining useful life (RUL) dataset show consistent midlife changepoints with narrow highest-density intervals. The formulation is lightweight, interpretable, and amenable to smart-sensing deployment on embedded BMS platforms.",
+      "authors": [
+        "Waldemar Bauer",
+        "Anna Jarosz-Kozyro",
+        "Jerzy Baranowski"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-06-24T20:19:30+00:00",
+      "link": "https://arxiv.org/pdf/2606.26363v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Bayesian changepoint detection for battery degradation using cycle-level health indicator from BMS data.",
+      "llm_evidence_cn": "利用BMS数据循环级健康指标的贝叶斯变点检测用于电池退化",
+      "llm_evidence": "利用BMS数据循环级健康指标的贝叶斯变点检测用于电池退化",
+      "canonical_evidence": "利用BMS数据循环级健康指标的贝叶斯变点检测用于电池退化",
+      "llm_tldr_en": "Presents a Bayesian single-changepoint model for detecting accelerated degradation in lithium-ion batteries using a charge-time to discharge-time ratio health indicator computed from BMS telemetry, with PyMC implementation.",
+      "llm_tldr_cn": "针对锂离子电池安全经济运行中需可靠检测加速退化起始点的问题，提出贝叶斯单变点模型，利用从电池管理系统遥测数据计算的充电时间与放电时间比值作为循环级健康指标，通过PyMC和哈密顿蒙特卡洛方法得到退化起始时间及斜率后验分布。在公开数据集上的实验验证了模型能有效识别退化模式变化，为主动维护提供不确定性量化。该方法无需原始波形数据，易于在BMS中部署，有助于提前预警电池加速老化。",
+      "llm_tldr": "针对锂离子电池安全经济运行中需可靠检测加速退化起始点的问题，提出贝叶斯单变点模型，利用从电池管理系统遥测数据计算的充电时间与放电时间比值作为循环级健康指标，通过PyMC和哈密顿蒙特卡洛方法得到退化起始时间及斜率后验分布。在公开数据集上的实验验证了模型能有效识别退化模式变化，为主动维护提供不确定性量化。该方法无需原始波形数据，易于在BMS中部署，有助于提前预警电池加速老化。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

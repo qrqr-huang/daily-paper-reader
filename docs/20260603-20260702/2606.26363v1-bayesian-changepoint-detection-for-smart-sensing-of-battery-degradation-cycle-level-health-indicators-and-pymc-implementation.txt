@@ -1,0 +1,221 @@
+Title: Bayesian Changepoint Detection for Smart Sensing of Battery Degradation: Cycle-Level Health Indicators and PyMC Implementation
+
+URL Source: https://arxiv.org/pdf/2606.26363v1
+
+Published Time: Fri, 26 Jun 2026 00:17:42 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+# Bayesian Changepoint Detection for Smart Sensing of Battery Degradation: Cycle-Level Health Indicators and PyMC Implementation 
+
+Waldemar Bauer 
+
+Department of Automatic Control & Robotics AGH University of Krakow Krakow, Poland Email: bauer@agh.edu.pl ORCID: 0000-0002-8543-0995 
+
+Anna Jarosz-Kozyro 
+
+Department of Process Control AGH University of Krakow Krakow, Poland Email: anjarosz@agh.edu.pl ORCID: 0000-0002-7832-8191 
+
+Jerzy Baranowski 
+
+Department of Automatic Control & Robotics AGH University of Krakow Krakow, Poland Email: jb@agh.edu.pl ORCID: 0000-0003-3313-581X 
+
+Abstract —Reliable detection of the onset of accelerated degra-dation is central to safe and cost-efficient operation of lithium-ion batteries. This paper presents a Bayesian single-changepoint model applied to a simple but physically meaningful cycle-level health indicator (HI), defined as the ratio of charge time to discharge time. The indicator is computed directly from volt-age–current telemetry typically available in battery management systems (BMS), without access to raw waveforms. The change-point model is implemented in PyMC using Hamiltonian Monte Carlo and produces posterior distributions for onset time and pre/post-degradation slopes, together with posterior predictive checks. Experiments on an open 18650-cell remaining useful life (RUL) dataset show consistent midlife changepoints with narrow highest-density intervals. The formulation is lightweight, interpretable, and amenable to smart-sensing deployment on embedded BMS platforms. 
+
+Index Terms —Battery management systems, Bayesian infer-ence, changepoint detection, smart sensing, PyMC, lithium-ion degradation. 
+
+I. I NTRODUCTION 
+
+Lithium-ion batteries (LIBs) are widely used in electric vehicles, micro-mobility, and stationary storage. Their degra-dation affects internal resistance, usable capacity, power ca-pability, and thermal behavior, all of which impact safety and lifecycle cost [1], [2]. Modern BMS architectures continuously sense voltage, current, and temperature (V–I–T) and often log cycle-level summary statistics. The challenge is to transform these routine measurements into robust, interpretable indica-tors of degradation and actionable maintenance decisions. Many recent works use supervised machine learning or deep neural networks for state-of-health (SoH) and remaining useful life (RUL) prediction [3], [4]. While such models can achieve 
+
+Partially funded by the European Union. Views and opinion expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or Europe’s Rail Joint Undertaking. Neither the European Union nor the granting authority can be held responsible for them. The project FP3-IAM4Rail is supported by the Europe’s Rail Joint Undertaking and its members. Partially funded by AGH’s subvention for scientific research. 
+
+high predictive accuracy, they often require large labeled datasets and high-rate signals, and they typically provide point estimates without calibrated uncertainty. For safety-critical systems, the absence of uncertainty quantification and the difficulty of interpreting black-box predictions limit their direct use in BMS decision logic. Bayesian methods provide an attractive alternative: they offer principled uncertainty quantification, allow incorpora-tion of prior information, and yield interpretable posterior summaries [5]. In particular, changepoint models explicitly describe transitions between regimes, such as the onset of accelerated degradation. Classical Bayesian changepoint for-mulations date back to [6], but applications to cycle-level LIB indicators that are compatible with embedded BMS constraints remain relatively limited. This work proposes a simple, deployable framework in which: (i) a cycle-level health indicator (HI) is constructed from charge and discharge time; (ii) a Bayesian single-changepoint model is used to detect the onset of accelerated degradation in this HI; and (iii) implementation is carried out in PyMC using Hamiltonian Monte Carlo, with posterior predictive checks and diagnostics. A more extensive journal version is described in [7]; here we emphasize the Bayesian formulation, PyMC implementation, and smart-sensing impli-cations. Beyond purely empirical approaches, model-based statisti-cal formulations have gained attention in the battery analyt-ics community, especially those grounded in Bayesian infer-ence. Recent surveys highlight how probabilistic frameworks naturally accommodate sensor uncertainty, device-to-device variability, and context-dependent degradation pathways [5], [8]. Bayesian models allow the incorporation of physical insight—for example, priors reflecting expected monotonic aging or plausible ranges of slopes—and facilitate down-stream decision-making through posterior predictive distri-butions rather than point predictions. Similar ideas underlie 
+
+> arXiv:2606.26363v1 [eess.SY] 24 Jun 2026
+
+Gaussian process–based SOH estimation [4] and hierarchical models for population-level aging [1]. However, few works ex-plicitly focus on changepoint detection using low-dimensional cycle-level indicators, despite the practical importance of identifying the onset of accelerated wear rather than predicting SOH trajectories far into the future. The changepoint detection perspective aligns directly with smart-sensing requirements: BMS engineers often care less about long-horizon RUL forecasting and more about reliably identifying transitions into regimes requiring derating, thermal safeguards, or warranty interventions. Our method therefore positions itself not as an alternative full-scale prognostic algo-rithm, but as a lightweight, interpretable sensing primitive that could be integrated into broader battery analytics pipelines. Furthermore, by using only V–I–T–derived cycle durations, the approach avoids the need for specialized hardware such as impedance spectroscopy units [9] or fiber-optic sensing modules [10], although such signals could be incorporated into extended models. II. C YCLE -L EVEL HEALTH INDICATOR 
+
+Production BMS often record, for each cycle i, the duration of charge and discharge phases. Let 
+
+T chg  
+
+> i
+
+= charging time (s) , T dis  
+
+> i
+
+= discharging time (s) .
+
+As a cell ages, internal resistance increases and usable ca-pacity decreases. For a fixed protocol, this typically leads to longer charging times (e.g., slower constant-voltage taper) and shorter discharge times. We exploit this by defining the health indicator 
+
+HI i = T chg 
+
+> i
+
+T dis 
+
+> i
+
+. (1) This choice has several advantages:  
+
+> •
+
+It is physically interpretable: it compares energy input duration to energy output duration.  
+
+> •
+
+It is directly computable from BMS logs without access to raw current or voltage waveforms.  
+
+> •
+
+It is relatively robust to noise, as it aggregates over a full cycle rather than focusing on pointwise measurements. We evaluated this indicator using the “Battery Remaining Useful Life (RUL)” dataset [11], which provides cycle-level summaries for 14 commercial 18650 cells. Figure 1 shows the HI across all cells. A characteristic pattern appears: an initial region with slowly varying HI, followed by a pronounced change in trend around midlife (roughly 350–450 cycles for most cells). This motivates a single-changepoint model. In practice, alternative indicators (e.g., based on voltage plateaus or internal resistance estimates) could be used. How-ever, (1) has the advantage of requiring only two scalar durations per cycle, making it attractive for embedded systems. III. B AYESIAN CHANGEPOINT MODEL 
+
+A. Data Model 
+
+Let yi = HI i denote the indicator at cycle i, and ti
+
+the corresponding cycle index. Because yi is positive and        
+
+> Fig. 1. Health indicator HI i=Tchg
+> i/T dis
+> ias a function of cycle index for all cells in the Battery RUL dataset [11]. A midlife transition is visible in each trajectory.
+
+may exhibit multiplicative variation, we work with the log-transformed response: 
+
+zi = log( yi).
+
+We also standardize the cycle index to improve conditioning: 
+
+˜ti = ti − ¯tst
+
+,
+
+where ¯t and st are the empirical mean and standard deviation of ti.We assume a piecewise-linear Gaussian model with a single unknown changepoint τ in the standardized domain: 
+
+zi ∼ N (μi, σ 2), (2) 
+
+μi =
+
+(
+
+α1 + β1˜ti, ˜ti < τ, α2 + β2˜ti, ˜ti ≥ τ. (3) The parameter τ indicates the onset location; (α1, β 1) describe the pre-change trend; (α2, β 2) describe the post-change trend; and σ is the residual standard deviation. To clarify the probabilistic structure of the changepoint formulation, Fig. 2 provides the corresponding Bayesian net-work, showing how global parameters, the changepoint τ , and standardized cycle indices jointly generate the per-cycle latent mean and the observed health-indicator values. 
+
+B. Prior Specification 
+
+We place weakly informative priors on all parameters. Let 
+
+¯z and sz be the empirical mean and standard deviation of zi.We use 
+
+τ ∼ Uniform(min ˜ t, max ˜ t), (4) 
+
+α1, α 2 ∼ N (¯ z, 5sz ), (5) 
+
+β1, β 2 ∼ N (0 , 1) , (6) 
+
+σ ∼ HalfNormal( sz ). (7) These priors encode broad prior uncertainty: the intercepts are centered near the observed mean of zi; slopes are initially assumed modest; and the changepoint is a priori equally likely across the observed range. The HalfNormal prior on 
+
+σ regularizes variance without imposing strong constraints. The Bayesian formulation offers several advantages beyond merely detecting a structural transition. First, it enables coher-ent uncertainty quantification: instead of relying on thresholds applied to smoothed curves, which are sensitive to filter parameters, the posterior of the changepoint τ directly captures the probability distribution over plausible onset times. Second, Bayesian inference naturally handles uneven sampling, het-eroscedastic noise, and missing cycles—conditions common in field BMS logs. Third, the piecewise-linear mean structure in (3) is simple yet flexible enough to approximate many aging patterns observed in lithium-ion cells, including the emergence of the characteristic midlife ”knee” [2]. Unlike classical changepoint estimators based on dynamic programming or penalized likelihoods, the Bayesian model treats τ as a continuous latent parameter rather than restricting it to discrete cycle indices. This continuous parametrization improves interpretability and improves mixing when modern gradient-based samplers such as NUTS [12] are used. It also permits extension to hierarchical or multi-cell models where the changepoint is shared or partially pooled across units—an important feature for pack-level sensing. The Bayesian network shown in Fig. 2 highlights this structural simplicity: a handful of global parameters define the generative process for each cycle, ensuring that inference remains efficient even when long trajectories are available. 
+
+C. Posterior and Inference 
+
+Let θ = ( α1, β 1, α 2, β 2, τ, σ ) denote all parameters, and 
+
+z = ( z1, . . . , z n) the observed data. The joint posterior is, up to a normalizing constant, 
+
+p(θ | z) ∝
+
+" nY
+
+> i=1
+
+N (zi | μi(θ), σ 2)
+
+#
+
+p(θ), (8) where p(θ) is the product of priors (4)–(7). Because the changepoint τ appears inside the piecewise definition (3), the posterior is non-conjugate and multimodality is possible in general. We therefore resort to Markov chain Monte Carlo (MCMC) to approximate p(θ | z).IV. P YMC I MPLEMENTATION 
+
+A. Modeling Workflow 
+
+The model is implemented in PyMC (v5), a modern proba-bilistic programming library for Python that supports gradient-based MCMC via the No-U-Turn Sampler (NUTS) [13]. The modeling workflow consists of: 1) Preprocessing: compute yi, zi, and ˜ti; filter out cycles with non-positive durations or missing values. 2) Model specification: declare priors, deterministic mean 
+
+μi, and likelihood (2) in PyMC syntax. 3) Sampling: run NUTS with multiple chains; monitor convergence using ˆR and effective sample size. 4) Posterior summarization: compute posterior distribu-tions of τ and slope differences ∆β = β2 −β1; construct credible intervals. 
+
+α1 β1
+
+τ
+
+α2 β2 σ
+
+˜ti μi
+
+zi
+
+i = 1 , . . . , N 
+
+i      
+
+> Fig. 2. Bayesian network for the single-changepoint model: global parameters
+> (α1, β 1, α 2, β 2, τ, σ )govern the latent mean μiand the observed health indicator ziover cycles with standardized index ˜ti.
+
+5) Posterior predictive checks: draw replicated datasets 
+
+zrep  
+
+> i
+
+from p(zrep | θ) and compare to observed data. PyMC provides a concise symbolic interface for construct-ing models while delegating inference to highly optimized nu-merical backends. Under the hood, PyMC computes gradients of the log-posterior via JAX, enabling efficient exploration of the posterior landscape even when changepoints create mild non-smoothness. The NUTS sampler used here is a variant of Hamiltonian Monte Carlo that eliminates the need to manually specify trajectory lengths; instead, it adaptively determines when to stop the Hamiltonian integration [12]. This adaptivity is especially beneficial for non-conjugate models such as changepoint regression. Model checking is performed using ArviZ, which pro-vides trace plots, rank histograms, kernel density estimates, and divergence diagnostics [14]. Posterior predictive checks (Fig. 3) show that replicated draws reproduce the upward trend and variance structure of the observed HI data. In addition, we examined parameter autocorrelation functions and Monte Carlo standard errors, confirming that effective sample sizes are sufficient for stable posterior summaries. Although PyMC is not intended for deployment directly on embedded systems, it plays a critical role in offline calibration. Once posterior samples are obtained, the posterior medians or full distributions can be compressed into compact lookup tables, small neural surrogates, or polynomial regressors for real-time inference. This mirrors workflows already used in model-based predictive control and impedance-based diagnos-tics [9], [15]. 
+
+B. Sampling Details 
+
+For each cell, we run four MCMC chains with 2000 tuning and 2000 sampling iterations per chain, yielding 8000 post-tuning draws. PyMC automatically adapts step sizes and mass matrices during tuning. Diagnostics computed via ArviZ include: Fig. 3. Posterior predictive check for a representative cell: observed health indicator (points) and 95% posterior predictive band (shaded).  
+
+> •
+
+ˆR close to 1.0 for all parameters, indicating convergence across chains.  
+
+> •
+
+Effective sample sizes (bulk and tail) in the hundreds or thousands for intercepts and slopes.  
+
+> •
+
+Zero or negligible number of divergent transitions. Figure 3 shows a posterior predictive check for one rep-resentative cell. The shaded credible band of replicated HI values covers the majority of observed points, indicating that the model’s residual assumptions are compatible with the data. Although full MCMC would not typically be run on an em-bedded microcontroller, PyMC-based inference is well suited for offline model fitting, model comparison, and calibration. The resulting posterior summaries or maximum a posteriori (MAP) estimates can then be embedded in a lightweight on-device implementation. V. E XPERIMENTAL RESULTS 
+
+We applied the above model to all 14 cell trajectories in the Battery RUL dataset [11]. For each cell, we inferred the changepoint location in cycle space and the pre- and post-change slopes of zi = log(HI i) as functions of ˜ti.Across cells, posterior distributions of the changepoint tcp 
+
+are unimodal and concentrated in the midlife region. Typical posterior medians fall between 380 and 420 cycles, with 95% highest-density intervals spanning approximately 50–80 cycles. For all cells, the posterior probability that the post-change slope is larger than the pre-change slope, Pr( β2 > β 1 |
+
+z), exceeds 0.9, supporting the interpretation of accelerated degradation onset. Figure 4 illustrates the fitted mean trend and credible band for one representative cell. The model captures an initially flat or slowly varying HI, followed by a steeper increase after the estimated changepoint. For comparison, simple heuristic methods based on thresh-olding a smoothed derivative of HI often trigger either too early (sensitive to noise) or too late (over-smoothed), and they provide no uncertainty quantification. In contrast, the Bayesian formulation yields explicit posterior distributions for onset  
+
+> Fig. 4. Posterior mean trend and 95% credible band for the log-HI, with the median changepoint indicated by a vertical line.
+
+time and change in slope, which are more directly usable in risk-aware BMS logic. A notable advantage of changepoint-based monitoring is that it directly connects to operational maintenance policies. For example, a BMS may initiate derating when the posterior lower bound of τ falls below a predefined safety threshold, en-suring high-confidence early warnings. Furthermore, tracking the posterior of the slope difference ∆β enables distinguishing between benign drift and the onset of physically meaningful accelerated degradation. Future work includes extending the model to multi-output indicators, incorporating physics-informed priors based on electrochemical constraints [2], and validating performance under different cycling rates and temperature regimes. Incor-porating impedance-derived features [9] or fiber-optic sensing measurements [10] could also enrich the probabilistic repre-sentation, although such enhancements must remain compat-ible with embedded constraints to preserve the lightweight nature of the approach. VI. D ISCUSSION AND SMART -S ENSING IMPLICATIONS 
+
+The proposed framework has several properties that make it suitable for smart-sensing applications:  
+
+> •
+
+BMS compatibility: the health indicator relies only on cycle-level durations readily available in existing BMS logs; no additional sensors or high-rate storage are re-quired.  
+
+> •
+
+Interpretability: the model parameters have clear mean-ings: pre- and post-change slopes, changepoint location, and residual variability. This aids debugging and regula-tory acceptance.  
+
+> •
+
+Uncertainty quantification: posterior credible intervals on onset time and slope change enable conservative safety thresholds (e.g., triggering derating when the lower bound of the onset interval enters a given region).  
+
+> •
+
+Deployability: while full MCMC is run offline, em-bedded implementations can use pre-fitted coefficients, approximate filters, or small neural surrogates trained to reproduce posterior summaries. The approach can be extended along several directions: hierarchical changepoint models that share information across cells in a pack; multiple changepoints to capture multi-phase aging; robust likelihoods to handle outliers; and fusion of HI with impedance or temperature-based features [9], [10]. All these can be implemented within the same PyMC-based workflow. VII. C ONCLUSION 
+
+We have presented a Bayesian single-changepoint frame-work for detecting the onset of accelerated degradation in lithium-ion batteries using a simple, BMS-friendly health in-dicator. The model is implemented in PyMC with Hamiltonian Monte Carlo, provides calibrated posterior uncertainty, and shows consistent midlife changepoints on an open 18650-cell dataset. The combination of interpretability, uncertainty quan-tification, and modest data requirements makes the method attractive for smart-sensing and embedded BMS deployment. REFERENCES [1] M. Berecibar, M. Garmendia, I. Villarreal, N. Omar, J. Van Mierlo, and P. Van den Bossche, “Critical review of state-of-health estimation meth-ods of li-ion batteries for real applications,” Renewable and Sustainable Energy Reviews , vol. 56, pp. 572–587, 2016. [2] W. Visser, C. D. Laird, and J. Sun, “Physics-based lithium-ion battery models: A survey,” Journal of The Electrochemical Society , vol. 163, no. 7, pp. A1070–A1077, 2016. [3] W. Li, J. Wu, J. Du, and D. Long, “A review of machine learning for lithium-ion battery management systems,” Renewable and Sustainable Energy Reviews , vol. 132, p. 110017, 2020. [4] R. R. Richardson, M. A. Osborne, and D. A. Howey, “Gaussian process regression for flexible and interpretable battery health modeling,” 
+
+Journal of Power Sources , vol. 390, pp. 262–273, 2018. [5] Y. Wang, K. Liu, Y. Chen, and B. Chen, “A review of bayesian methods for lithium-ion battery state-of-health estimation,” Journal of Power Sources , vol. 414, pp. 199–210, 2019. [6] D. Barry and J. A. Hartigan, “A bayesian analysis for change point problems,” Journal of the American Statistical Association , vol. 88, no. 421, pp. 309–319, 1993. [7] A. Jarosz-Kozyro, W. Bauer, and J. Baranowski, “Towards smart sensing of battery degradation modelling: Bayesian approach,” 
+
+Preprints , September 2025, submitted to Sensors. [Online]. Available: https://doi.org/10.20944/preprints202509.2395.v1 [8] K. Liu, Y. Li, X. Zhang, H. Wang, and G. Zhang, “Online estimation of lithium-ion battery degradation based on voltage relaxation,” Applied Energy , vol. 275, p. 115361, 2020. [9] A. Nov´ akov´ a, M. Klein, and P. Haverlik, “Advances in electrochemical impedance spectroscopy for battery diagnostics,” Electrochimica Acta ,vol. 476, p. 142222, 2024. [10] S. Jeong, M. Lee, and Y. Park, “Optical fiber sensing for real-time temperature and stress monitoring in lithium-ion batteries,” Energy Storage Materials , vol. 64, pp. 789–803, 2024. [11] I. Vi˜ nuales, “Battery remaining useful life (rul) dataset,” Kaggle, 2022, https://www.kaggle.com/datasets/ignaciovinuales/battery-rul. [12] M. D. Hoffman and A. Gelman, “The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo,” Journal of Machine Learning Research , vol. 15, no. 1, pp. 1593–1623, 2014. [13] J. Salvatier, T. V. Wiecki, and C. Fonnesbeck, “Probabilistic program-ming in Python using PyMC3,” PeerJ Computer Science , vol. 2, p. e55, 2016. [14] R. Kumar, C. C. Carroll, A. Hartikainen, and O. A. Martin, “ArviZ: A unified library for exploratory analysis of bayesian models in Python,” 
+
+Journal of Open Source Software , vol. 4, no. 33, p. 1143, 2019. [15] G. C. Goodwin, M. M. Seron, and J. De Don´ a, “Predictive control and estimation for autonomous battery management,” Annual Reviews in Control , vol. 48, pp. 205–214, 2019.

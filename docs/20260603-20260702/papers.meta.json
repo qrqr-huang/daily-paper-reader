@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-03 ~ 2026-07-02",
+  "date": "2026-06-03 ~ 2026-07-02",
+  "generated_at": "2026-07-02T02:33:02",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "20260603-20260702/2606.26363v1-bayesian-changepoint-detection-for-smart-sensing-of-battery-degradation-cycle-level-health-indicators-and-pymc-implementation",
+      "section": "deep",
+      "title_en": "Bayesian Changepoint Detection for Smart Sensing of Battery Degradation: Cycle-Level Health Indicators and PyMC Implementation",
+      "authors": "Waldemar Bauer, Anna Jarosz-Kozyro, Jerzy Baranowski",
+      "date": "2026-06-24",
+      "pdf": "https://arxiv.org/pdf/2606.26363v1",
+      "score": "8.0",
+      "evidence": "利用BMS数据循环级健康指标的贝叶斯变点检测用于电池退化",
+      "tldr": "针对锂离子电池加速退化的可靠起始检测需求，本文提出一种贝叶斯单变点模型，采用充电与放电时间比这一物理可解释的循环级健康指标，直接利用BMS电压-电流遥测数据而无需原始波形。模型使用PyMC和哈密顿蒙特卡洛采样，获得变点时间和退化斜率后验分布，并配合后验预测检验。在公开的18650剩余寿命数据集上，检测到一致的中期变点及其狭窄的最高密度区间。该方法轻量、可解释，适用于嵌入式电池管理系统智能传感部署。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Reliable detection of the onset of accelerated degradation is central to safe and cost-efficient operation of lithium-ion batteries. This paper presents a Bayesian single-changepoint model applied to a simple but physically meaningful cycle-level health indicator (HI), defined as the ratio of charge time to discharge time. The indicator is computed directly from voltage-current telemetry typically available in battery management systems (BMS), without access to raw waveforms. The changepoint model is implemented in PyMC using Hamiltonian Monte Carlo and produces posterior distributions for onset time and pre/post-degradation slopes, together with posterior predictive checks. Experiments on an open 18650-cell remaining useful life (RUL) dataset show consistent midlife changepoints with narrow highest-density intervals. The formulation is lightweight, interpretable, and amenable to smart-sensing deployment on embedded BMS platforms.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
