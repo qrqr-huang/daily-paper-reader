@@ -6,23 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-03 ~ 2026-07-02
-- 运行时间：2026-07-02 02:32:50 UTC
+- 最新运行日期：2026-07-02
+- 运行时间：2026-07-02 23:10:38 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：1
+- 本次总论文数：2
+- 精读区：2
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读电池退化感知新研究：用贝叶斯变点检测捕捉电池健康曲线拐点，PyMC实现效果突出。
-该方法能从循环级数据中自动识别退化开始的时刻，告别手动阈值。
-建议有兴趣的读者直接跑通论文附带的PyMC代码，移植到自己的设备老化监测场景试试。
-- 详情：[/20260603-20260702/README](/20260603-20260702/README)
+今日精读两篇技术论文，聚焦储能系统故障诊断与状态估计前沿。  
+在电池健康方面，从现场故障数据中提取特征可提升诊断精度；分层变分卡尔曼滤波则为复杂动态系统提供新型高效估计框架。  
+建议读者关注基于真实数据的储能健康管理，以及变分推理在工业状态监测中的应用趋势。
+- 详情：[/202607/02/README](/202607/02/README)
 
 ### 精读区论文标签
-1. [Bayesian Changepoint Detection for Smart Sensing of Battery Degradation: Cycle-Level Health Indicators and PyMC Implementation](/20260603-20260702/2606.26363v1-bayesian-changepoint-detection-for-smart-sensing-of-battery-degradation-cycle-level-health-indicators-and-pymc-implementation)  
+1. [Health feature extraction from battery energy storage system field fault data](/202607/02/2606.26347v1-health-feature-extraction-from-battery-energy-storage-system-field-fault-data)  
    标签：评分：8.0/10、query:soc-soh
-   evidence：利用BMS数据循环级健康指标的贝叶斯变点检测用于电池退化
+   evidence：从锂离子电池模组现场数据中提取健康特征以识别故障
+2. [Hierarchical Variational Kalman Filtering](/202607/02/2607.00877v1-hierarchical-variational-kalman-filtering)  
+   标签：评分：8.0/10、query:lfp-soc
+   evidence：解决变分卡尔曼滤波中过程协方差估计不一致问题，可直接应用于面向SOC估计的自适应卡尔曼滤波
 
 ### 速读区论文标签
 - 本次无速读推荐。

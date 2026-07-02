@@ -1,0 +1,101 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-02T23:07:49.898752+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.00877v1",
+      "source": "arxiv",
+      "title": "Hierarchical Variational Kalman Filtering",
+      "abstract": "Traditional variational Kalman filtering with unknown noise statistics suffers from inconsistent process covariance estimation and slow convergence speed, limiting its practical utility. To address these issues, we introduce a surrogate variable representing the process-noise-free state, which enables explicit modeling and inference of process noise statistics. In addition, we reformulate the conventional coordinate ascent variation inference (CAVI) as a marginalized maximum a posteriori problem, followed by a single-step hyperparameter fitting. This reformulation obviates the need for multiple inner iterations inherent to CAVI and decouples the design of the covariance tracking filters. Consequently, this architecture permits the deployment of higher-order filters for covariance tracking and enables sliding-window hyperparameter estimation. Notably, when this window encompasses all historical data, the covariance tracking estimator intrinsically operates as a zero-phase filter. Numerical simulations validate the theoretical framework, demonstrating the enhanced convergence speed and superior estimation accuracy compared with existing methods.",
+      "authors": [
+        "Shilei Li",
+        "Dawei Shi",
+        "Wei Zheng",
+        "Ling Shi"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.IT"
+      ],
+      "published": "2026-07-01T12:38:41+00:00",
+      "link": "https://arxiv.org/pdf/2607.00877v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Addresses inconsistent process covariance estimation in variational Kalman filters, directly applicable to adaptive Kalman filters for SOC estimation",
+      "llm_evidence_cn": "解决变分卡尔曼滤波中过程协方差估计不一致问题，可直接应用于面向SOC估计的自适应卡尔曼滤波",
+      "llm_evidence": "解决变分卡尔曼滤波中过程协方差估计不一致问题，可直接应用于面向SOC估计的自适应卡尔曼滤波",
+      "canonical_evidence": "解决变分卡尔曼滤波中过程协方差估计不一致问题，可直接应用于面向SOC估计的自适应卡尔曼滤波",
+      "llm_tldr_en": "Variational Kalman filters often have inconsistent process covariance estimation. This paper introduces a surrogate variable and reformulates inference as a marginalized MAP problem, enabling faster convergence and higher-order covariance tracking, improving adaptive Kalman filters for applications like battery SOC estimation.",
+      "llm_tldr_cn": "传统变分卡尔曼滤波面临过程协方差估计不一致和收敛慢的问题。本文引入过程噪声无关的代理变量，将坐标上升变分推断重构为边缘化最大后验问题，实现单步超参数拟合，支持高阶协方差跟踪滤波器。该方法提升了自适应卡尔曼滤波的精度和收敛速度，非常适用于电池荷电状态估计等需要自适应噪声建模的任务。",
+      "llm_tldr": "传统变分卡尔曼滤波面临过程协方差估计不一致和收敛慢的问题。本文引入过程噪声无关的代理变量，将坐标上升变分推断重构为边缘化最大后验问题，实现单步超参数拟合，支持高阶协方差跟踪滤波器。该方法提升了自适应卡尔曼滤波的精度和收敛速度，非常适用于电池荷电状态估计等需要自适应噪声建模的任务。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2606.26347v1",
+      "source": "arxiv",
+      "title": "Health feature extraction from battery energy storage system field fault data",
+      "abstract": "Health monitoring methods are critical for lithium-ion battery modules connected to the grid to prevent faults that can lead to catastrophic events. However, assessing the health of cells in modules from their operational data presents challenges including variable operating conditions, which directly confound health features, and sparse sensing in the modules, particularly within cells in parallel, which prevents observing critical states of individual cells. Here, we present a framework for extracting and calibrating health features for battery modules from their operational data to identify discriminative features for separating faulty parallel-connected cell groups within the modules. We applied this framework to operational data from 25 commercial grid-connected lithium-ion Battery Energy Storage System (BESS) modules. Each module consisted of 14 series-connected parallel groups, one of which was confirmed as faulty via post-mortem investigation; in total, the dataset included 25 faulty and 325 non-faulty cell groups. A statistical evaluation of these calibrated features demonstrated that group-level capacity, capacity degradation rate, and dV/dQ peak heights separate faulty parallel-connected cell groups within the modules with statistical significance (p<0.05). Conversely, group internal resistance did not (p>0.05), indicating that increased resistance was not a primary characteristic of the faults in this dataset. These findings challenge the exclusive reliance on resistance features for fault detection. The observed feature signatures suggest potential failure mechanisms, furthering the understanding of fault behavior in lithium-ion battery modules during field operation. More importantly, this work demonstrates a framework for robustly monitoring the health of cells in lithium-ion battery modules under real-world operations.",
+      "authors": [
+        "Clement Wong",
+        "Andrew Weng",
+        "Xin Hui Ooi",
+        "Zhiwen Wan",
+        "Jeesoon Choi",
+        "Seung Yoon Yang",
+        "Heejun Jin",
+        "Jason Siegel",
+        "Anna Stefanopoulou"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-06-24T19:39:16+00:00",
+      "link": "https://arxiv.org/pdf/2606.26347v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "health feature extraction from lithium-ion battery module field data for fault identification",
+      "llm_evidence_cn": "从锂离子电池模组现场数据中提取健康特征以识别故障",
+      "llm_evidence": "从锂离子电池模组现场数据中提取健康特征以识别故障",
+      "canonical_evidence": "从锂离子电池模组现场数据中提取健康特征以识别故障",
+      "llm_tldr_en": "Presents a framework for extracting and calibrating health features from operational data of battery energy storage systems to identify faulty parallel-connected cell groups.",
+      "llm_tldr_cn": "针对电池储能模组健康评估中运行工况多变且传感稀疏的挑战，提出一种从运行数据中提取与校准健康特征的框架，以分离模块内并联电池组中的故障组。该框架利用25个商业模组的现场数据，标定了难以直接测量的单体状态，识别出区分故障并联组的判别性特征。这项工作为大规模电池储能系统的在线健康监测和故障预警提供了实用化的数据分析方法，有助于避免灾难性事件。",
+      "llm_tldr": "针对电池储能模组健康评估中运行工况多变且传感稀疏的挑战，提出一种从运行数据中提取与校准健康特征的框架，以分离模块内并联电池组中的故障组。该框架利用25个商业模组的现场数据，标定了难以直接测量的单体状态，识别出区分故障并联组的判别性特征。这项工作为大规模电池储能系统的在线健康监测和故障预警提供了实用化的数据分析方法，有助于避免灾难性事件。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

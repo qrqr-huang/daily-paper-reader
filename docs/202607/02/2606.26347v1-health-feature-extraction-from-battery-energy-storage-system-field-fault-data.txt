@@ -1,0 +1,564 @@
+Title: Health feature extraction from battery energy storage system field fault data
+
+URL Source: https://arxiv.org/pdf/2606.26347v1
+
+Published Time: Fri, 26 Jun 2026 00:16:20 GMT
+
+Number of Pages: 46
+
+Markdown Content:
+# Health feature extraction from battery energy storage system field fault data 
+
+Clement Wong a, Andrew Weng a, Xin Hui Ooi a, Zhiwen Wan a, Jeesoon Choi b, Seung Yoon Yang b, Heejun Jin b, Jason Siegel a, Anna Stefanopoulou a
+
+> aDepartment of Mechanical Engineering, University of Michigan, 1231 Beal Ave, Ann Arbor, Michigan, 48109, USA
+> bLG Energy Solution, Seoul, South Korea
+
+Abstract 
+
+Health monitoring methods are critical for lithium-ion battery modules con-nected to the grid to prevent faults that can lead to catastrophic events. However, assessing the health of cells in modules from their operational data presents challenges including variable operating conditions, which directly confound health features, and sparse sensing in the modules, particularly within cells in parallel, which prevents observing critical states of individual cells. Here, we present a framework for extracting and calibrating health features for battery modules from their operational data to identify discrimi-native features for separating faulty parallel-connected cell groups within the modules. We applied this framework to operational data from 25 commercial grid-connected lithium-ion Battery Energy Storage System (BESS) modules. Each module consisted of 14 series-connected parallel groups, one of which was confirmed as faulty via post-mortem investigation; in total, the dataset included 25 faulty and 325 non-faulty cell groups. A statistical evaluation of these calibrated features demonstrated that group-level capacity, capacity degradation rate, and dV/dQ peak heights separate faulty parallel-connected cell groups within the modules with statistical significance ( p < 0.05 ). Con-versely, group internal resistance did not ( p > 0.05 ), indicating that increased resistance was not a primary characteristic of the faults in this dataset. These findings challenge the exclusive reliance on resistance features for fault detec-tion. The observed feature signatures suggest potential failure mechanisms, furthering the understanding of fault behavior in lithium-ion battery mod-ules during field operation. More importantly, this work demonstrates a framework for robustly monitoring the health of cells in lithium-ion battery 
+
+> arXiv:2606.26347v1 [eess.SY] 24 Jun 2026
+
+modules under real-world operations. 
+
+Keywords: lithium-ion batteries, battery energy storage system, parallel-connected cells, field data, health monitoring, Gaussian processes, machine learning, fault detection 
+
+1. Introduction 
+
+Lithium-ion battery modules are central to many large-scale battery en-ergy storage systems (BESS) that support our grid infrastructure. Battery faults in these modules pose risks, including major property damage and economic losses [19]. Therefore, to ensure the reliability and safety of these systems, it is critical to detect faults within the battery modules during their field operations to enable preventative actions. Extensive research has been conducted on fault detection for lithium-ion batteries; however, much of this work has been based in the laboratory setting, and translating these findings to field applications presents many challenges. One significant challenge is that in the field, the fault mechanism is generally unknown [25]. In laboratory settings, researchers induce abuse conditions, such as mechanical, electrical, or thermal stresses, to study fault behaviors and mechanisms, thereby understanding both the cause and the likely effects on battery behavior [7, 16, 48]. In contrast, information regard-ing the faults in the field and their underlying mechanisms is often unknown, complicating the task of determining how a fault in the field may affect bat-tery behavior and how such effects are reflected in operational data [50, 18]. Another challenge is the variability of operating conditions in real-world sys-tems, which contrasts with the controlled environments of laboratory exper-iments [39]. This variability directly affects health features, complicating distinguishing if changes in health features are reflective of changes in degra-dation versus changes in the operating conditions [1]. Furthermore, unlike high-resolution laboratory instruments, sensors used in the field are typi-cally inexpensive and can introduce significant noise into the data [39, 1]. This inherent noise can obscure the subtle, transient electrical and thermal signatures that may indicate the onset of a fault. The limited number of sensors in a battery system further complicates fault detection. In most commercial battery systems, there are only voltage, current, and temperature sensors, which may not be effective for capturing faults as compared to other sensors such as gas, force, or internal strain 2sensors [6, 10, 20]. Even if the fault can be directly reflected in voltage, current, and temperature, its signature may be difficult to observe due to the sparse placement of the sensors [24]. Typically, voltage and current are measured only at the level of each parallel-connected cell group, and the number of temperature sensors in a module is often fewer than the number of series-connected cells [33, 36, 13]. Because there is not a dedicated sensor for each cell, the states of individual cells within the system cannot be directly observed, making it difficult to pinpoint the subtle, cell-level signals that could indicate an emerging fault [24]. With the low probability of fault occurrence, data with faults are very hard to obtain, hindering the development and validation of methods to de-tect faults in battery modules in the field [41, 18]. Recent work by Schaeffer et al. represents a significant step forward by releasing a public dataset of real-world battery systems with faulty behavior, providing a valuable re-source for the research community [36]. However, the scope of their anal-ysis presents clear opportunities for further investigation. First, the sys-tems in their dataset consisted solely of cells connected in series and do not contain cells in parallel connection, and thus do not address the fault dy-namics of the many commercial systems that utilize parallel-connected cell groups. Furthermore, their study focuses exclusively on internal resistance as a health indicator, leaving open the question of whether other health fea-tures could serve as potentially more effective indicators for fault detection in the field [3, 5, 46]. Therefore, there remains a critical need to analyze faults in systems with parallel cell connections and to evaluate a broader suite of health features for their ability to indicate real-world faults. In this work, we analyze a unique field dataset from 25 commercial lithium-ion BESS modules; each module consisted of 14 series-connected parallel groups, one of which was identified as faulty via post-mortem anal-ysis. The dataset provides 1 Hz operational data for a period of 1 to 6 months leading up to the fault, generating over 183 million data rows. From this real-world operational data, we develop and apply algorithms to ex-tract health features—including capacity, internal resistance, and differential voltage analysis (DVA) features— for each parallel-connected cell group (Sec-tion 3). We then employ Gaussian Process (GP) regression to calibrate the health features, separating the confounding effects of operating conditions to isolate the time-dependent trend that reflects the battery’s true underlying degradation trajectory (Section 4). By decoupling operational sensitivities, our method enables continuous health monitoring whenever features are ex-3tractable, regardless of the specific operating conditions. Finally, we statis-tically evaluate the effectiveness of these features in distinguishing the faulty group within each module (Section 5). Our analysis demonstrates that ca-pacity and DVA-derived features separated the faulty cell groups within the modules with statistical significance, whereas internal resistance features did not for the modules in our dataset. However, the distributional overlap be-tween faulty cell groups and non-faulty cell groups with respect to the health features highlights the challenges of utilizing these group-level electrochemi-cal features for robust fault detection in the field. While we lack post-mortem physical analysis to confirm the specific root causes, the observed feature sig-natures allow us to hypothesize failure mechanisms consistent with the data. Our findings further the understanding of fault behavior in lithium-ion bat-tery modules during field operation and, more importantly, demonstrate a framework for robustly monitoring the health of cells in lithium-ion battery modules under real-world conditions. 
+
+2. Dataset 
+
+2.1. Battery System 
+
+The dataset comprises operational data from 25 modules that were sourced from separate racks in one grid-connected BESS site. Each module consisted of 14 series-connected parallel groups, one of which was confirmed as faulty via post-mortem investigation, while the remaining 13 were assumed to be non-faulty. The fault type and the underlying cause were unknown. In total, the dataset included 25 faulty and 325 non-faulty cell groups. Of the 25 modules analyzed, 22 were configured as 14S3P and 3 were 14S2P. Data were logged nominally at 1 Hz over a period of 1 to 6 months leading up to the day of the fault, generating over 183 million data rows (averaging 7.3 million data rows per module) and a total of 52,150 days of operational data across all cell groups. While the system targeted a 1 Hz sampling rate, the dataset contains gaps in recording, primarily dur-ing the post-discharge relaxation periods where the system likely entered a standby or data-saving mode. For each module, voltage was measured for every parallel-connected cell group with 1 mV precision. Current was mea-sured at the module level. Since the 14 parallel-connected cell groups were arranged in series, this module-level current corresponds to the current flow-ing through each group in a module. Each module was equipped with only two temperature sensors. Consequently, there is no dedicated temperature 4measurement for each of the 14 series-connected cell groups; the sparse sen-sor coverage captures the overall thermal behavior of the module but limits the observability of the specific thermal states of individual cell groups. The cells used were of an NMC/Graphite chemistry with a nominal ca-pacity of 63 Ah and an operating voltage range of 3.0 to 4.2 V. Due to confidentiality agreements, the source of the BESS data cannot be disclosed. 
+
+2.2. Field Operations 
+
+> Figure 1: Example data of a single battery module. Typical daily usage patterns include 1) solar charging, 2) post-charge relaxation, 3) discharging to the grid, and 4) post-discharge relaxation.
+
+Figure 1 displays a typical 24-hour operational cycle for each BESS mod-ule consisting of four distinct phases: solar charging, post-charge relaxation, discharging to the grid, and post-discharge relaxation. Figure 2 displays normalized histograms of key operational conditions experienced by the cell groups in the 25 modules across their days of cycling. During the day, mod-ules underwent solar charging at a variable rate averaging 0.17 C until reach-ing a predefined rack-level State of Charge (SOC) limit, typically 80% or 90%. This was followed by a relaxation period averaging 3.45 hrs (std: 1.3 hrs). Subsequently, the modules discharged to the grid at a constant power until the rack-level SOC fell below 5%. The discharge power level varied across modules, ranging from 1520 W to 2895 W. The discharge was followed by a final relaxation period lasting an average of 12.4 hrs (std: 1.6 hrs) until the next day’s charging cycle. 5Post-charge Relaxation Post-discharge Relaxation Post-charge Relaxation Figure 2: Distributions of key operational parameters across all cycles for the cell groups in the 25 modules. These histograms reveal the module-to-module and cycle-to-cycle variability in C-rate, discharge power, relaxation times, voltage limits, Depth of Discharge (DoD), and temperature. 
+
+The operational data show that the cell groups within the modules were not under harsh operational stress. The distribution of the C-rate (defined as the current divided by the nominal Ampere-hour capacity of the bat-tery) shows that the cell groups were not discharged or charged at a high current magnitude ( |I| < 0.45 C). Furthermore, the end-of-charge and end-of-discharge voltage distributions show that cell groups did not overcharge or undercharge outside of the manufacturer-specified voltage limits (3.0 V to 4.2 V). Additionally, the temperature data indicates effective thermal manage-ment throughout the year, with the modules consistently maintained within a safe operating range. This suggests that the faulty cell groups within the modules did not arise from electrical or thermal abuse but rather likely from intrinsic degradation mechanisms. 6However, the inherent variability in operating conditions, as shown in Figure 2, presents a significant challenge for extracting health features for cells. Fluctuations in conditions, such as C-rate and voltage windows, di-rectly affect health features, confounding the true degradation trend with operational effects. To overcome this, it is essential to decouple the effects of operating conditions from the underlying signs of degradation. Accord-ingly, Section 4 introduces our GP regression framework, which calibrates the health features to isolate this time-dependent degradation trajectory. 
+
+3. Data Processing and Feature Extraction 
+
+Given that the fault type and the underlying cause were unknown, we de-veloped algorithms to extract various health features from the cycling data to investigate which electrochemical properties might serve as effective indi-cators for detecting faulty cell groups. We focused on estimating capacity, internal resistances, and features derived from differential voltage analysis, as detailed in the following sections. 
+
+3.1. Capacity 3.1.1. Method 
+
+Capacity was estimated for each parallel-connected cell group during constant-power discharge events (Figure 3). We utilized constant-power dis-charge intervals for this estimation because their low-dynamic currents min-imize numerical sampling and integration errors, enabling accurate Coulomb counting [29]. Furthermore, the discharge events operated under consistent constant-power setpoints across cycles; this consistency minimizes the vari-ability in capacity estimates induced by rate-dependence [13]. The estimated cell-group capacity, bC, was computed by dividing the Coulomb-counted dis-charge capacity, Qdis , by the change in state of charge (SOC) over the dis-charge interval, bzdis , start − bzdis , end (Equation 1). The SOC values at the start and end of discharge, bzdis , start and bzdis , end ,were determined by mapping the corresponding estimated open-circuit volt-ages to SOC using the OCV–SOC curve of a fresh cell (Equations 3–4; see Appendix A for OCV fresh (z)). These estimated OCVs were approximated using the terminal voltage measurements at the end of the post-charge and post-discharge relaxation periods, Vpost _chg _rel , end and Vpost _dis _rel , end , respec-tively. 7Figure 3: Methodology for estimating the capacity of an exemplary cell group in a module using daily operational data. 
+
+bC = Qdis 
+
+bzdis , start − bzdis , end 
+
+(1) 
+
+Qdis = − 13600  
+
+> kdis ,end −1
+
+X 
+
+> k=kdis ,start
+
+Ik + Ik+1 
+
+2
+
+ tk+1 − tk
+
+ (2) 
+
+bzdis , start = OCV −1fresh 
+
+ Vpost _chg _rel , end 
+
+ (3) 
+
+bzdis , end = OCV −1fresh 
+
+ Vpost _dis _rel , end 
+
+ (4) To reduce measurement noise and mitigate the influence of outliers, the voltage measurements were median-filtered over the final 60 s of their respec-tive relaxation periods, yielding robust OCV estimates over the quasi-static voltage windows (Equations 5–6). 
+
+Vpost _chg _rel , end = median  V (t) : t ∈ [tpost _chg _rel , end − 60 , t post _chg _rel , end ]
+
+(5) 8Vpost _dis _rel , end = median  V (t) : t ∈ [tpost _dis _rel , end − 60 , t post _dis _rel , end ]
+
+(6) A key assumption in this method is that the OCV-SOC relationship of the aged cell groups can be represented by that of the fresh cells. It is known that the OCV-SOC curve evolves with degradation due to aging mechanisms like loss of active material, and in turn can affect capacity estimation [51]. However, since this work prioritizes the reliable relative comparison of ca-pacity among cell groups within a module over the absolute accuracy of any single capacity value, this assumption is justifiable. Applying the same OCV-SOC curve to all cell groups provides a consistent basis for this relative comparison. 
+
+3.1.2. Implementation Details 
+
+To ensure robust capacity estimation, we restricted our analysis to dis-charge cycles where Vpost _chg _rel , end > 3.9 V and Vpost _dis _rel , end < 3.45 V .This criterion was selected to minimize the propagation of voltage measure-ment noise into SOC estimation errors and, consequently, capacity estimation errors [28]. Voltages below 3.45 V correspond to the steep region of the OCV curve, where the OCV gradient is high, thereby minimizing the sensitivity of bzdis , end to voltage measurement error. Similarly, the region above 3.9 V 
+
+avoids the voltage plateau associated with the graphite Stage 2 phase tran-sition ( ≈ 3.7–3.9 V ). In this plateau region, the OCV gradient is shallow, causing small voltage errors to translate into significant variance in bzdis , start 
+
+and, consequently, bC. By restricting Vpost _chg _rel , end > 3.9 V , we ensure that the start of discharge is determined in a region with a sufficiently steep slope to yield a robust estimation of bzdis , start .In addition, to ensure that the voltages used for SOC estimation accu-rately represented open-circuit conditions, we only selected data where the post-charge and post-discharge relaxation periods used to estimate Vpost _chg _rel , end 
+
+and Vpost _dis _rel , end lasted at least 1 h . This constraint increases confidence that the terminal voltage had sufficiently relaxed toward its open-circuit value prior to mapping to SOC using the fresh OCV–SOC relationship. While these constraints ensured robust SOC estimations, thereby en-abling accurate capacity estimations, they limited the quantity of analyzable discharge cycles. Although more complex online SOC estimation algorithms could be employed to relax these constraints and increase data utilization, such algorithms can struggle to account for rapid changes in capacity and resistance that can occur with faults [47]. Therefore, the method employed 9here prioritizes robustness for fault detection over maximizing data quantity. 
+
+3.2. Resistances 3.2.1. Method 
+
+Internal resistances were estimated from the voltage relaxation behavior following solar charging events. The termination of each charging event is marked by an abrupt change in current, and the resulting voltage response to this current step during the subsequent relaxation period was used to estimate internal resistances of each cell group. The estimated resistance at time τ into the post-charge relaxation period, 
+
+bRpost _chg _rel , τ , was defined as the ratio of the change in terminal voltage (∆Vτ ) to the corresponding change in current between the final instant of the charging period and time τ (∆Iτ ) (Equation 7). 
+
+bRpost _chg _rel , τ = ∆Vτ
+
+∆Iτ
+
+= Vpost _chg _rel , τ − Vchg , end 
+
+Ipost _chg _rel , τ − Ichg , end 
+
+(7) Here, Vchg , end and Ichg , end denote the terminal voltage and current at the final instant of the charging period, respectively, while Vpost _chg _rel , τ and 
+
+Ipost _chg _rel , τ denote the corresponding quantities measured time τ into the post-charge relaxation period. To reduce measurement noise and mitigate the influence of outliers, volt-age measurements used in the resistance calculation were median-filtered over short time windows. Specifically, we defined 
+
+Vchg , end = median( V (t) : t ∈ [tchg , end − ∆tchg , t chg , end ]) , (8) 
+
+Vpost _chg _rel , τ = median  V (t) : t ∈ [tpost _chg _rel , start + τ, t post _chg _rel , start + τ + ∆ trel ] ,
+
+(9) where ∆tchg and ∆trel denote the median-filter window lengths (in seconds). We set ∆tchg = ∆ trel = 10 s , which at 1 Hz provides a robust median over ∼10 samples while remaining short relative to the relaxation timescale. Current measurements were used without filtering. We extracted resistance estimates with τ ∈ { 1 s, 5 min , 10 min , 15 min , 20 min , 25 min }.Resistance estimates obtained at different values of τ capture distinct phys-ical contributions. The resistance evaluated shortly after the current inter-ruption, bRpost _chg _rel , 1 s , primarily reflects the ohmic resistance of the cell group, while resistance estimates obtained further into the relaxation pe-riod ( τ > 1 s ) increasingly incorporate charge-transfer and diffusion-related resistances. 10 Figure 4: Methodology for estimating internal resistance of an exemplary cell group in a module using daily operational data. 
+
+3.2.2. Implementation Details 
+
+To ensure reliable resistance estimates, the absolute change in current (|∆Iτ |), was required to exceed a minimum amplitude of 20 A . This thresh-old ensures that the corresponding absolute voltage change ( |∆Vτ |) is signif-icantly larger than the voltage sensor resolution ( 1 mV ), thereby providing a sufficiently high signal-to-noise ratio for reliable resistance estimation. 
+
+3.3. Differential Voltage Analysis (DVA) Features 3.3.1. Method 
+
+Differential voltage analysis features were estimated for each cell group using the constant power discharge portions of the field data. These features correspond to the peaks that arise in the dV/dQ curve of the cell groups under low-dynamic discharge. For our NMC/graphite cell groups, two peaks in the dV/dQ curve can appear: High V dV/dQ peak, which occurs between 3.7 V and 3.9 V, and Low V dV/dQ peak, which occurs between 3.45 V to 3.65 V. Four features are extracted from these curves: the height and voltage location of each of these two peaks (Figure 5). However, accurately identifying these features is challenging due to mea-surement noise from the inexpensive sensors used in the field [39, 1]. To 11 Figure 5: Methodology for dV /dQ feature extraction of an exemplary cell group in a module using daily operational data. 
+
+address this, we implemented specific strategies for each peak. For High V dV/dQ peak, we applied the OCP-informed Feature Iden-tification algorithm presented in [45]. This algorithm fits the voltage and charge throughput data corresponding to High V dV/dQ peak to a physics-based model to determine the peak’s height and location. A key advantage of this approach is that it avoids the need for user-defined tuning parameters required by traditional filtering techniques, thereby enabling accurate and reproducible feature estimation. The OCP-informed Feature Identification algorithm, however, is only ap-plicable to well-defined, isolated peaks and thus cannot be applied to Low V dV/dQ peak, as multiple phase transitions occur within this voltage win-dow, causing a broad and often distorted peak. For Low V dV/dQ peak, we first applied a Savitzky-Golay (SG) filter to the voltage data. For the SG filter, we selected a third-order polynomial, which effectively models the graphite phase transition without overfitting to noise. We set the window size to span a number of data points equivalent to a 7% SOC window, which makes the peak clearly identifiable. Having filtering parameters set to a fixed polynomial order and fixed SOC window led to consistent filtering [26]. After 12 smoothing, we applied a peak-finding algorithm to identify Low V dV/dQ peak and valley. The peak height was then computed as the difference be-tween the peak and valley, and its location was recorded as the voltage of the peak. 
+
+3.3.2. Implementation Details 
+
+To ensure the integrity of the dV/dQ features, we excluded discharge segments where the power level changed within the voltage window of the specific peak being analyzed. 
+
+4. Gaussian Process (GP) Regression for Feature Calibration and Uncertainty Quantification 
+
+The health features extracted from operational cycling data in Section 3 exhibited high sensitivity to cycle-to-cycle changes in operating conditions, which complicated isolating the underlying degradation trend over time. Ta-ble 1 summarizes the health features for each cell group and the corresponding operating conditions to which each feature is highly sensitive. 
+
+> Table 1: Summary of health features ( y) and the operating conditions ( x) they are sensitive to
+
+Health Feature ( y) Operational Inputs ( x)
+
+DVA Peak Heights & Locations Voltage at start of discharge (Vdis , start ), C-rate Resistance ( bRpost _chg _rel , τ ) Current ( |∆Iτ |), SOC Capacity ( bC) C-rate, Voltage at end of post-charge relaxation ( Vpost _chg _rel , end )To address these sensitivities to operating conditions, we employed a GP regression framework to calibrate each health feature for each cell group. We selected a GP framework for this task due to several key advantages. First, GP models are non-parametric models that can capture complex, nonlinear relationships without a fixed functional form and learn dependencies directly from the data [35]. Second, GP models provide a principled measure of uncertainty for each calibrated feature [35], which is critical for distinguishing 13 whether a feature’s value reflects abnormal behavior or is merely a byproduct of operating conditions and sensor noise. We modeled each cell group’s health feature ( y) as a GP model ( f ) com-posed as the sum of two independent GPs: fop , which captures the feature’s sensitivity to operating conditions ( x), and fdeg , which captures how the fea-ture changes with time ( t) which is indicative of degradation. This additive structure allows the model to decouple the operational dynamics while simul-taneously learning the feature’s sensitivity to operating conditions. However, this structure assumes that the relationship between the features and time is independent of the features’ sensitivity to operating conditions. Equations 10 - 13 overview the modeling equations for a given cell group, with independent Gaussian noise ϵ:
+
+y(x, t ) = f (x, t ) + ϵ, where ϵ ∼ N (0 , σ 2
+
+> n
+
+) (10) 
+
+f (x, t ) = fop (x) + fdeg (t) (11) 
+
+fop (x) ∼ GP (μop (x), k op (x, x′)) (12) 
+
+fdeg (t) ∼ GP (μdeg (t), k deg (t, t ′)) (13) We select the kernels for fop and fdeg based on physical assumptions about the batteries’ behavior. For modeling the dependency on operating condi-tions, we used a radial basis function (RBF) kernel, assuming each feature’s response to changing operating conditions is relatively smooth. For modeling the dependency on time, we used a non-stationary Brownian motion kernel, since its cumulative properties provide a direct mathematical analogue for the irreversible, accumulating process of battery degradation. The full de-tails about kernels, implementation, and hyperparameter optimization are provided in Appendix B. With our GP method decoupling sensitivities to operating conditions, our method enables continuous health monitoring whenever features are ex-tractable, regardless of the specific operating conditions. For instance, across the 52,150 days of operational data in the dataset, the High V dV/dQ peak height is extractable on 30,492 days. Without our method, ensuring that changes in the High V dV/dQ peak height reflect degradation rather than operational variability would require downselecting data for each cell group to the most common C-rate and voltage at the start of discharge, the operating conditions to which the High V dV/dQ peak height feature is sensitive. This 14 downselection results in only 17,771 usable High V dV/dQ peak height val-ues across the dataset. Our GP method enables the utilization of all 30,492 extractable values. Sections 4.1 - 4.3 present the sensitivities of the health features to op-erating conditions learned from the GP models, which are consistent with battery physics and validate the GP models’ physical plausibility. 
+
+4.1. Sensitivity of DVA features to operating conditions 
+
+The differential voltage analysis features depend on the voltage at the start of discharge ( Vdis , start ) and the C-rate of the power discharge [26, 43]. Figure 6 illustrates these dependencies, as learned by the GP models. The plots are generated from models trained on cell groups selected for their wide variation in the respective operating conditions, as these cases best highlight the learned relationships. 
+
+Vdis , start primarily affects the High V peak features, particularly its height, while the Low V peak features show negligible sensitivity. With increasing 
+
+Vdis , start , High V peak height significantly decreases. The learned relation-ship directly aligns with lithium-ion diffusion dynamics. The High V peak appears early in the discharge before diffusion processes have fully stabilized. 
+
+Vdis , start dictates the time required to reach this peak’s associated phase tran-sition, which in turn affects the cell group’s diffusion gradients at the time of the peak and consequently the peak’s features. Conversely, the Low V peak features are insensitive to Vdis , start because this peak occurs later in the discharge, by which point the initial diffusion dynamics have stabilized [26]. In contrast to Vdis , start , C-rate affects the features of both the High V and Low V peaks. The peak heights are particularly sensitive, decreasing signifi-cantly with higher C-rates, while the peak locations minimally change within the range of C-rate. This trend is consistent with battery physics: higher C-rates increase cell polarization and kinetic limitations, which broaden the dV/dQ peaks, thus reducing their height and shifting their location [43, 27]. 
+
+4.2. Sensitivity of Resistances to Operating Conditions 
+
+Internal resistances depend on a battery’s age, current, temperature, and SOC [1, 36]. We excluded the temperature dependence from our GP modeling because the observed thermal variation was minimal (std:1.3 °C) and the available sensors do not measure the local temperature of each individual cell group. 15 Figure 6: GP-learned sensitivities of DVA features to Vdis , start and C-rate. Plots illustrate the mean (solid line) and 95% confidence interval (shaded area) of the learned relationships. (A) Sensitivity to Vdis , start , learned from Cell 1 in Module 23, with C-rate fixed at its median. (B) Sensitivity to C-rate, learned from Cell 1 in Module 6, with Vdis , start fixed at its median. Cell 1 in Module 23 and 6 were selected for exhibiting the widest variance in 
+
+Vdis , start and C-rate, respectively 
+
+Figure 7 shows the variability of the estimated internal resistances ( bRpost _chg _rel , τ )as a function of SOC ( bzpost _chg _rel ) and current ( |∆Iτ |) learned from our GP 16 Figure 7: GP-learned sensitivities of internal resistances to SOC and current. Plots il-lustrate the mean (solid line) and 95% confidence interval (shaded area) of the learned relationships. (A) Sensitivity to SOC, learned from Cell 1 in Module 14, with current magnitude fixed at its median. (B) Sensitivity to current, learned from Cell 1 in Module 14, with SOC fixed at its median. Cell 1 in Module 14 was selected for exhibiting the widest variance in both SOC and current. 
+
+modeling. As shown, the resistance values change significantly with oper-ating conditions, and this sensitivity becomes more pronounced at longer relaxation times. Resistances were observed to monotonically decrease as the current in-creases, which is consistent with findings in previous studies [2, 1, 36]. This trend can be explained by electrochemical processes governed by Butler-Volmer kinetics, where the activation overpotential required for charge trans-fer increases more slowly at higher current densities (see Appendix C for more details) [4]. Resistances were observed to change with SOC in the high-SOC region where the cells typically operated, increasing slightly from 80% to 90% SOC. This is consistent with previous studies [36, 42] and can be attributed to thermodynamic and mass-transport limitations at the graphite anode. As the graphite anode becomes more saturated at higher SOC, a greater overpo-tential is required to insert ions into the packed structure, which increases the 17 charge-transfer resistance, while slow internal diffusion increases the mass-transport resistance [23]. The increasing sensitivity of resistances to both SOC and current as the relaxation time ( τ ) increases is consistent with battery physics, as these re-sistances corresponding to instances longer into relaxation ( τ > 1 s) increas-ingly incorporate charge-transfer resistance and diffusion resistance. The estimated resistance at time τ = 1 s into the post-charge relaxation period ( bRpost _chg _rel , 1 s ) shows minimal sensitivity as it is dominated by ohmic resis-tance which is largely independent of SOC and current. By τ = 5 minutes, 
+
+bRpost _chg _rel , 5 min becomes significantly more sensitive due to the inclusion of charge-transfer resistance, which is governed by nonlinear electrochemi-cal kinetics and is highly dependent on both SOC and current. At τ ≥ 10 
+
+minutes, these sensitivities are amplified further by the inclusion of diffusion resistance, which is also highly sensitive to SOC and current. Ultimately, this progression explains why bRpost _chg _rel , 25 min is the most sensitive to operating conditions [32]. 
+
+4.3. Sensitivity of Capacity to Operating Conditions 
+
+Figure 8: GP-learned sensitivities of capacity estimates to Vpost _chg _rel, end and C-rate. Plots illustrate the mean (solid line) and 95% confidence interval (shaded area) of the learned relationships.(A) Sensitivity to Vpost _chg _rel, end , learned from Cell 1 in Module 23, with C-rate fixed at its median. (B) Sensitivity to C-rate, learned from Cell 1 in Module 6, with Vpost _chg _rel, end fixed at its median. Cell 1 in Module 23 and 6 were selected for exhibiting the widest variance in Vpost _chg _rel, end and C-rate, respectively. 
+
+18 Capacity estimations ( bC) depend on the operating conditions of the dis-charge segment, particularly the applied C-rate, the estimated voltage at the end of post-charge relaxation ( Vpost _chg _rel , end ), and the estimated voltage at the end of post-discharge relaxation ( Vpost _dis _rel , end ) [17, 13]. In our dataset, there was minimal variation in the estimated end-of-discharge SOC ( bzdis , end )for each cell in a module. Accordingly, we designed the operational compo-nent of our Gaussian process model for each cell group’s capacity estimations to use only C-rate and Vpost _chg _rel , end as inputs. Figure 8 shows these learned dependencies, which are physically consis-tent with established electrochemical principles. First, the model captures that higher magnitude C-rates lead to lower estimated capacity, which is at-tributed to increased voltage drops across the battery’s internal resistance at higher currents causing the terminal voltage to reach its cutoff limit prema-turely [13]. Furthermore, the model captures the sensitivity of the capacity estimation to Vpost _chg _rel , end , which is a direct consequence of the battery’s non-linear OCV curve. Due to the variable slope of this curve, constant volt-age measurement errors translate into variable SOC uncertainties. A value of Vpost _chg _rel , end located in a steeper OCV region reduces SOC error, effec-tively minimizing the overestimation of ∆SOC and yielding a higher capacity estimate (See Appendix D for more details) [34]. In Figure 8, the capacity estimate at 4.05 V is higher than at 3.90 V due to the steeper OCV gradient at 4.05 V (Figure D.15). 
+
+4.4. Calibrated Health Features for Cell Groups 
+
+Our GP modeling isolates each health feature’s underlying aging trend (fdeg ) and decouples the effects of operating conditions. Figure 9 provides a visual demonstration of this calibration process through GP modeling for an example health feature (e.g. High V dV/dQ Height) of a single cell group. The uncalibrated health feature data ( y) shows the feature’s variance due to changes in the operating conditions. The full GP model ( f ) is fitted to y.Once fitted, we compute the posterior mean of the time-dependent compo-nent ( fdeg ) as the calibrated feature, effectively decoupling the degradation trend from the feature’s sensitivity to operating conditions ( fop ). Figure 10 shows the resulting calibrated trajectories for all health features and all cell groups within an example module. From these isolated trajec-tories, we can extract the feature’s estimated value and its rate of change (derivative) at any point in time. Both features are potentially useful indi-cators for identifying faults in modules. 19 Figure 9: Visual demonstration of Gaussian process calibration on a health feature (e.g. High V Peak Height). The uncalibrated feature data ( y) is fitted to a full GP model (f) that accounts for fluctuations caused by operating conditions. After model fitting, the GP time component ( fdeg ) reveals the health feature’s underlying aging trend. Shaded areas denote the 95% confidence intervals. 
+
+5. Evaluating Fault Diagnostic Potential of Individual Features 
+
+From the GP-calibrated time series of capacity, internal resistance, and DVA features (Section 4.4), we extracted median values from varying pre-fault time windows (0–15, 15–30, and 30–45 days) and linear slopes calculated across all available cycles. The median values capture the cell group’s abso-lute health features within a specific time window, while the slope captures the cell group’s rate of degradation. Before evaluating the fault diagnostic potential of these features, we nor-malized them relative to the cell groups within each module to ensure com-parability across modules with different operating conditions (Section 5.1). Using these normalized features, we then evaluated their fault diagnostic po-tential. First, we assessed each feature’s ability to separate the faulty and non-faulty cell groups with statistical significance using Mann–Whitney U tests (Section 5.2). Second, we quantified the discriminative utility of each feature for fault detection across all possible decision thresholds (Section 5.3). 20 Figure 10: Calibrated capacity, DVA, and resistances of cell groups in a module (all 14 cell groups in module 8). The calibration process removes effects from operational variability, revealing clearer and more monotonic aging trends. 
+
+5.1. Normalizing Features for Cross-Module Feature Comparability 
+
+The GP model (Equation 11; f (x, t ) = fop (x) + fdeg (t)) for each cell group’s health feature is trained on that specific group’s data. While the model effectively decouples the feature’s sensitivity to cycle-to-cycle opera-tional condition changes ( fop (x)), the values of the calibrated feature ( fdeg (t))are learned relative to the cell group’s specific operating conditions ( x). Within a module, the operating conditions of cell groups are relatively similar. All cell groups within the same module share the same module-level current and are kept well-balanced in voltage by the Battery Management System (BMS) (Appendix E). Because the cell groups within a module share these common operating conditions, differences in their calibrated health fea-tures reflect intrinsic differences in health rather than differences in operating conditions. However, operating conditions differ for cell groups in different modules. Because a cell group’s calibrated health features are learned relative to each cell group’s specific operating conditions, their values are not directly com-parable across modules. Figure 11(A) illustrates how differences in operating conditions across 21 Figure 11: Feature normalization to enable cross-module comparability, using High V Peak Height as an example feature. (A) Unnormalized time-series data for three modules (8, 15, 23), showing that differences in operating conditions cause offsets in feature values across modules. (B) Unnormalized features (median (0–15 days before fault) and slope (across all cycles)) extracted from the time-series data. Because these values are affected by their module’s specific operating conditions, they are unreliable for cross-module fault detection. (C) The same features after normalization. 
+
+modules cause offsets in the values of the High V dV/dQ Peak Height, used here as a representative example. These offsets propagate to derived features, such as the median value of the feature at a pre-fault time window (0–15 days) and the slope of the feature value across cycling, as shown in Figure 11(B) To evaluate the effectiveness of a health feature to separate faulty cell groups, the feature values must be made comparable across modules. We achieve this by normalizing each cell group’s feature value relative to the feature values of other cell groups within the same module, as defined in Equation 14: 22 ϕnorm  
+
+> i
+
+= ϕi − μmodule 
+
+σmodule 
+
+,
+
+where μmodule = 1
+
+n
+
+> n
+
+X
+
+> j=1
+
+ϕj , σmodule =
+
+vuut 1
+
+n
+
+> n
+
+X
+
+> j=1
+
+(ϕj − μmodule )2.
+
+(14) where ϕi is the value of a specific feature (e.g., the capacity slope) for cell group i, and μmodule and σmodule are the mean and standard deviation of that same feature across all n = 14 cell groups within that specific module. The resulting metric ϕnorm  
+
+> i
+
+represents the normalized feature value for the cell group. The resulting normalized values place every cell group on a common scale, representing how many standard deviations its behavior deviates from its module’s average. Figure 11(C) visually demonstrates how this normalization aligns the features from different modules, allowing us to effectively identify abnormal behaviors across the entire dataset. 
+
+5.2. Statistical Separation of Faulty and Non-Faulty Groups with respect to Features 
+
+Figure 12 summarizes the p-values for each feature from the Mann–Whitney U test ( Appendix F). A p-value < 0.05 indicates a statistically significant difference between the distributions of the faulty and non-faulty groups with at least 95% confidence. Among the DVA features, the peak heights for both the High V and Low V peaks differed significantly between faulty and non-faulty groups ( p < 0.05 ), whereas peak locations and slopes did not ( p > 0.05 ). Figure 13 (A)–(C) show that the median heights of both peaks were significantly lower for the faulty cell groups. Notably, this significance persisted across all the tested pre-fault time windows, with a clear separation emerging as early as 30-45 days prior to the fault. Capacity-based features also demonstrated strong statistical separation. Both median capacity values and the capacity degradation rate showed a statistically significant difference between faulty and non-faulty cell groups (p < 0.05 ). As shown in Figure 13 (D) and (E), faulty cell groups exhibited significantly lower median capacity as early as 15–30 days before the fault and a more negative degradation slope (indicating accelerated capacity loss). 23 Figure 12: Statistical Significance of Normalized Health Features in Separating Faulty Groups. Bar plots display 1 − p-values from Mann-Whitney U test comparing normalized calibrated health features for faulty vs. non-faulty cell groups, with a significance threshold of 1 − p = 0 .95 indicated by the dashed line. 
+
+In contrast to capacity and DVA features, internal resistance estimates showed no statistically significant difference between faulty and non-faulty groups ( p > 0.05 ). This result indicates that increased internal resistance was not a primary characteristic of specific faults captured in this dataset. 
+
+5.3. Utility of Features for Fault Detection 
+
+We assessed the potential of individual health features for fault detection by calculating their Area Under the Receiver Operating Characteristic Curve 24 (AUC). The ROC curve characterizes the trade-off between the true positive rate and the false positive rate as a decision threshold is swept across the feature values. An AUC of 0.5 indicates no discriminative power (equivalent to random guessing), while 1.0 indicates perfect separation between faulty and non-faulty populations (see Appendix G). Despite the statistical significance reported in Section 5.2, the capacity and DVA features yielded AUC values that indicate substantial distributional overlap between the faulty and non-faulty cell groups. AUC values were con-sistently below 0.70, implying that these features alone cannot support robust fault detection without incurring a substantial false positive rate. The capac-ity degradation rate (slope) exhibited the highest discriminative capability (AUC = 0.671). Median capacity values were lower, ranging from 0.633 (0-15 days before fault) to 0.614 (30-45 days before fault). Similarly, the AUC for High V and Low V dV/dQ peak heights remained approximately 0.64 across all time windows. The AUC values for resistance features were generally below 0.60. These scores approach the baseline of random guessing (0.5), confirming that resis-tance features lack the discriminative power necessary to effectively detect these faults. 
+
+5.4. Discussion 5.4.1. Hypothesized Failure Mechanisms Consistent with Fault Signatures 
+
+The statistically significant differences in specific health features enables us to hypothesize potential physical mechanisms driving the faults. The reduced dV/dQ peak heights observed in faulty cell groups are con-sistent with mechanisms such as cell-to-cell imbalances and inhomogeneities in the parallel group. The peaks of the dV/dQ curve correspond to phase transitions in the electrode materials; peak broadening and the correspond-ing reduction in height signify greater imbalances and inhomogeneities [9, 21, 22, 37]. Such imbalances and inhomogeneities can lead to uneven current distributions [14, 44, 11], forcing some cells to operate at higher effective C-rates. This, in turn, can generate localized resistive heating that accelerates the degradation mechanism or, under severe conditions, trigger faults [30]. Furthermore, the faulty groups’ lower capacity and accelerated degra-dation rate suggest that the faults could be associated with local lithium plating. Experimental studies by Yuan et al. [49], Chen et al. [8], and Tian et al. [40] have demonstrated that plating defects cause an irreversible loss of 25 Figure 13: Comparison of normalized health features for the non-faulty and faulty cell populations. Faulty cells show statistically significantly lower values for (A, B) dV/dQ peak heights, (D) capacity, and (E) capacity slope ( p < 0.05 ). (C) dV/dQ curves of the cell groups within an exemplary module (module 1) 10 days before the fault. No statistical difference in (F) R0min , (G) R25 min (p > 0.05 ). ∗ - median value over 0-15 days before the fault. ∗∗ - the slope across all available cycles. 
+
+lithium inventory (LLI) that lead to batteries with local lithium plating de-fects to exhibit lower capacity and a steeper degradation trajectory compared to batteries with no plating. While post-mortem analysis would be required to confirm these mech-anisms, the feature signatures observed here align with these established degradation modes. A critical finding of this study is the inability of the resistance estima-tions to reliably distinguish faulty cell groups ( p > 0.05 ), which challenges conventional reliance on using resistance for fault detection. Previous studies document faults that are reflected in significant changes in resistances. For instance, connector loss and corrosion can lead to high contact resistance [31]. Internal short circuit faults and thermal faults can be characterized by ohmic internal resistance increases [12, 15]. However, the lack of statistical sepa-ration suggests that significant resistance deviation was not a primary char-acteristic of the specific faulty cell groups in our dataset. While this may 26 indicate that the underlying fault mechanisms are not related to significant changes in resistance, it is also possible that the parallel connections mask the signal of a single cell with abnormal resistance. In a parallel configura-tion, the equivalent resistance is dominated by the low-resistance pathways of the healthy cells; consequently, a resistance increase in a single failing cell can be effectively hidden. This masking effect, specifically the low sensitivity of group-level resistance to individual cell degradation, has been quantified by researchers like Song et al. [38]. 
+
+5.4.2. Challenges in Fault Detection using only individual health features 
+
+While our analysis establishes statistically significant differences in ca-pacity and DVA-derived features between faulty and non-faulty groups, the distributional overlap highlights the challenges of utilizing these group-level features individually for robust fault detection in the field. These limitations likely arise from two primary factors: the heterogeneity of the underlying fault mechanisms and the fundamental limits of observability of faults from electrochemical signals. First, the root causes of the faults likely vary and consequently cause different electrochemical behaviors. As discussed in Section 5.2, a significant portion of the faulty groups exhibited reduced dV/dQ peak heights and lower capacity; these behaviors are consistent with mechanisms such as cell-to-cell imbalances, inhomogeneities, and lithium plating. However, the population of faulty groups likely included groups that failed via alternative mechanisms that do not exhibit these electrochemical behaviors [18]. Consequently, the performance of any individual feature for fault detection is diluted by the presence of faults that do not manifest the targeted electrochemical behav-iors. Second, some faults may be fundamentally unobservable from electro-chemical signals. Recent studies indicate that even in an isolated single cell, localized mechanical or thermal failures, such as electrode fractures or early-stage internal short circuits, induce minimal cell voltage changes that are often indistinguishable from sensor noise [10]. These minimal voltage changes would be further attenuated if the single faulty cell is in parallel with healthy cells. Consequently, the fault signal would be unobservable through electrochemical signals regardless of the feature extraction method used. 27 6. Conclusion 
+
+Monitoring the health of lithium-ion battery modules from their opera-tional data is critical for ensuring safe operation; however, this task is chal-lenging due to the variability of operating conditions, which confounds health features, and the limited sensing in modules, which prevents the direct ob-servation of individual cell states. This work developed and demonstrated a framework for extracting and calibrating health features for battery modules from available operational data. We applied this framework to field data from 25 commercial grid-connected lithium-ion BESS modules; each module consisted of 14 series-connected parallel groups, one of which was identified as faulty via post-mortem analysis. Using only the available current and voltage measurements, our framework first extracts capacity, resistance, and differential voltage analysis features for all cell groups within the modules. It then employs Gaussian process regression to calibrate the health features, separating features’ time-dependent trend indicative of degradation from the confounding effects of variable operating conditions. With the calibrated health features, we evaluated the potential of these features to separate faulty parallel-connected cell groups within the modules. Our analysis demonstrated that calibrated capacity, capacity degradation rate, and dV/dQ peak heights separated the faulty cell groups with statistical significance ( p < 0.05 ). These statistically significant differences suggest that the faults may be consistent with mechanisms such as cell-to-cell imbalances, inhomogeneities, and lithium plating. Conversely, internal resistance features ( bRpost _chg _rel ,τ ) did not show statistical separation ( p > 0.05 ). This lack of separation was observed for τ ∈ { 1 s, 5 min , 10 min , 15 min , 20 min , 25 min }.These resistance estimates obtained at different values of τ capture distinct physical contributions: bRpost _chg _rel , 1 s primarily reflects the ohmic resistance of the cell group, while resistance estimates obtained further into the relax-ation period ( τ > 1 s ) increasingly incorporates charge-transfer and diffusion-related resistances. Our results indicate that the specific faults in this dataset were not distinguishable via any of these resistance components, challeng-ing the conventional notion that faults are primarily reflected by significant changes in internal resistance. As discussed, resistance features were likely ineffective because the parallel architecture masks the signal of individual high-resistance cells. While the features highlighted statistically significant differences that provide insight into the potential physical mechanisms driv-ing the faults, there were substantial distributional overlaps between faulty 28 and non-faulty cell groups with respect to the features, highlighting the chal-lenge of utilizing the features individually for robust fault detection in the field. Ultimately, this work furthers the understanding of how cell health can be assessed from field data. By applying our framework to commercial BESS modules containing verified faulty parallel-connected cell groups, we demon-strate both the potential and the limitations of electrochemical signals for detecting faults in real-world operations. 
+
+CRediT authorship contribution statement Clement Wong : Conceptualization, Methodology, Software, Formal analysis, Investigation, Visualization, Writing – original draft. Andrew Weng : Writing – review & editing. Xin Hui Ooi : Writing – review & edit-ing. Zhiwen Wan : Writing – review & editing. Jeesoon Choi : Project administration. Seung Yoon Yang : Project administration. Heejun Jin :Project administration. Jason Siegel : Writing – review & editing. Anna Stefanopoulou : Supervision, Writing – review & editing, Funding acquisi-tion. 
+
+Funding 
+
+This work was supported by LG Energy Solution. 29 Appendix A. OCV–SOC curve of a fresh cell 0 20 40 60 80 100 
+
+State of Charge [%] 
+
+> 3.0
+> 3.2
+> 3.4
+> 3.6
+> 3.8
+> 4.0
+> 4.2
+> Open Circuit Voltage [V]
+> Figure A.14: Laboratory-measured OCV–SOC curve of fresh cell
+
+Appendix B. Gaussian Process (GP) Modeling Framework to iso-late the change in a health feature vs time 
+
+To isolate the change in a health feature vs time of each cell in a module from variations caused by operating conditions, we employ GP framework. As described in Section 4, a GP model is trained for each individual cell group within a module. Our approach allows the model to learn the effects of operating conditions on a health feature and effectively decouple these effects to uncover the underlying trend between a health feature and time indicative of degradation for a cell group in a module. 
+
+Appendix B.1. GP Model for a health feature 
+
+For a given cell group, its health feature y at time t under operating conditions x is modeled as the sum of a latent function f and independent Gaussian noise ϵ:
+
+y(x, t ) = f (t, x) + ϵ, where ϵ ∼ N (0 , σ 2
+
+> n
+
+)
+
+30 To isolate the degradation trend from operational effects, we structure 
+
+f (x(t), t ) as the sum of two independent Gaussian Processes: one for the operating conditions ( fop ) and one for time-dependent degradation ( fdeg ). 
+
+f (x, t ) = fop (x) + fdeg (t) (B.1) 
+
+fop (x) ∼ GP (μop (x), k op (x, x′)) (B.2) 
+
+fdeg (t) ∼ GP (μdeg (t), k deg (t, t ′)) (B.3) Because the two component GPs are independent, the mean and kernel of the combined process are simply the sum of their parts. 
+
+μ(t, x ) = μop (x) + μdeg (t) (B.4) 
+
+k(( x, t ), (x′, t ′)) = kop (x, x′) + kdeg (t, t ′) (B.5) 
+
+Appendix B.1.1. Operational Variability Kernel ( kop )
+
+For kop (x, x′), we use a radial basis function (RBF) kernel in modeling the dependency of a health feature on operating conditions, assuming that the variability of a health feature to operating conditions are relatively smooth. 
+
+kop (x, x′) = σ2 
+
+> op
+
+exp −12
+
+> 2
+
+X
+
+> d=1
+
+(x − x′)2
+
+ℓ2
+
+!
+
+(B.6) 
+
+Appendix B.1.2. Cell-Specific Degradation Kernel ( kdeg )
+
+To model a unique degradation rate for each cell, we define a kernel 
+
+kdeg (t, t ′) using a non-stationary Brownian motion kernel. This kernel is se-lected because its cumulative properties provide a direct mathematical ana-logue for the irreversible, accumulating process of battery degradation, as discussed in Section Appendix B. 
+
+kdeg (t, t ′) = min( t, t ′) (B.7) 
+
+Appendix B.2. Model Implementation 
+
+The model was trained using the GPy library in Python. The training process for each cell group’s model involved two key steps: data normalization and hyperparameter optimization. 31 Appendix B.2.1. Data normalization 
+
+Prior to training each model, its specific inputs (operating conditions) and output (health feature y) were normalized to have zero mean and unit variance. This standard pre-processing step ensures that the kernel com-putations are not dominated by any single input’s scale and improves the stability of the numerical optimization. 
+
+Appendix B.2.2. Hyperparameter optimization 
+
+The GP model’s kernels are governed by a set of hyperparameters (e.g., lengthscales and variances) that were learned from the data for each health feature model. Using the GPy library, we optimized these hyperparame-ters by maximizing the marginal log-likelihood of the observations for that specific cell group, a procedure that finds the kernel parameters that best ex-plain the data while inherently penalizing model complexity. Furthermore, we incorporated prior physical knowledge by setting scientifically reasonable bounds on the lengthscale hyperparameters before optimization, which con-strained the model to learn relationships consistent with established battery behavior. The optimization was performed using the L-BFGS-B algorithm. 
+
+Appendix C. Derivation of Resistance Sensitivity to Current 
+
+The observed decrease in resistance with increasing current magnitude can be explained by electrochemical processes governed by Butler-Volmer kinetics. The relationship between current density ( j) and activation over-potential ( η) is described by the Butler-Volmer equation: 
+
+j = j0
+
+
+
+exp 
+
+αanF η RT 
+
+
+
+− exp 
+
+
+
+−αcnF η RT 
+
+ 
+
+(C.1) where j0 is the exchange current density, αa and αc are the anodic and cathodic transfer coefficients, n is the number of electrons involved in the reaction, F is Faraday’s constant, R is the ideal gas constant, and T is the temperature. Charge transfer resistance ( Rct ) is defined as: 
+
+Rct = dη dj . (C.2) For the resistance measurements performed in this study, the current pulses exceeded 0.1 C (Section 3.2.2). Under these high-current conditions, 32 the overpotential η becomes large. Consequently, the cathodic reaction term in Equation C.1 becomes negligible. The kinetics can thus be approximated by the Tafel equation: 
+
+j ≈ j0 exp 
+
+αanF η RT 
+
+
+
+. (C.3) Rearranging Equation (C.3) expresses the overpotential η as a function of current: 
+
+η = RT αanF ln 
+
+ jj0
+
+
+
+. (C.4) Differentiating η with respect to j in Equation (C.4) yields Rct according to Equation (C.2): 
+
+Rct = ddj 
+
+ RT αanF ln 
+
+ jj0
+
+ 
+
+= RT αanF · 1
+
+j . (C.5) As shown in Equation (C.5), the charge transfer resistance is inversely proportional to the current magnitude ( Rct ∝ j−1), explaining the monotonic decrease in resistance observed in the field data. 
+
+Appendix D. Derivation of Capacity Estimation Sensitivity to Vpost _chg _rel , end 
+
+As presented in Section 3.1.1, the capacity estimate is defined as: 
+
+bC = Qdis 
+
+bzdis , start − bzdis , end 
+
+(D.1) where bzdis , start = OCV −1fresh (Vpost _chg _rel , end ) and bzdis , end = OCV −1fresh (Vpost _dis _rel , end ).
+
+Vpost _chg _rel , end is subject to measurement error ϵ relative to the true open-circuit voltage at the start of discharge. 
+
+Vpost _chg _rel , end = V post _chg _rel , end ,true + ϵ. (D.2) We approximate bzdis , start using a first-order Taylor series expansion around 
+
+Vpost _chg _rel , end ,true :
+
+bzdis , start = OCV −1fresh (V post _chg _rel , end , true + ϵ) ≈ zdis , start , true + d(OCV −1fresh )
+
+dV · ϵ
+
+(D.3) 33 Applying the Inverse Function Theorem, the derivative of the inverse OCV function is the reciprocal of the OCV slope, denoted here as S(V ) =  
+
+> d(OCV fresh )
+> dz
+
+. Substituting this into the expansion yields: 
+
+bzdis , start ≈ zdis ,start ,true + ϵS(Vpost _chg _rel , end ) (D.4) A similar expansion applies to bzdis , end :
+
+bzdis , end ≈ zdis ,end ,true + ϵS(Vpost _dis _rel , end ) (D.5) Therefore, the change in SOC is: 
+
+bzdis , start − bzdis , end =
+
+
+
+zdis ,start ,true + ϵS(Vpost _chg _rel , end )
+
+
+
+−
+
+
+
+zdis ,end ,true + ϵS(Vpost _dis _rel , end )
+
+
+
+= ( zdis ,start ,true − zdis ,end ,true )+ ϵ
+
+ 1
+
+S(Vpost _chg _rel , end ) − 1
+
+S(Vpost _dis _rel , end )
+
+
+
+(D.6) Figure D.15 shows S(V ) across voltages. 
+
+Figure D.15: S(V ) vs V where S(V ) = d(OCV fresh )
+
+> dz
+
+34 Vpost _dis _rel , end is typically located in the lower knee region of the OCV curve, where the OCV gradient is steep and S(Vpost _dis _rel , end ) ≫ S(Vpost _chg _rel , end ).Consequently, the second term in the parenthesis becomes negligible, and the equation simplifies to: 
+
+bzdis , start − bzdis , end ≈ (zdis ,start ,true − zdis ,end ,true ) + ϵS(Vpost _chg _rel , end ) (D.7) Substituting Equation D.7 into the capacity equation, we arrive at: 
+
+bC ≈ Qdis 
+
+(zdis ,start ,true − zdis ,end ,true ) + ϵS(Vpost _chg _rel , end )
+
+(D.8) Equation D.8 demonstrates that the capacity estimate is dependent on the local OCV gradient at the start of discharge. A value of Vpost _chg _rel , end 
+
+located in a steeper OCV region leads to a higher capacity estimate: 
+
+S(Vpost _chg _rel , end ) ↑ =⇒ ϵS(Vpost _chg _rel , end ) ↓ =⇒ bC ↑
+
+Appendix E. Intra-Module Uniformity of Operating Conditions 
+
+Within each module, operating conditions are more consistent across cell groups, which helps with comparing the health features of cell groups. The battery management system actively balances the cell groups after charging, resulting in minimal deviation in voltage across cell groups, as shown in Figure E.16. Additionally, because the cell groups are connected in series, they share the same current. This consistency in both voltage after charge and current ensures that any significant deviation in a health feature from one cell group relative to others in the same module likely reflects a change in intrinsic health rather than operational differences. 
+
+Appendix F. Mann Whitney U test 
+
+A Mann–Whitney U test for two samples was employed in this study to assess whether differences in the features between fault cells and non-fault cells were statistically significant. This test is particularly suitable when the assumptions of normality may not hold, or when there are substantial differ-ences in sample sizes. The p-value obtained from the Mann–Whitney U test 35 0.0 0.2 0.4 0.6 0.8 1.0 
+
+# Voltage (V) ×10 2
+
+0.0 
+
+0.5 
+
+1.0 
+
+> Frequency
+
+×10 3
+
+# Standard Deviation of Voltage 
+
+# at the Start of Discharge Figure E.16: Distribution of Intra-Module Voltage Standard Deviation. The histogram shows the standard deviation of the 14 cell group voltages at the end of the post-charge relaxation period, aggregated across all cycles and all 25 modules. The sharp peak at low values indicates that cell groups within each module are consistently well-balanced in voltage after charging. 
+
+quantifies the level of marginal significance within the statistical hypothe-sis test, representing the probability that the null hypothesis—namely, that there is no difference in the distributions of the two groups—holds true. A p-value less than 0.05 was used to reject this null hypothesis, indicating a sta-tistically significant difference. Because the Mann–Whitney U test does not rely on the data being normally distributed, it offers robust results even for skewed data and/or presence of outliers. In addition, box-and-whisker plots were used throughout the study to visually summarize the distributions of measured outcomes 
+
+Appendix G. Methodology for Evaluating Fault Classification Per-formance of Individual Features 
+
+Appendix G.1. Threshold-Based Decision Rule 
+
+For a given health feature value x and a specific decision threshold τ , we assign the predicted class label ( ˆy) using the following logic: 36 ˆy =
+
+(
+
+Faulty if x < τ 
+
+Non-Faulty if x ≥ τ (G.1) For features where faults are characterized by an increase in value (e.g., In-ternal Resistance), the inequality direction is reversed ( x > τ implies Faulty).         
+
+> Figure G.17: Threshold-based decision rule applied to example feature (i.e. x=dV/dQ Peak 1 Height ∗) where τ= -1. ∗- median value over 0-15 days before the fault
+
+By comparing these predicted labels ( ˆy) against the true labels for every cell group in the dataset, we calculate the True Positive Rate (TPR) and False Positive Rate (FPR) for a specific threshold τ :
+
+T P R (τ ) = True Positives (τ )
+
+True Positives (τ ) + False Negatives (τ ) (G.2) 
+
+F P R (τ ) = False Positives (τ )
+
+False Positives (τ ) + True Negatives (τ ) (G.3) 
+
+Appendix G.2. Receiver Operating Characteristic (ROC) and Area Under the Curve (AUC) 
+
+The Receiver Operating Characteristic (ROC) curve plots T P R (τ ) against 
+
+F P R (τ ) with the threshold τ ranging from −∞ to +∞. This curve visual-izes the trade-off between detection capability and false alarm rates for every possible sensitivity setting. The AUC is the integral of the ROC curve: 
+
+AU C =
+
+Z 10
+
+T P R (F P R ) d(F P R ) (G.4) 37 Figure G.18: ROC and AUC analysis for an example feature (i.e. dV/dQ Peak 1 Height   
+
+> ∗.∗- median value over 0-15 days before the fault)
+
+The AUC represents the probability that a randomly selected faulty cell group will have a more abnormal feature value than a randomly selected non-faulty cell group. The values of AUC, which ranges from 0 to 1, ranges evaluates the classification performance: 
+
+• AUC = 0.5: The feature has no discriminative power; its performance is equivalent to random guessing. 
+
+• 0.5 < AUC < 1.0: The feature provides better-than-random classifica-tion. A higher value indicates less overlap between the distributions of the faulty and non-faulty populations. 
+
+• AUC = 1.0: Perfect separation. There exists a threshold τ that per-fectly separates faulty and non-faulty groups with 100% sensitivity and 0% false positives. 38 References 
+
+[1] Aitio, A., Howey, D.A., 2021. Predicting battery end of life from solar off-grid system field data using machine learning. Joule 5, 3204–3220. URL: https://www.sciencedirect.com/science/ article/pii/S2542435121005328 , doi: https://doi.org/10.1016/j. joule.2021.11.006 .[2] Anseán, D., García, V., González, M., Viera, J., Blanco, C., Antuña, J., 2013. Dc internal resistance during charge: Analysis and study on lifepo4 batteries, in: 2013 World Electric Vehicle Symposium and Exhibition (EVS27), pp. 1–11. doi: 10.1109/EVS.2013.6914746 .[3] Attia, P.M., Bills, A., Brosa Planella, F., Dechent, P., dos Reis, G., Dubarry, M., Gasper, P., Gilchrist, R., Greenbank, S., Howey, D., Liu, O., Khoo, E., Preger, Y., Soni, A., Sripad, S., Stefanopoulou, A.G., Sulzer, V., 2022. Review—“Knees” in Lithium-Ion Battery Ag-ing Trajectories. Journal of The Electrochemical Society 169, 060517. doi: 10.1149/1945-7111/ac6d13 .[4] Bai, P., Bazant, M.Z., 2014. Charge transfer kinetics at the solid–solid interface in porous electrodes. Nature Communications 5, 3585. URL: 
+
+https://doi.org/10.1038/ncomms4585 , doi: 10.1038/ncomms4585 .[5] Berecibar, M., Gandiaga, I., Villarreal, I., Omar, N., Van Mierlo, J., Van Den Bossche, P., 2016. Critical review of state of health estimation meth-ods of Li-ion batteries for real applications. Renewable and Sustainable Energy Reviews 56, 572–587. doi: 10.1016/j.rser.2015.11.042 .[6] Cai, T., Valecha, P., Tran, V., Engle, B., Stefanopoulou, A., Siegel, J., 2021. Detection of Li-ion battery failure and venting with Carbon Dioxide sensors. eTransportation doi: 10.1016/j.etran.2020.100100 .[7] Chen, M., Bai, F., Lin, S., Song, W., Li, Y., Feng, Z., 2019. Performance and safety protection of internal short circuit in lithium-ion battery based on a multilayer electro-thermal cou-pling model. Applied Thermal Engineering 146, 775–784. URL: 
+
+https://doi.org/10.1016/j.applthermaleng.2018.10.011 , doi: 10. 1016/j.applthermaleng.2018.10.011 .39 [8] Chen, Y., Zhang, H., Hong, J., Hou, Y., Yang, J., Zhang, C., Ma, S., Zhang, X., Yang, H., Liang, F., Li, K., 2024. Lithium plating detec-tion of lithium-ion batteries based on the improved variance entropy algorithm. Energy 299, 131574. URL: https://doi.org/10.1016/j. energy.2024.131574 , doi: 10.1016/j.energy.2024.131574 .[9] Dubarry, M., Pastor-Fernández, C., Baure, G., Yu, T.F., Widan-age, W.D., Marco, J., 2019. Battery energy storage system model-ing: Investigation of intrinsic cell-to-cell variations. Journal of Energy Storage 23, 19–28. URL: https://www.sciencedirect.com/science/ article/pii/S2352152X18308156 , doi: https://doi.org/10.1016/j. est.2019.02.016 .[10] Fan, J., Liu, C., Li, N., Yang, L., Yang, X.G., Dou, B., Hou, S., Feng, X., Jiang, H., Li, H., Song, W.L., Sun, L., Chen, H.S., Gao, H., Fang, D., 2025. Wireless transmission of internal hazard signals in Li-ion batteries. Nature 641, 639–645. URL: https://doi.org/10.1038/ s41586-025-08785-7 , doi: 10.1038/s41586-025-08785-7 .[11] Fath, J.P., Dragicevic, D., Bittel, L., Nuhic, A., Sieg, J., Hahn, S., Alsheimer, L., Spier, B., Wetzel, T., 2019. Quantifica-tion of aging mechanisms and inhomogeneity in cycled lithium-ion cells by differential voltage analysis. Journal of Energy Stor-age 25, 100813. URL: https://www.sciencedirect.com/science/ article/pii/S2352152X19301811 , doi: https://doi.org/10.1016/j. est.2019.100813 .[12] Feng, X., Pan, Y., He, X., Wang, L., Ouyang, M., 2018. Detect-ing the internal short circuit in large-format lithium-ion battery us-ing model-based fault-diagnosis algorithm. Journal of Energy Stor-age 18, 26–39. URL: https://doi.org/10.1016/j.est.2018.04.020 ,doi: 10.1016/j.est.2018.04.020 .[13] Figgener, J., van Ouwerkerk, J., Haberschusz, D., Bors, J., Wo-erner, P., Mennekes, M., Hildenbrand, F., Hecht, C., Kairies, K.P., Wessels, O., Sauer, D.U., 2024. Multi-year field measurements of home storage systems and their use in capacity estimation. Na-ture Energy 9, 1438–1447. URL: http://dx.doi.org/10.1038/ s41560-024-01620-9 , doi: 10.1038/s41560-024-01620-9 .40 [14] Fuhrmann, M., Torcheux, L., Kobayashi, Y., 2024. Knee point prediction for lithium-ion batteries using differential voltage anal-ysis and degree of inhomogeneity. Journal of Power Sources 621, 235210. URL: https://www.sciencedirect.com/science/ article/pii/S0378775324011625 , doi: https://doi.org/10.1016/j. jpowsour.2024.235210 .[15] Gao, W., Zheng, Y., Ouyang, M., Li, J., Lai, X., Hu, X., 2019. Micro-short-circuit diagnosis for series-connected lithium-ion battery packs us-ing mean-difference model. IEEE Transactions on Industrial Electronics 66, 2132–2142. doi: 10.1109/TIE.2018.2838109 .[16] Han, S., Choi, C., Kwon, S., Lee, S., Kim, J., 2020. Electrical analysis about internal short circuit using additional resistance in high energy lithium-ion battery. International Conference on Control, Automation and Systems 2020-Octob, 496–498. doi: 10.23919/ICCAS50221.2020. 9268389 .[17] He, Z., Shen, X., Sun, Y., Zhao, S., Fan, B., Pan, C., 2021. State-of-health estimation based on real data of elec-tric vehicles concerning user behavior. Journal of Energy Stor-age 41, 102867. URL: https://www.sciencedirect.com/science/ article/pii/S2352152X21005892 , doi: https://doi.org/10.1016/j. est.2021.102867 .[18] Hu, X., Zhang, K., Liu, K., Lin, X., Dey, S., Onori, S., 2020. Advanced Fault Diagnosis for Lithium-Ion Battery Systems: A Review of Fault Mechanisms, Fault Features, and Diagnosis Procedures. IEEE Industrial Electronics Magazine 14, 65–91. doi: 10.1109/MIE.2020.2964814 .[19] Im, D.H., Chung, J.B., 2023. Social construction of fire accidents in battery energy storage systems in Korea. Journal of Energy Storage 71, 108192. URL: https://doi.org/10.1016/j.est.2023.108192 ,doi: 10.1016/j.est.2023.108192 .[20] Koch, S., Birke, K.P., Kuhn, R., 2018. Fast Thermal Runaway Detection for Lithium-Ion Cells in Large Scale Traction Batteries , 1–11doi: 10. 3390/batteries4020016 .41 [21] Lewerenz, M., Marongiu, A., Warnecke, A., Sauer, D.U., 2017. Differen-tial voltage analysis as a tool for analyzing inhomogeneous aging: A case study for LiFePO4|Graphite cylindrical cells. Journal of Power Sources 368, 57–67. URL: https://doi.org/10.1016/j.jpowsour.2017.09. 059 , doi: 10.1016/j.jpowsour.2017.09.059 .[22] Lewerenz, M., Sauer, D.U., 2018. Evaluation of cyclic aging tests of prismatic automotive LiNiMnCoO2-Graphite cells considering influence of homogeneity and anode overhang. Journal of Energy Storage 18, 421– 434. URL: https://www.sciencedirect.com/science/article/pii/ S2352152X18301579 , doi: https://doi.org/10.1016/j.est.2018.06. 003 .[23] Lin, X., Khosravinia, K., Hu, X., Li, J., Lu, W., 2021. Lithium Plating Mechanism, Detection, and Mitigation in Lithium-Ion Batteries. Progress in Energy and Combustion Science 87, 100953. URL: https://www.sciencedirect.com/science/ article/pii/S0360128521000514 , doi: https://doi.org/10.1016/j. pecs.2021.100953 .[24] Lin, X., Perez, H.E., Siegel, J.B., Stefanopoulou, A.G., 2020. Robust estimation of battery system temperature distribution under sparse sens-ing and uncertainty. IEEE Trans. Control Syst. Technol. . [25] Luder, D., John, P.T., Busch, P., Börner, M., Cao, W., Dechent, P., Barbers, E., Bihn, S., Liu, L., Feng, X., Sauer, D.U., Li, W., 2025. Big data generation platform for battery faults under real-world variances. Green Energy and Intelligent Transportation 4. doi: 10.1016/j.geits. 2025.100282 .[26] Mohtat, P., Lee, S., Siegel, J.B., Stefanopoulou, A.G., 2022. Comparison of expansion and voltage differential indicators for battery capacity fade. Journal of Power Sources 518. doi: 10.1016/j.jpowsour.2021.230714 .[27] Mohtat, P., Lee, S., Sulzer, V., Siegel, J.B., Stefanopoulou, A.G., 2020. Differential expansion and voltage model for li-ion batteries at practical charging rates. Journal of The Electrochemical Society 167, 110561. URL: https://dx.doi.org/10.1149/1945-7111/aba5d1 ,doi: 10.1149/1945-7111/aba5d1 .42 [28] Mohtat, P., Nezampasandarbabi, F., Mohan, S., Siegel, J.B., Ste-fanopoulou, A.G., 2017. On identifying the aging mechanisms in li-ion batteries using two points measurements, in: 2017 American Control Conference (ACC), pp. 98–103. doi: 10.23919/ACC.2017.7962937 .[29] Movassagh, K., Raihan, A., Balasingam, B., Pattipati, K., 2021. A Criti-cal Look at Coulomb Counting Approach for State of Charge Estimation in Batteries. Energies 14. URL: https://www.mdpi.com/1996-1073/ 14/14/4074 , doi: 10.3390/en14144074 .[30] Naylor Marlow, M., Chen, J., Wu, B., 2024. Degradation in parallel-connected lithium-ion battery packs under thermal gradients. Com-munications Engineering 3, 2. URL: https://doi.org/10.1038/ s44172-023-00153-5 , doi: 10.1038/s44172-023-00153-5 .[31] Offer, G.J., Yufit, V., Howey, D.A., Wu, B., Brandon, N.P., 2012. Mod-ule design and fault diagnosis in electric vehicle batteries. Journal of Power Sources 206, 383–392. URL: http://dx.doi.org/10.1016/j. jpowsour.2012.01.087 , doi: 10.1016/j.jpowsour.2012.01.087 .[32] Plett, G., 2015. Battery Management Systems, Volume II: Equivalent-Circuit Methods. Artech. chapter 3. [33] Pozzato, G., Allam, A., Pulvirenti, L., Negoita, G.A., Paxton, W.A., Onori, S., 2023. Analysis and key findings from real-world electric vehicle field data. Joule 7, 2035–2053. URL: https://doi.org/10.1016/j. joule.2023.07.018 , doi: 10.1016/j.joule.2023.07.018 .[34] Qi, Q., Liu, W., Deng, Z., Li, J., Song, Z., Hu, X., 2024. Battery pack capacity estimation for electric vehicles based on enhanced ma-chine learning and field data. Journal of Energy Chemistry 92, 605– 618. URL: https://www.sciencedirect.com/science/article/pii/ S2095495624000858 , doi: https://doi.org/10.1016/j.jechem.2024. 01.047 .[35] Rasmussen, C.E., Williams, C.K.I., 2005. Gaussian Processes for Ma-chine Learning. The MIT Press. URL: https://doi.org/10.7551/ mitpress/3206.001.0001 , doi: 10.7551/mitpress/3206.001.0001 .[36] Schaeffer, J., Lenz, E., Gulla, D., Bazant, M.Z., Braatz, R.D., Findeisen, R., 2024. Gaussian-process-based online health monitoring and fault 43 analysis of lithium-ion battery systems from field data. Cell Reports Physical Science 5, 102258. URL: https://doi.org/10.1016/j.xcrp. 2024.102258 , doi: 10.1016/j.xcrp.2024.102258 , arXiv:2406.19015 .[37] Sieg, J., Storch, M., Fath, J., Nuhic, A., Bandlow, J., Spier, B., Sauer, D.U., 2020. Local degradation and differential voltage analysis of aged lithium-ion pouch cells. Journal of Energy Storage 30, 101582. URL: 
+
+https://doi.org/10.1016/j.est.2020.101582 , doi: 10.1016/j.est. 2020.101582 .[38] Song, Z., Delgado, F.P., Hou, J., Hofmann, H., Sun, J., 2020. Individ-ual Cell Fault Detection for Parallel-Connected Battery Cells Based on the Statistical Model and Analysis. Proceedings of the American Con-trol Conference 2020-July, 1155–1160. doi: 10.23919/ACC45564.2020. 9147423 .[39] Sulzer, V., Mohtat, P., Aitio, A., Lee, S., Yeh, Y.T., Steinbacher, F., Khan, M.U., Lee, J.W., Siegel, J.B., Stefanopoulou, A.G., Howey, D.A., 2021. The challenge and opportunity of battery lifetime pre-diction from field data. Joule 5, 1934–1955. URL: https://www. sciencedirect.com/science/article/pii/S2542435121002932 ,doi: https://doi.org/10.1016/j.joule.2021.06.005 .[40] Tian, Y., Lin, C., Chen, X., Yu, X., Xiong, R., Zhang, Q., 2023. Re-versible lithium plating on working anodes enhances fast charging capa-bility in low-temperature lithium-ion batteries. Energy Storage Mate-rials 56, 412–423. URL: https://doi.org/10.1016/j.ensm.2023.01. 035 , doi: 10.1016/j.ensm.2023.01.035 .[41] Ward, L., Babinec, S., Dufek, E.J., Howey, D.A., Viswanathan, V., Aykol, M., Beck, D.A., Blaiszik, B., Chen, B.R., Crabtree, G., Clark, S., De Angelis, V., Dechent, P., Dubarry, M., Eggleton, E.E., Finegan, D.P., Foster, I., Gopal, C.B., Herring, P.K., Hu, V.W., Paulson, N.H., Preger, Y., Uwe-Sauer, D., Smith, K., Snyder, S.W., Sripad, S., Tanim, T.R., Teo, L., 2022. Principles of the Battery Data Genome. Joule 6, 2253–2271. URL: https://doi.org/10.1016/j.joule.2022.08.008 ,doi: 10.1016/j.joule.2022.08.008 , arXiv:2109.07278 .[42] Weng, A., Mohtat, P., Attia, P.M., Sulzer, V., Lee, S., Less, G., Stefanopoulou, A., 2021. Predicting the impact of formation pro-44 tocols on battery lifetime immediately after manufacturing. Joule 5, 2971–2992. URL: https://www.sciencedirect.com/science/ article/pii/S2542435121004438 , doi: https://doi.org/10.1016/j. joule.2021.09.015 .[43] Weng, A., Siegel, J.B., Stefanopoulou, A., 2023. Differential voltage analysis for battery manufacturing process control. Frontiers in Energy Research 11. [44] Weng, C., Cui, Y., Sun, J., Peng, H., 2013. On-board state of health monitoring of lithium-ion batteries using incremental capacity analysis with support vector regression. Journal of Power Sources 235, 36–44. URL: https://www.sciencedirect.com/science/ article/pii/S0378775313002668 , doi: https://doi.org/10.1016/j. jpowsour.2013.02.012 .[45] Wong, C., Weng, A., Movahedi, H., Choi, J., Yang, S.Y., Jin, H., Siegel, J., Stefanopoulou, A., 2026. Quantifying imbalances in parallel-connected cell groups using group voltage and current. Journal of Energy Storage 150, 120507. URL: https://www. sciencedirect.com/science/article/pii/S2352152X26001714 ,doi: https://doi.org/10.1016/j.est.2026.120507 .[46] Xiong, R., Li, L., Tian, J., 2018. Towards a smarter battery management system: A critical review on battery state of health monitoring meth-ods. Journal of Power Sources 405, 18–29. URL: https://doi.org/ 10.1016/j.jpowsour.2018.10.019 , doi: 10.1016/j.jpowsour.2018. 10.019 .[47] Xu, J., Ma, J., Zhang, K., Li, J., Zhao, X., He, Z., Wu, X., 2025. SOC estimation and internal short circuit fault diagnosis based on DAEKF method for power batteries. Journal of Energy Stor-age 112, 115524. URL: https://www.sciencedirect.com/science/ article/pii/S2352152X25002373 , doi: https://doi.org/10.1016/j. est.2025.115524 .[48] Yi, J., Kim, U.S., Shin, C.B., Han, T., Park, S., 2013. Three-Dimensional Thermal Modeling of a Lithium-Ion Battery Considering the Combined Effects of the Electrical and Thermal Contact Resistances 45 between Current Collecting Tab and Lead Wire. Journal of The Elec-trochemical Society 160, A437–A443. doi: 10.1149/2.039303jes .[49] Yuan, Y., Wang, H., Sun, Y., Han, X., Zhu, C., Ouyang, M., 2025. The influence of local lithium plating on battery safety and a novel detection method. Energy 321, 135529. URL: https://doi.org/10.1016/j. energy.2025.135529 , doi: 10.1016/j.energy.2025.135529 .[50] Zhao, J., Feng, X., Tran, M.K., Fowler, M., Ouyang, M., Burke, A.F., 2024. Battery safety: Fault diagnosis from laboratory to real world. Journal of Power Sources 598. doi: 10.1016/j.jpowsour.2024.234111 .[51] Zhou, Z., Aitio, A., Howey, D., 2025. Learning Li-ion battery health and degradation modes from data with aging-aware circuit models. Applied Energy 397, 126375. URL: https://doi.org/10.1016/j.apenergy. 2025.126375 , doi: 10.1016/j.apenergy.2025.126375 .46
