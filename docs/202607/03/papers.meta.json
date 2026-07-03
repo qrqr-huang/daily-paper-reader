@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-03",
+  "date": "2026-07-03",
+  "generated_at": "2026-07-03T22:34:34",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/03/2606.30804v1-wind-and-state-estimation-on-se3-comparative-evaluation-of-ekf-and-ukf-with-continuous-and-discrete-quadrotor-models",
+      "section": "quick",
+      "title_en": "Wind and State Estimation on SE(3): Comparative Evaluation of EKF and UKF with Continuous and Discrete Quadrotor Models",
+      "authors": "Hiranya Udagedara, Adam Bigsby, Mahdis Bisheban",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.30804v1",
+      "score": "6.0",
+      "evidence": "对EKF与UKF在状态估计中的比较评估，可迁移至基于自适应卡尔曼滤波的SOC估计",
+      "tldr": "四旋翼风速估计因非线性动态而具挑战性。本研究在SE(3)上比较了连续与离散动力学模型，结合EKF和UKF进行状态估计。离散模型采用李群变分积分器，无需近似。结果表明，离散模型结合UKF在悬停和轨迹跟踪中精度更高，即便使用低成本传感器。该方案为高精度、低成本的机载估计任务提供了可行路径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Use of quadrotor UAVs for wind velocity estimation is gaining popularity in recent studies, leveraging their maneuverability, compact size and low cost. Among available approaches, model-based wind velocity estimation is most commonly used, since it relies only on onboard sensors. However, as the quadrotor is a highly nonlinear system, thus making this task challenging. This study evaluate the use of both discrete and continuous dynamic equations of the quadrotor UAV for wind velocity estimation on SE(3), rather than commonly adapted continuous or discretized form. Lie Group Variational Integrator, developed on discrete Lagrangian is used as the discrete model without any approximation or discritization. The study assess both the discrete and continuous form of the quadrotor dynamics on SE(3) using Extended Kalman filter (EKF), and Unscented Kalman filter (UKF). The quadrotor UAV performance is evaluated in both MATLAB-based numerical simulations and free outdoor flight. The numerical simulations are conducted during both hovering and trajectory-tracking flights. Results demonstrate that, by using discrete SE(3) dynamics coupled with UKF, the quadrotor achieves higher estimation accuracy while maintaining trajectory tracking, even with low-cost sensors. These findings highlight the potential of discrete quadrotor models with UKF not only for wind velocity estimation but also for other high-accuracy tasks, even when relying on low-cost onboard sensors.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

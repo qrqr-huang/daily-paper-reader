@@ -1,0 +1,54 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-03T22:33:33.288978+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.30804v1",
+      "source": "arxiv",
+      "title": "Wind and State Estimation on SE(3): Comparative Evaluation of EKF and UKF with Continuous and Discrete Quadrotor Models",
+      "abstract": "Use of quadrotor UAVs for wind velocity estimation is gaining popularity in recent studies, leveraging their maneuverability, compact size and low cost. Among available approaches, model-based wind velocity estimation is most commonly used, since it relies only on onboard sensors. However, as the quadrotor is a highly nonlinear system, thus making this task challenging. This study evaluate the use of both discrete and continuous dynamic equations of the quadrotor UAV for wind velocity estimation on SE(3), rather than commonly adapted continuous or discretized form. Lie Group Variational Integrator, developed on discrete Lagrangian is used as the discrete model without any approximation or discritization. The study assess both the discrete and continuous form of the quadrotor dynamics on SE(3) using Extended Kalman filter (EKF), and Unscented Kalman filter (UKF). The quadrotor UAV performance is evaluated in both MATLAB-based numerical simulations and free outdoor flight. The numerical simulations are conducted during both hovering and trajectory-tracking flights. Results demonstrate that, by using discrete SE(3) dynamics coupled with UKF, the quadrotor achieves higher estimation accuracy while maintaining trajectory tracking, even with low-cost sensors. These findings highlight the potential of discrete quadrotor models with UKF not only for wind velocity estimation but also for other high-accuracy tasks, even when relying on low-cost onboard sensors.",
+      "authors": [
+        "Hiranya Udagedara",
+        "Adam Bigsby",
+        "Mahdis Bisheban"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-06-29T18:30:35+00:00",
+      "link": "https://arxiv.org/pdf/2606.30804v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "query:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "comparative evaluation of EKF and UKF for state estimation, transferable to adaptive Kalman filter-based SOC estimation",
+      "llm_evidence_cn": "对EKF与UKF在状态估计中的比较评估，可迁移至基于自适应卡尔曼滤波的SOC估计",
+      "llm_evidence": "对EKF与UKF在状态估计中的比较评估，可迁移至基于自适应卡尔曼滤波的SOC估计",
+      "canonical_evidence": "对EKF与UKF在状态估计中的比较评估，可迁移至基于自适应卡尔曼滤波的SOC估计",
+      "llm_tldr_en": "This study compares EKF and UKF for wind velocity and state estimation on quadrotors using continuous and discrete dynamic models, providing insights for nonlinear Kalman filtering applicable to battery SOC estimation.",
+      "llm_tldr_cn": "该研究针对四旋翼无人机平台，采用基于李群变分积分器的连续和离散动力学模型，对比了扩展卡尔曼滤波（EKF）与无迹卡尔曼滤波（UKF）在风场和状态估计中的效果，揭示了不同模型和滤波方法对估计精度的影响，验证了该方法在非线性系统状态估计中的有效性，为电池SOC估计等领域的非线性滤波应用提供了方法参考。",
+      "llm_tldr": "该研究针对四旋翼无人机平台，采用基于李群变分积分器的连续和离散动力学模型，对比了扩展卡尔曼滤波（EKF）与无迹卡尔曼滤波（UKF）在风场和状态估计中的效果，揭示了不同模型和滤波方法对估计精度的影响，验证了该方法在非线性系统状态估计中的有效性，为电池SOC估计等领域的非线性滤波应用提供了方法参考。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
