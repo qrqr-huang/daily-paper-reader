@@ -1,0 +1,1938 @@
+Title: Multiphysical impedance spectroscopy of porous electrodes based on linear irreversible thermodynamics
+
+URL Source: https://arxiv.org/pdf/2606.29257v1
+
+Published Time: Tue, 30 Jun 2026 01:02:06 GMT
+
+Number of Pages: 64
+
+Markdown Content:
+# Multiphysical impedance spectroscopy of porous electrodes based on linear irreversible thermodynamics 
+
+Junning Jiao, Juner Zhu ∗
+
+> Department of Mechanical and Industrial Engineering, Northeastern University, 360 Huntington Ave, Boston, 02115, MA, USA
+
+Abstract 
+
+Porous electrodes couple electrical, chemical, mechanical, hydraulic, and thermal fields, yet conventional frequency-domain diagnostics interrogate only one of them: electro-chemical impedance spectroscopy (EIS) the electrical response and dynamic mechanical analysis (DMA) the mechanical. Each reads a diagonal entry of the multiphysical con-stitutive matrix and is blind to the cross-couplings that govern structural evolution and degradation. Starting from linear irreversible thermodynamics, we formulate a general theory of multiphysical impedance spectroscopy, in which perturbing one field and mea-suring the conjugate response of another probes an off-diagonal entry of the constitu-tive (Onsager) matrix, recovering the static coupling coefficient and resolving its relax-ation dynamics across frequency. Specializing to the electro-chemo-mechanical path-way yields a closed-form theory of mechano-electrochemical impedance spectroscopy (MEIS), in which a small harmonic current is applied and the stack stress is measured; the impedance factorizes into a chemical-accumulation term multiplying the sum of a chemo-mechanical and a poro-mechanical kernel. The porosity-accommodation bridge function is derived from a Helmholtz free energy—following from a microstructural stiff-ness and viscosity rather than a fitted form—and a three-phase (solid–fluid–void) clo-sure interpolates continuously between unsaturated and Biot-saturated limits through a void-accommodation fraction. Non-dimensionalization reduces the spectrum to five groups, identifies the phase angle as the discriminator of the chemo-mechanical param-eters, and locates the onset of second-quadrant behavior, which in a full cell arises from     
+
+> ∗Corresponding author.
+> Email addresses: jiao.ju@northeastern.edu (Junning Jiao), j.zhu@northeastern.edu (Juner Zhu)
+> arXiv:2606.29257v1 [cond-mat.mtrl-sci] 28 Jun 2026
+
+the competition between an expanding and a contracting electrode. Because the me-chanical kernel reduces to an equivalent spring–dashpot network, measured spectra can be fitted as in EIS or DMA with each element retaining a definite physical meaning, and MEIS emerges as one member of a family of cross-coupled spectroscopies the same framework brings within reach. 
+
+Keywords: Chemo-mechanics, multiphysical systems, porous electrodes, dynamic mechanical analysis, irreversible thermodynamics 
+
+1. Introduction 
+
+Many natural and engineered systems are governed by the simultaneous action of multiple physical fields. Electrical, chemical, mechanical, hydraulic, and thermal pro-cesses rarely act in isolation; instead, they couple, so that a gradient in one field drives a flux in another (Prigogine and Rysselberghe, 1963). Table 1 qualitatively summarizes various direct and cross-coupling effects among electric, chemical, mechanical (solids and fluids), and thermal fields. For example, thermoelectricity converts heat flow into electric current; electro-osmosis drives fluid through a charged porous medium under an electric field; thermal expansion couples temperature to deformation; and diffusion-induced stress couples composition to mechanics. Such cross-couplings are not inciden-tal complications but are central to the function of devices ranging from fuel cells and thermoelectric generators to actuators, sensors, and biological tissues. The theoreti-cal description of these couplings is the domain of linear irreversible thermodynamics, which, through the Onsager reciprocal relations (Onsager, 1931a,b), provides a unified and thermodynamically consistent structure relating the full set of generalized fluxes to their conjugate driving forces (Balluffi et al., 2005). Among multiphysical systems, porous electrodes in electrochemical energy technolo-gies are one of the most strongly coupled. They are central to lithium-ion batteries, electrochemical capacitors, fuel cells, electrolysis systems, and direct lithium extrac-tion (Newman and Tiedemann, 1975; Lai et al., 2018; Huang et al., 2020; Chen et al., 2022), and their operation simultaneously involves all five of the physical fields named above. During operation, electrons are conducted through the solid matrix; ions mi-grate and diffuse through the electrolyte-filled pore network; electrochemical reactions 2Potential                    
+
+> \Flux Electric current
+> Je
+> Ionic flux
+> Fi
+> Deformation
+> ˙εp
+> Fluid flow
+> vf
+> Heat flux
+> Jq
+> Electric potential ϕ
+> Electronic conduction Electromigration Electrostriction Electro-osmosis Peltier effect
+> Chemical potential μ
+> Diffusion potential Ionic diffusion Compositional expansion Chemo-osmosis Dufour effect
+> Stress σpPiezoelectricity Stress-assisted diffusion Skeleton viscoelasticity Poroelastic consolidation Piezocaloric effect
+> Fluid pressure p
+> Streaming current Advective ion transport Pore-pressure swelling Darcy flow Thermal advection
+> Temperature
+> TSeebeck effect Soret effect Thermal expansion Thermo-osmosis Heat conduction Table 1: Direct (shaded, on the diagonal) and cross-coupling effects among the five coupled processes in a porous electrode. Each row is a thermodynamic driving force (potential gradient) and each column the conjugate generalized flux; the entry names the physical effect by which a given potential drives a given flux. The constitutive relations underlying these effects are developed in the following sections.
+
+at solid–electrolyte interfaces drive compositional changes; these compositional changes deform the solid skeleton; the deformation in turn drives flow of the pore fluid; and the entire process generates and is modulated by heat. A porous electrode is therefore a system in which electrical, chemical, mechanical, hydraulic, and thermal fields are intrinsically and bidirectionally coupled within a single heterogeneous microstructure composed of solid active materials, electrolyte-filled pores, and conductive additives. These couplings are not merely of academic interest; they govern performance and degradation. For example, intercalation-induced swelling of active particles pro-duces stress accumulation, particle fracture, electrode-level deformation, and progres-sive degradation of the porous structure (Ipers et al., 2024; Jiao et al., 2026). Recipro-cally, changes in porosity and pore morphology alter electrolyte transport and reaction kinetics, feeding back on the electrochemical response (Xu et al., 2021; Song et al., 2025; Zhao et al.). Capturing this web of interactions requires a framework that treats 3all the participating fields and their couplings on an equal footing. 
+
+Modeling of porous electrodes. On the electrochemical side, continuum descriptions of porous electrodes have been largely shaped by the pioneering work of Newman and collaborators, now known as porous electrode theory (PET) (Newman and Tiedemann, 1975; Doyle et al., 1993; Fuller and Harb, 2018). PET provides a reduced-order de-scription of electrochemical processes by averaging microscale transport and reaction phenomena over the porous structure, and has become the foundation for modeling a wide variety of electrochemical systems. Subsequent developments incorporated concentrated-solution effects, phase transitions, and nonlinear reaction kinetics; in par-ticular, nonequilibrium thermodynamic formulations have captured phase separation, electro-autocatalysis, and mosaic instabilities in battery materials (Bazant, 2013, 2017; Smith and Bazant, 2017; Lian and Bazant, 2024). In parallel, the mechanics community has developed thermodynamically consistent theories of chemo-mechanical coupling in solids (Di Leo et al., 2014; Chester et al., 2015; Klinsmann et al., 2019), treating diffu-sion as a thermodynamically driven process influenced by mechanical fields, and pro-viding insight into stress-assisted diffusion, phase transformations, particle fracture, and diffusion-induced stresses. These two lines of work have greatly advanced predic-tive capability, but they have largely developed the electrochemical and mechanical descriptions separately, and high-fidelity models have grown increasingly costly and parameter-rich, making direct identification of physical parameters from low-cost ex-periments difficult. 
+
+Diagnostics and the impedance concept. A complementary route to understanding cou-pled systems is provided by frequency-domain diagnostics. The most established is electrochemical impedance spectroscopy (EIS) (Huang et al., 2020; Wang et al., 2021), in which a small harmonic electrical perturbation is applied and the electrical response is measured, yielding a transfer function whose frequency dependence separates dis-tinct transport and kinetic processes. The mechanical analogue is dynamic mechani-cal analysis (DMA) (Menard and Menard, 2020; Ferry and Myers, 1961), in which a small harmonic strain is imposed and the resulting stress is recorded, characterizing viscoelastic relaxation. Both techniques share a common principle: a small periodic perturbation in one field, a measured periodic response in a conjugate field, and a 4frequency-domain transfer function that resolves the underlying dynamics. EIS and DMA, however, each remain confined to a single physical domain—EIS to the elec-trical, DMA to the mechanical—and therefore probe only the diagonal, self-coupled response of the system. Neither directly measures the cross-coupling between differ-ent physical fields, even though it is precisely these cross-couplings that encode the multiphysical interactions of interest. 
+
+A unifying view: multiphysical impedance spectroscopy. Viewed through the lens of linear irreversible thermodynamics, EIS and DMA are revealed as two members of a much larger family. The multiphysical matrix in Table 1 relates every generalized flux to every conjugate force; its diagonal entries correspond to the classical transport laws (Ohm, Fick, Newton, Darcy, Fourier, see Eq. 4 of the following section for details), while its off-diagonal entries correspond to the multiphysical cross-couplings. Each entry of this matrix, in principle, defines a dynamic spectroscopy: one drives a generalized flux harmonically and measures a conjugate response, reading the transfer function from the corresponding matrix structure. EIS probes the electrical diagonal; DMA probes the mechanical diagonal. The off-diagonal entries define a class of cross-coupled spec-troscopies that probe the multiphysical interactions directly, and that remain almost entirely unexplored. We refer to this general class as multiphysical impedance spec-troscopy .Recently, our group introduced one realization of this class: mechano-electrochemical impedance spectroscopy (MEIS) (Fang et al., 2025), in which a small harmonic elec-tric current is applied and the mechanical (pressure or stress) response is measured. MEIS occupies an off-diagonal pathway of the multiphysical constitutive matrix, cou-pling the electrical, chemical, and mechanical fields, and thereby provides access to structural evolution—porosity change, particle rearrangement, electrode consolidation, stress accumulation—that is invisible to purely electrical measurements. As a low-cost, noninvasive probe that requires only the addition of a force sensor to a standard electro-chemical setup, MEIS is practical and broadly deployable. Despite a strict derivation of an equivalent phenomenological model of MEIS has been available, its theoretical foundation, and more fundamentally the theory of the general multiphysical-impedance class to which it belongs, has not yet been established. 5This work. In this work, we develop a general framework for multiphysical impedance spectroscopy of porous electrodes based on the linear theory of irreversible thermody-namics. Starting from the full multiphysical constitutive matrix coupling electrical, chemical, mechanical, hydraulic, and thermal fields, we identify the family of dynamic spectroscopies generated by its diagonal and off-diagonal entries, and derive the cor-responding frequency-domain transfer functions. We then specialize the framework to the electro-chemo-mechanical pathway, yielding a closed-form theory for MEIS that explicitly accounts for chemo-mechanical coupling, viscoelastic relaxation of the solid skeleton, and—through a three-phase poromechanical treatment of the partially satu-rated electrode—the coupled evolution of pore-volume change and pore-fluid pressuriza-tion. The theory provides a thermodynamically consistent and physically interpretable foundation for MEIS, identifies the characteristic relaxation time scales governing the measured spectra, and recovers existing phenomenological models as limiting cases. More broadly, it positions MEIS as one member of a family of multiphysical impedance spectroscopies and points toward additional, as-yet-unrealized cross-coupled measure-ments that the same framework predicts. Although restricted to the linear regime, the framework is naturally suited to small-perturbation spectroscopies and applies equally to EIS, DMA, and their cross-coupled counterparts. 
+
+2. General Multiphysical Framework 
+
+2.1. Generalized Fluxes and Driving Forces 
+
+We consider a porous electrode undergoing coupled electrical, chemical, mechanical, hydraulic, and thermal processes, as illustrated in Figure 1. The active material exists in the form of particles. In typical industrial applications, each particle is itself an agglomerate of many smaller primary particles and is therefore referred to as a secondary particle. These particles form a connected network–hereinafter called the solid skeleton– immersed in a liquid electrolyte. The framework considers five irreversible processes: electrical conduction, ionic transport, mechanical dissipation, fluid flow, and heat transport. Each process is char-acterized by a generalized flux and a conjugate thermodynamic driving force. We 6Figure 1: Illustration of the coupled processes in a porous electrode. Fluxes: Je, electric current density; Fi, ionic flux; ˙εp, strain rate of the porous medium; vf , fluid velocity; Jq , heat flux. Forces:      
+
+> ϕ, electric potential; ci, ionic concentration; σp, stress of the porous medium; p, fluid pressure; T,temperature.
+
+assemble the generalized fluxes into the vector 
+
+J =
+
+h
+
+Je Fi ˙εp vf Jq
+
+iT
+
+, (1) where Je = ( Je1, J e2, J e3) is the electric current density, Fi = ( Fi1, F i2, F i3) is the ionic flux, ˙εp = ( ˙ εp
+
+> 1
+
+, ˙εp
+
+> 2
+
+, ˙εp
+
+> 3
+
+) are the principal strain rates of the porous medium, vf =(vf 1, v f 2, v f 3) is the fluid velocity, and Jq = ( Jq1, J q2, J q3) is the heat flux. The corresponding conjugate thermodynamic driving forces are 
+
+X =
+
+h
+
+−∇ ϕ −∇ μ −σp −∇ p −∇ T
+
+iT
+
+, (2) where −∇ ϕ is the electric field driving the electric current, −∇ μ is the chemical poten-tial gradient driving ionic transport, −σp = −(σp 
+
+> 1
+
+, σ p 
+
+> 2
+
+, σ p 
+
+> 3
+
+) are the principal stresses of the porous medium conjugate to the strain rate, −∇ p is the pressure gradient driving fluid flow, and −∇ T is the temperature gradient driving heat transport. The negative sign in front of σp reflects the standard solid-mechanics convention in which stress is positive in tension, so that compressive loading—driving inward strain—corresponds to a positive driving force in the entropy production, which will be discuss in Section 2.4. This convention ensures that all entries of X are uniformly signed: each component rep-7resents the driving force whose product with the conjugate flux contributes positively to the entropy production rate. A remark on the mechanical variables is in order. Rather than working with the full stress and strain-rate tensors, we have restricted the mechanical entries of J and 
+
+X to their principal components. This simplification is justified by two considerations. First, we assume that the porous electrode is statistically isotropic at the homogenized scale: the active particles and the pore network have no preferred orientation, and the constitutive response is invariant under rotation. In an isotropic medium, the stress and strain-rate tensors are coaxial, so the constitutive relations between them reduce to relations between principal values along the common principal axes (Coussy, 2004). Moreover, the Curie–Prigogine principle of linear irreversible thermodynamics states that, in an isotropic system, fluxes and forces of different tensorial rank cannot cou-ple (de Groot and Mazur, 1984; Demirel and Gerbaud, 2019). Consequently, the scalar driving forces ( −∇ ϕ, −∇ μ, −∇ p, −∇ T ) couple only to the hydrostatic (scalar) part of the mechanical response, and the deviatoric (shear) components are decoupled from the other physical fields. Second, in the experimental configurations of primary interest, including stack-pressure measurements and MEIS (Fang et al., 2025), the electrode is mechanically constrained along a single direction and the measured mechanical quan-tity is the normal stress (or pressure) along the stacking axis. The principal-stress formulation thus captures the mechanical degrees of freedom that are both physically relevant for multiphysical coupling and experimentally accessible. 
+
+2.2. Assumptions and Linear Response Regime 
+
+The formulation of theoretical framework is developed under the following assump-tions, standard in linear irreversible thermodynamics (Balluffi et al., 2005): 1. Small perturbations about a local reference state. All state variables deviate only slightly from a thermodynamic reference state, so that the system response remains within the linear regime and superposition applies. 2. Local thermodynamic equilibrium. Although the system is globally out of equilibrium, each material point is in local equilibrium, so that thermodynamic 8state variables such as temperature, chemical potential, and stress remain well defined throughout the continuum. 3. Small-strain kinematics. Deformation is described by the infinitesimal strain tensor, and the governing equations are linearized about a reference configuration of uniform temperature. Temperature gradients are retained as thermodynamic driving forces for heat transport. 4. Onsager reciprocity. The microscopic dynamics are assumed to satisfy time-reversal symmetry, so that the matrix of phenomenological coefficients relating fluxes to conjugate forces is symmetric (Onsager, 1931a,b). 
+
+2.3. Constitutive Relations 
+
+Under the assumptions stated above, the generalized fluxes depend linearly on the thermodynamic driving forces. The constitutive relation is therefore written as 
+
+J = L X, (3) where L is the constitutive matrix of phenomenological coefficients. Explicitly, 
+
+
+
+Je
+
+Fi
+
+˙εp
+
+vf
+
+Jq
+
+
+
+=
+
+
+
+L11 L12 L13 L14 L15 
+
+L21 L22 L23 L24 L25 
+
+L31 L32 L33 L34 L35 
+
+L41 L42 L43 L44 L45 
+
+L51 L52 L53 L54 L55 
+
+
+
+−∇ ϕ
+
+−∇ μ
+
+−σp
+
+−∇ p
+
+−∇ T
+
+
+
+. (4) Each block Lij is a second-order tensor mapping a three-component driving force to a three-component flux. The diagonal blocks Lii correspond to the classical transport laws associated with each physical process—Ohm’s law, Fick’s law, Newton’s law of viscosity, Darcy’s law, and Fourier’s law—while the off-diagonal blocks Lij (i̸ = j)encode the cross-couplings between distinct physical mechanisms. Onsager reciprocity further constrains the matrix to be symmetric, 
+
+Lij = LT
+
+> ji
+
+, (5) reducing the number of independent coupling coefficients. The physical content of each block is examined in Section 2.5. 92.4. Thermodynamic Admissibility 
+
+The constitutive law must satisfy the second law of thermodynamics, which requires non-negative local entropy production. With the generalized fluxes and conjugate forces introduced above, the local entropy production rate takes the bilinear form 
+
+˙sprod = JTX. (6) Substituting the linear constitutive relation J = L X gives 
+
+˙sprod = XT L X ≥ 0. (7) For this inequality to hold for all admissible driving forces X, the symmetric part of 
+
+L must be positive semi-definite. Combined with the Onsager reciprocity introduced in the preceding subsection, which renders L symmetric, the constitutive matrix itself must therefore be positive semi-definite: 
+
+L = LT, XT L X ≥ 0 ∀ X. (8) These two conditions—symmetry and positive semi-definiteness—together constitute the thermodynamic admissibility requirements on the phenomenological coefficients. They imply that each diagonal block Lii is itself positive semi-definite, ensuring that every transport process is individually dissipative, and they bound the off-diagonal cou-pling blocks Lij in terms of the diagonal blocks. For scalar coefficients, this constraint takes the familiar form 
+
+L2 
+
+> ij
+
+≤ Lii Ljj , (9) which is a direct consequence of positive semi-definiteness and limits the magnitude of any cross-coupling by the geometric mean of the associated direct dissipation coeffi-cients (de Groot and Mazur, 1984; Demirel and Gerbaud, 2019). 
+
+2.5. Classical Transport Laws and Cross-Couplings 
+
+The constitutive matrix L introduced in the previous subsections naturally recovers the classical phenomenological transport laws as its diagonal blocks, while the off-diagonal blocks encode the multiphysical couplings between distinct transport pro-cesses. 10 Diagonal blocks: classical transport laws. The diagonal block L11 relates the electric current density to the electric field, 
+
+Je = L11 (−∇ ϕ), (10) which is Ohm’s law with L11 playing the role of the electrical conductivity tensor. Similarly, L22 governs ionic transport, 
+
+Fi = L22 (−∇ μ). (11) For dilute solutions, μ = μ0 + RT ln c gives ∇μ = ( RT /c )∇c, where c is the concen-tration of the intercalation ions, and the transport law reduces to 
+
+Fi = −D ∇c, (12) recovering Fick’s law of diffusion with the effective diffusivity D = L22 RT /c .The block L33 describes the dissipative mechanical response of the porous medium as a whole, 
+
+˙εp = L33 (−σp), (13) which is Newton’s law of viscosity, with L33 playing the role of an inverse viscosity tensor. The superscript p emphasizes that both the strain rate and the stress are defined at the homogenized porous-medium scale rather than on the solid skeleton alone, and thereby reflect the combined dissipative behavior of the skeleton, the pore fluid, and their interactions. Fluid transport through the porous medium is described by L44 ,
+
+vf = L44 (−∇ p), (14) which is Darcy’s law with L44 = κ/η f , where κ is the permeability tensor and ηf is the electrolyte viscosity. Finally, L55 governs heat conduction, 
+
+Jq = L55 (−∇ T ), (15) which is Fourier’s law with L55 the thermal conductivity tensor. 
+
+Off-diagonal blocks: cross-couplings. The off-diagonal blocks Lij (i̸ = j) capture the multiphysical couplings that distinguish the present framework from the uncoupled classical laws. Each pair Lij = LT 
+
+> ji
+
+encodes a reciprocal cross-effect between two distinct processes. Several couplings are of particular relevance for porous electrodes: 11 • Electro-chemical coupling (L12 , L21 ): chemical potential gradients contribute to electric current (diffusion potential), while electric fields drive ion migration (electromigration). 
+
+• Chemo-mechanical coupling (L23 , L32 ): chemical potential gradients drive deformation (intercalation-induced expansion), while stresses bias ionic transport (stress-assisted diffusion). 
+
+• Poro-mechanical coupling (L34 , L43 ): pore-fluid pressure gradients deform the solid skeleton, while skeletal deformation drives fluid flow within the pore network. 
+
+• Electrokinetic coupling (L14 , L41 ): electric fields drive fluid flow (electroosmo-sis) and fluid flow generates electric currents (streaming potential). 
+
+• Thermo-diffusive coupling (L25 , L52 ): temperature gradients drive species transport (Soret effect), while concentration gradients contribute to heat trans-port (Dufour effect). Additional couplings, such as thermoelectric ( L15 , Seebeck/Peltier effects) and ther-momechanical ( L35 , thermal expansion) interactions, are likewise captured within the framework. Some of these couplings may vanish due to material symmetry, the Curie– Prigogine principle, or the specific physical structure of the system; the surviving cou-plings constitute the multiphysical signature of the porous electrode. 
+
+2.6. Quadratic Dissipation Potential 
+
+An equivalent and more fundamental formulation of the linear constitutive relations is obtained by introducing a scalar dissipation potential (Ziegler, 1983; Germain et al., 1983). We define 
+
+Φ( X) = 12 XT L X, (16) so that the generalized fluxes are recovered by differentiation, 
+
+J = ∂Φ
+
+∂X = L X. (17) The linear force–flux relation thus arises from the existence of a quadratic dissipation potential. 12 This potential structure offers a unified interpretation of the thermodynamic admis-sibility conditions established in Section 2.4. Because Φ is a smooth scalar function, the equality of mixed partial derivatives, 
+
+∂2Φ
+
+∂X a∂X b
+
+= ∂2Φ
+
+∂X b∂X a
+
+, (18) directly yields the Onsager reciprocal relations Lab = LT 
+
+> ba
+
+without invoking microscopic time-reversibility as a separate postulate. The entropy production rate is then 
+
+˙sprod = JTX = XTL X = 2 Φ( X) ≥ 0, (19) so that non-negativity of Φ is equivalent to the second law and requires L to be positive semi-definite. The reciprocity and positive semi-definiteness conditions, previously de-rived as separate constraints, both emerge from the single assumption that a quadratic dissipation potential exists. Material symmetry further constrains the admissible structure of L. For an isotropic medium, each tensor block reduces to a scalar multiple of the identity tensor, 
+
+Lab = Lab I, (20) where I denotes the identity operator of appropriate rank. Consequently, no preferred direction exists in the constitutive response, and all directional dependence is carried by the gradient operators acting on the driving forces, while the magnitude of each coupling is encoded in the scalar coefficient Lab .The quadratic dissipation potential thus provides a compact and systematic genera-tor for thermodynamically admissible multiphysical coupling within the linear response regime. 
+
+3. Specialization to Electro–Chemo–Mechanics of Porous Electrodes 
+
+3.1. Physical Assumptions 
+
+We now specialize the general framework developed in Section 2 to porous electrodes operating through ion intercalation. Intercalation refers to the reversible insertion of guest ions or molecules into a host material with a layered or open-framework crystal structure, without disrupting the overall structural integrity of the host (Whittingham 13 and Jacobson, 1982). It is the dominant charge-storage mechanism in modern lithium-ion batteries, with representative host materials including graphite, lithium iron phos-phate (LFP), lithium nickel manganese cobalt oxide (NMC), and silicon-based alloys. The following physical assumptions are adopted to isolate the dominant couplings rel-evant to battery operation while preserving the essential multiphysical structure: 
+
+• Isothermal conditions. The system is assumed to operate at a uniform ref-erence temperature, so that thermal gradients and temperature variations are neglected during the perturbation. This assumption is consistent with typical laboratory measurements performed in temperature-controlled environments and removes the thermal field from the active set of coupled processes. 
+
+• Non-piezoelectric solid matrix. The active materials are assumed to exhibit no direct piezoelectric coupling between electric field and mechanical stress. This is appropriate for the centrosymmetric crystal structures of most common inter-calation electrodes, including layered oxides, spinels, and olivines (Kholkin et al., 2008; Park et al., 2022). 
+
+• Migration-diffusion ionic transport. Ionic transport in the electrolyte is gov-erned by the combined action of electromigration and concentration-driven diffu-sion. Electrokinetic couplings between electric fields and pore-fluid flow (electroos-mosis, streaming potential) are neglected at the homogenized porous-electrode scale, which is justified for the moderate ionic strengths and macroscopic pore sizes characteristic of battery electrolytes (Qu et al., 2018; Zhao et al.). 
+
+• Linearized poro-mechanical response. The porous electrode is described by a linearized poro-mechanical constitutive law in which pore pressure contributes additively to the macroscopic stress through the Biot effective stress relation, and pore pressure evolves through fluid storage and Darcy-type hydraulic relax-ation (Wang, 2017). Nonlinear effects such as finite-deformation poroelasticity, pore collapse, and capillary phenomena are not considered. Under these assumptions, all direct electric–mechanical ( L13 , L31 ) and electric– hydraulic ( L14 , L41 ) couplings vanish, and the thermal channel ( Li5, L5j ) is removed 14 from the active matrix. The remaining multiphysical interactions are organized along three pathways: electrochemical ( L12 = LT21 ), chemo-mechanical ( L23 = LT32 ), and poro-mechanical ( L34 = LT43 ). These three surviving couplings define the irreducible multiphysical structure of the porous electrode within the present framework. 
+
+3.2. Reduced Constitutive Matrix 
+
+For the one-dimensional through-thickness analysis adopted in subsequent sections, the tensorial flux–force relations of Section 2 reduce to scalar relations along the stacking direction. The generalized flux and driving-force vectors become 
+
+J =
+
+
+
+Je
+
+Fi
+
+˙εp
+
+Q
+
+
+
+, X =
+
+
+
+−∇ ϕ
+
+−∇ μ
+
+−σp
+
+−∇ p
+
+
+
+, (21) where Je, Fi, ˙εp, and Q denote, respectively, the electric current density, ionic flux, volu-metric strain rate of the porous medium, and pore-fluid flux along the through-thickness direction. The thermal channel has been removed under the isothermal assumption of Section 3.1. Invoking the simplifications introduced in Section 3.1—the absence of piezoelectric coupling ( L13 = L31 = 0 ), the absence of electrokinetic coupling ( L14 = L41 = 0 ), and the absence of direct ion–fluid advective coupling ( L24 = L42 = 0 )—the constitutive matrix takes the reduced block-tridiagonal form 
+
+
+
+Je
+
+Fi
+
+˙εp
+
+Q
+
+
+
+=
+
+
+
+L11 L12 0 0
+
+L12 L22 L23 00 L23 L33 L34 
+
+0 0 L34 L44 
+
+
+
+−∇ ϕ
+
+−∇ μ
+
+−σp
+
+−∇ p
+
+
+
+, (22) where Onsager reciprocity has been imposed to set Lij = Lji . The reduced matrix preserves only three multiphysical couplings: the electrochemical coupling L12 between ionic transport and electric current, the chemo-mechanical coupling L23 between in-tercalation and deformation, and the poro-mechanical coupling L34 between skeletal deformation and pore-fluid flow. 15 The block-tridiagonal structure of Eq. 22 reveals an important physical feature: the four transport processes form a sequential coupling chain. Electric fields drive ionic transport ( L12 ), which in turn generates intercalation-induced deformation ( L23 ), which finally drives pore-fluid redistribution through poroelastic coupling ( L34 ). There is no direct pathway from electric current to mechanical or hydraulic response; the mechan-ical signal probed by MEIS arises only through the cascade of these three reciprocal couplings. This sequential structure underlies the multiplicative form of the MEIS transfer function derived in subsequent sections. 
+
+Thermodynamic admissibility. The reduced Onsager matrix must satisfy the second law of thermodynamics. The local rate of entropy production is 
+
+D = Je(−∇ ϕ) + Fi(−∇ μ) + ˙ ε σ + Q(−∇ p), (23) which can be written compactly as 
+
+D = XTLX . (24) Thermodynamic admissibility requires 
+
+D ≥ 0 for all admissible X,
+
+which implies that the constitutive matrix L must be symmetric and positive semi-definite. In particular, the diagonal coefficients must satisfy 
+
+L11 > 0, L22 > 0, L33 > 0, L44 > 0,
+
+while the principal minors impose bounds on the strength of the coupling coefficients. 
+
+3.3. Governing Field Equations 
+
+The reduced constitutive relations of Section 3.2 must be combined with the conser-vation laws governing each field to obtain a closed system of governing equations. The unknown fields are the electric potential ϕ, the ionic concentration c, the mechanical strain ε, and the pore pressure p, all taken as functions of the through-thickness co-ordinate x and time t. Under the one-dimensional approximation adopted throughout this section, the governing equations take the following form. 16 Charge conservation. Electric charge conservation in the absence of bulk charge accu-mulation requires 
+
+∂xJe = 0 , (25) so that the electric current density is spatially uniform across the electrode thickness. 
+
+Species conservation. Conservation of the inserted ionic species in the active material is expressed as 
+
+∂tc + ∂xFi = 0 , (26) where c is the volumetric concentration of intercalated species and Fi is the ionic flux. 
+
+Mechanical equilibrium. Under quasi-static loading at the time scales of interest, the porous-medium stress satisfies the equilibrium equation 
+
+∂xσp = 0 , (27) so that σp is spatially uniform across the electrode thickness. At the homogenized porous-medium scale, σp is the total stress that, in the presence of a pore fluid, decom-poses through the Biot effective stress relation (Biot, 1941) into a skeleton contribution and a pore-pressure contribution, 
+
+σp = σs − α p, (28) where σs is the skeleton stress and α is the Biot coefficient. 
+
+Fluid mass conservation. Conservation of pore fluid takes the form 
+
+∂tζ + ∂xQ = 0 , (29) where ζ is the increment of fluid content (fluid volume gained per unit reference volume) and Q is the pore-fluid flux. The evolution of ζ couples to the deformation of the solid skeleton and to the pore pressure through the constitutive structure, which will be specified together with the poro-mechanical closure in the following sections. Together with the reduced constitutive relations [Eq. 22], Eqs. 25–29 form a closed system describing the coupled electrochemical, mechanical, and hydraulic response of the porous intercalation electrode. 17 4. Current-Controlled Mechano-Electrochemical Impedance Spectroscopy 
+
+4.1. Concept and Motivation 
+
+Electrochemical systems based on porous electrodes inherently couple charge trans-port, species redistribution, solid deformation, and fluid flow. Conventional electro-chemical impedance spectroscopy (EIS) (Wang et al., 2021) probes the electrical re-sponse to a small harmonic current perturbation, thereby characterizing interfacial ki-netics and transport in the electrochemical domain. However, electrochemical processes also generate chemical strain and internal stress, which encode multiphysical informa-tion that is invisible in purely electrical measurements. The mechanical counterpart to EIS is dynamic mechanical analysis (DMA) (Menard and Menard, 2020; Ferry and Myers, 1961), in which a small harmonic strain (or displacement) is imposed and the resulting stress (or force) is recorded. DMA characterizes the viscoelastic response of the material but provides no information about the underlying electrochemical pro-cesses. To bridge these two complementary techniques, our group recently developed mechano-electrochemical impedance spectroscopy (MEIS) (Fang et al., 2025), which extends the impedance concept to the coupled electro-chemo-mechanical regime. In MEIS, a small sinusoidal electric current is applied to the electrode and the resulting linear mechanical response—stress or pressure—is measured. The frequency-domain transfer function between current and mechanical response captures the dynamics of electrochemical, chemical, and mechanical processes on an equal footing. The reduced constitutive matrix derived in Section 3.2 provides the local relations between fluxes and driving forces underlying this coupled response. In the following subsections, we combine these constitutive relations with the corresponding balance laws in the frequency domain to derive the analytical MEIS transfer function. The resulting expression decomposes naturally into physically interpretable contributions associated with electrochemical accumulation, viscoelastic relaxation, hydraulic relax-ation, and porosity accommodation, each carrying a distinct characteristic time scale. Because the perturbation amplitude is small, the response remains within the linear regime: superposition applies, and the distinct multiphysical relaxation processes sep-arate cleanly in frequency space. MEIS thus provides a frequency-resolved probe of electro-chemo-mechanical coupling in porous electrodes. 18 4.2. Problem Definition 
+
+We consider a one-dimensional porous electrode of characteristic thickness ℓ, oper-ated near a local equilibrium state. The governing equations introduced in Section 3 describe the coupled evolution of electric potential ϕ, chemical potential μ, concentra-tion c of the inserted species, mechanical deformation of the porous skeleton, and pore pressure p.In a current-controlled MEIS experiment, a small harmonic electronic current den-sity is imposed at the electrode boundary: 
+
+Je(t) = ˆJe eiωt , (30) where ω is the angular frequency, i is the imaginary unit, and ˆJe is the complex ampli-tude of the applied current. Because the perturbation amplitude is small, the system response remains within the linear regime, and all state variables oscillate harmonically at the same frequency ω. The electrode stack is mechanically constrained under global displacement control, so that the macroscopic strain vanishes, 
+
+ε = 0 . (31) Local stresses, pore pressure, and porosity evolution within the representative porous microstructure are unconstrained and develop in response to the applied current. Since the system is linear and the excitation is purely harmonic, we formulate the problem in the frequency domain via the temporal Fourier transform. For any time-dependent field f (x, t ), we define 
+
+ˆf (x, ω ) = 
+
+Z ∞−∞ 
+
+f (x, t ) e−iωt dt, (32) so that time derivatives transform according to ∂t → iω . In the linear regime, each field variable is fully characterized by its complex amplitude ˆf (x, ω ) at the excitation frequency, and all governing equations become algebraic relations between these ampli-tudes. The mechano-electrochemical impedance is then defined as the frequency-domain transfer function between the applied current and the resulting macroscopic stress re-sponse, 
+
+ZMEIS (ω) = ˆσtot (ω)ˆJe(ω) , (33) 19 where ˆσtot is the complex amplitude of the total stress measured by the load cell at the electrode boundary. The following subsections combine the reduced constitutive relation matrix with the corresponding balance laws to evaluate this transfer function in closed form. 
+
+4.3. Derivation of the General MEIS Expression 
+
+We now combine the reduced constitutive relations of Section 3.2 with the balance laws in the frequency domain to obtain the MEIS transfer function. The derivation sepa-rates naturally into three stages that follow the sequential coupling chain of the reduced matrix: the applied current drives ionic accumulation (electrochemical), the accumu-lated species generate skeleton stress and pore pressure (chemo- and poro-mechanical), and these combine into the measured impedance. The complete step-by-step algebra, retaining all couplings and relaxation time scales, is given in Appendix Appendix A; here we establish the structure and the resulting general expression. Throughout, the perturbation is harmonic, ˆf (t) = ˆf e iωt , so ∂t → iω , and the electrode is treated in the lumped (thickness-averaged) limit. 
+
+Stage 1: electrochemical accumulation. Charge conservation renders the electronic cur-rent uniform, and eliminating the electric-potential gradient from the first two rows of the reduced matrix expresses the ionic flux in terms of the applied current through the cation transference number 
+
+t+ ≡ Fc
+
+L12 
+
+L11 
+
+, (34) the fraction of the ionic current carried by the inserted cation, where Fc is the Faraday constant (96 485.33 C/mol). The thickness-integrated species balance—accumulation equal to the Faradaic flux entering at the separator—then gives the concentration re-sponse 
+
+ˆc(ω) = Ge Gc(ω) ˆJe, Ge = t+
+
+Fc
+
+, Gc(ω) = 1
+
+ℓ iω , (35) where Ge is the electrical-to-ionic conversion factor and Gc the Faradaic accumulation factor. The 1/(iω ) in Gc is the integrator that converts current into stored concen-tration, producing the capacitor-like signature familiar from EIS. Diffusion and chemo-mechanical feedback generalize Gc to a full relaxation denominator Ω∗(ω) [Appendix Ap-20 pendix A, Eq. A.47]; these are negligible over the frequency range of interest and are omitted in the present expression. 
+
+Stage 2: mechanical response. The accumulated species produce a chemical eigenstrain that, under the global constraint ε = 0 imposed by the MEIS fixture, generates an inter-nal stress through two distinct pathways. Through the chemo-mechanical coupling, the eigenstrain loads the viscoelastic solid skeleton; through the poro-mechanical coupling, the accompanying pore-volume change pressurizes the pore fluid. Both responses are linear in ˆc, so the total stress measured at the boundary may be written 
+
+ˆσtot (ω) = Hcm (ω) + Hpm (ω) ˆc, (36) which defines the chemo-mechanical kernel Hcm (concentration to skeleton stress) and the poro-mechanical kernel Hpm (concentration to the pore-fluid contribution to stress). The two kernels enter additively because the Biot effective-stress relation superposes the skeleton and pore-fluid stresses linearly. Their explicit forms—carrying the vis-coelastic, porosity-accommodation, and hydraulic relaxation time scales—are derived in Section 4.4. 
+
+Stage 3: the transfer function. Combining Eqs. 35 and 36, the mechano-electrochemical impedance is 
+
+ZMEIS (ω) = ˆσtot (ω)ˆJe(ω) = Ge Gc(ω)Hcm (ω) + Hpm (ω). (37) As illustrated in Figure 2, the result is a product of two electrochemical factors ( GeGc,converting current to concentration) multiplying a sum of two mechanical kernels ( Hcm +
+
+Hpm , converting concentration to stress). The multiplicative form reflects the sequential coupling chain—current drives ion flux, which drives concentration accumulation, which in turn drives both skeleton stress and pore-fluid pressurization—while the additivity of the mechanical kernels reflects the Biot superposition of skeleton and fluid contribu-tions. This multiplicative-plus-additive structure is the essential feature distinguishing MEIS from EIS, in which all contributions to the impedance enter additively. 
+
+A remark on sign. The continuum stress σtot is taken positive in tension (Section 2), so that the constrained chemical expansion places the electrode in compression ( ˆσtot < 0
+
+21 Ge Gc
+
+Hcm 
+
+Hpm 
+
+## +      
+
+> t+/Fc
+> electrical →ionic
+> 1/(ℓ iω )
+> accumulation
+> skeleton stress
+> pore-fluid pressure
+> Electrochemical
+> current →concentration
+> Chemo-Poro-Mechanical
+> concentration →stress
+
+ˆJe ˆc ˆσtot 
+
+ZMEIS = ˆσtot 
+
+ˆJe
+
+= Ge Gc
+
+| {z } 
+
+> multiplicative
+
+  Hcm + Hpm 
+
+| {z }
+
+> additive
+
+
+
+Figure 2: Block-diagram structure of the MEIS transfer function. The applied current ˆJe is converted to an intercalated-species concentration ˆc by the two electrochemical factors—the electrical-to-ionic conversion Ge = t+/Fc and the Faradaic accumulation Gc = 1 /(ℓ iω )—which act in series (multi-plicatively). The concentration then drives two parallel mechanical pathways: the chemo-mechanical kernel Hcm (skeleton stress) and the poro-mechanical kernel Hpm (pore-fluid pressurization), which add through the Biot effective-stress relation to give the total stress ˆσtot . The resulting impedance is the multiplicative-plus-additive form ZMEIS = GeGc(Hcm + Hpm ).
+
+for ˆJe > 0); with the kernel forms of Section 4.4 this gives a negative real prefactor for 
+
+ZMEIS . A load cell instead reports the compressive stack stress −σtot , and the impedance referred to that measured quantity carries the opposite, positive sign [Appendix Ap-pendix A, Eq. A.53]. The two differ only by this global sign; the relative magnitudes and phase relationships among the contributions are unaffected. 
+
+4.4. Constitutive Closure: Chemo-Mechanical and Poro-Mechanical Kernels 
+
+To complete the MEIS expression we specify the two kernels Hcm and Hpm intro-duced in Eq. 36. Both arise from the mechanical and hydraulic constitutive response of the porous electrode, which must be specified beyond the linear constitutive rela-tions to capture the rheology and pore-scale physics of real materials. We present the closure here; the complete step-by-step assembly of the transfer function is given in Appendix Appendix A. 22 Strain decomposition under the global constraint. The electrode-level strain is the sum of an elastic skeleton strain εe, the chemical (intercalation) eigenstrain βc with β the chemical expansion coefficient, and the relative pore contraction ξ that accommodates part of the particle swelling through rearrangement of the porous microstructure: 
+
+ε = εe + βc − ξ. (38) Under the global constraint ε = 0 imposed by the MEIS fixture, the elastic strain is 
+
+ˆεe = −βˆc + ˆξ, (39) so the chemical eigenstrain is partly relieved by the porosity change ˆξ rather than transmitted entirely to the skeleton. This strain decomposition is inspired by our recent experimental observation (Fang et al., 2025). 
+
+Skeleton viscoelasticity. Real porous electrodes exhibit both an instantaneous elastic and a time-dependent viscous response. We represent the skeleton by a standard linear solid (SLS)—a spring E∞ in parallel with a Maxwell element (spring E1 in series with a dashpot)—giving the complex modulus 
+
+ˆσs = E∗(ω) ˆ εe, E∗(ω) = E∞ + iωτ mE0
+
+1 + iωτ m
+
+, (40) where E0 = E∞ + E1 is the instantaneous (unrelaxed) modulus, E∞ the relaxed mod-ulus, and τm the viscoelastic relaxation time. 
+
+Porosity evolution from a free-energy functional. To place the porosity change ξ on a thermodynamic footing—rather than introduce it as a phenomenological fit—we posit a Helmholtz free-energy density 
+
+ψ = 12 E∗ε 2 
+
+> e
+
++ 12 k ξ 2, (41) in which k is the microstructural stiffness resisting consolidation of the granular packing and binder network. The thermodynamic force conjugate to ξ is fξ = −∂ψ/∂ξ |ε,c , which with Eq. 39 evaluates to fξ = E∗βc − (E∗ + k)ξ. A linear kinetic law ˙ξ = fξ/η ξ, with ηξ
+
+the microstructural viscosity governing dissipation during particle rearrangement and binder creep, yields the first-order relaxation 
+
+˙ξ + ξτξ
+
+= E∗βηξ
+
+c, τξ = ηξ
+
+E∗ + k , (42) 23 βˆc ˆεe = −βBˆc ˆσs          
+
+> k
+> ηξ
+> E∞
+> E1ηm
+> Porosity accommodation Skeleton viscoelasticity (SLS)
+> bridge B(ω)
+> τξ=ηξ/(E∗+k)
+> modulus E∗(ω)
+> τm=ηm/E 1
+> chemical eigenstrain
+> skeleton stress
+
+Hcm (ω) = −β E∗(ω)
+
+| {z } 
+
+> viscoelastic
+
+B(ω)
+
+| {z } 
+
+> accommodation
+
+Figure 3: Rheological structure of the chemo-mechanical kernel Hcm . The chemical eigenstrain βˆc
+
+generated by intercalation is processed by two relaxation mechanisms in series. The porosity accom-modation stage (a Kelvin–Voigt element with microstructural stiffness k and viscosity ηξ ) lets the pore network rearrange and absorb a fraction ξ0 of the swelling, reducing the strain transmitted to the skeleton to ˆεe = −βB(ω)ˆ c with relaxation time τξ . The skeleton viscoelasticity stage—a standard linear solid (a spring E∞ in parallel with a Maxwell arm E1–ηm)—then converts this elastic strain into skeleton stress through the complex modulus E∗(ω) with relaxation time τm. At low frequency the pores rearrange ( B → 1 − ξ0) and the skeleton relaxes ( E∗ → E∞); at high frequency the porosity is frozen ( B → 1) and the skeleton is stiff ( E∗ → E0). The two combine as Hcm = −β E ∗(ω) B(ω).
+
+whose frequency-domain solution is 
+
+ˆξ = ξ0 β
+
+1 + iωτ ξ
+
+ˆc, ξ0 = E∗
+
+E∗ + k , (43) with ξ0 the equilibrium porosity-accommodation ratio, defined at the moment when the spectroscopy test is carried out. Substituting into Eq. 39 gives ˆεe = −β B(ω) ˆ c, where 
+
+B(ω) = 1 − ξ0
+
+1 + iωτ ξ
+
+= (1 − ξ0) + iωτ ξ
+
+1 + iωτ ξ
+
+(44) is the bridge function mapping particle-scale chemical strain to electrode-scale elastic strain. It interpolates between 1) B → 1 − ξ0 = k/ (E∗ + k) at low frequency—porosity rearranges and absorbs part of the expansion—and 2) B → 1 at high frequency, where the porosity is frozen and the full chemical eigenstrain is transmitted to elastic strain. Equation 44 thus supplies the thermodynamic origin, in terms of the microstructural parameters k and ηξ, of the bridge function introduced phenomenologically by Fang et al. (2025). 
+
+Chemo-mechanical kernel. Combining Eqs. 40 and 44, the skeleton stress is ˆσs =
+
+−β E ∗(ω) B(ω) ˆ c, so the chemo-mechanical kernel is 
+
+Hcm (ω) = −β E ∗(ω) B(ω). (45) 24 βˆc ˆξ −αˆp (Biot)                
+
+> k
+> ηξ
+> λM
+> ξ
+> κ
+> Porosity accommodation
+> Pore-fluid pressurization
+> (three-phase)
+> ˆξ=ξ0β
+> 1 + iωτ ξ
+> ˆcτξ=ηξ/(E∗+k)
+> W(ω) = iωτ p
+> 1 + iωτ p
+> ,drains to separator
+> τp=ηfℓ2/(κM )
+> chemical eigenstrain
+> contribution to
+> ˆσtot
+
+Hpm (ω) = − α M (1 − λ)¯ εs
+
+| {z }
+
+> fluid storage
+
+ξ0 β
+
+1 + iωτ ξ
+
+W (ω)
+
+| {z } 
+
+> drainage
+
+Figure 4: Structure of the poro-mechanical kernel Hpm , which shares the porosity-accommodation stage of Hcm but routes the porosity change into the pore fluid rather than the solid skeleton. The chemical eigenstrain βˆc first produces the pore contraction ˆξ = ξ0βˆc/ (1 + iωτ ξ ) (relaxation time τξ ). In the three-phase pore space, a fraction (1 − λ) of this contraction displaces electrolyte while a fraction 
+
+λ closes gas-filled void without pressurization; the displaced fluid (storage modulus M , solid fraction 
+
+¯εs) loads the pore pressure and drains by Darcy flow (permeability κ) to the separator, giving the hydraulic relaxation W (ω) with time τp. Pore pressure builds up under fast compression ( W → 1,undrained) and vents at low frequency ( W → 0, drained). The pressure enters the total stress through the Biot coefficient α, yielding Hpm = −αM (1 − λ)¯ εs ξ0β W (ω)/(1 + iωτ ξ ).
+
+Three-phase poro-mechanical closure. The pore pressure is driven by displacement of pore fluid as the porosity rearranges. In a real electrode the pore space holds both electrolyte and gas-filled void regions, so only part of the porosity change displaces fluid. We introduce the void accommodation fraction λ ∈ [0 , 1] , defined such that a fraction (1 −λ) of the porosity change displaces fluid while a fraction λ closes void space without generating pressure; the Biot fluid-content increment is 
+
+ˆζ = −(1 − λ) ¯ εs ˆξ + ˆpM , (46) with ¯εs the steady-state solid volume fraction and M the Biot modulus. Combining fluid mass conservation with Darcy flow in the lumped (thickness-averaged) limit—the drained-separator, sealed-collector balance derived in Appendix Appendix A (Step 4)— gives the first-order pore-pressure relaxation 
+
+˙p + pτp
+
+= M (1 − λ)¯ εs ˙ξ, τp = ηf ℓ2
+
+κ M , (47) 25 with κ the Darcy permeability and ηf the electrolyte viscosity. Here ℓ denotes the drainage path length, which in the lumped through-thickness model is the electrode thickness; the relevant drainage geometry, and the resulting range of τp, are reconsidered in Sec. 7.1. In the frequency domain, using Eq. 43, 
+
+ˆp = M (1 − λ)¯ εs ξ0 β
+
+1 + iωτ ξ
+
+W (ω) ˆ c, W (ω) = iω iω + τ −1
+
+> p
+
+= iωτ p
+
+1 + iωτ p
+
+, (48) where W (ω) is the single-pole hydraulic relaxation factor: pore pressure builds up under rapid porosity change ( W → 1, undrained) and vents to the separator at low frequency (W → iωτ p → 0, drained). 
+
+Poro-mechanical kernel. The pore pressure enters the total stress through the Biot effective stress relation ˆσtot = ˆ σs − αˆp, so −αˆp = Hpm ˆc gives 
+
+Hpm (ω) = −α M (1 − λ)¯ εs ξ0 β
+
+1 + iωτ ξ
+
+W (ω) = − α M (1 − λ)¯ εs ξ0 β iω 
+
+(iω + τ −1 
+
+> p
+
+)(1 + iωτ ξ), (49) with α the Biot coefficient. 
+
+The closed-form MEIS expression. Inserting the kernels (45) and (49) into the general structure Eq. 37, with GeGc = t+/(F c ℓ iω ), yields the closed-form mechano-electrochemical impedance 
+
+ZMEIS (ω) = − t+ β
+
+Fc ℓ iω 
+
+
+
+E∗(ω) B(ω) + α M (1 − λ)¯ εs ξ0 iω 
+
+(iω + τ −1 
+
+> p
+
+)(1 + iωτ ξ)
+
+
+
+. (50) The prefactor t+β/ (F c ℓ iω ) is the Faradaic conversion of current into chemical eigen-strain; the first bracketed term is the skeleton stress, modulated by viscoelastic re-laxation E∗(ω) and porosity accommodation B(ω), and the second is the pore-fluid pressurization, controlled by the Biot coefficient α, the void accommodation fraction λ,and the coupled relaxation through τξ and τp.The response is governed by four characteristic time scales: the viscoelastic re-laxation time τm (in E∗), the porosity accommodation time τξ (in both B and the pore-fluid source), the hydraulic relaxation time τp (Darcy drainage), and the chemical accumulation time 1/ω . Their relative ordering sets the qualitative shape of the MEIS spectrum. Three limiting cases connect Eq. 50 to simpler descriptions: 26 • Rigid microstructure (k → ∞ , ξ0 → 0): porosity cannot rearrange, B → 1, no fluid is displaced ( ˆp → 0), and the impedance reduces to the chemo-viscoelastic response −t+βE ∗(ω)/(F c ℓ iω ).
+
+• Fully unsaturated (λ = 1 ): all porosity change closes void space without dis-placing fluid; the pore-fluid term vanishes and Eq. 50 reduces to −t+βE ∗B/(F c ℓ iω ),recovering the bridge-function model of Fang et al. (Fang et al., 2025). 
+
+• Fully saturated (λ = 0 ): all porosity change displaces fluid and the pore-fluid pressurization reaches its maximum; porosity accommodation then reduces the skeleton-stress contribution while enhancing the fluid-pressurization contribution, a trade-off absent from either limit above. Equation 50 therefore unifies the phenomenological bridge-function model and the clas-sical saturated poro-mechanical model within a single thermodynamically consistent framework, with λ controlling the balance between kinematic accommodation and hy-draulic pressurization. As in Section 4.3, Eq. 50 is written in the tension-positive convention; referred to the measured compressive stack pressure −σtot it carries the opposite, positive overall sign. 
+
+5. Non-Dimensional Analysis of the MEIS Spectrum 
+
+5.1. Dimensionless Form and Governing Parameters 
+
+The closed-form impedance Eq. 50 is governed by four time scales—the viscoelastic relaxation τm, the porosity accommodation τξ, the hydraulic relaxation τp, and the inverse driving frequency 1/ω —together with the modulus contrast of the skeleton and the strength of the poro-mechanical coupling. To expose the independent groups that actually control the spectrum, we non-dimensionalize. Scaling frequency by the viscoelastic relaxation time, 
+
+Ω = ω τ m, (51) the standard linear solid and the two relaxation factors become 
+
+E∗
+
+E∞
+
+= 1 + iλ E Ω1 + iΩ , A(Ω) = 11 + iΩ/Λξ
+
+, W (Ω) = iΩ
+
+iΩ + Λ p
+
+, (52) 27 where A is the porosity-accommodation factor and W the hydraulic-drainage factor. The dimensionless groups are 
+
+λE = E0
+
+E∞
+
+(≥ 1) , Λξ = τm
+
+τξ
+
+, Λp = τm
+
+τp
+
+, Π = αM (1 − λ)¯ εs
+
+E∞
+
+, (53) together with the equilibrium accommodation ratio ξ0, which is already dimensionless. Here λE is the viscoelastic stiffness contrast (instantaneous over relaxed modulus), Λξ
+
+and Λp measure how fast porosity rearrangement and pore-fluid drainage are relative to skeleton relaxation, and Π is the poro-mechanical coupling strength—the ratio of the fluid storage stiffness αM (1 − λ)¯ εs to the skeleton modulus E∞. The void accommoda-tion fraction λ and the solid fraction ¯εs therefore enter the spectrum only through the single group Π. Normalizing the impedance by 
+
+Z0 = t+ β E ∞ τm
+
+Fc ℓ , (54) the dimensionless spectrum Z(Ω) = ZMEIS /Z 0 is 
+
+Z(Ω) = − 1 + iλ E Ω
+
+iΩ (1 + iΩ) 
+
+
+
+1 − ξ0
+
+1 + iΩ/Λξ
+
+
+
+− Π ξ0
+
+(iΩ + Λ p)(1 + iΩ/Λξ). (55) The first term is the chemo-mechanical (skeleton) branch and the second the poro-mechanical (pore-fluid) branch. We treat the accommodation amplitude ξ0 and time τξ (hence Λξ) as constants, evaluated at a representative skeleton modulus. Strictly, ξ0 = E∗/(E∗ + k) and τξ =
+
+ηξ/(E∗ + k) inherit a weak frequency dependence through E∗(ω); this is negligible when the microstructural stiffness dominates the modulus contrast, k ≳ (E0 − E∞), and retaining it only renormalizes the accommodation pole without changing the structure of Eq. 55. 
+
+5.2. Structure of the Spectrum and Competition of Relaxation Mechanisms 
+
+Three poles organize Eq. 55: the viscoelastic pole at Ω ∼ 1, the accommodation pole at Ω ∼ Λξ, and the hydraulic pole at Ω ∼ Λp, all riding on the 1/(iΩ) accumulation factor inherited from chemical storage, as illustrated in Figure 5. 
+
+Shared accommodation. The decisive structural feature is that the accommodation fac-tor A(Ω) enters both branches. In the chemo-mechanical branch it appears as 1 − ξ0A,28 reducing the strain delivered to the skeleton: porosity rearrangement diverts part of the chemical eigenstrain away from elastic loading. In the poro-mechanical branch it ap-pears as +ξ0A, since the same porosity change is what displaces pore fluid and sources the pressure. Increasing the accommodation ratio ξ0 thus simultaneously suppresses 
+
+the skeleton contribution and feeds the pore-fluid contribution; the two branches are coupled through this single shared parameter rather than being independent. This is the non-dimensional counterpart of the common branch point ˆξ in Figs. 3 and 4. 
+
+Low-frequency limit ( Ω ≪ 1, Λξ, Λp). Here A → 1, E∗ → E∞, and W → 0. The chemo-mechanical branch reduces to −(1 −ξ0)/(iΩ) , a capacitive accumulation softened by the relaxed accommodation factor 1 − ξ0 = k/ (E∞ + k), while the poro-mechanical branch approaches the constant offset −Πξ0/Λp. The mechanical response is dominated by the diverging accumulation term, with the pore fluid fully drained. 
+
+High-frequency limit ( Ω ≫ 1, Λξ, Λp). Here A → 0, so the bridge 1 − ξ0A → 1 (porosity frozen, full eigenstrain transmitted) and E∗ → E0. The chemo-mechanical branch tends to −λE /(iΩ) , recovering the stiff instantaneous skeleton, whereas the poro-mechanical branch decays as Λξ/Ω2 and vanishes: with the porosity frozen there is no volume change to displace fluid, so the pore-fluid branch is band-limited even though the drainage factor W → 1.
+
+Competition. The qualitative shape of the spectrum is set by the ordering of Λξ, Λp, and unity. When these are well separated, the response splits into resolvable viscoelastic, accommodation, and drainage features; when they are comparable, the corresponding relaxations overlap and broaden in frequency. The poro-mechanical branch is intrinsi-cally band-limited, bounded below by drainage ( Λp) and above by frozen accommoda-tion ( Λξ), and its weight is set by Πξ0; the chemo-mechanical branch spans the whole range, its low- and high-frequency plateaus separated by the factor λE /(1 −ξ0). Because the two branches add, MEIS resolves chemical storage, skeleton viscoelasticity, porosity accommodation, and pore-fluid drainage as distinct but coupled spectral signatures. 29 log Ω 
+
+Chemo-mechanical branch    
+
+> accumulation
+> Ω→0
+> SLS zero
+> 1/λ E
+> skeleton
+> τm
+> 1
+> bridge zero
+> (1 −ξ0)Λ ξ
+> accommodation
+> τξ(shared)
+> Λξ
+
+Poro-mechanical branch         
+
+> drainage
+> τp
+> Λp
+> |Z| ∼ 1−ξ0
+> Ω|Z| ∼ λE
+> Ω
+> |Z| ∼ Πξ0
+> Λp
+> |Z| ∼ Ω−2
+> pole zero
+
+Figure 5: Pole–zero (corner-frequency) map of the dimensionless MEIS spectrum, Eq. 55, on the logarithmic frequency axis Ω = ωτ m. The chemo-mechanical branch (top) contains the accumulation pole at Ω → 0, the viscoelastic pole at Ω = 1 (τm), the accommodation pole at Ω = Λ ξ (τξ ), together with the viscoelastic zero at 1/λ E and the bridge zero at (1 − ξ0)Λ ξ . The poro-mechanical branch (bottom) contains the drainage pole at Ω = Λ p (τp) and the shared accommodation pole at Ω = Λ ξ
+
+(purple). The common accommodation pole reflects the shared porosity-accommodation mechanism linking the chemo-mechanical and poro-mechanical branches. Feature locations are schematic and depend on the relative values of λE , Λξ , and Λp.
+
+6. Results: Spectral Characteristics and Parametric Behavior 
+
+We now use the closed-form dimensionless spectrum Eq. 55 to map how each gov-erning parameter shapes the mechano-electrochemical impedance. Throughout, spectra are plotted in the measured (compression-positive) convention, Zmeas = −Z , so that the dominant capacitive response occupies the first quadrant; frequency increases toward the origin. We examine the Nyquist and Bode representations in turn, then identify the conditions under which the spectrum crosses into the second quadrant. 
+
+6.1. Characteristic Frequencies 
+
+The spectrum is organized by the poles and zeros catalogued in Sec. 5.2 and mapped in Fig. 5. The chemo-mechanical branch carries the accumulation pole at Ω → 0, the viscoelastic pole at Ω = 1 , and the accommodation pole at Ω = Λ ξ, together with the viscoelastic zero at 1/λ E and the bridge zero at (1 − ξ0)Λ ξ; its magnitude rolls off as 
+
+Ω−1 at both ends, the two capacitive tails separated by the factor λE /(1 − ξ0). The poro-mechanical branch is a two-pole low-pass sharing the accommodation pole Λξ and 30 adding the drainage pole Λp. Because the accommodation pole is common to both branches, the porosity-accommodation parameters ξ0 and Λξ couple the skeleton and pore-fluid responses—a feature that recurs throughout the parametric study below. 
+
+6.2. Nyquist Representation 
+
+Figure 6 sweeps each dimensionless group about the baseline. Every spectrum shares the same qualitative form: a depressed relaxation arc at intermediate frequency merg-ing into a near-vertical capacitive tail at low frequency. The parameters reshape this locus in distinct ways. The accommodation ratio ξ0 contracts both the arc and the tail, since it lowers the real intercept ∼ (1 − ξ0)( λE − 1) + ξ0/Λξ and the tail weight 
+
+(1 − ξ0); more accommodation diverts chemical strain from the skeleton and softens the entire response. The viscoelastic contrast λE opens the mid-frequency loop between the relaxed and instantaneous skeleton stiffness, collapsing to a single capacitive line at λE = 1 . The accommodation rate Λξ alters the arc curvature as the porosity relax-ation sweeps through the window. The drainage rate Λp produces only a small change, confirming that the pore-fluid branch is a weak low-pass correction at moderate cou-pling. The poro-mechanical coupling Π adds real-axis weight at low and intermediate frequency—the plateau ∼ Πξ0/Λp—and shifts the locus rightward, vanishing entirely at Π = 0 .
+
+6.3. Bode Representation 
+
+The Nyquist locus is dominated by the 1/Ω accumulation, which compresses the relaxation features into the small near-origin region. The Bode representation is more discriminating, because the chemo-mechanical response is a product of three multiplica-tive elements, 
+
+Zchemo = 1
+
+iΩ|{z} 
+
+> accumulation
+
+E∗
+
+E∞
+
+|{z} 
+
+> viscoelastic
+
+B|{z} 
+
+> bridge
+
+, (56) so that log-magnitudes and phases add (Fig. 7). Removing the accumulation factor exposes the mechanical relaxation directly: Ω|Z| steps from a low-frequency plateau equal to 1−ξ0, the accommodation-softened modulus, to a high-frequency plateau equal to λE , the stiff instantaneous modulus, while the phase departs upward from the −90 ◦
+
+capacitive floor by an amount set by the same relaxations. 31 0 2
+
+Re 
+
+0
+
+1
+
+2
+
+3 
+
+> Im
+> 0(accommodation ratio)
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+
+0 5
+
+Re 
+
+0
+
+2
+
+4
+
+6
+
+8     
+
+> Im
+> E=E0/E(viscoelastic)
+> E=E0/E
+> 1
+> 2
+> 4
+> 8
+
+0 2 4
+
+Re 
+
+0
+
+1
+
+2
+
+3
+
+4
+
+5   
+
+> Im
+> =m/(accommodation rate)
+> =m/
+> 0.3
+> 1
+> 3
+> 10
+
+0 2
+
+Re 
+
+0
+
+1
+
+2
+
+3       
+
+> Im
+> p=m/p(drainage rate)
+> p=m/p
+> 1
+> 2
+> 5
+> 20
+
+0 2
+
+Re 
+
+0
+
+1
+
+2
+
+3
+
+4
+
+> Im
+> (poro-mechanical coupling)
+> 0
+> 0.5
+> 1
+> 2
+
+0 1 2
+
+Re 
+
+0
+
+1
+
+2
+
+3        
+
+> Im
+> = 1
+> = 10
+> = 100
+> decreasing
+> Baseline with frequency markers
+> Dimensionless MEIS Nyquist response (baseline: E= 3 ,0= 0.5 ,= 1 ,p= 2 ,= 0.8 )
+
+Figure 6: Dimensionless MEIS Nyquist response Z(Ω) (Eq. 55), plotted in the measured (compression-positive) convention as −Im Z versus Re Z, with frequency increasing toward the origin. Each panel varies one dimensionless parameter while the others are held at the baseline λE = 3 , ξ0 = 0 .5, Λξ = 1 ,
+
+Λp = 2 , and Π = 0 .8. Panels (a)–(e) show the effects of the accommodation ratio ξ0, viscoelastic contrast λE , accommodation rate Λξ , drainage rate Λp, and poro-mechanical coupling Π, respectively. Panel (f) shows the baseline response annotated with representative frequency markers, illustrating the progression from the high-frequency limit near the origin to the low-frequency accumulation tail. 
+
+Figure 8 sweeps each parameter in this representation. The accommodation ratio 
+
+ξ0 both lowers the low-frequency magnitude plateau and deepens the phase excursion, because increasing ξ0 separates the bridge zero (1 − ξ0)Λ ξ further below the accom-modation pole Λξ; the peak phase rises from −57 ◦ at ξ0 = 0 .1 to −12 ◦ at ξ0 = 0 .9.The viscoelastic contrast λE sets the high-frequency magnitude plateau and similarly enlarges the phase excursion (from −64 ◦ to −22 ◦ across λE = 1 .2 to 8), as the vis-32 10 3
+
+10 2
+
+10 1
+
+10 0
+
+10 1
+
+10 2
+
+> magnitude  | |
+
+1/ E 1
+
+(1 0)          
+
+> p
+> Bode decomposition of the MEIS spectrum
+> accumulation |1/ i|
+> viscoelastic |E*/E|
+> bridge ||
+> chemo product
+> poro branch
+> total ||
+
+10 2 10 1 10 0 10 1 10 2 10 3
+
+= m
+
+90 
+
+60 
+
+30 
+
+0
+
+30 
+
+> phase (deg)
+
+Figure 7: Bode decomposition of the dimensionless MEIS spectrum in the measured convention, with baseline parameters λE = 4 , ξ0 = 0 .5, Λξ = 3 , Λp = 10 , and Π = 1 . The chemo-mechanical contribution is decomposed into the multiplicative accumulation, viscoelastic, and bridge elements, 
+
+Zchemo = (1 /i Ω)( E∗/E ∞)B, together with their product, the poro-mechanical branch, and the total MEIS response. The upper panel shows the magnitude and the lower panel the phase as functions of the dimensionless frequency Ω. Vertical dotted lines indicate the characteristic corner frequencies 
+
+1/λ E , 1, (1 − ξ0)Λ ξ , Λξ , and Λp (cf. Fig. 5). 
+
+coelastic zero 1/λ E separates from its pole at Ω = 1 . The accommodation rate Λξ
+
+translates the bridge feature horizontally along the frequency axis: the phase excursion is maximal near Λξ ≈ 1, where the bridge feature reinforces the viscoelastic feature, 33 and resolves into a separate shoulder when Λξ departs from unity. In contrast, the pore-fluid parameters are weak phase discriminators: the drainage rate Λp shifts the phase only for slow drainage ( Λp ≲ 1, when the hydraulic pole enters the window), and the coupling Π shifts the phase-peak frequency slightly without changing its height or the magnitude plateaus, since the pore-fluid branch enters Eq. 55 additively rather than multiplicatively. 10 1                               
+
+> 10 0
+> 10 1
+> | | (acc. removed)
+> 0(baseline 0.5)
+> 10 110 110 3
+> =m
+> 90
+> 60
+> 30
+> 0
+> phase (deg)
+> 0
+> 0.1
+> 0.3
+> 0.5
+> 0.7
+> 0.9
+> E(baseline 3)
+> 10 110 110 3
+> =m
+> E
+> 1.2
+> 2
+> 4
+> 6
+> 8
+> (baseline 1)
+> 10 110 110 3
+> =m
+> 0.2
+> 0.5
+> 1
+> 3
+> 10
+> p(baseline 2)
+> 10 110 110 3
+> =m
+> p
+> 0.3
+> 1
+> 3
+> 10
+> 30
+> (baseline 0.8)
+> 10 110 110 3
+> =m
+> 0
+> 0.5
+> 1
+> 2
+> 4
+> Parametric Bode plots (baseline: E= 3, 0= 0.5, = 1, p= 2, = 0.8 )
+
+Figure 8: Parametric Bode study of the dimensionless MEIS spectrum (measured convention), varying one dimensionless parameter while the others are held at the baseline λE = 3 , ξ0 = 0 .5, Λξ = 1 ,
+
+Λp = 2 , and Π = 0 .8. The upper row shows the accumulation-removed magnitude Ω|Z| , highlighting the mechanical relaxation, while the lower row shows the corresponding phase. Panels (a)–(e) illustrate the effects of the accommodation ratio ξ0, viscoelastic contrast λE , accommodation rate Λξ , drainage rate Λp, and poro-mechanical coupling Π, respectively. Vertical dotted lines indicate the baseline corner frequencies (cf. Fig. 5). 
+
+This separation of roles has a direct practical consequence for fitting MEIS data. The phase angle is governed almost entirely by the chemo-mechanical parameters (ξ0, λ E , Λξ)
+
+and is nearly insensitive to the pore-fluid parameters (Π , Λp). The accommodation and viscoelastic parameters are therefore best extracted from the phase spectrum first, 34 after which the pore-fluid coupling is obtained from the residual low- and intermediate-frequency magnitude. 
+
+6.4. Onset of Second-Quadrant Behavior 
+
+A recurring experimental feature is the excursion of the spectrum into the second quadrant ( Re Z < 0, a negative in-phase response). Within the present single-electrode model this originates solely in the poro-mechanical branch: the chemo-mechanical branch keeps a phase lead (both of its zero–pole pairs place the zero below the pole) and remains in the first quadrant, whereas the poro-mechanical branch is a second-order low-pass whose real part turns negative above Ω∗ = pΛpΛξ. The spectrum crosses into the second quadrant once this negative contribution overcomes the chemo-mechanical branch, which occurs above the threshold 
+
+Π∗ = λE + λE − 1
+
+ξ0Λξξ0Λξ ≫1
+
+−−−−−→ λE , (57) i.e. when the pore-fluid storage stiffness exceeds the skeleton stiffness, αM (1 − λ)¯ εs ≳
+
+E0. Figure 9 shows the progression as Π increases through Π∗ and the correspond-ing regime map in the (λE , Π) plane: below Π∗ the spectrum is confined to the first quadrant, while above it a loop near the origin (intermediate-to-high frequency, deepest near Ω∗) bends into the second quadrant, the excursion growing with Π/λ E and with slower drainage. The low-frequency tail, whose real intercept is strictly positive, always remains in the first quadrant. The single-electrode model therefore admits second-quadrant behavior only under strong pore-fluid coupling and only at intermediate-to-high frequency. The gradual, low-frequency second-quadrant entry frequently seen in full-cell measurements requires the competition between an expanding and a contracting electrode, which we develop next in Sec. 6.5. 
+
+6.5. Full-Cell MEIS: Competition Between Electrodes 
+
+The single-electrode results above assume a rigid fixture ( ε = 0 ) acting on one active layer. A full-cell MEIS measurement instead records the stack pressure of an anode | separator | cathode assembly, in which a single applied current produces anti-correlated concentration changes in the two electrodes—lithium leaving one enters the 35 2 0 2 4                        
+
+> Re
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> 3.0
+> 3.5
+> 4.0
+> Im
+> Q2 Q1
+> = 7 here
+> (a) Spectra vs (E= 3, 0= 0.5, = 1, p= 0.5 )
+> 2
+> 5
+> 8
+> 12
+> 18
+> 25
+> 2468
+> E=E0/E
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> (poro coupling)
+> Q1 only
+> Q2 crossing
+> (b) Regime map ( 0= 0.5, = 1, p= 0.5 )
+> =E+E1
+> 0
+
+Figure 9: Conditions for the MEIS spectrum to cross into the second quadrant (negative in-phase response, Re Z < 0 in the measured convention). (a) Nyquist spectra obtained by increasing the poro-mechanical coupling Π while holding λE = 3 , ξ0 = 0 .5, Λξ = 1 , and Λp = 0 .5 fixed. (b) Regime map in the (λE , Π) plane, showing regions where the spectrum remains entirely in the first quadrant (Q1) and where second-quadrant (Q2) crossing occurs. The dashed line denotes the analytical threshold 
+
+Π∗ = λE + ( λE − 1) /(ξ0Λξ ) (Eq. 57), and the markers indicate the cases shown in panel (a). 
+
+other—so that one electrode expands while the other contracts. The measured stress is the result of this competition, and it gives the full cell access to spectral regions that no single electrode can reach. 
+
+Effective MEIS modulus. Relaxing the rigid-fixture assumption, we retain the electrode strain ε in the porosity free energy, so the conjugate force becomes fξ = E∗(βc − ε) −
+
+(E∗ +k)ξ and the kinetic law ˙ξ = fξ/η ξ gives, in the frequency domain, ˆξ = Φ( ω)( βˆc− ˆε)
+
+with Φ = ξ0/(1 + iωτ ξ). Combining the skeleton stress ˆσs = E∗(ˆ ε − βˆc + ˆξ), the pore pressure ˆp = M (1 − λ)¯ εsW ˆξ, and the effective stress ˆσ = ˆ σs − αˆp, all terms collapse onto the single relation 
+
+ˆσ = ˆE(ω) (ˆ ε − βˆc), ˆE(ω) = E∗ − ΦE∗ − αM (1 − λ)¯ εsW , (58) where ˆE(ω) is the effective MEIS modulus , carrying the viscoelastic, accommodation, and pore-fluid relaxations in a single complex stiffness. It reproduces the single-electrode result in the blocked limit ε = 0 : since − ˆEβ = Hcm + Hpm (using 1 − Φ = B), 36 the blocked impedance is Z = −β ˆE Γ with Γ = t+/(F cℓ iω ) the accumulation factor, and ˆE → E∞(1 − ξ0) at low frequency. 
+
+Series assembly under iso-stress. We idealize the stack as three layers in mechanical series. Force balance makes the normal stress common to all layers, and the rigid fixture fixes the total thickness, ℓa ˆεa + ℓs ˆεs + ℓc ˆεc = 0 . Each electrode obeys Eq. 58, 
+
+ˆεk = ˆ σ/ ˆEk + βk ˆck, while the separator is elastic, ˆεs = ˆ σ/E s. Solving for the common stress and inserting the anti-correlated sources ˆca = +Γ a ˆJe, ˆcc = −Γc ˆJe (the thickness 
+
+ℓk cancels against Γk) gives the full-cell impedance 
+
+Zcell MEIS (ω) = − βat+,a − βct+,c 
+
+Fc iω C Σ(ω) , CΣ = ℓa
+
+ˆEa
+
++ ℓs
+
+Es
+
++ ℓc
+
+ˆEc
+
+, (59) with CΣ the series (thickness-weighted) compliance. Equivalently, in terms of the blocked half-cell impedances Zk = −βk ˆEkΓk,
+
+Zcell MEIS = waZa − wcZc, wk = ℓk/ ˆEk
+
+CΣ
+
+, wa + ws + wc = 1 , (60) a compliance-weighted difference of the two half-cell spectra; the weights are complex and frequency dependent, so the softer electrode at a given frequency dominates. Equa-tion 59 reduces correctly to the blocked anode impedance Za for a rigid, inert cathode and rigid separator. 
+
+Competition and second-quadrant behavior. Writing CΣ = CR + iC I and ∆ ≡ βat+,a −
+
+βct+,c , the measured response has the exact sign structure 
+
+Re Zmeas = ∆Fc
+
+−CI
+
+ω|CΣ|2 , −Im Zmeas = ∆Fc
+
+CR
+
+ω|CΣ|2 . (61) Two mechanisms, neither available to a single electrode, move the cell spectrum between quadrants. First, competition : since CR > 0, the sign of ∆ selects the half-plane, so when the contracting electrode wins the chemical-strain balance ( βct+,c > β at+,a ) the entire spectrum reverses through the origin relative to the anode-dominated case; near electrode balance ∆ → 0 and the mechanical signal collapses. Second, loss reversal :within a fixed half-plane the real part changes sign with CI = − P 
+
+> k
+
+ℓk Im( ˆEk)/| ˆEk|2.Two ordinary (positive-loss) electrodes keep CI < 0 and remain in one quadrant, but a soft, strongly pore-coupled electrode—whose effective loss modulus turns negative above 
+
+q
+
+τ −1 
+
+> p
+
+τ −1 
+
+> ξ
+
+, as in Sec. 6.4—can drive the compliance-weighted loss negative over a 37 band when it dominates CΣ, bending the cell gradually into the second quadrant there. Figure 10 illustrates both: two half-cells confined to the first quadrant combine into a cell that either reverses entirely with the sign of ∆ (the expand/contract competition) or develops a partial second-quadrant loop when one electrode is soft and strongly poro-coupled. The full cell thus reaches spectral regions inaccessible to either electrode in isolation, providing a mechanistic origin for the second-quadrant features observed in full-cell MEIS measurements. 2 1 0 1 2
+
+Re (norm.) 
+
+2
+
+1
+
+0
+
+1
+
+2
+
+> Im  (norm.)
+
+Q2 Q1 
+
+Q3 
+
+(a) Half-cells, competition, and full flip        
+
+> anode (half-cell)
+> cathode (half-cell)
+> cell, a>c
+> cell, a<c(flip)
+
+0.5 0.0 0.5 1.0 
+
+Re (norm., high- )
+
+0.0 
+
+0.5 
+
+1.0 
+
+1.5 
+
+2.0 
+
+2.5 
+
+3.0 
+
+> Im  (norm., high- )
+
+Q2 Q1 
+
+> high-
+> loop
+
+(b) Gradual Q2 entry vs of soft poro electrode 
+
+> soft
+> 2
+> 8
+> 16
+> 30
+
+Figure 10: Full-cell MEIS as a compliance-weighted difference of two half-cells (Eqs. 59–60), measured convention, normalized. (a) Two half-cell spectra (anode, cathode) lie in the first quadrant; the cell combines them as a difference. When the anode wins the chemical-strain competition ( βa > β c) the cell stays in Q1; when the cathode wins ( βa < β c) the entire spectrum reverses through the origin. (b) When one electrode is soft and strongly pore-fluid–coupled, the cell bends gradually into the second quadrant near the origin (high frequency), the excursion growing with that electrode’s coupling Πsoft .
+
+38 Table 2: Representative physical parameters for a porous lithium-ion composite electrode and the resulting MEIS time scales. Ranges are order-of-magnitude literature estimates intended to bound the dimensionless groups, not properties of a specific cell. 
+
+Symbol Quantity Typical range Note 
+
+E∞ relaxed electrode modulus 0.1–2 GPa porosity/binder dependent 
+
+λE = E0/E ∞ viscoelastic contrast 2–3 modulus rises ∼ 3× on lithiation 
+
+k consolidation stiffness 0.1–2 GPa resists porosity change 
+
+ξ0 = E∗/(E∗ + k) accommodation ratio 0.3–0.7 shared by both branches 
+
+τm viscoelastic relaxation 1–10 4 s binder/polymer creep 
+
+τξ accommodation relaxation 1–10 3 s particle rearrangement 
+
+ηf electrolyte viscosity 3–10 mPa s carbonate electrolyte 
+
+M Biot modulus 0.5–10 GPa pore-fluid stiffness 
+
+κ permeability 10 −16 –10 −14 m2 Kozeny–Carman 
+
+α Biot coefficient 0.5–1 effective-stress coupling 
+
+λ void accommodation fraction 0–0.7 three-phase 
+
+¯εs solid volume fraction 0.5–0.7 1 − ϕL drainage length 10 −6–10 −1 m particle → cell width 
+
+τp drainage relaxation 10 −11 –10 3 s ∝ L2 (see text) 
+
+7. Discussion 
+
+7.1. Characteristic Time Scales and Parameter Estimates 
+
+The MEIS response is organized by three intrinsic relaxation times—the viscoelastic time τm = ηm/E 1 of the binder-supported skeleton, the porosity-accommodation time 
+
+τξ = ηξ/(E∗ + k) of microstructural rearrangement, and the hydraulic drainage time 
+
+τp = ηf L2/(κM ) of the pore fluid—each probed against the inverse driving frequency 
+
+1/ω . Whether a given relaxation is resolvable depends on where it falls relative to the experimental window (typically ∼ 1 mHz to ∼ 10 Hz, i.e. characteristic times ∼ 10 −2 to 
+
+10 2 s). We therefore estimate the three times and the governing dimensionless groups from representative composite-electrode parameters, collected in Table 2. The viscoelastic and accommodation times both fall in the range 1–10 4 s, overlapping the experimental window: the binder creep and the microstructural rearrangement 39 are therefore directly resolvable in a typical MEIS sweep, and the associated groups 
+
+λE = E0/E ∞ ∼ 2–3 and ξ0 ∼ 0.3–0.7 are of order unity. The poro-mechanical coupling 
+
+Π = αM (1 −λ)¯ εs/E ∞ ranges from ∼ 0.02 to ∼ 70 but is of order unity for representative parameters; importantly, soft electrodes (small E∞) with stiff pore fluid (large M )readily reach Π ≳ λE , the threshold for second-quadrant behavior derived in Sec. 6.4. 
+
+The drainage length scale. The hydraulic time is the outlier. Because τp ∝ L2 and the relevant Darcy length L is not uniquely defined, τp spans roughly fourteen orders of magnitude. Three candidate lengths give qualitatively different pictures: 
+
+• Particle/pore scale (L ∼ 1–10 μm): τp ∼ 10 −11 –10 −5 s. Drainage is essentially instantaneous, far faster than any accessible frequency. 
+
+• Through-thickness (L ∼ 50 –100 μm): τp ∼ 10 −7–10 −3 s. Still below the window for all but the slowest, lowest-permeability cases. 
+
+• Lateral / cell scale (L ∼ 1–10 cm): τp ∼ 10 −3–10 3 s. Only here does τp enter the experimental window. Correspondingly the dimensionless drainage rate Λp = τm/τ p spans some eighteen decades, from ∼ 10 −3 (slow lateral drainage) to ∼ 10 14 (fast pore-scale drainage), in contrast with Λξ = τm/τ ξ, which clusters near unity. Figure 11 places all of these against the measurement window. 
+
+Implications for interpretation. The wide span of Λp has a concrete consequence. Pore-scale and through-thickness drainage are far faster than the measurement ( Λp ≫ 1,
+
+W → 1): the pore fluid is effectively undrained at all observable frequencies and con-tributes only a frequency-independent stiffening that is absorbed into the apparent modulus, leaving no distinct hydraulic feature. A resolvable hydraulic relaxation in a MEIS spectrum must therefore originate in long-range , lateral or edge-directed drainage across the electrode footprint, not in pore-scale flow. This both identifies which L to use when fitting τp and cautions that an apparent “poro-mechanical” arc reflects cell-level transport geometry rather than intrinsic microstructure. It also explains why the drainage rate is a weak spectral discriminator at the pore/thickness scale (Sec. 6.3): at those scales the hydraulic pole simply lies outside the window. 40 10 11 10 9 10 7 10 5 10 3 10 1 10 1 10 3 10 5
+
+characteristic time (s)         
+
+> mviscoelastic (binder creep)
+> porosity accommodation
+> pdrainage: lateral / cell ( Lcm)
+> pdrainage: through-thickness ( L10 2m)
+> pdrainage: particle / pore ( Lm)
+> MEIS window
+> (mHz Hz)
+
+Modelled MEIS time scales vs. the experimental window Figure 11: Modelled MEIS relaxation times against the experimental window (shaded, ∼mHz–Hz). The viscoelastic time τm and accommodation time τξ overlap the window and are resolvable. The hy-draulic time τp = ηf L2/(κM ) depends strongly on the drainage length L: particle/pore- and through-thickness drainage are far faster than the window (the pore fluid is effectively undrained, W → 1), whereas only lateral/cell-scale drainage produces a τp that enters the measurement window. The bars span the parameter ranges of Table 2. 
+
+7.2. Limitations of the Linear Multiphysical Framework 
+
+The linear constitutive matrix developed in this work provides a thermodynami-cally consistent and physically interpretable description of the coupled electro–chemo– mechanical response of porous electrodes. It is intended as a reduced spectral frame-work for identifying the dominant relaxation mechanisms that shape the multiphysical impedance, rather than a fully resolved microscopic account of every transport and deformation process within the electrode. Several limitations follow from this scope. First, the model is derived in the linear-response regime, in which the constitutive coefficients are taken to be constant over the perturbation. In practical electrodes the ionic mobility, mechanical stiffness, and hydraulic permeability all vary appreciably with state of lithiation, temperature, and microstructural evolution, so the extracted coefficients should be read as effective quantities linearised about a reference state, and the spectrum as the response of that state. 41 Second, transport and relaxation in porous electrodes are intrinsically multiscale. Ionic motion may proceed within active particles, through the electrolyte-filled pore network, or within interfacial double layers, each with its own characteristic length and hence its own effective time; viscoelastic deformation, pore-pressure equilibration, and microstructural rearrangement are similarly distributed across scales. A measured MEIS spectrum therefore superposes relaxation processes spread over broad frequency bands rather than cleanly separated single-process responses. The characteristic times 
+
+τm, τξ, and τp of the reduced model (Sec. 7.1) should accordingly be understood as effective spectral times marking dominant dynamical regimes, not uniquely isolated microscopic constants. Third, the formulation is homogenised at the electrode scale and does not resolve particle-scale mechanics, evolving interparticle contact, or microstructural fracture. The porosity-accommodation bridge function, although derived here from a free-energy potential and therefore thermodynamically consistent, represents this mesoscale struc-tural adaptation through effective parameters ( k, ηξ) rather than a particle-resolved constitutive law. Finally, the framework describes the bulk electrode response and does not explic-itly include interfacial charge-transfer kinetics. Quantitative comparison with full-cell spectra—in particular the low-frequency second-quadrant features discussed in Sec. 6.5—would require coupling the present matrix with an appropriate electrochemi-cal interfacial model. 
+
+7.3. Practical Application: Equivalent Rheological Networks 
+
+The closed-form derivation above is deliberately detailed, and the full multiphysical expression may appear too involved for routine data analysis. In practice it need not be inverted directly. Its essential content is that the mechanical kernel of the MEIS response—the effective modulus ˆE(ω)—is a network of springs and dashpots. A mea-sured spectrum can therefore be fitted with a compact rheological model in exactly the way an electrochemical impedance spectrum is fitted with an equivalent electrical circuit, or a dynamic mechanical analysis (DMA) curve with a generalized viscoelas-tic model. The physics-based derivation then serves as the dictionary that assigns a definite physical meaning to each fitted element. 42 Each relaxation in the model corresponds to an identifiable mechanical element (Figs. 3 and 4). The viscoelastic skeleton is a standard linear solid—a spring E∞ in parallel with a Maxwell arm (spring E1, dashpot ηm)—which sets the stiffness contrast 
+
+λE = E0/E ∞ and the time τm = ηm/E 1. Porosity accommodation is a Kelvin–Voigt element (spring k, dashpot ηξ) that diverts strain from the skeleton, setting the accom-modation ratio ξ0 and the time τξ. Pore-fluid drainage is a consolidation element (fluid storage stiffness M in series with a Darcy dashpot fixed by the permeability κ), setting the coupling Π and the time τp. The chemical accumulation factor 1/iω , shared with the co-measured EIS, completes the network. Because the chemo-mechanical elements combine multiplicatively (Sec. 6.3), their signatures are separable in the Bode representation, which makes the fit practical. The magnitude plateaus fix the spring ratios—the low- and high-frequency, levels 1 − ξ0 and 
+
+λE —while the phase bumps locate the dashpot time constants τm, τξ, and, where lateral drainage is resolved, τp. One therefore fits the phase to recover the chemo-mechanical parameters and the residual magnitude to recover the pore-fluid coupling, then maps the fitted spring constants and viscosities to E0, E∞, k, ηm, ηξ, M , and κ through the closed-form relations of Eq. 50. This is the same workflow long established for EIS and DMA, and it inherits the same caveat: equivalent networks are not unique, and a sufficiently elaborate net-work can reproduce any spectrum. The value of the present derivation is that it fixes the minimal physically admissible topology—how many springs and dashpots are war-ranted, and what each one represents—so that the fit remains mechanistic rather than merely descriptive. Furthermore, because MEIS and EIS are acquired synchronously and share both the accumulation factor and several relaxation times, the mechanical spring–dashpot network and the electrical equivalent circuit can be fitted jointly, with common time constants constraining the two spectra together. Tracking the fitted elements across state of charge or cycle number then yields mechanistic diagnostics— stiffening, accommodation loss, or altered drainage—each tied to a definite physical quantity rather than to an empirical coefficient. 43 7.4. A General Phenomenological MEIS Model for Fitting 
+
+The structure ZMEIS = G(ω) ˆE(ω), with G ∝ 1/iω the chemical accumulation factor and ˆE(ω) the effective mechanical modulus, suggests a general form suitable for data fitting: any lumped network of springs and dashpots has a modulus that is a rational function of iω , which can always be written as a bank of elementary relaxation elements. We therefore propose the phenomenological expression 
+
+ZMEIS (ω) = Kiω ˆE(ω), ˆE(ω) = Ee +
+
+> N
+
+X
+
+> j=1
+
+gj
+
+iωτ j
+
+1 + iωτ j
+
++
+
+> P
+
+X
+
+> p=1
+
+hp
+
+iωτ dp
+
+(1 + iωτ dp )(1 + iωτ cp ).
+
+(62) Here K is a real transduction gain (chemo-mechanical coupling per unit current); 
+
+Ee is the equilibrium modulus; {gj , τ j } are the strengths and times of N viscoelas-tic (Maxwell) relaxations representing skeleton creep and porosity accommodation; and 
+
+{hp, τ dp , τ cp } are the strengths and the two times (drainage τ dp , coupling τ cp ) of P porome-chanical (consolidation) elements. The model is read off the spectrum exactly as an equivalent circuit is fitted to EIS or a Prony series to a DMA curve: one adds ele-ments only until the residual is explained, and each fitted element carries a definite mechanism. 
+
+Spectral content. The modulus interpolates between ˆE(0) = Ee (fully relaxed, fully drained) and ˆE(∞) = Ee + P 
+
+> j
+
+gj (glassy), the two limits separated by the relaxation strengths gj . Writing ˆE = E′ + iE ′′ , the impedance is ZMEIS = ( K/ω )( E′′ − iE ′), so that 
+
+Re ZMEIS ∝ E′′ (ω)
+
+ω , Im ZMEIS ∝ − E′(ω)
+
+ω : (63) a MEIS Nyquist plot is, frequency by frequency, the complex mechanical modulus—loss against storage, as in a Cole–Cole or DMA representation—weighted by the chemical accumulation 1/ω . The Maxwell terms contribute a strictly non-negative loss E′′ and so remain in the first quadrant. Each consolidation element, by contrast, contributes a loss 
+
+∝ hp ωτ dp (1 − ω2τ dp τ cp ) that changes sign at ω∗ 
+
+> p
+
+= ( τ dp τ cp )−1/2 while its storage part stays positive; when such an element dominates the net loss above ω∗ 
+
+> p
+
+, the spectrum crosses into the second quadrant. The poromechanical family is thus the only one capable of second-quadrant behavior, in agreement with Sec. 6.4. 44 Relation to the physics-based model. The closed-form result of Eq. 50 is the minimal instance N = 2 , P = 1 of Eq. 62, which fixes the parameter dictionary. The equi-librium modulus is Ee = E∞(1 − ξ0); the two viscoelastic times are the skeleton and accommodation times τ1 = τm and τ2 = τξ, with strengths g1, g 2 given by the partial-fraction residues of E∗(ω)B(ω) (fixed combinations of E∞, E 0, ξ 0, τ m, τ ξ); and the single consolidation element has strength h1 = αM (1 − λ)¯ εsξ0 with drainage time τ d 
+
+> 1
+
+= τp and coupling time τ c 
+
+> 1
+
+= τξ. The coupling time of the consolidation element coincides with a viscoelastic time, reflecting the accommodation pole shared by both branches of the physics model. Fitted parameters that do not collapse onto this dictionary—additional relaxations, or consolidation times that do not match an accommodation time—signal physics beyond the present model (e.g. multiple drainage paths or interfacial kinetics). 
+
+Practical fitting. Equation 62 inherits the strengths and the pitfalls of equivalent-circuit analysis. The Bode separation of Sec. 6.3 makes the parameters identifiable: the mag-nitude plateaus Ee and Ee + P 
+
+> j
+
+gj fix the spring strengths, the phase peaks locate the times τj , and a phase excursion past −90 ◦ flags an active consolidation element and its 
+
+ω∗ 
+
+> p
+
+. As in EIS, the representation is not unique and is prone to over-fitting; the dictio-nary above provides the discipline, fixing how many elements are physically admissible and what each represents. In practice we recommend the smallest N, P consistent with the residual, fitted jointly with the co-measured EIS through their shared accumulation factor and relaxation times. 
+
+7.5. Toward Multiphysical Impedance Spectroscopy 
+
+The mechano-electrochemical impedance developed in this work is one instance of a broader measurement principle. Its defining feature is not that it is mechanical or electrochemical, but that it is a cross-field transfer function: a harmonic perturbation is applied to a generalized force (or flux) of one physical field and the conjugate flux (or force) of another field is recorded. In the current-controlled configuration studied here the perturbation is an electrochemical flux, the applied current, and the response is a mechanical force, the stack stress, so the measured spectrum is precisely the trans-fer function between the electrochemical and mechanical fields. Any system in which several conjugate force–flux pairs are thermodynamically coupled admits the same con-struction. 45 This is most transparent in the linear constitutive matrix of Sec. 2. Collecting the generalized fluxes— electronic, ionic, solid deformation, pore fluid, and thermal— together with their conjugate forces, the linear response is J = L X , in which the diagonal entries of L are the direct, single-field responses and the off-diagonal entries are the inter-field couplings (Table 1). A conventional spectroscopy probes a diagonal block: electrochemical impedance spectroscopy the electrical entry, dynamic mechanical analysis the mechanical entry, thermal impedance the thermal entry. A multiphysical 
+
+impedance spectroscopy instead probes an off-diagonal block, perturbing field a and measuring the conjugate variable of field b, so that the transfer function Zba (ω) reduces in the static limit to the coupling coefficient Lba and, across frequency, reports the relaxation dynamics of that coupling. The frequency dependence is the essential content. A static cross-field measure-ment returns only the magnitude of a coupling; the spectrum resolves the intermediate state variables—concentration, porosity, pore pressure, temperature—through which the coupling is mediated, each contributing its own characteristic time. For this reason the analysis developed here is not specific to porous electrodes: the non-dimensional groups, the characteristic-time hierarchy (Sec. 7.1), and the equivalent spring–dashpot / equivalent-circuit fitting (Secs. 7.3 and 7.4) all carry over to any coupled-field pair, with only the identity of the elements and the parameter dictionary changing. Several such spectroscopies follow immediately from the same matrix and the cou-plings catalogued in Table 1. Perturbing temperature and measuring current realizes a dynamic thermo-electrochemical spectroscopy, the time-resolved Seebeck–Peltier cou-pling; perturbing voltage and measuring fluid flux, or pressure and measuring current, realizes electro-osmotic / streaming spectroscopy; perturbing temperature and mea-suring stress or fluid flux realizes thermo-mechanical (piezocaloric) or thermo-osmotic spectroscopy. MEIS occupies the mechanical–electrochemical entry, while the remain-ing entries define a family of largely unexplored coupled-field spectroscopies. Moreover, because the constitutive matrix is symmetric under the reciprocal (Onsager) relations, conjugate cross-spectroscopies are not independent: Zba and Zab are linked, which pro-vides an internal consistency check and halves the number of measurements needed to populate the coupling structure. 46 Seen in this light, mechano-electrochemical impedance spectroscopy is the porous-electrode example of a general multiphysical impedance spectroscopy : apply a perturba-tion in one field, measure the response in another, and read both the coupling and its dynamics from the resulting transfer function. The thermodynamic framework, non-dimensionalization, and fitting methodology established here for porous electrodes ap-ply wherever multiple physical fields are coupled, and we hope they provide a common language for designing and interpreting such measurements across electrochemistry, mechanics, and transport. 
+
+8. Conclusions 
+
+We have presented a thermodynamically consistent, closed-form theory of mechano-electrochemical impedance spectroscopy (MEIS) for porous electrodes. Beginning from a linear multiphysical constitutive matrix that couples electronic, ionic, solid-deformation, pore-fluid, and thermal fluxes to their conjugate forces, we reduced the coupled response to a compact transfer function between the applied electrochemical perturbation and the measured mechanical stress, making explicit the physical content that a measured MEIS spectrum encodes. Three elements distinguish the formulation. First, the porosity-accommodation re-sponse, previously represented by a phenomenological bridge function, was derived from a Helmholtz free energy, so that the bridge function and its relaxation time follow from a microstructural stiffness k and viscosity ηξ rather than from a fitted form. Second, a three-phase (solid–fluid–void) description with a void-accommodation fraction λ in-terpolates continuously between the unsaturated and the fully saturated (Biot) limits, recovering earlier two-phase models as special cases. Third, the impedance was or-ganized into a three-stage transfer-function structure—chemical accumulation acting on the sum of a chemo-mechanical and a poro-mechanical branch— yielding a single closed-form expression (Eq. 50) whose rigid, unsaturated, and saturated limits are each physically transparent. Non-dimensionalization reduced the response to five groups: the viscoelastic con-trast λE , the accommodation ratio ξ0 and rate Λξ, the drainage rate Λp, and the poro-mechanical coupling Π. A single accommodation pole was found to couple the me-47 chanical and pore-fluid branches. The parametric Nyquist and Bode studies identified the phase angle as the sharp discriminator of the chemo-mechanical parameters, while the pore-fluid coupling sets the low-frequency magnitude—a separation that yields a concrete fitting sequence. We further located the onset of second-quadrant behavior at Π∗ = λE + ( λE − 1) /(ξ0Λξ) for a single electrode, and showed that in a full cell the competition between an expanding and a contracting electrode produces both a complete reversal of the spectrum through the origin and the gradual second-quadrant entry commonly observed in experiment—features inaccessible to either electrode in isolation. An estimate of the governing time scales placed the viscoelastic and accommodation relaxations within the experimental window, but showed that the hydraulic time, scaling with the square of an ambiguous drainage length, spans many decades; only long-range, cell-scale drainage is resolvable, so an observed poro-mechanical feature reflects transport geometry rather than pore-scale structure. Despite the apparent complexity of the full derivation, the mechanical kernel of the response is a network of springs and dashpots. We therefore proposed a general phenomenological expression (Eq. 62)—a generalized-Maxwell bank for the skeleton together with coupled consolidation elements for the pore fluid—that can be fitted to data exactly as equivalent circuits are fitted in EIS and Prony series in DMA. The closed-form theory serves as the dictionary that assigns a physical meaning to each fitted element and fixes the minimal admissible network, so that the fit remains mechanistic rather than merely descriptive. Finally, MEIS is only the porous-electrode instance of a general principle: in any thermodynamically coupled system, perturbing one field and recording the conjugate response of another yields a cross-field transfer function—an off-diagonal entry of the constitutive matrix— whose frequency dependence carries the dynamics of the cou-pling. The same framework, non-dimensionalization, and equivalent-network fitting extend to thermo-electrochemical, electro-osmotic, thermo-mechanical, and other mul-tiphysical impedance spectroscopies, with the reciprocal relations linking conjugate measurements. Promising directions include quantitative validation against full-cell MEIS data, coupling the present bulk framework to interfacial charge-transfer kinetics to capture the lowest-frequency response, and exploration of the off-diagonal spectro-48 scopies that this framework brings within reach. It is also worth noting that the linear response function for MEIS is important not only for the frequency domain measure-ments, but also as the general transfer function for linear response in the time domain (Laplace transform) and for steady state couplings. 
+
+Acknowledgment 
+
+This work was supported by the National Science Foundation through award CMMI-2543158 (CAREER program). We also gratefully acknowledge the Toyota Research Institute of North America (TRINA), whose Electrochemical Society Toyota Young In-vestigator Fellowship supported this research at its earliest stage, when it was still an unproven idea; that early gift allowed the concept to mature into the present NSF CA-REER project. We thank Professor Martin Z. Bazant of MIT for acting as an unofficial advisor to the team, and for guidance that helped us develop multiphysical impedance spectroscopy within a rigorous mathematical framework grounded in irreversible ther-modynamics. 
+
+Author contributions: CRediT Junning Jiao: Data curation; Formal analysis; Investigation; Methodology; Soft-ware; Validation; Visualization; Writing – original draft. Juner Zhu: Conceptual-ization; Data curation; Formal analysis; Investigation; Methodology; Project admin-istration; Resources; Validation; Visualization; Supervision; Writing – original draft; Writing – review & editing; Funding acquisition. 
+
+Appendix A. Complete Derivation of the MEIS Transfer Function 
+
+This appendix presents the full step-by-step derivation of the MEIS transfer func-tion, retaining all terms appearing in the reduced Onsager structure without drop-ping any couplings or relaxation contributions. All fields are treated under a lumped (thickness-averaged) approximation, in which through-thickness gradients are repre-sented by finite differences across the electrode. The result is written in closed form, with subsequent sections of the main text showing how this general expression reduces to the standard MEIS formula under common simplifying assumptions. 49 Appendix A.1. Starting Point: Constitutive Relations and Conservation Laws 
+
+We begin with the four constitutive relations from the reduced constitutive matrix structure of Section 3.2, written along the through-thickness direction x ∈ [0 , ℓ ]:
+
+Je = L11 (−∂xϕ) + L12 (−∂xμ), (A.1) 
+
+Fi = L12 (−∂xϕ) + L22 (−∂xμ) + L23 (−σp), (A.2) 
+
+˙εp = L23 (−∂xμ) + L33 (−σp) + L34 (−∂xp), (A.3) 
+
+Q = L34 (−σp) + L44 (−∂xp). (A.4) Onsager reciprocity ( Lij = Lji ) has been imposed throughout. The four conservation laws are 
+
+∂xJe = 0 , (A.5) 
+
+∂tc + ∂xFi = 0 , (A.6) 
+
+∂xσp = 0 , (A.7) 
+
+∂tζ + ∂xQ = 0 , (A.8) where ζ is the increment of fluid content (fluid volume gained per unit reference volume), the natural Biot storage variable. The boundary conditions for a single electrode in the stack are: 
+
+• Je(0 , t ) = Je(ℓ, t ) = ˆJeeiωt (applied current); 
+
+• Fi(0 , t ) = ( t+/Fc)Je(t) (Faradaic flux at the separator), Fi(ℓ, t ) = 0 (blocking at the impermeable current collector); 
+
+• ˆp(0 , t ) = 0 (drained: the separator is hydraulically connected to the electrolyte reservoir), ˆQ(ℓ, t ) = 0 (sealed: impermeable current collector); 
+
+• Global mechanical constraint: ε(t) = 0 (single-electrode lumped form). 50 Appendix A.2. Frequency-Domain Transformation 
+
+Under harmonic excitation ˆJeeiωt , all fields oscillate at the same frequency, so time derivatives transform according to ∂t → iω . The conservation laws become 
+
+∂x ˆJe = 0 ⇒ ˆJe(x, ω ) = ˆJe(ω) uniform , (A.9) 
+
+iω ˆc + ∂x ˆFi = 0 , (A.10) 
+
+∂x ˆσp = 0 ⇒ ˆσp(x, ω ) = ˆ σp(ω) uniform , (A.11) 
+
+iω ˆζ + ∂x ˆQ = 0 . (A.12) 
+
+Appendix A.3. Lumped Spatial Approximation 
+
+All fields are treated under a lumped approximation, in which gradients are repre-sented by through-thickness finite differences, ∂x ˆf (x, ω ) ≈ ℓ−1 ˆf (ω) ℓ
+
+> 0
+
+, and the transport balances are closed by integrating each conservation law across the thickness and ap-plying the boundary fluxes. 
+
+• Mechanical. The global constraint R ℓ 
+
+> 0
+
+˙εp dx = 0 reduces to the pointwise condi-tion ˆ˙εp = 0 .
+
+• Electrochemical. Integrating the species conservation law iω ˆc + ∂x ˆFi = 0 across the thickness and applying the blocking condition ˆFi(ℓ) = 0 at the current collec-tor gives iωℓ ˆc = ˆFi(0) − ˆFi(ℓ) = ˆFi(0) : the rate of species accumulation equals the ionic flux entering at the separator face. 
+
+• Hydraulic. Identically, integrating iω ˆζ + ∂x ˆQ = 0 across the thickness and applying the sealed-collector condition ˆQ(ℓ) = 0 gives iωℓ ˆζ = ˆQ(0) : the rate of fluid-content change equals the drainage flux at the drained separator. With the lumped Darcy flux ˆQ(0) ≈ − (L44 /ℓ )ˆ p, the single representative pore pressure ˆp
+
+relaxes on the hydraulic time τp, as derived in Step 4. 
+
+Appendix A.4. Step 1: Elimination of the Electric Potential 
+
+Solving Eq. A.1 for −∂x ˆϕ:
+
+−∂x ˆϕ = ˆJe
+
+L11 
+
+− L12 
+
+L11 
+
+(−∂x ˆμ). (A.13) 51 Substituting into Eq. A.2: 
+
+ˆFi = L12 
+
+" ˆJe
+
+L11 
+
+− L12 
+
+L11 
+
+(−∂x ˆμ)
+
+#
+
++ L22 (−∂x ˆμ) + L23 (−ˆσp). (A.14) Combining the ∂x ˆμ terms: 
+
+ˆFi = L12 
+
+L11 
+
+ˆJe + eL22 (−∂x ˆμ) + L23 (−ˆσp), (A.15) where 
+
+eL22 ≡ L22 − L 212 
+
+L11 
+
+(A.16) is the effective ionic transport coefficient after eliminating the electronic degree of free-dom. 
+
+Identification of the cation transference number. 
+
+In the absence of all driving forces other than the imposed current ( ∂x ˆμ = 0 , ˆσp = 0 ), Eq. A.15 reduces to ˆFi = ( L12 /L 11 ) ˆJe. The cation current Fc ˆFi is then a fraction 
+
+FcL12 /L 11 of the total electronic current. This fraction is, by definition, the cation transference number: 
+
+t+ ≡ Fc
+
+L12 
+
+L11 
+
+. (A.17) 
+
+Appendix A.5. Step 2: Closing the Ionic Sub-Problem 
+
+Under the lumped approximation, the ionic balance is represented by iωℓ ˆc = ˆFi,which equates the rate of species accumulation to a representative ionic flux through the electrode thickness. Evaluating ˆFi from the constitutive relation Eq. A.15, with the lumped gradient −∂x ˆμ ≈ − ˆμ/ℓ ,
+
+iωℓ ˆc = L12 
+
+L11 
+
+ˆJe − eL22 
+
+ℓ ˆμ + L23 (−ˆσp). (A.18) In the limiting case of no concentration gradient and no mechanical driving, this reduces to iωℓ ˆc = ( L12 /L 11 ) ˆJe = ( t+/Fc) ˆJe, consistent with the Faradaic boundary condition and with the definition of t+ in Eq. A.17. At this stage, ˆμ has not been related to ˆc. We introduce the thermodynamic sus-ceptibility 
+
+χ ≡ ∂μ ∂c ref 
+
+, (A.19) 52 evaluated at the reference state. For an ideal dilute solution, χ = R T / ¯c; for non-ideal solutions, χ includes activity corrections. Under the linearization ˆμ = χˆc in the lumped approximation: 
+
+iωℓ ˆc = L12 
+
+L11 
+
+ˆJe − eL22 χℓ ˆc − L23 ˆσp. (A.20) Rearranging to collect ˆc on the left: 
+
+iωℓ + eL22 χℓ
+
+!
+
+ˆc = L12 
+
+L11 
+
+ˆJe − L23 ˆσp. (A.21) Dividing by ℓ and introducing the diffusion time scale 
+
+τD ≡ ℓ2
+
+eL22 χ, (A.22) we obtain 
+
+ iω + τ −1
+
+> D
+
+ ˆc = 1
+
+ℓ
+
+L12 
+
+L11 
+
+ˆJe − L23 ˆσp
+
+
+
+. (A.23) This is the first key intermediate result : the concentration amplitude is determined by both the applied current and the chemo-mechanical feedback through L23 ˆσp.
+
+Appendix A.6. Step 3: Mechanical Constraint and Skeleton Stress 
+
+Under the lumped approximation, the constraint ˆ˙εp = 0 applied to Eq. A.3 (with 
+
+−∂x ˆμ ≈ − ˆμ/ℓ = −χˆc/ℓ and −∂x ˆp ≈ − ˆp/ℓ ) gives: 
+
+0 = L23 
+
+
+
+−χˆcℓ
+
+
+
++ L33 (−ˆσp) + L34 
+
+
+
+− ˆpℓ
+
+
+
+, (A.24) or 
+
+L33 ˆσp = −L23 χℓ ˆc − L34 
+
+ℓ ˆp. (A.25) Solving for ˆσp:
+
+ˆσp = −L23 χL33 ℓ ˆc − L34 
+
+L33 ℓ ˆp. (A.26) Here ˆσp is the porous-medium stress from the Onsager constitutive law, corresponding to the dissipative mechanical response governed by L33 . To obtain the total load-cell stress we combine this with the pore-pressure contribution via the Biot effective stress relation; this is handled in Step 5. 53 Appendix A.7. Step 4: Pore-Pressure Closure 
+
+The pore-fluid flux from Eq. A.4 is 
+
+ˆQ = L34 (−ˆσp) + L44 (−∂x ˆp). (A.27) Because mechanical equilibrium (Eq. A.7) renders ˆσp spatially uniform, the L34 ˆσp con-tribution is divergence-free and does not drive fluid redistribution; only the Darcy term 
+
+L44 (−∂x ˆp) generates flow. Under the lumped approximation the pressure gradient is represented by the through-thickness finite difference −∂x ˆp ≈ − ˆp/ℓ , so the Darcy flux is ˆQ ≈ − (L44 /ℓ )ˆ p, draining from the sealed collector ( ˆQ(ℓ) = 0 ) toward the drained separator ( ˆp(0) = 0 ). 
+
+Storage relation. Here ˆξ is the relative pore contraction , an internal kinematic variable measuring the portion of particle-scale chemical expansion absorbed by closure of the pore space (its strain decomposition and constitutive evolution are given in Step 5). With λ ∈ [0 , 1] the void accommodation fraction, and a fraction (1 − λ) of the porosity change displacing fluid, the fluid-content increment is 
+
+ˆζ = −(1 − λ) ¯ εs ˆξ + ˆpM , (A.28) where ¯εs is the steady-state solid volume fraction and M the Biot modulus. The leading minus sign is fixed by physical consistency: a positive pore contraction ˆξ > 0 must expel 
+
+fluid, so that in the undrained limit ( ˆζ = 0 ) the pore pressure rises , ˆpu = M (1 −λ)¯ εs ˆξ > 
+
+0. Writing the storage in terms of the fluid-content increment ζ rather than the fluid volume fraction removes the sign ambiguity that otherwise arises from conflating fluid storage with pore-space kinematics. 
+
+Lumped hydraulic balance. Integrating the fluid continuity equation iω ˆζ + ∂x ˆQ = 0 
+
+across the thickness and applying the boundary fluxes gives 
+
+iωℓ ˆζ = ˆQ(0) − ˆQ(ℓ) = ˆQ(0) , (A.29) the rate of fluid-content change balancing the drainage flux at the separator. Substi-tuting the lumped Darcy flux ˆQ(0) ≈ − (L44 /ℓ )ˆ p and the storage relation (A.28), 
+
+iωℓ 
+
+
+
+−(1 − λ)¯ εs ˆξ + ˆpM
+
+
+
+= −L44 
+
+ℓ ˆp, (A.30) 54 and rearranging, 
+
+ˆp
+
+ iω M + L44 
+
+ℓ2
+
+
+
+= iω (1 − λ)¯ εs ˆξ, (A.31) which, with the hydraulic relaxation time 
+
+τp = ℓ2
+
+L44 M = ηf ℓ2
+
+κ M (L44 = κ/η f ), (A.32) gives the first-order pore-pressure relaxation 
+
+ˆp = iω M (1 − λ)¯ εs
+
+iω + τ −1
+
+> p
+
+ˆξ = M (1 − λ)¯ εs ˆξ W (ω), W (ω) = iω iω + τ −1
+
+> p
+
+= iωτ p
+
+1 + iωτ p
+
+.
+
+(A.33) This is the frequency-domain form of ˙ˆp+ ˆ p/τ p = M (1 −λ)¯ εs
+
+˙ˆξ. Its limits are the expected ones: W → 1 (undrained, ˆp → ˆpu) at high frequency, and W → iωτ p → 0 (drained, 
+
+ˆp → 0) at low frequency, the fluid venting to the separator. 
+
+Effective relaxation time. The single pole is the lumped (lowest-mode) reduction of the distributed through-thickness drainage problem, consistent with the lumped treatment of the electrochemical and mechanical fields. The τp in Eq. A.32 is accordingly an 
+
+effective hydraulic relaxation time—a fully resolved boundary-value treatment places the dominant relaxation near 0.4 τp—and the numerical prefactor is absorbed into the fitted Darcy permeability κ.
+
+Appendix A.8. Step 5: Total Stress and the Biot Effective Stress Relation 
+
+To capture the full mechanical state of the porous medium we introduce the vis-coelastic skeleton response and the porosity-accommodation kinematics. 
+
+Strain decomposition. The electrode-level strain is the sum of an elastic skeleton strain 
+
+εe, the chemical (intercalation) eigenstrain βc with β the chemical expansion coefficient, and the relative pore contraction ξ that accommodates part of the particle swelling: 
+
+ˆε = ˆ εe + βˆc − ˆξ. (A.34) Under the lumped global constraint ˆε = 0 ,
+
+ˆεe = −βˆc + ˆξ. (A.35) 55 Skeleton viscoelasticity. The skeleton obeys a standard-linear-solid (SLS) law with com-plex modulus 
+
+ˆσs = E∗(ω) ˆ εe = E∗(ω)
+
+
+
+−βˆc + ˆξ
+
+
+
+, E∗(ω) = E∞ + iωτ mE0
+
+1 + iωτ m
+
+, (A.36) where E0 = E∞ + E1 is the instantaneous (unrelaxed) modulus, E∞ the relaxed mod-ulus, and τm the viscoelastic relaxation time. 
+
+Porosity evolution. The pore contraction ξ is driven by the chemical eigenstrain and re-sisted by a microstructural stiffness k, with dissipation set by a microstructural viscosity 
+
+ηξ. The resulting first-order relaxation ˙ˆξ + ˆξ/τ ξ = ( E∗β/η ξ)ˆ c has the frequency-domain solution 
+
+ˆξ = ξ0 β
+
+1 + iωτ ξ
+
+ˆc, ξ0 = E∗
+
+E∗ + k , τξ = ηξ
+
+E∗ + k , (A.37) with ξ0 the equilibrium porosity-accommodation ratio. 
+
+Skeleton stress. Substituting Eq. A.37 into the SLS law Eq. A.36: 
+
+ˆσs = −E∗(ω) B(ω) β ˆc, (A.38) where the bridge function is 
+
+B(ω) = 1 − ξ0
+
+1 + iωτ ξ
+
+= (1 − ξ0) + iωτ ξ
+
+1 + iωτ ξ
+
+. (A.39) The total stress measured by the load cell is given by the Biot effective stress relation, 
+
+ˆσtot = ˆ σs − α ˆp, (A.40) where α is the Biot coefficient. Substituting the skeleton stress (A.38), the pore pressure (A.33), and the porosity response (A.37), and factoring out −βˆc:
+
+ˆσtot = −βˆc
+
+
+
+E∗B + α M (1 − λ)¯ εs ξ0 W (ω)1 + iωτ ξ
+
+
+
+. (A.41) 
+
+Appendix A.9. Step 6: Reconciliation with the Onsager Mechanical Stress 
+
+The Onsager constitutive law gave the porous-medium stress ˆσp in Eq. A.26, while the viscoelastic–bridge derivation gives the skeleton stress ˆσs in Eq. A.38. These are consistent in the appropriate limit: the Onsager L33 represents the relaxed (steady-state) viscous response, while E∗(ω) captures the full viscoelastic spectrum. In the relaxed limit ( ω ≪ τ −1 
+
+> m
+
+), E∗(ω) → E∞, and ˆσp is recovered as the limit of ˆσs plus the pore-pressure correction. The SLS extension thus generalizes the Onsager mechanical block while preserving consistency in the relaxed limit. 56 Appendix A.10. Step 7: Closing the Concentration Equation Self-Consistently 
+
+The concentration response from Step 2 (Eq. A.23) depends on ˆσp, which is deter-mined by the mechanical sub-problem above. To close the system, we substitute ˆσtot 
+
+(Eq. A.41) for ˆσp in Eq. A.23. Under the present linearization the porous-medium stress equals the total stress, so we write 
+
+ˆσp ≈ ˆσtot = −βˆc Kmech (ω), (A.42) where 
+
+Kmech (ω) ≡ E∗(ω)B(ω) + α M (1 − λ)¯ εs ξ0 W (ω)1 + iωτ ξ
+
+. (A.43) Substituting Eq. A.42 into Eq. A.23: 
+
+iω + τ −1
+
+> D
+
+ ˆc = 1
+
+ℓL12 
+
+L11 
+
+ˆJe + L23 βℓ Kmech ˆc. (A.44) Rearranging to collect ˆc:
+
+
+
+iω + τ −1 
+
+> D
+
+− L23 βℓ Kmech 
+
+
+
+ˆc = L12 
+
+L11 ℓ ˆJe. (A.45) Solving for ˆc and using L12 /L 11 = t+/Fc:
+
+ˆc(ω) = t+
+
+Fc ℓ Ω∗(ω) ˆJe(ω), (A.46) where 
+
+Ω∗(ω) ≡ iω + τ −1 
+
+> D
+
+− L23 βℓ Kmech (ω). (A.47) This is the full concentration response , accounting for (i) chemical accumulation 
+
+iω , (ii) diffusion relaxation τ −1 
+
+> D
+
+, and (iii) chemo-mechanical feedback through the me-chanical kernel Kmech .
+
+Appendix A.11. Step 8: The Full MEIS Transfer Function 
+
+Substituting Eq. A.46 into Eq. A.41: 
+
+ˆσtot = −β Kmech (ω) · t+
+
+Fc ℓ Ω∗(ω) ˆJe. (A.48) The MEIS impedance is 
+
+ZMEIS (ω) = ˆσtot 
+
+ˆJe
+
+= −t+ β Kmech (ω)Fc ℓ Ω∗(ω) . (A.49) 57 Substituting the explicit forms of Kmech (Eq. A.43) and Ω∗ (Eq. A.47): 
+
+ZMEIS (ω) = −t+ β
+
+Fc ℓE∗(ω)B(ω) + αM (1 − λ)¯ εsξ0 W (ω)1 + iωτ ξ
+
+iω + τ −1 
+
+> D
+
+− L23 βℓ
+
+
+
+E∗B + αM (1 − λ)¯ εsξ0 W (ω)1 + iωτ ξ
+
+. (A.50) This is the full closed-form MEIS expression , retaining all couplings and relaxation time scales: 
+
+• Viscoelastic skeleton relaxation: τm (in E∗). 
+
+• Porosity accommodation relaxation: τξ (in B and the pore-pressure source). 
+
+• Hydraulic relaxation: single-pole W (ω) = iωτ p/(1 + iωτ p) on the time τp set by Darcy drainage to the separator. 
+
+• Diffusion relaxation: τD (in the denominator). 
+
+• Chemo-mechanical feedback: L23 βKmech /ℓ in the denominator, representing how the mechanical response modifies the concentration response through stress-assisted diffusion. 
+
+Appendix A.12. Step 9: Simplified Limit (Comparison with Main Text) 
+
+In the limit where the chemo-mechanical feedback in the concentration equation is negligible and diffusion is fast compared to the perturbation frequency, 
+
+L23 βℓ Kmech ≪ iω, τ −1 
+
+> D
+
+≪ ω, (A.51) the denominator simplifies to Ω∗ ≈ iω , and the MEIS expression reduces to 
+
+ZMEIS (ω) ≈ − t+ β
+
+Fc ℓ iω 
+
+
+
+E∗(ω)B(ω) + αM (1 − λ)¯ εsξ0 W (ω)1 + iωτ ξ
+
+
+
+. (A.52) 
+
+Sign convention. The overall negative sign follows from the tension-positive stress con-vention adopted throughout (Section 2). Under the global constraint ˆε = 0 , lithiation-induced chemical expansion ( ˆc > 0 for ˆJe > 0) places the constrained electrode in compression, so that ˆσtot < 0 and the impedance (A.52) is negative. Experimental stack-pressure measurements, however, report compression as positive; the impedance 58 defined against the measured pressure ˆpmeas = −ˆσtot therefore carries the opposite, positive, overall sign, 
+
+Zmeas MEIS (ω) = ˆpmeas 
+
+ˆJe
+
+= + t+ β
+
+Fc ℓ iω 
+
+
+
+E∗B + αM (1 − λ)¯ εsξ0 W (ω)1 + iωτ ξ
+
+
+
+, (A.53) which is the form used when the impedance is reported against the measured stack pressure. The two conventions differ only by this global sign; the relative magnitudes and phase relationships among the chemo-mechanical and poro-mechanical contribu-tions are identical. The definition of ZMEIS and the main-text result should be fixed to whichever convention matches the reported measurements. 
+
+Appendix A.13. Step 10: Identifying the Four Factors 
+
+The simplified MEIS expression (A.52) can be written in the multiplicative–additive form 
+
+ZMEIS (ω) = Ge Gc(ω) [ Hcm (ω) + Hpm (ω)] , (A.54) with 
+
+Ge = t+
+
+Fc
+
+(current-to-ionic-flux conversion ), (A.55) 
+
+Gc(ω) = 1
+
+ℓ iω (Faradaic accumulation ), (A.56) 
+
+Hcm (ω) = −β E ∗(ω) B(ω) (chemo-mechanical kernel ), (A.57) 
+
+Hpm (ω) = −α M (1 − λ)¯ εs ξ0 β
+
+1 + iωτ ξ
+
+W (ω) (poro-mechanical kernel ). (A.58) The product GeGc converts the applied current into a chemical eigenstrain ( ˆc > 0
+
+for ˆJe > 0), while the two mechanical kernels—both negative in the tension-positive convention—convert that eigenstrain into a (compressive) stress. Writing W (ω) = 
+
+iωτ p/(1 + iωτ p) explicitly, the poro-mechanical kernel takes the equivalent form 
+
+Hpm (ω) = − α M (1 − λ)¯ εs ξ0 β iω 
+
+(iω + τ −1 
+
+> p
+
+)(1 + iωτ ξ). (A.59) Their combination recovers the overall-negative simplified form (A.52); in the measured (compression-positive) convention each kernel changes sign and the multiplicative– additive structure of the main text is reproduced. 59 References 
+
+Balluffi, R.W., Allen, S.M., Carter, W.C., 2005. Kinetics of materials. John Wiley & Sons. Bazant, M.Z., 2013. Theory of Chemical Kinetics and Charge Transfer based on Nonequilibrium Thermodynamics. Accounts of Chemical Research 46, 1144–1160. URL: https://pubs.acs.org/doi/10.1021/ar300145c , doi: 10.1021/ar300145c .Bazant, M.Z., 2017. Thermodynamic stability of driven open systems and control of phase separation by electro-autocatalysis. Faraday Discussions 199, 423–463. URL: 
+
+http://xlink.rsc.org/?DOI=C7FD00037E , doi: 10.1039/C7FD00037E .Biot, M.A., 1941. General theory of three-dimensional consolidation. Journal of Applied Physics 12, 155–164. doi: 10.1063/1.1712886 .Chen, Z., Danilov, D.L., Eichel, R., Notten, P.H.L., 2022. Porous Electrode Modeling and its Applications to Li-Ion Batteries. Advanced Energy Materials 12, 2201506. URL: https://advanced.onlinelibrary.wiley.com/doi/10.1002/ aenm.202201506 , doi: 10.1002/aenm.202201506 .Chester, S.A., Di Leo, C.V., Anand, L., 2015. A finite element implementation of a cou-pled diffusion-deformation theory for elastomeric gels. International Journal of Solids and Structures 52, 1–18. URL: https://linkinghub.elsevier.com/retrieve/ pii/S0020768314003278 , doi: 10.1016/j.ijsolstr.2014.08.015 .Coussy, O., 2004. Poromechanics. John Wiley & Sons, Chichester. Demirel, Y., Gerbaud, V., 2019. Nonequilibrium Thermodynamics: Transport and Rate Processes in Physical, Chemical and Biological Systems. 4th ed., Elsevier. Di Leo, C.V., Rejovitzky, E., Anand, L., 2014. A Cahn–Hilliard-type phase-field the-ory for species diffusion coupled with large elastic deformations: Application to phase-separating Li-ion electrode materials. Journal of the Mechanics and Physics of Solids 70, 1–29. URL: https://linkinghub.elsevier.com/retrieve/pii/ S0022509614000842 , doi: 10.1016/j.jmps.2014.05.001 .60 Doyle, M., Fuller, T.F., Newman, J., 1993. Modeling of Galvanostatic Charge and Discharge of the Lithium/Polymer/Insertion Cell. Journal of The Electrochemical Society 140, 1526–1533. URL: https://iopscience.iop.org/article/10.1149/ 1.2221597 , doi: 10.1149/1.2221597 .Fang, R., Jiao, J., Li, W., Ihuaenyi, R.C., Bazant, M.Z., Zhu, J., 2025. Mechano-electrochemical impedance spectroscopy: Experimentation, interpretation, and appli-cation. Joule 9. URL: https://www.cell.com/joule/abstract/S2542-4351(25) 00358-7 , doi: 10.1016/j.joule.2025.102177 .Ferry, J.D., Myers, H.S., 1961. Viscoelastic properties of polymers. Journal of The Electrochemical Society 108, 142C–143C. Fuller, T.F., Harb, J.N., 2018. Electrochemical engineering. First edition ed., Wiley, Hoboken, NJ, USA. Germain, P., Nguyen, Q.S., Suquet, P., 1983. Continuum thermodynamics. Journal of Applied Mechanics 50, 1010–1020. doi: 10.1115/1.3167184 .de Groot, S.R., Mazur, P., 1984. Non-Equilibrium Thermodynamics. Dover Publica-tions, New York. Originally published by North-Holland, Amsterdam, 1962. Huang, J., Gao, Y., Luo, J., Wang, S., Li, C., Chen, S., Zhang, J., 2020. Review—Impedance Response of Porous Electrodes: Theoretical Framework, Physical Models and Applications. Journal of The Electrochemical Society 167, 166503. URL: https://iopscience.iop.org/article/10.1149/1945-7111/ abc655 , doi: 10.1149/1945-7111/abc655 .Ipers, G., Jiao, J., Pathak, S., Fang, R., Berliner, M.D., Li, W., Li, W., Braatz, R.D., Bazant, M.Z., Zhu, J., 2024. Rapid Simulation of Electro-Chemo-Mechanical Defor-mation of Li-ion Batteries Based On Porous Electrode Theory. Journal of The Elec-trochemical Society 171, 050557. URL: https://iopscience.iop.org/article/ 10.1149/1945-7111/ad4f1e , doi: 10.1149/1945-7111/ad4f1e .Jiao, J., Kim, E., Li, W., Xu, Z., Ihuaenyi, R.C., Fang, R., Kim, T., Shin, S., Li, X., Li, W., Cho, H., Zhu, J., 2026. Modeling the powder plasticity of porous electrodes 61 for the prediction of battery breathing and swelling prior to degradation. Journal of Power Sources 662, 238736. URL: https://linkinghub.elsevier.com/retrieve/ pii/S0378775325025728 , doi: 10.1016/j.jpowsour.2025.238736 .Kholkin, A.L., Pertsev, N.A., Goltsev, A.V., 2008. Piezoelectricity and Crys-tal Symmetry, in: Safari, A., Akdoğan, E.K. (Eds.), Piezoelectric and Acous-tic Materials for Transducer Applications. Springer US, Boston, MA, pp. 17–38. URL: http://link.springer.com/10.1007/978-0-387-76540-2_2 , doi: 10.1007/ 978-0-387-76540-2_2 .Klinsmann, M., Hildebrand, F.E., Ganser, M., McMeeking, R.M., 2019. Den-dritic cracking in solid electrolytes driven by lithium insertion. Journal of Power Sources 442, 227226. URL: https://linkinghub.elsevier.com/retrieve/pii/ S0378775319312194 , doi: 10.1016/j.jpowsour.2019.227226 .Lai, J., Nsabimana, A., Luque, R., Xu, G., 2018. 3D Porous Carbona-ceous Electrodes for Electrocatalytic Applications. Joule 2, 76–93. URL: 
+
+https://linkinghub.elsevier.com/retrieve/pii/S2542435117301290 , doi: 10. 1016/j.joule.2017.10.005 .Lian, H., Bazant, M.Z., 2024. Modeling Lithium Plating Onset on Porous Graphite Elec-trodes Under Fast Charging with Hierarchical Multiphase Porous Electrode Theory. Journal of The Electrochemical Society 171, 010526. URL: https://iopscience. iop.org/article/10.1149/1945-7111/ad1e3d , doi: 10.1149/1945-7111/ad1e3d .Menard, K.P., Menard, N., 2020. Dynamic mechanical analysis. CRC press. Newman, J., Tiedemann, W., 1975. Porous-electrode theory with battery applica-tions. AIChE Journal 21, 25–41. URL: https://onlinelibrary.wiley.com/doi/ 10.1002/aic.690210103 , doi: 10.1002/aic.690210103 .Onsager, L., 1931a. Reciprocal Relations in Irreversible Processes. I. Physical Review 37, 405–426. URL: https://link.aps.org/doi/10.1103/PhysRev.37.405 , doi: 10. 1103/PhysRev.37.405 .62 Onsager, L., 1931b. Reciprocal Relations in Irreversible Processes. II. Physical Review 38, 2265–2279. URL: https://link.aps.org/doi/10.1103/PhysRev.38.2265 ,doi: 10.1103/PhysRev.38.2265 .Park, D.S., Hadad, M., Riemer, L.M., Ignatans, R., Spirito, D., Esposito, V., Tileli, V., Gauquelin, N., Chezganov, D., Jannis, D., Verbeeck, J., Gorfman, S., Pryds, N., Muralt, P., Damjanovic, D., 2022. Induced giant piezoelectricity in centrosymmet-ric oxides. Science 375, 653–657. URL: https://www.science.org/doi/10.1126/ science.abm7497 , doi: 10.1126/science.abm7497 .Prigogine, I., Rysselberghe, P.V., 1963. Introduction to Thermodynamics of Irre-versible Processes. Journal of The Electrochemical Society 110, 97C. URL: https: //iopscience.iop.org/article/10.1149/1.2425756 , doi: 10.1149/1.2425756 .Qu, Y., Campbell, P.G., Hemmatifar, A., Knipe, J.M., Loeb, C.K., Reidy, J.J., Hubert, M.A., Stadermann, M., Santiago, J.G., 2018. Charging and Transport Dynamics of a Flow-Through Electrode Capacitive Deionization System. The Journal of Physical Chemistry B 122, 240–249. URL: https://pubs.acs.org/doi/10.1021/acs.jpcb. 7b09168 , doi: 10.1021/acs.jpcb.7b09168 .Smith, R.B., Bazant, M.Z., 2017. Multiphase Porous Electrode Theory. Journal of The Electrochemical Society 164, E3291–E3310. URL: http://arxiv.org/abs/1702. 08432 , doi: 10.1149/2.0171711jes .Song, J., Ihuaenyi, R.C., Lim, J., Wang, Z., Li, W., Fang, R., Ghamsari, A.K., Xu, H., Lee, Y.M., Zhu, J., 2025. A microstructural electrochemo-mechanical model of high-nickel composite electrodes towards digital twins to bridge the particle and electrode-level characterizations. Energy & Environmental Science , 10.1039.D4EE04856CURL: 
+
+https://xlink.rsc.org/?DOI=D4EE04856C , doi: 10.1039/D4EE04856C .Wang, H., 2017. Theory of Linear Poroelasticity with Applications to Geomechanics and Hydrogeology. Princeton Series in Geophysics, Princeton University Press, Princeton, NJ. doi: 10.1515/9781400885688 .Wang, S., Zhang, J., Gharbi, O., Vivier, V., Gao, M., Orazem, M.E., 2021. Electrochemical impedance spectroscopy. Nature Reviews Methods Primers 1, 63 41. URL: https://www.nature.com/articles/s43586-021-00039-w , doi: 10. 1038/s43586-021-00039-w .Whittingham, M.S., Jacobson, A.J., 1982. Intercalation chemistry. Materials science and technology, Academic Press, New York. Xu, H., Zhu, J., Finegan, D.P., Zhao, H., Lu, X., Li, W., Hoffman, N., Bertei, A., Shearing, P., Bazant, M.Z., 2021. Guiding the Design of Heterogeneous Electrode Microstructures for Li-Ion Batteries: Microscopic Imaging, Predictive Modeling, and Machine Learning. Advanced Energy Materials 11, 2003908. URL: https: //onlinelibrary.wiley.com/doi/10.1002/aenm.202003908 , doi: 10.1002/aenm. 202003908 .Zhao, C.X., Wang, Z., Jacobson, D., Li, Y., Khaykovich, B., Fayfar, S., Zheng, L., LaManna, J., Chen, X., Hussey, D.S., Chen, F., Veith, G.M., Wang, C., . Electrolytes that reduce electro-osmotic drag improve fast charging of lithium-ion batteries . Ziegler, H., 1983. An Introduction to Thermomechanics. 2nd ed., North-Holland, Amsterdam. 64

@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-06",
+  "date": "2026-07-06",
+  "generated_at": "2026-07-06T23:13:35",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/06/2606.29257v1-multiphysical-impedance-spectroscopy-of-porous-electrodes-based-on-linear-irreversible-thermodynamics",
+      "section": "quick",
+      "title_en": "Multiphysical impedance spectroscopy of porous electrodes based on linear irreversible thermodynamics",
+      "authors": "Junning Jiao, Juner Zhu",
+      "date": "2026-06-28",
+      "pdf": "https://arxiv.org/pdf/2606.29257v1",
+      "score": "6.0",
+      "evidence": "提出多物理场阻抗谱方法，探测多孔电极中的交叉耦合，可用于电池等效电路建模与诊断。",
+      "tldr": "多孔电极耦合多种物理场，传统电化学阻抗谱(EIS)或动态力学分析(DMA)仅测量单场对角响应，对交叉耦合驱动的结构演化视而不见。从线性不可逆热力学出发，建立多物理阻抗谱一般理论，激扰一场并检测另场共轭响应以探测非对角项。聚焦电-化学-机械路径，导出机械-电化学阻抗谱(MEIS)闭式解，其阻抗分解为化学积累因子与化学-机械、孔隙-机械两核之和的乘积，孔隙桥函数源自亥姆霍兹自由能，无需经验拟合。无量纲化后相位角成为化学-机械参数的直接鉴别器，并揭示由电极膨胀/收缩竞争引起的第二象限行为。MEIS为跨域耦合谱家族一员，拓宽了电极退化诊断手段。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Porous electrodes couple electrical, chemical, mechanical, hydraulic, and thermal fields, yet conventional frequency-domain diagnostics interrogate only one of them: electrochemical impedance spectroscopy (EIS) the electrical response and dynamic mechanical analysis (DMA) the mechanical. Each reads a diagonal entry of the multiphysical constitutive matrix and is blind to the cross-couplings that govern structural evolution and degradation. Starting from linear irreversible thermodynamics, we formulate a general theory of multiphysical impedance spectroscopy, in which perturbing one field and measuring the conjugate response of another probes an off-diagonal entry of the constitutive matrix, recovering the static coupling coefficient and resolving its relaxation dynamics across frequency. Specializing to the electro-chemo-mechanical pathway yields a closed-form theory of mechano-electrochemical impedance spectroscopy (MEIS), in which a small harmonic current is applied and the stack stress is measured; the impedance factorizes into a chemical-accumulation term multiplying the sum of a chemo-mechanical and a poro-mechanical kernel. The porosity-accommodation bridge function is derived from a Helmholtz free energy -- following from a microstructural stiffness and viscosity rather than a fitted form -- and a three-phase (solid-fluid-void) closure interpolates continuously between unsaturated and Biot-saturated limits through a void-accommodation fraction. Non-dimensionalization reduces the spectrum to five groups, identifies the phase angle as the discriminator of the chemo-mechanical parameters, and locates the onset of second-quadrant behavior, which in a full cell arises from the competition between an expanding and a contracting electrode. MEIS emerges as one member of a family of cross-coupled spectroscopies the same framework brings within reach.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/06/2606.30487v1-discovering-the-kalman-bucy-koopman-filter",
+      "section": "quick",
+      "title_en": "Discovering the Kalman-Bucy-Koopman Filter",
+      "authors": "Umesh Vaidya",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.30487v1",
+      "score": "6.0",
+      "evidence": "提出一种基于Koopman算子的非线性状态估计器，可潜在应用于SOC估计",
+      "tldr": "非线性状态估计是控制领域核心难题，传统Kalman滤波仅适用于线性系统，扩展卡尔曼滤波依赖线性化近似。本文提出Kalman-Bucy-Koopman (KBK)滤波器，基于Koopman算子谱理论，通过主Koopman特征函数参数化HJ方程，将非线性滤波转化为Koopman坐标下的Riccati演化，保留非线性结构。仿真显示估计精度优于扩展卡尔曼滤波，且能实现数据驱动，无需线性化。该框架为非线性滤波提供新原理，融合算子理论与最优估计。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "This paper introduces the Kalman-Bucy-Koopman (KBK) filter, a novel framework for nonlinear state estimation grounded in Koopman operator spectral theory. The nonlinear estimation problem is formulated as a maximum-likelihood (Mortensen) estimator whose solution is characterized by a Hamilton-Jacobi (HJ) partial differential equation. The proposed KBK filter provides a spectral, operator-theoretic realization of this nonlinear filtering problem by parameterizing the HJ value function in terms of principal Koopman eigenfunctions. This transformation converts the nonlinear estimation problem into a Riccati-type evolution in Koopman coordinates, yielding a linear-operator analogue of the classical Kalman-Bucy filter while preserving nonlinear structure in the original state variables. We develop a path-integral formulation for computing principal Koopman eigenfunctions and introduce a dynamics-informed, characteristics-inspired basis construction for their approximation. Theoretical error bounds are derived for value-function and state-estimation approximations. Simulation results demonstrate improved performance over the extended Kalman filter and illustrate the ability of the KBK framework to operate in data-driven settings without explicit model linearization.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

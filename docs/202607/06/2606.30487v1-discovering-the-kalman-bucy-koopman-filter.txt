@@ -1,0 +1,1783 @@
+Title: Discovering the Kalman-Bucy-Koopman Filter
+
+URL Source: https://arxiv.org/pdf/2606.30487v1
+
+Published Time: Tue, 30 Jun 2026 02:32:48 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+> 1
+
+# Discovering the Kalman-Bucy-Koopman Filter 
+
+Umesh Vaidya, IEEE Senior Member 
+
+Abstract —This paper introduces the Kalman Bucy Koopman (KBK) filter, a novel framework for nonlinear state estimation grounded in Koopman operator spectral theory. The nonlinear estimation problem is formulated as a maximum-likelihood (Mortensen) estimator whose solution is characterized by aHamilton–Jacobi (HJ) partial differential equation. The proposed KBK filter provides a spectral, operator-theoretic realization of this nonlinear filtering problem by parameterizing the HJ value function in terms of principal Koopman eigenfunctions. This transformation converts the nonlinear estimation problem into a Riccati-type evolution in Koopman coordinates, yielding a linear-operator analogue of the classical Kalman–Bucy filter while preserving nonlinear structure in the original state vari-ables. We develop a path-integral formulation for computing principal Koopman eigenfunctions and introduce a dynamics-informed, characteristics-inspired basis construction for their approximation. Theoretical error bounds are derived for value-function and state-estimation approximations. Simulation results demonstrate improved performance over the extended Kalman filter and illustrate the ability of the KBK framework to operate in data-driven settings without explicit model linearization. 
+
+I. I NTRODUCTION 
+
+The problem of nonlinear state estimation is central to modern control, robotics, signal processing, and machine learning [1]–[3]. While the celebrated Kalman–Bucy filter [4] provides an optimal solution for linear systems with Gaussian noise processes, extending its analytical tractability and struc-tural optimality to nonlinear systems remains a fundamental challenge in estimation theory. Classical approaches such as the Extended Kalman Filter (EKF), Unscented Kalman Filter (UKF), and Particle Filters (PF) approximate the nonlinear dynamics or posterior density through local linearization, sigma-point sampling, or stochastic simulation [5]–[7]. De-spite their widespread use, these methods often lack the elegant linear–quadratic structure that underpin the linear Kalman–Bucy framework [8]. As a result, nonlinear estimation algorithms frequently involve trade-offs between accuracy, interpretability, and computational complexity, especially in high-dimensional or data-driven settings. The growing intersection of estimation and machine learn-ing has further amplified the importance of nonlinear filtering. Deep state-space models (SSMs) including the Deep Kalman Filter and its variants extend probabilistic state estimation to large-scale learning tasks [9], [10]. Similarly, Neural ODEs and continuous-time latent dynamics models embed estimation within differentiable architectures for sequential prediction and control [11]. Recent structured state-space models such as S4 and DSS further highlight the central role of state estimation in long-range sequence modeling and modern machine learning 
+
+> Financial support from of NSF CMMI 2031573 is greatly acknowledged. The author is with the Department of Mechanical Engineering, Clemson University, Clemson SC, 29631.
+
+[12], [13]. Despite these advances, most learning-based esti-mators rely on parametric surrogates or amortized inference, with limited theoretical connection to classical filtering theory. There remains a pressing need for estimation framework that preserve analytical structure while leveraging data-driven representations of nonlinear dynamics. In this paper, we propose a fundamentally new approach to nonlinear state estimation based on Koopman operator theory. The Koopman operator provides a linear, infinite-dimensional representation of nonlinear dynamics by acting on functions called observables of the system state [14]–[16]. This operator-theoretic framework enables the analysis, control, and estimation of nonlinear systems using linear operator tools [17]–[21]. Building on our prior work [22] established a connection between the solution of the Hamilton–Jacobi (HJ) equation and the spectral properties specifically, the principal eigenvalues and eigenfunctions of the Koopman operator. In the present paper, we exploit this connection in the context of nonlinear estimation. Two popular formulations of the stochastic filtering prob-lem, include the Zakai and Kushner–Stratonovich (KS) filters [23]–[25]. Both formulations describe the evolution of the state-density function through the Fokker–Planck or Kol-mogorov forward equation, which is the dual of the Koopman advection equation with an added diffusion term [26], [27]. Alternatively, the solution to the nonlinear filtering problem can be obtained from the HJ equation, leading to what is classically known as the maximum-likelihood or Mortensen filter [8], [28]. This HJ-based formulation forms the founda-tion for the proposed Kalman–Bucy–Koopman (KBK) filter, which generalizes the Kalman–Bucy filter to nonlinear systems through a linear operator-theoretic formulation. The key insight underlying our approach is that the optimal value function solving the HJ equation can be parameterized in terms of the Koopman principal eigenfunctions. This yields a quadratic representation of the cost functional in the Koop-man eigenfunction coordinates, transforming the nonlinear estimation problem into a linear estimation problem in the lifted (Koopman) space. The resulting KBK filter evolves according to Riccati-type differential equations, analogous to the Kalman–Bucy equations, but expressed in terms of Koopman eigenfunction coordinates. Moreover, the inclusion of the gradient and Hessian of the eigenfunctions in the gain dynamics ensures that the filter remains fully nonlinear in the original state variables while preserving linearity in the principal eigenfunction coordinates. The literature on Koopman-based control and estimation has grown rapidly in recent years [17], [29]–[40]. Surana [19], [21] proposed Koopman observer synthesis for nonlinear systems using linear models in the lifted observable space, demonstrat-ing improved robustness compared to EKF-type estimators. 
+
+> arXiv:2606.30487v1 [math.OC] 29 Jun 2026 2
+
+[17], [18], [41] exploited Koopman eigenfunctions for global stability, observability, and isostable analysis, highlighting their potential for globally valid coordinate transformations. More broadly, Koopman spectral expansions and Extended Dynamic Mode Decomposition (EDMD) methods enable the data-driven identification of linear operator representations for nonlinear systems, while kernel and reproducing-kernel Hilbert space (RKHS) formulations offer convex, mesh-free frameworks for eigenfunction approximation [42], [43]. Within this rich body of work, the proposed KBK filter provides a systematic bridge between Koopman operator the-ory, Hamilton–Jacobi optimal estimation, and Kalman–Bucy filtering. Unlike previous data-driven observer approaches that rely on regression or local linearization in the lifted space, the KBK framework is derived directly from the variational structure of the estimation problem. It offers an operator-theoretic analog of the Kalman–Bucy filter that evolves over the space of eigenfunctions yielding an estimator that is linear in the operator, yet nonlinear in the state. Unlike lift-and-linearize approaches, the KBK filter is derived from the Hamilton–Jacobi optimality principle and is not a regression-based linear approximation. The main contributions of this paper are summarized as follows. We establish a spectral representation of the Hamil-ton–Jacobi equation that arise in Mortensen nonlinear esti-mation in terms of Koopman principal eigenfunctions. We derive the Kalman–Bucy–Koopman (KBK) filter equations, showing that the nonlinear estimation problem can be recast as a Riccati-type evolution in the Koopman eigenfunction coordinates. Mortensen filtering problem is shown to be solved exactly under the assumption that the output map-ping lies in the span of the Koopman eigenfunctions. We further provide rigorous error bounds between the true and the approximated optimal value function when the measurement function does not lies within the span of the Koopman princi-pal eigenfunctions thereby providing approximate solution to the filtering problem. These value-function error bounds are subsequently used to derive error bounds on the maximum-likelihood estimates. We show that the approximation error can be improved by including higher order Koopman principal eigenfunction used in the parameterization of the optimal value function. We present a path-integral-based approach for approximating Koopman principal eigenfunctions, enabling the practical implementation of the proposed filter. The finite-time path integral formula is also used to propose a novel dy-namics–informed eigenfunction approximation method. This method relies on a set of characteristic-inspired basis func-tions construction that naturally encode the system dynamics. Through simulation studies on benchmark nonlinear systems, we show that the KBK filter achieves superior performance compared with the extended Kalman filter (EKF). A key advantage of the KBK filter is that it can be implemented in a data-driven setting without explicit knowledge of the system dynamics—unlike the EKF, which requires such knowledge for linearization. We demonstrate this data-driven capability of the KBK filter through an illustrative example. The proposed Kalman-Bucy-Koopman filter thus introduces a new paradigm for nonlinear estimation combining the opti-mality and structure of the Kalman–Bucy theory, the spectral linearity of the Koopman operator, and the data-driven flexibil-ity of modern machine learning to offer a unified foundation for operator-theoretic filtering and inference. II. P RELIMINARIES AND NOTATIONS 
+
+In this section, we present some preliminaries on the spec-tral theory of the Koopman operator and nonlinear estimation. We refer the readers to [23], [26], [28], [44] for further details on the preliminaries. 
+
+Notations : Rn denotes the n dimensional Euclidean space. We denote by Ck the space of k-times continuously differentiable functions and C0 the space of continuous function. C denotes the set of complex numbers. We denote by st(x) and st(x)
+
+the solutions of systems, ˙x = f (x). We use the notation 
+
+∇ · F (x) = 
+
+> n
+
+X
+
+> i=1
+
+∂F i
+
+∂x i
+
+, ∇g =
+
+ ∂g ∂x 1
+
+, . . . , ∂g ∂x n
+
+
+
+where F = ( F1, . . . , F n)⊤ is a vector and g(x) is a scalar valued function of x.
+
+A. Spectral Theory of Koopman Operator 
+
+In this section, we provide a brief overview of existing results on the spectral theory of the Koopman operator. For more details on this topic, refer to [18], [44]. Consider the dynamical system 
+
+˙x = f (x), (1) defined on a state space x ∈ Rn. The vector field f is assumed to be smooth function. Let F ⊆ C 0 be the function space of observable ψ : Rn → C. We have following definitions for the Koopman operator and its spectrum. 
+
+Definition 1 (Koopman Operator) . The family of Koopman operators Ut : F → F corresponding to (1) is defined as 
+
+[Utψ]( x) = ψ(st(x)) . (2) 
+
+If in addition ψ is continuously differentiable, then φ(x, t ) := [Utψ]( x) satisfies a partial differential equation [26] 
+
+∂φ ∂t = ∂φ ∂x f =: Kf φ (3) 
+
+with the initial condition φ(x, 0) = ψ(x). The operator Kf is the infinitesimal generator of Ut i.e., 
+
+Kf ψ = lim 
+
+> t→0
+
+(Ut − I)ψt . (4) 
+
+Definition 2. [Eigenvalues and Eigenfunctions of Koopman] A function ϕλ(x), assumed to be at least C1, is said to be an eigenfunction of the Koopman operator associated with eigenvalue λ if 
+
+[Utϕλ]( x) = eλt ϕλ(x). (5) 
+
+Using the Koopman generator, the (5) can be written as 
+
+∂ϕ λ
+
+∂x f = λϕ λ. (6) 3
+
+The eigenfunctions and eigenvalues of the Koopman oper-ator enjoy the following property [44], [45]. 
+
+Property 1. Let ϕλ1 and ϕλ2 are the eigenfunctions of the Koopman generator associated with eigenvalues λ1 and λ2
+
+respectively. If ϕk1 
+
+> λ1
+
+ϕk2 
+
+> λ2
+
+∈ C 1, for k1, k 2 ∈ R+, then it is an eigenfunctions of Koopman generator with eigenvalue k1λ1 +
+
+k2λ2.
+
+The property is true because 
+
+[Utϕk1 
+
+> λ1
+
+ϕk2 
+
+> λ2
+
+] = [ Utϕk1 
+
+> λ1
+
+Utϕk2 
+
+> λ2
+
+] = [ Utϕλ1 ]k1 [Utϕλ2 ]k2
+
+= e(k1λ1+k2λ2)tϕk1 
+
+> λ1
+
+ϕk2 
+
+> λ2
+
+. (7) 
+
+Definition 3 (Koopman mode decomposition (KMD)) . Con-sider a scalar-valued function g : Rn → R, and assume that the function g can be expanded in terms of Koopman eigenfunctions as follows. 
+
+g(x) = 
+
+> N
+
+X
+
+> k∈Nn
+
+¯gk
+
+> n
+
+Y
+
+> i=1
+
+ϕki 
+
+> i
+
+(z), (8) 
+
+where k = (k1, . . . , k n) and ¯gk are the Koopman modes and correspond to the projection of function g(z) on the eigenfunctions, ϕk1 
+
+> λ1
+
+(z), . . . , ϕ kn 
+
+> λn
+
+(z).
+
+The spectrum of the Koopman operator is, in general, infinite–dimensional and depends sensitively on the choice of the underlying function space used for its representation and approximation [44]. Consequently, not all spectral components are equally relevant for control or estimation purposes. In this work, we focus on a particular portion of the spec-trum associated with the local linearization of the nonlinear system around an equilibrium point. Under the hyperbolicity assumption on the equilibrium of system (1), this part of the spectrum is well defined and consists of eigenvalues that coincide with those of the Jacobian of the linearized dynamics. We therefore restrict attention to the corresponding Koopman eigenfunctions with eigenvalues that matches with the local linearization of the nonlinear flow. The relevant theoretical properties summarized below follow from [44]. While the Koopman spectrum is classically defined over the entire state space and over infinite time horizons (cf. (5)–(6)), it can also be meaningfully characterized over finite time intervals or restricted subsets of the state space. In particular, 
+
+subdomain or open eigenfunctions are defined on subsets of the state space and provide a well-posed spectral description of the dynamics in a neighborhood of the equilibrium [44, Definition 5.2, Lemma 5.1]. The filter construction in this paper employs the principal eigenfunctions of the Koopman operator. These eigenfunctions are locally defined and possess eigenvalues that match those of the linearization of the nonlinear system at the equilibrium [44, Proposition 5.8]. They therefore furnish intrinsic coordinates that linearize the dynamics to first order and naturally connect to classical results such as the Hartman–Grobman theorem and Poincaré normal forms [46]. Depending on the regularity of the flow, these principal eigenfunctions may be defined either on a proper subset 
+
+P ⊂ Rn (subdomain eigenfunctions) or globally on the entire state space [44, Lemma 5.1, Corollaries 5.1–5.2, 5.8]. In the sequel, these principal eigenfunctions serve as the lifting coordinates underlying the proposed spectral filter dynamics. 
+
+B. Estimation in Nonlinear Systems 
+
+For the nonlinear estimation problem, we consider system with output measurements of the form 
+
+˙x = f (x) + w(t), y = h(x) + v(t) (9) where x ∈ Rn and y ∈ Rp are the state and output measure-ment respectively. w(t) ∈ Rn and v(t) ∈ Rp are a white Gaussian noise processes assumed to be independent with covariance matrices R ∈ Rn×n and Q ∈ Rp×p respectively i.e., 
+
+E[w(t)] = 0 , E(w(t)w⊤(τ )) = Rδ (t − τ )
+
+E[v(t)] = 0 , E(v(t)v⊤(τ )) = Qδ (t − τ ).
+
+The stochastic differential equation in (9) is assumed to be in the sense of Itô. Both the vector field f and the output mapping h are assumed to be smooth function of x. For the estimation problem, the control input is typically ignored as it is assumed to known. The initial prior probability density of the state x is denoted by 
+
+p(x, 0) = p0(x),
+
+Z
+
+> Rn
+
+p0(x) dx = 1 . (10) Between measurements, the state density p(x, t ) evolves deterministically according to the Fokker–Planck (FP) or Kol-mogorov forward equation: 
+
+∂p ∂t (x, t ) = −∇·  f (x) p(x, t )
+
++ 12
+
+> n
+
+X
+
+> i,j =1
+
+∂2
+
+∂x i∂x j
+
+
+
+Rij p(x, t )
+
+
+
+. (11) The above equation can be written in the compact form using the operator notation as follows. 
+
+∂p ∂t = L∗p, L∗p := −∇· (f p ) + 12 ∇·  R∇p. (12) The unnormalized density ¯p(x, t ) satisfies the Zakai equation :
+
+∂ ¯p∂t = L∗ ¯p + ¯ p h (x)⊤Q−1y. (13) This is a linear Stochastic partial differential equation (SPDE), linear in ¯p, but stochastic because y is random. The normalized posterior p = ¯pR ¯pdx satisfies the Kushner–Stratonovich (KS) 
+
+equation: 
+
+∂p ∂t = L∗p + p  h − ¯h⊤Q−1  y − ¯h,
+
+¯h(t) = 
+
+Z
+
+h(x) p(x, t ) dx. (14) Thus, the prediction step is governed by the FP operator L∗,and the correction step introduces information from the mea-surements. The Kushner–Stratonovich equation is a nonlinear SPDE because normalization introduces division by a random integral R ¯pdx . There are different ways to build an estimator 4
+
+given the posterior p(·, t ). In particular, we can use 
+
+MMSE estimator: 
+
+ˆxMMSE (t) = 
+
+Z
+
+x p (x, t ) dx. 
+
+MAP estimator: 
+
+ˆxMAP (t) = arg max  
+
+> x
+
+p(x, t ).
+
+Credible sets: regions 
+
+Cα(t)s .t.
+
+Z
+
+> Cα
+
+p(x, t ) dx = α. 
+
+C. Special Case: Linear–Gaussian (Kalman–Bucy Filter) 
+
+For the special case when the system dynamics and the measurement model are linear, we obtain the Kalman-Bucy filter. Consider the following linear time invariant system 
+
+˙x = Ax + w(t), (15) 
+
+y = Cx + v(t), (16) with w(t) and v(t) are independent Gaussian white noise with covariance matrices R and Q respectively. The FP solution re-mains Gaussian with mean ˆx(t) and covariance P (t) satisfying the following Kalman–Bucy equations :
+
+˙ˆx = Aˆx + K(t)  y − C ˆx, K(t) = S(t)C⊤Q−1, (17) 
+
+˙S = AS + SA ⊤ + R − SC ⊤Q−1CS. (18) with initial covariance S(0) = S0. This linear Gaussian filter is a finite-dimensional projection of the FP/KS filter. III. KALMAN -B UCY -K OOPMAN FILTER VIA HJ FORMULATION OF OPTIMAL ESTIMATION 
+
+Instead of evolving the full probability density (as in the Fokker–Planck or Kushner–Stratonovich equations), we may seek the most probable trajectory x(t) given the observations 
+
+y(t). This leads to the maximum a posteriori (MAP) or minimum-energy estimation problem also called as Mortensen filter. For the MAP or minimum-energy estimation problem we consider nonlinear stochastic system with output measurement where we borrow the set-up from II-B 
+
+˙x = f (x) + w(t), y = h(x) + v(t), (19) with w(t) and v(t) are assumed to be independent Gaussian white noises with covariances matrices R and Q respectively. The goal is to estimate the hidden state x(t) from the noisy observations y(t). The initial state is x(0) , where x(0) is a random vector with Gaussian distribution with covariance matrix Σ and mean μ. The cost functional for the maximum posteriori problem is given by 
+
+Jt[x(·)] = 12 (x − μ)⊤Σ−1(x − μ)+ 12
+
+Z t
+
+> 0
+
+h
+
+( ˙ x − f (x)) ⊤R−1( ˙ x − f (x)) +( y − h(x)) ⊤Q−1(y − h(x)) 
+
+i
+
+dτ. (20) 
+
+Jt[x(·)] = V0(x) + 12
+
+Z t
+
+> 0
+
+h
+
+( ˙ x − f (x)) ⊤R−1( ˙ x − f (x)) +( y − h(x)) ⊤Q−1(y − h(x)) 
+
+i
+
+dτ. (21) This cost functional penalizes the deviations from the model dynamics ( w-term) and the mismatch between predicted and observed measurements ( v-term). For the computation of the maximum-likelihood estimate the output y(τ ), 0 ≤ τ ≤ t, over a time interval. Substituting for y(τ ) into Jt in (21), then it is functional only of x(τ ),
+
+0 ≤ τ ≤ t with both end conditions x(0) and x(t) free. Using standard variational methods, we determine the trajectory 
+
+x⋆(t), 0 ≤ τ ≤ t, which minimizes Jt. The modal-trajectory estimate is then x⋆(t), the final state of the most probable trajectory at time t, given y(τ ), 0 ≤ τ ≤ t. Only the final value of the minimizing trajectory is of any significance. We refer to [28] for more detailed discussion on this. Suppose now that we wish to construct a sequential estima-tor. This means that, as t varies, we wish continually to update the optimal estimate. Let x⋆
+
+> [0 ,t ]
+
+(τ ), 0 ≤ τ ≤ t, denote the trajectory which minimizes Jt when y(τ ), 0 ≤ τ ≤ t is given. Let ˆx(t) denote the optimal maximum-likelihood estimate at time t when y(τ ), 0 ≤ τ ≤ t is given. The Hamilton Jacobi theory can be applied to solve this problem. We first define 
+
+V (x, t ) = min    
+
+> u(τ),0≤τ≤t
+
+Jt (22) It is known that the V (x, t ) is the viscosity solution of the following HJ equation [47] 
+
+∂V ∂t + ∂V ∂x f (x) + 12
+
+∂V ∂x R ∂V ∂x 
+
+> ⊤
+
+− 12 (y(t) − h(x)) ⊤Q−1(y(t) − h(x)) . (23) and the initial condition for the PDE given by 
+
+V (x, 0) = V0(x) (24) with the minimum of this function at x = μ. We make the following assumption on the solution of the HJ PDE. 
+
+Assumption 1. The Hamiltonian corresponding to the HJ PDE (23) is quadratic in the gradient ∂V ∂x and hence convex. We assume that the HJ PDE (23) admits a viscosity solution which is semi-continuous [48]. 
+
+The optimal estimate ˆx(t) is obtained as the root of follow-ing equation 
+
+∇V (x, t ) = 0 (25) The optimal or maximal likelihood estimate, ˆx(t), is the root of the above equation. Computationally and from the online implementation perspective it is more efficient to obtain the differential equation governing the evolution of ˆx(t). This governing equation is derived as follows [28]. Taking time derivative of (25), we obtain 
+
+ddt 
+
+ ∂V (x, t )
+
+∂x 
+
+
+
+> x=ˆ x(t)
+
+= ∂2V∂x∂t + ∂2V∂x 2
+
+dˆxdt x=ˆ x(t)
+
+(26) 5
+
+Let, 
+
+Πij (x, t ) := ∂2V∂x ixj
+
+(x, t ) (27) Using the Hessian notation and (23), we can write the above as 
+
+ddt Vx(x, t ) x=ˆ x(t)
+
+=
+
+n
+
+− Hx(x, ∇xV (x, t ), t )+Π( x, t ) dˆxdt 
+
+o
+
+> x=ˆ x(t)
+
+(28) Under the assumption that the Hessian of V (x, t ) i.e, the matrix Π in (27) is invertible it can be shown that the the differential equation for the evolution of the maximum likelihood estimate is given by [28] 
+
+˙ˆx = f (ˆ x) + Π −1(ˆ x, t ) ∂h ∂x (ˆ x)Q−1(y − h(ˆ x)) (29) The initial condition for the above differential equation is 
+
+ˆx(0) = μ. We next proceed with deriving the maximum likelihood filter equations in the Koopman eigenfunction coordinates. We make following assumption on the system dynamics for the estimator design problem using Koopman. 
+
+Assumption 2. We assume that the origin is an hyperbolic equilibrium point of the system ˙x = f (x) and Φ( x) ∈ Rn
+
+are the principal eigenfunctions of the Koopman operator associated with the matrix of eigenvalue Λ i.e., 
+
+∂Φ
+
+∂x f (x) = ΛΦ( x), (30) 
+
+The matrix Λ is in real Jordan canonical form as the principal eigenfunctions are assumed to be real. We assume that the eigenfunctions are well defined in Rn.
+
+Remark 1. The principal eigenfunctions are assumed to be well defined on Rn in the above. In general, however, principal eigenfunctions may only be defined on an invariant subdomain 
+
+P ⊆ Rn. In such cases, the validity of the proposed proposed filter is restricted to the region where the eigenfunctions are well defined. Extension of the KBK filter beyond a single invariant subdomain, for example via patching of local eigen-functions, will be an interesting direction for future work. 
+
+Following (21), we choose the following cost functional for the maximum posterior problem in the spectral Koopman coordinates 
+
+Jt[u(·)] = 12 (Φ( x) − Φ( μ)) ⊤Σ−1(Φ( x) − Φ( μ)) + 12
+
+Z t
+
+> 0
+
+h
+
+u(τ )⊤R−11 (x)u(τ ) + ( y − h(x)) ⊤Q−1(y − h(x)) 
+
+i
+
+dτ. 
+
+(31) with 0 ≤ t ≤ T and where R1(x) := ∂Φ
+
+> ∂x
+> ⊤
+
+R−1 ∂Φ 
+
+> ∂x
+
+. The objec-tive is to choose x(t) to minimize Jt with x(0) free subject to the system equation constraints (19). Comparing the objective function (31) for the proposed Kalman-Bucy-Koopman filter with the objective function (21), we notice the presence of the state dependent term, R1(x) in the cost function. Importantly, the introduction of the state-dependent weighting R1(x) does not alter the underlying stochastic model; rather, it arises naturally from expressing the Mortensen minimum-energy functional under the nonlinear coordinate transformation in-duced by the Koopman eigenfunctions. In this sense, the proposed formulation is equivalent to the classical Mortensen problem in the original state variables, with the Jacobian of the Koopman transformation accounting for the change of metric in the process noise penalty. The initial condition is assumed to be quadratic but in Koopman eigenfunctions coordinates Φ
+
+with minimum at x = μ, which is the estimate of the initial state x(0) . It is also important to emphasize that the term  
+
+> ∂Φ
+> ∂x
+
+in R1(x) is an invertible matrix as Φ forms a change of coordinates transforming the nonlinear system to a linear system (Assumption 2). The optimal value function, satisfies 
+
+V(x, t ) = min    
+
+> u(τ),0≤τ≤t
+
+Jt (32) The optimal value function, V(x, t ), satisfies following HJ PDE. 
+
+∂tV + H(x, ∇xV(x, t ), t ) = 0 (33) where H is the Hamiltonian and of the form 
+
+H(x, ∇xV(x, t ), t ) = ∂V
+
+∂x f (x) + 12
+
+∂V
+
+∂x R−11 (x) ∂V
+
+∂x 
+
+> ⊤
+
+− 12 (y(t) − h(x)) ⊤Q−1(y(t) − h(x)) . (34) with the initial condition given by 
+
+V(x, 0) = 12 (Φ( x) − Φ( μ)) ⊤ Σ−1 (Φ( x) − Φ( μ)) (35) This section establishes quadratic parameterizations of the optimal value function using the Koopman principal eigen-functions Φ and their higher-order products ¯Φ( x), leading to the representations VΦ(x, t ) and V¯Φ(x, t ). The main results are summarized as follows. First, Theorem 2 provides an exact representation of the optimal value function in terms of the principal eigenfunctions under the assumption that the output mapping h(x) lies in the span of Φ( x) (Assumption 3). Under this condition, the solution of the Hamilton–Jacobi equation (33) admits a quadratic form in Koopman eigenfunction coordinates, yield-ing V(x, t ) = VΦ(x, t ) as given in (40). Hence, under Assumption 3, the Mortensen filter problem is solved exactly. Second, Theorem 3 relaxes Assumption 3 to provide ap-proximate solution to the Mortensen filter problem. Theorem 3 characterizes the resulting approximation error when VΦ(x, t )
+
+is used in place of the true value function V(x, t ). Explicit bounds are derived on the value-function approximation error, which are subsequently used to quantify the discrepancy be-tween the true maximum-likelihood state estimates and those obtained from the principal-eigenfunction-based approxima-tion. Finally, Theorem 6, presented in Subsection III-A, ex-tends the parameterization framework to include higher-order products of the Koopman eigenfunctions. This enriched rep-resentation mitigates approximation error when the output mapping h(x) cannot be adequately captured by the principal eigenfunctions alone and yields computable upper and lower bounds on the optimal value function V(x, t ).6
+
+For the first main result, we make the following assumption. 
+
+Assumption 3. We assume that the output function h(x) lies in the span of the Koopman principal eigenfunction i.e., h(x) ∈
+
+span {ϕ1, . . . , ϕ n}.
+
+Following Assumption 3, we know that there exists a matrix 
+
+C ∈ Rp×n such that 
+
+hi(x) = c⊤ 
+
+> i
+
+Φ, i = 1 , . . . , p 
+
+where, c⊤ 
+
+> i
+
+, forms the rows of matrix C. The c′
+
+> i
+
+s are obtained from the solution of the following least square optimization problem. 
+
+min 
+
+> ci
+
+hi − c⊤ 
+
+> i
+
+Φ, h i − c⊤ 
+
+> i
+
+Φ , i = 1 , . . . , n (36) where ⟨· , ·⟩ stands for inner product in the function space 
+
+⟨f, g ⟩ := 
+
+Z
+
+> Rn
+
+f (x)g(x)dx 
+
+It is known that the solution to this optimization problem (36) is given by 
+
+Rn ∋ ci = G−1bi, i = 1 , . . . , n. (37) where 
+
+G = Φ, Φ⊤ ∈ Rn×n, bi = ⟨Φ, h i⟩ ∈ Rn (38) The numerically expensive step of computing the integral involved in the computation of matrix C can be replaced with the empirical sum over some sample data points [22]. In particular, let {xk}Lk=1 be the data points sampled uniformly. We can define 
+
+ˆG = 1
+
+L
+
+> L
+
+X
+
+> k
+
+Φ( xk)Φ( xk)⊤, ˆbi = 1
+
+L
+
+> L
+
+X
+
+> k
+
+Φ( xk)hi(xk) (39) The ˆci is then obtained as 
+
+ˆci = ˆG†ˆbi
+
+where † stands for pseudo inverse. The following is the first main result of this paper on the realization of Kalman-Bucy filter in the spectral Koopman coordinates. 
+
+Theorem 2. Under Assumption 3, the optimal value function (32) for the solution of HJ equation (33) is given by the following expression 
+
+VΦ(x, t ) = 12 Φ⊤(x)P (t)Φ( x) + s⊤(t)Φ( x) + r(t) (40) 
+
+where P (t) ∈ Rn×n is a positive matrix, s(t) ∈ Rn, and 
+
+r(t) ∈ R satisfy 
+
+˙P (t) + Λ ⊤P (t) + P (t)Λ + P (t)RP (t) − C⊤Q−1C = 0 ˙s(t) + Λ ⊤s(t) + P (t)Rs (t) + C⊤Q−1y(t) = 0 ˙r(t) + 12 s⊤(t)Rs (t) − 12 y⊤(t)Q−1y(t) = 0 (41) 
+
+for t ∈ [0 , T ] and with initial condition 
+
+P (0) = Σ −1, s (0) = −Σ−1Φ( μ), r (0) = 12 Φ( μ)⊤Σ−1Φ( μ)
+
+(42) 
+
+Proof. For the case when the Assumption 3 is satisfied, we write h(x) = CΦ( x), where the matrix C is obtained from the solution of the optimization problem (36). Substituting the parameterization of the optimal value function in Eq. (40) in the HJ equation (33), and using the Assumption 3 we obtain 
+
+ 12 Φ⊤ ˙P Φ + ˙ s⊤Φ + ˙ r
+
+
+
++ Φ ⊤P ∂Φ
+
+∂x f (x) + s⊤ ∂Φ
+
+∂x f (x)
+
+(43) 
+
++ 12 Φ⊤P RP Φ + Φ ⊤P Rs + 12 s⊤Rs 
+
+(44) 
+
+− 12 (y − CΦ( x)) Q−1(y − CΦ) = 0 
+
+(45) Using (30) and collecting terms involving quadratic, linear and no terms involving Φ, we obtain 
+
+˙P + Λ ⊤P + P Λ + P RP − C⊤Q−1C = 0 ˙s + Λ ⊤s + P Rs + C⊤Q−1y = 0 ˙r + 12 s⊤Rs − 12 y⊤Q−1y = 0 (46) The desired boundary conditions (42) is obtained by equating (40) with (35) at t = 0 .Let ΠΦ(x, t ) be the Hessian of the optimal value function 
+
+VΦ from (40) with entries 
+
+[Π Φ]ij = ∂2
+
+∂x i∂x j
+
+ 12 Φ⊤(x)P (t)Φ( x) + s⊤(t)Φ( x) + r(t)
+
+
+
+(47) The Hessian matrix is explicitly given by 
+
+ΠΦ = ∂Φ
+
+∂x 
+
+> ⊤
+
+P (t) ∂Φ
+
+∂x +
+
+> n
+
+X
+
+> i=1
+
+ P (t) Φ( x) + s(t)
+
+> i
+
+∂2ϕi(x)
+
+∂x 2 ,
+
+Combining the dynamics of the maximum likelihood esti-mates of the state (29) with the (41), we obtain the following dynamics for the Kalman-Bucy-Koopman filter. 
+
+˙ˆx = f (ˆ x) + Π −1Φ (ˆ x, t ) ∂h ∂x (ˆ x)Q−1(y − h(ˆ x)) 0 = ˙P + Λ ⊤P + P Λ + P RP − C⊤Q−1C
+
+0 = ˙ s + Λ ⊤s + P Rs + C⊤Q−1y
+
+0 = ˙ r + 12 s⊤Rs − 12 y⊤Q−1yP (0) = Σ −1, s (0) = −Σ−1Φ( μ)
+
+r(0) = 12 Φ( μ)⊤Σ−1Φ( μ)ΠΦ = ∂Φ
+
+∂x 
+
+> ⊤
+
+P (t) ∂Φ
+
+∂x +
+
+> n
+
+X
+
+> i=1
+
+ P (t) Φ( x) + s(t)
+
+> i
+
+∂2ϕi(x)
+
+∂x 2
+
+We now relax the Assumption 3. In particular, when the Assumption 3 is not satisfied there will be the error between 7
+
+the projection h(x) on the space span by the eigenfunctions 
+
+Φ i.e., CΦ. Let ∆( x) be the projection error i.e., 
+
+∆( x) = h(x) − CΦ.
+
+where C is obtained from the solution of the optimization problem (36). We make following assumption on the projec-tion error. 
+
+Assumption 4. We assume that 
+
+δh = sup 
+
+> x∈Rn
+
+∥h(x) − CΦ( x)∥ (48) 
+
+δ(t) = sup 
+
+> x∈Rn
+
+∥y(t) − h(x(t)) ∥, t ∈ [0 , T ] (49) 
+
+where C is obtained as the solution of the optimization prob-lem solved in (36). Furthermore, the optimal value function 
+
+V and VΦ are locally strongly convex in the neighborhood of the minimizer i.e., there exists a positive γ and γΦ such that 
+
+V(x, t ) ≥ V (ˆ x(t), t ) + γ
+
+2 ∥ˆx(t) − x∥, ∀x
+
+VΦ(x, t ) ≥ ˆV(ˆ xΦ(t), t ) + γΦ
+
+2 ∥ˆxΦ(t) − x∥, ∀x (50) Following results can be proved when the Assumption 3 is not satisfied i.e., when the output function, h(x), does not belong to the span of Koopman principal eigenfunctions. 
+
+Theorem 3. Let the Assumption 3 is not satisfied but the Assumption 4 holds true. We have following error bounds between the solution of the optimal function, V, from Eq. (32) obtained as the solution of the HJ equation (33) and the one obtained based on the parameterization of Koopman eigenfunctions i.e.(40). 
+
+|V − V Φ| ≤ λmax (Q−1)
+
+Z t
+
+> 0
+
+ δh
+
+2 + δ(τ )
+
+
+
+dτ =: c(t) (51) 
+
+for t ∈ [0 , T ] and 
+
+∥ˆx(t) − ˆxΦ(t)∥ ≤ 2
+
+s
+
+c(t)
+
+γmin 
+
+(52) 
+
+where γmin = min {γ, γ Φ}.Proof. We know that the optimal value function V and VΦ
+
+(32) satisfy following PDEs 
+
+∂V
+
+∂t + ∂V
+
+∂x f (x) + 12
+
+∂V
+
+∂x R−11 (x) ∂V
+
+∂x 
+
+> ⊤
+
+− 12 (y(t) − h(x)) Q−1(y(t) − h(x)) (53) 
+
+∂VΦ
+
+∂t + ∂VΦ
+
+∂x f (x) + 12
+
+∂VΦ
+
+∂x R−11 (x) ∂VΦ
+
+∂x 
+
+> ⊤
+
+− 12 (y(t) − CΦ) Q−1(y(t) − CΦ( x)) (54) Let 
+
+r(x) = h(x) − CΦ( x) = ⇒ CΦ = h − r
+
+We have 
+
+H − H Φ = − 12 (y − h)⊤Q−1(y − h)+ ( y − CΦ) ⊤Q−1(y − CΦ) (55) 
+
+|H − H Φ| ≤ | (y − h)⊤Q−1r| + 12 rQ −1r
+
+Following Assumption 4, this is equal to 
+
+|H − H Φ| ≤ λmax (Q−1)δh
+
+ δh
+
+2 + δ(t)
+
+
+
+Hence 
+
+|V−V Φ| = ∂∂t (HΦ − H ) ≤ λmax (Q−1)
+
+Z t
+
+> 0
+
+ δh
+
+2 + δ(τ )
+
+
+
+dτ 
+
+It is known that the optimal maximum likelihood estimate, 
+
+ˆx(t), is obtained from the boundary condition p(t) = 0 i.e., where the gradient of optimal value function ∇xV(x, t ) = 0 
+
+as p(t) = ∇xV(x, t ) (25). Hence, the error bounds between the true maximum likelihood estimate obtained from V. and the approximate one from VΦ can be obtained as follows. 
+
+V(ˆ xΦ(t), t ) ≤ V Φ(ˆ xΦ(t), t ) + c(t) ≤ V Φ(ˆ x(t), t ) + c(t)
+
+≤ V (ˆ x(t), t ) + 2 c(t).
+
+(56) In the above we have use the fact that |V − V Φ| ≤ c(t) and 
+
+ˆxΦ is the minimizer of VΦ. Similarly, we have inequality in the other direction as 
+
+VΦ(ˆ x(t), t ) ≤ V (ˆ x(t), t ) + c(t) ≤ V (ˆ xΦ(t), t ) + c(t)
+
+≤ V Φ(ˆ xΦ(t), t ) + 2 c(t). (57) Since V is strongly convex following Assumption 4, we have 
+
+V(x, t ) ≥ V (ˆ x(t), t ) + γ
+
+2 ∥ˆx(t) − x∥2
+
+VΦ(x, t ) ≥ V Φ(ˆ x(t), t ) + γΦ
+
+2 ∥ˆxΦ(t) − x∥2
+
+Hence, 
+
+∥ˆxΦ(t) − ˆx(t)∥ ≤ ∥ ˆxΦ(t) − x∥ + ∥ˆx(t) − x∥≤
+
+r 2
+
+γΦ
+
+|V Φ(x, t )−V Φ(ˆ xΦ(t), t )| 12 +
+
+r 2
+
+γ |V (x, t )−V (ˆ x(t), t )| 12
+
+= 2 
+
+s
+
+c(t)
+
+γmin 
+
+where γmin = min {γ, γ Φ}.
+
+Remark 4. The curvature constants, denoted by γ1 and γΦ,can be directly computed as the minimum eigenvalues of the Hessian matrices associated with the value functions V and VΦ
+
+respectively. Furthermore, the constant δh used in Assumption 4 will decrease as we use higher order basis function in the approximation of the output mapping h(x) as shown in our next Theorem 6. 8
+
+A. KMD and Lifting of Output 
+
+The principal eigenfunctions of the Koopman operator sat-isfy the algebra property stated in Property 1. This algebraic structure can be exploited to construct improved projections of the output map h(x) in cases where h(x) does not lie in the span of the principal eigenfunctions alone i.e., when Assumption 3 is not satisfied. To this end, we define multi-index α = ( α1, . . . , α n) ∈ Nn, define 
+
+ϕα(x) := 
+
+> n
+
+Y
+
+> i=1
+
+ϕi(x) αi .
+
+Assume that each lifted eigenfunction ϕα(x) belongs to 
+
+C1(Rn). Let A ⊂ Nn denote the collection of multi-indices used in the approximation (e.g., all α with |α| ≤ k). We define the lifted principal–eigenfunction vector 
+
+¯Φ( x) :=  ϕα(x) 
+
+> α∈A
+
+∈ RN ,
+
+where N = |A| is the cardinality of A. The over-bar notation indicates an augmented set of Koopman eigenfunctions. The Koopman eigenvalue associated with ϕα(x) is 
+
+> n
+
+X
+
+> i=1
+
+αiλi,
+
+where λi is the eigenvalue corresponding to the principal eigenfunction ϕi(x). Both ¯Φ( x) and ¯Λ admit the block struc-ture 
+
+¯Φ( x) = Φ( x)
+
+q1(Φ( x)) 
+
+!
+
+, ¯Λ = Λ 00 q2(Λ) 
+
+!
+
+, (58) where q1 : Rn → RN −n and q2 : Rn → R(N −n)×(N −n),assuming that Φ and Λ are in real canonical form. Instead of expanding the output observable h(x) solely in terms of the principal eigenfunctions Φ( x), we may perform a Koopman Mode Decomposition (Definition 3) of h(x) using the lifted eigenfunctions ¯Φ( x). Repeating the least-squares optimization steps in (36)–(38) with Φ( x) replaced by ¯Φ( x)
+
+yields coefficients ¯ci ∈ RN . Since ¯Φ( x) contains Φ( x) as a subset (Eq. (58)), the projection error satisfies 
+
+h − ¯c⊤ 
+
+> i
+
+¯Φ, h − ¯c⊤ 
+
+> i
+
+¯Φ ≤ h − c⊤ 
+
+> i
+
+Φ, h − c⊤ 
+
+> i
+
+Φ .
+
+The main results of this section show that the optimal value function V(x, t ), defined as the solution of the Hamilton– Jacobi equation (33), admits computable upper and lower bounds in terms of quadratically parameterized value functions expressed in the lifted eigenfunction coordinates. We make following assumption. 
+
+Assumption 5 (KMD of the output) . We assume that the output mapping h(x) lies in the span of the lifted principal eigenfunctions i.e., there exists a matrix ¯C ∈ RN ×p such that 
+
+h(x) = ¯C ¯Φ (59) 
+
+Remark 5. If this assumption is not satisfied then the results along the lines of Theorem 3 can be proved for this case of lifted eigenfunctions. 
+
+To prove the next main results of this paper, we derive the following bounds on the following matrix function of x of interest 
+
+¯R(x) := ∂ ¯Φ
+
+∂x R1(x)−1 ∂ ¯Φ
+
+∂x 
+
+> ⊤
+
+= ∂ ¯Φ
+
+∂x 
+
+∂Φ
+
+∂x 
+
+> ⊤
+
+R−1 ∂Φ
+
+∂x 
+
+!−1
+
+∂ ¯Φ
+
+∂x 
+
+> ⊤
+
+(60) Using the structure of lifted eigenfunction ¯Φ( x) in (58), we have 
+
+∂ ¯Φ
+
+∂x (x) = In
+
+Jq (Φ( x)) 
+
+!
+
+JΦ(x),
+
+where JΦ(x) = ∂Φ 
+
+> ∂x
+
+and Jq (z) = ∂q ∂z (z). Define 
+
+B(x) := J¯Φ(x) JΦ(x)−1 = In
+
+Jq (Φ( x)) 
+
+!
+
+∈ RN ×n.
+
+For a symmetric positive definite matrix R ≻ 0, the matrix of interest can be written as 
+
+¯R(x) = ∂ ¯Φ
+
+∂x 
+
+ ∂Φ
+
+∂x 
+
+−1
+
+R
+
+ ∂Φ
+
+∂x 
+
+−T  ∂ ¯Φ
+
+∂x 
+
+⊤
+
+= B(x) R B (x)⊤.
+
+Since for any w ∈ Rn,
+
+∥B(x)w∥2 = ∥w∥2 + ∥Jq (Φ( x)) w∥2 ≥ ∥ w∥2,
+
+the smallest singular value of B(x) satisfies 
+
+σmin (B(x)) ≥ 1.
+
+Similarly, 
+
+∥B(x)w∥2 ≤  1 + ∥Jq (Φ( x)) ∥2 ∥w∥2,
+
+which implies 
+
+σmax (B(x)) 2 ≤ 1 + ∥Jq (Φ( x)) ∥2.
+
+Let 0 < λ min (R) ≤ λmax (R) denote the extremal eigenval-ues of R. Using the standard bounds for BRB ⊤, we obtain the following matrix inequality 
+
+λmin (R) σmin (B(x)) 2 IN ⪯ ¯R(x) ⪯ λmax (R) σmax (B(x)) 2 IN .
+
+Substituting the bounds on the singular values of B(x) yields the estimate 
+
+λmin (R) IN ⪯ ¯R(x) ⪯ λmax (R)  1 + ∥Jq (Φ( x)) ∥2 IN .
+
+The bounds from the above discussion can be summarized in the following assumption. 
+
+Assumption 6. We assume that the satisfies the uniform bounds ¯R− ≤ ¯R(x) ≤ ¯R+, (61) 
+
+¯R+ = λmax (R) (1 + L2) IN , ¯R− = λmin (R) IN , (62) 
+
+for some constant L ≥ 0 such that 
+
+∂q 1(Φ( x)) 
+
+∂x ≤ L for all x ∈ Rn. (63) 
+
+Theorem 6. Let V(x, t ) denote the optimal value function associated with the Hamilton–Jacobi equation (33). Let ¯Φ( x)
+
+be the lifted eigenfunctions as constructed in (58) . We assume that: 9
+
+1) Each lifted eigenfunction ϕα(x) belongs to C1(Rn).
+
+2) The matrix ¯R(x) from Eq. (60) satisfies Assumption 6 Define the lifted, quadratically parameterized value functions 
+
+V± 
+
+> ¯Φ
+
+(x, t ) = 12 ¯Φ( x)⊤P ±(t) ¯Φ( x)+ s±(t)⊤ ¯Φ( x)+ r±(t), (64) 
+
+where the coefficient triples (P ±(t), s ±(t), r ±(t)) solve the Riccati-type systems 
+
+˙¯P ±(t) + ¯Λ⊤ ¯P ±(t) + ¯P ±(t) ¯Λ + ¯P ±(t) ¯R± ¯P ±(t)
+
+− ¯C⊤Q−1 ¯C = 0 , (65) 
+
+˙¯s±(t) + ¯Λ⊤ ¯s±(t) + ¯P ±(t) ¯R± ¯s±(t) + ¯C⊤Q−1y(t) = 0 ,
+
+(66) 
+
+˙¯r±(t) + 12 (¯ s±(t)) ⊤ ¯R± ¯s±(t) − 12 y⊤(t)Q−1y(t) = 0 . (67) 
+
+Then, for initial conditions V+¯Φ (x, 0) = V− 
+
+> ¯Φ
+
+(x, 0) = V(x, 0) ,the functions V− 
+
+> ¯Φ
+
+(x, t ) and V+¯Φ (x, t ) satisfy the sandwich bounds 
+
+V+¯Φ (x, t ) ≤ V (x, t ) ≤ V − 
+
+> ¯Φ
+
+(x, t ), ∀ x ∈ Rn, t ∈ [0 , T ],
+
+(68) 
+
+where the inequalities are understood pointwise. Proof. The proof proceeds by constructing sub and super-solutions of the Hamilton–Jacobi equation (33) in the lifted eigenfunction coordinates and then invoking a comparison principle. We will only prove the inequality V ≥ V +¯Φ , the inequality in the other direction follows along similar lines. Substituting the expression of V+¯Φ in the HJ equation (33) and using Assumption 5 along with bounds in (61) we obtain 
+
+∂V+¯Φ
+
+∂t + H(x, ∇xV+¯Φ , t ) = 12 ¯Φ⊤ ˙P + ¯Φ +˙ ¯s+(t)⊤ ¯Φ + ˙ r+
+
+¯Φ⊤ ¯P + ¯Λ ¯Φ + ¯Φ⊤ ¯Λ⊤ ¯P + ¯Φ + ¯ s+(t)⊤ ¯Λ ¯Φ+ 12
+
+  ¯Φ⊤ ¯P + + ¯ s⊤ ∂ ¯Φ
+
+∂x R1(x)−1 ∂ ¯Φ
+
+∂x  
+
+> ⊤
+
+  ¯Φ⊤ ¯P + + ¯ s⊤⊤
+
+− 12 (y − ¯C ¯Φ) ⊤Q−1(y − ¯C ¯Φ) 
+
+≤ 12 ¯Φ⊤ ˙P + ¯Φ +˙ ¯s+(t)⊤ ¯Φ + ˙ r+ + ¯Φ⊤ ¯P + ¯Λ ¯Φ + ¯Φ⊤ ¯Λ⊤ ¯P + ¯Φ+¯ s+(t)⊤ ¯Λ ¯Φ + 12
+
+  ¯Φ⊤ ¯P + + ¯ s⊤ ¯R+
+
+  ¯Φ⊤ ¯P + + ¯ s⊤⊤
+
+− 12 (y − ¯C ¯Φ) ⊤Q−1(y − ¯C ¯Φ) = 0 
+
+The above equality eqaul to zero follows because ( ¯P +, ¯s+, ¯r+)
+
+satisfy the Riccatti equation (67). Hence we get, 
+
+∂V+¯Φ
+
+∂t + H(x, ∇xV+¯Φ , t ) ≤ 0
+
+The results, V+¯Φ (x, t ) ≤ V (x, t ), then follows using compar-ison principle as V+¯Φ (x, t ) is the viscosity sub-solution and 
+
+V(x, t ) is the assumed viscosity solution (Assumption 1) and 
+
+V+¯Φ (x, 0) = V(x, 0) [48]. The proof for V− 
+
+> ¯Φ
+
+(x, t ) ≥ V (x, t ),will follow along similar lines. 
+
+B. Relation to the posterior density, Zakai/Mortensen view-points, and the Kalman–Bucy filter 
+
+The optimal value function VΦ(x, t ) obtained from the Hamilton–Jacobi (HJ) formulation admits an immediate proba-bilistic interpretation. In particular, it induces an unnormalized 
+
+posterior density of the form 
+
+¯p(x, t | y[0 ,t ]) ∝ exp   − V Φ(x, t ).
+
+Consequently, the KBK estimate returned by the proposed filter is a maximum-a-posteriori (MAP) estimate, 
+
+ˆx(t) = arg min  
+
+> x
+
+VΦ(x, t ) = arg max  
+
+> x
+
+¯p(x, t | y[0 ,t ]),
+
+which coincides with the maximum-likelihood/modal trajec-tory estimate associated with the Mortensen minimum-energy formulation. Normalizing ¯p yields the (approximate) posterior density 
+
+p(x, t ) = ¯p(x, t )
+
+R 
+
+> Rn
+
+¯p(x, t ) dx .
+
+This perspective also clarifies the relationship between classical density-based filters and the proposed spectral approach. The Zakai/Kushner–Stratonovich filters propa-gate the (unnormalized/normalized) posterior density directly through a (stochastic) Fokker–Planck evolution, whereas the Mortensen/HJ formulation propagates the negative log-density (value function) whose minimizer yields the MAP estimate. The proposed KBK filter leverages Koopman spectral co-ordinates specifically, principal Koopman eigenfunctions to parameterize this value function in a tractable quadratic form, thereby producing a finite-dimensional, Riccati-type evolution for nonlinear estimation. Finally, the proposed KBK filter reduces to the classical Kalman–Bucy filter for linear time-invariant (LTI) systems. For ˙x = Ax + w and y = Cx + v, the principal Koopman eigenfunctions are available analytically as Φ( x) = W ⊤x,where W ⊤A = Λ W ⊤. In this case, the KBK filter equations in (41) coincide with the Kalman–Bucy equations expressed in the transformed coordinates Φ.
+
+C. Bias and Cramér-Rao considerations. 
+
+The proposed Kalman–Bucy–Koopman (KBK) filter is formulated through the Mortensen minimum–energy princi-ple and therefore computes a maximum–a–posteriori (MAP) state estimate by minimizing an approximate Hamilton– Jacobi value function V (x, t ) ≈ − log p(x | Yt). Con-sequently, the estimator targets the mode of the posterior distribution rather than its conditional mean. Unlike mini-mum–mean–square–error (MMSE) estimators, MAP estima-tors are generally biased whenever the posterior density is non–Gaussian or asymmetric, which is typical for nonlinear dynamical systems. Accordingly, unbiasedness and classical Cramér-Rao lower bound (CRLB) optimality are not expected in general, since the CRLB applies primarily to unbiased estimators of the conditional mean. Instead, the KBK filter should be interpreted as a determin-istic value-function approximation to the Mortensen optimal control problem, whose accuracy is governed by the quality 10 
+
+of the Koopman spectral approximation. In regimes where the posterior is approximately Gaussian (e.g., small noise or near-linear dynamics), the posterior mean and mode coincide, and the KBK estimate empirically approaches MMSE perfor-mance, often yielding error covariances close to the posterior Cramér-Rao bound. IV. C OMPUTATION OF THE KOOPMAN EIGENFUNCTIONS 
+
+For the propagation of maximum-likelihood estimates, it is essential to obtain the Hessian information of the value function, which in turn depends on the principal eigenfunctions of the Koopman operator. In [22], we have shown that these principal eigenfunctions satisfy a linear partial differential equation (PDE) and proposed a Galerkin projection–based method for their finite-dimensional approximation. Algorith-mically, the computation of the principal Koopman spectrum can be formulated as a least-squares optimization problem. However, similar to the finite-dimensional approximation of the Koopman operator itself, a key challenge in this procedure lies in the selection of an appropriate set of basis functions. The accuracy and efficiency of the resulting approximation are highly sensitive to this choice, making the design of data-efficient and adaptive basis selection strategies an important open problem. In what follows, we present two computational approaches for approximating the principal eigenfunctions, both grounded in a method-of-characteristics–based solution of the linear PDE satisfied by the eigenfunctions. The first approach, pre-sented in Subsection IV-A, derives an explicit path-integral representation for the eigenfunctions. This representation re-veals that the principal eigenfunctions can be computed di-rectly from system trajectories, without requiring discretization of the associated PDE over the state space. Consequently, the computation reduces to trajectory-based integration along characteristic curves, making the approach inherently compat-ible with data-driven implementation and scalable to higher-dimensional systems. The second approach, described in Sub-section IV-B, introduces a dynamics-informed basis construc-tion motivated by the method of characteristics, enabling effi-cient eigenfunction approximation within a finite-dimensional function space while retaining alignment with the underlying flow geometry. 
+
+A. Path-Integral Approach for Eigenfunction Computation 
+
+Following Assumption 2, the nonlinear system admits a decomposition into linear and nonlinear parts as follows. 
+
+˙x = f (x) = Ax + Fn(x) (69) The principal eigenfunction of the Koopman operator admits the decomposition of the form 
+
+(ϕλ1 , . . . , ϕ λn )⊤ = Φ( x) = W ⊤x + H(x)
+
+where W ⊤x is the linear and H(x) = ( hλ1 (x), . . . , h λn (x)) ∈
+
+Rn is the purely nonlinear part and hence satisfies ∂H ∂x (0) = 0. The individual eigenfunction admits a decomposition into linear and nonlinear parts as 
+
+ϕλ(x) = w⊤ 
+
+> λ
+
+x + hλ(x)
+
+Substituting the above expression of the eigenfunction in  
+
+> ∂ϕ λ
+> ∂x
+
+f (x) = λϕ λ(x), we obtain after comparing the linear and nonlinear parts that wλ and hλ should satisfy 
+
+w⊤ 
+
+> λ
+
+A = λw ⊤ 
+
+> λ
+
+, ∂h λ
+
+∂x f (x) − λh λ(x) + w⊤ 
+
+> λ
+
+Fn(x) = 0 (70) So w⊤ 
+
+> λ
+
+is the left eigenvector of A corresponding to the eigenvalue λ. The solution to this linear PDE is given by the method of characteristics and is of the form 
+
+hλ(x) = e−λt hλ(st(x)) + 
+
+Z t
+
+> 0
+
+e−λτ w⊤ 
+
+> λ
+
+Fn(sτ (x)) dτ (71) The path-integral formulation is particularly attractive, as it eliminates the need for basis-function expansions. Further-more, in the propagation of maximum-likelihood estimates (refer to the dynamics of the KBK filter), the local behavior of the principal eigenfunction along the estimated trajectory ˆx(t)
+
+is of primary interest. The path-integral representation is well suited for this purpose, enabling local computation of the eigenfunction without significant computational overhead. Although the expression for the nonlinear component of the eigenfunction in Eq. (71) remains implicit—requiring knowledge of the boundary condition—the following theorem provides an explicit formula for the computation of the prin-cipal eigenfunction under the stated stability assumption. The following theorem generalizes the results from [49] for the computation of principal eigenfunctions. 
+
+Theorem 7. For the dynamical system (69) satisfying Assump-tion 2, let the equilibrium point at the origin be asymptotically stable with domain of attraction D. Let the nonlinear terms 
+
+Fn(x) contains nonlinearity of order ℓ i.e., 
+
+Fn(x) ≈ O(∥x∥ℓ). (72) 
+
+where ℓ ≥ 2. If the eigenvalue, λ, at the linearization satisfy 
+
+−Re( λ) + ℓRe( λmax ) < 0 (73) 
+
+where λmax is the eigenvalue of A with maximum real part. Then the principal eigenfunction corresponding to the eigenvalue λ is given by 
+
+ϕλ(x) = w⊤ 
+
+> λ
+
+x +
+
+Z ∞
+
+> 0
+
+e−λt w⊤ 
+
+> λ
+
+Fn(st(x)) dt (74) 
+
+for all x ∈ D .Proof. We divide the proof in two parts. We start with the following condition 
+
+lim  
+
+> t→∞
+
+e−λt Fn(st(x)) = 0 (75) for all x ∈ D . Using this condition (75), we first show that 
+
+hλ(x) of the form 
+
+hλ(x) = 
+
+Z ∞
+
+> 0
+
+e−λk tw⊤ 
+
+> λ
+
+Fn(st(x)) dt (76) will satisfy the linear PDE (70). In the second part of the proof, we show that the condition (75) is satisfied under the assumption stated in the theorem statement i.e., (73). We begin 11 
+
+with the first part of the proof. Using the assumed form of the solution for hλ(x) from (76) we obtain 
+
+∂h λ
+
+∂x f (x) = 
+
+Z ∞
+
+> 0
+
+e−λt ∂w ⊤ 
+
+> λ
+
+Fn(st(x)) 
+
+∂x f (x)dt 
+
+=
+
+Z ∞
+
+> 0
+
+e−λt ddt (w⊤ 
+
+> λ
+
+Fn(st(x))) dt e−λt w⊤ 
+
+> λ
+
+Fn(st(x)) ∞ 
+
+> t=0
+
++ λ
+
+Z ∞
+
+> 0
+
+e−λt w⊤Fn(st(x)) dt (77) Using the assumption (75), we obtain 
+
+∂h λ
+
+∂x f (x) = −w⊤ 
+
+> λ
+
+Fn(x) + λh λ(x)
+
+which is precisely the linear PDE (70). For the second part of the proof, we will show that if the eigenvalues satisfy the spread condition (73), then (75) will hold true. Since the equilibrium point is assumed to be asymptotically stable we know that for given δ > 0 there exists a time T (δ) such that ∥st(x)∥ ≤ δ for t ≥ T and 
+
+lim t→∞ st(x) = 0 . Following (72), we know that there exists a constant K > 0 and δ > 0 such that 
+
+∥Fn(x)∥ ≤ K∥x∥ℓ, ∥x∥ ≤ δ
+
+Hence, 
+
+∥Fn(st(x)) ∥ ≤ K∥st(x)∥ℓ
+
+for t ≥ T . Now for ∥x∥ ≤ δ, there exists, by Hartman Grobman theorem, a near identity change of coordinates with inverse in the small neighborhood around the origin, say of size ∥x∥ ≤ δ, of the form 
+
+z = x + d(x) = D(x) ⇐⇒ x = D−1(z) = z + ¯d(z), (78) with d(x) and ¯d(z) purely nonlinear such that the nonlinear system is transformed into linear system i.e., ˙x = Ax +
+
+Fn(x) = ⇒ ˙z = Az and hence 
+
+st(x) = D−1(eAt D(x)) = ⇒ st(x) = D−1(eAt (x + d(x))) = eAt x + eAt d(x) + ¯d(eAt x + eAt d(x)) .
+
+In the above, we have used (78) for D−1. Since ¯d(z) is purely nonlinear, for ∥x∥ ≤ δ, we can get using mean value theorem 
+
+∥ ¯d(z)∥ ≤ c ¯d∥z∥2, ∥d(x)∥ ≤ cd∥x∥2.
+
+for some constants cd and c ¯d. Using the above inequality, Cauchy Schwartz inequality, and the fact that ∥x∥ ≤ δ, we obtain 
+
+∥st(x)∥ ≤ c1eRe( λmax t) =⇒ ∥ st(x)∥ℓ ≤ cℓ
+
+> 1
+
+eRe( ℓλ max t)
+
+for some constant c1 that depends on ϵ, c d, and ¯cd.
+
+Remark 8. Note that by time-reversing the vector field, the above theorem can also be applied for the case when the equilibrium point is anti-stable i.e., matrix −A (Eq. 69) is Hurwitz. 
+
+For system with saddle-type equilibrium point, the path-integral formula can be used for the computation of the eigenfunction under the following assumption. 
+
+Assumption 7. We assume that the nonlinear parts of the eigenfunctions are bounded i.e., 
+
+|hλ(x)| ≤ M (79) 
+
+for some constant M and for all x ∈ Rn.
+
+Theorem 9. Under the Assumption 7, the Koopman principal eigenfunction corresponding to eigenvalue λ 
+
+> •
+
+with Re( λ) > 0 is given by 
+
+ϕλ(x) = w⊤ 
+
+> λ
+
+x +
+
+Z ∞
+
+> 0
+
+e−λt w⊤ 
+
+> λ
+
+Fn(st(x)) dt (80)  
+
+> •
+
+with Re( λ) < 0 is given by 
+
+ϕλ(x) = w⊤ 
+
+> λ
+
+x −
+
+Z ∞
+
+> 0
+
+eλθ w⊤ 
+
+> λ
+
+Fn(s−θ (x)) dθ (81) 
+
+Proof. The method of characteristics based solution to the nonlinear part of the principal eigenfunction satisfying the-linear PDE is given by (71). Now consider any eigenvalue with Re( λ > 0. We have using (79) 
+
+lim  
+
+> t→∞
+
+|e−λt hλ(st(x)) | ≤ e−λt M = 0 
+
+Hence, using (71) in the limit as t → ∞ , we obtain the desired expression (80) for the eigenfunction. For Re( λ) < 0, we can reverse the time. In particular, we have 
+
+lim  
+
+> t→−∞
+
+|e−λt hλ(st(x)) | ≤ e−λt M = 0 
+
+and hence (71) in the limit as t → −∞ reduces to 
+
+hλ(x) = 
+
+Z −∞ 
+
+> 0
+
+e−λτ w⊤ 
+
+> λ
+
+Fn(sτ (x)) dτ (82) We obtain the desired formula in (81) after performing the change of variable from t = −θ.
+
+Remark 10. The formulas (74) and (80) generalize to the case of complex eigenvalues where one can treat the real and imaginary parts of the complex eigenfunctions separately. 
+
+The infinite horizon path-integral formula discussed in the previous section could be restrictive. These restriction arise in the form of conditions (73) and (79). In [50], the finite-time extension of the path integral formula is discussed. However, in the following section, we use the finite-horizon path-integral formula and use it to construct a dynamically informed basis functions which are used towards the approximation of the principal eigenfunctions. 
+
+B. Characteristics-Inspired Basis Functions for Koopman Eigenfunction Approximation 
+
+A central challenge in approximating Koopman eigenfunc-tions for nonlinear systems is the construction of basis func-tions that faithfully capture the geometry of the underlying dy-namics. Classical choices such as polynomial, trigonometric, or radial basis functions are agnostic to the system vector field 
+
+f (x), and consequently require a large number of elements to resolve even moderately nonlinear behavior. Approximation quality often degrades rapidly away from the origin or outside 12 
+
+the training region. To overcome these limitations, we intro-duce a dynamics-informed basis construction inspired by the 
+
+method of characteristics for the Koopman eigenfunction PDE 
+
+∂ϕ λ(x)
+
+∂x f (x) = λϕ λ(x), (83) whose characteristic curves coincide with trajectories of the nonlinear flow st(x). This relation motivates the design of 
+
+characteristics-based basis functions that incorporate the local behavior of the nonlinear flow directly into the eigenfunction approximation. 
+
+Path-Integral Characteristics Basis: Given a candidate Koopman eigenvalue λ and a left eigenvector w of the lin-earization matrix A, we define a family of nonlinear basis functions 
+
+ψλk (x) = 
+
+Z ∆k
+
+> 0
+
+e−λt w⊤Fn(st(x)) dt, k = 1 , . . . , K, 
+
+(84) where ∆k are short, increasing integration horizons that encode multi-scale nonlinear effects. Each function ψλk (x)
+
+is therefore a localized probe of the nonlinear dynamics, capturing how the nonlinear component of the vector field distorts trajectories over different time scales. Unlike classical static dictionaries, these features explicitly incorporate the system’s trajectory geometry, yielding a basis that is:  
+
+> •
+
+Dynamics-adaptive: the basis aligns with the characteris-tic curves of the eigenfunction PDE (83);  
+
+> •
+
+State-localized: since ψλk (x) is computed from short tra-jectories initialized at x, no global trajectory integration is required;  
+
+> •
+
+Multi-scale: the distinct horizons ∆k allow the basis to capture both local and moderately global nonlinear behavior;  
+
+> •
+
+Linear-term free: because Fn excludes the linear com-ponent, the nonlinear basis functions satisfy ψλk (x) = 
+
+O(∥x∥2), guaranteeing compatibility with the decompo-sition ϕλ(x) = w⊤x + hλ(x).
+
+Galerkin Approximation Using Characteristics Basis: Us-ing the characteristics-based dictionary {ψλk }, the nonlinear part of the Koopman eigenfunction is approximated by 
+
+hλ(x) ≈
+
+> K
+
+X
+
+> k=1
+
+akψλk (x), (85) and substituting hλ(x) into (70) yields a finite-dimensional least-squares problem for the coefficients ak. We omit the details on the finite-dimensional Galerkin based approxima-tion of eigenfunctions leading to the least-squares problem as it is a standard approach discussed in various literature including [22] in the specific context of the Koopman principal eigenfunctions. This produces a Galerkin-type approximation scheme in which both test and trial functions are derived from the flow geometry of the system. The proposed construction offers several key benefits:  
+
+> •
+
+Flow-aligned representation: the basis adapts naturally to the nonlinear trajectory structure of the system.  
+
+> •
+
+Compactness: because each ψk(x) carries dynamical information, only a small number of basis functions are required for accurate approximation.  
+
+> •
+
+Scalability: no combinatorial blow-up, unlike polynomial lifting.  
+
+> •
+
+Online compatibility: the local nature of the basis allows computation along an estimated trajectory, enabling real-time implementation.  
+
+> •
+
+Theoretical grounding: the construction follows directly from the characteristic representation of eigenfunction solutions, providing a principled alternative to heuristic dictionary learning. V. S IMULATION RESULTS 
+
+In this section, we present simulation results for the spectral Koopman-based design of nonlinear estimator. All the simula-tion codes are developed in MATLAB and run on a computer with 16 GB of RAM and a 3.8 GHz Intel Core i7 processor. The total simulation time for each example was in the order of 1-5 minutes. 
+
+A. Example 1: Analytical 
+
+Our first example is one for which the eigenfunctions can be computed analytically. Furthermore, the spanning Assumption 3 is also satisfied and hence the filter equation can be solved analytically. 
+
+˙x1 = ρx 1 + w1(t)˙x2 = μx 2 − (ρ2 − μ)cx 21 + w2(t) (86) 
+
+y = x2 − dx 21 + x21 + v(t) (87) where d = (μ−ρ2)cμ−2ρ . The Koopman principal eigenfunctions and eigenfunction of this system can be computed analytically and of the form 
+
+Φ( x) = 
+
+"ϕ1
+
+ϕ2
+
+#
+
+=
+
+" x1
+
+x2 − dx 21
+
+#
+
+, Λ = diag( ρ, μ ).
+
+For this output, the Assumption 3 is not satisfied and hence we have to lift the eigenfunctions to expressed the output in terms of lifted eigenfunctions. In particular, the output can be expressed as 
+
+y = ϕ2(x) + ϕ21(x) + v(t)
+
+The lifted eigenfunctions for this case will be of the form 
+
+¯Φ( x) = 
+
+
+
+ϕ1(x)
+
+ϕ2(x)
+
+ϕ21(x)
+
+
+
+The various parameter values are 
+
+ρ = −0.1, μ = −0.3, c = 1 .0, R = 1 e−4I, Q = 1 e−1
+
+The system matrices for this case will be 
+
+¯Λ = diag( ρ, μ, 2ρ), ¯C =  0 1 1
+
+We use the dynamics-inspired basis function as discussed in Section IV-B for the computation of the principal eigen-functions. For the construction of dynamics-inspired basis functions, we use 441 data point uniformly sampled in the domain [−1, 1] 2 with ∆ = {0.1, 0.2, 0.4} the time step of integration (refer to Eq. 84) and ε = 10 −5 used for approxi-mation of the gradient of eigenfunction. In Fig. 1, we show the 13 
+
+Fig. 1: Comparison of the error estimates between the KBK, (i.e., ∥xtrue − xKBK ∥ ) and EKF filter (i.e., ∥xtrue − xEKF ∥
+
+). 
+
+Fig. 2: Time evolution of the state density function, p(x, t ).comparison of the error plots between the ∥xtrue −xKBK ∥ and 
+
+∥xtrue −xEKF ∥. The performance of the proposed KBK filter is comparable to the EKF filter. However, the main advantage of the KBK filter is that it gives complete information of the state density function as shown in Fig. 2. The critical difference and the main advantage of the the KBK filter over EKF filter is the ability to compute the state density function. In Fig. 2, we illustrate the evolution of the state density function at several time instants. The density p(x, t ) is computed using the relation p(x, t ) =exp( −V (x, t )) , where V (x, t ) admits a quadratic parameteri-zation in terms of the principal eigenfunctions of the Koopman operator. As time progresses, the reduction in uncertainty is clearly reflected by the decreasing spread of the density, indicating improved concentration of the posterior estimate. 
+
+B. Example 2: Robust State Estimation for Quadrotor Vertical Dynamics with Parameter Mismatch 
+
+The primary objective of this example is to demonstrate the inherent robustness of the proposed KBK filter to modeling un-certainty and to contrast this robustness with the sensitivity of the Extended Kalman Filter (EKF) under parameter mismatch. In practical quadrotor systems, parameters such as damping coefficients, actuator gains, and sensor nonlinearities are rarely known with high precision. Unmodeled aerodynamic effects, actuator saturation, and environmental disturbances further introduce discrepancies between the true system dynamics and the nominal model used for estimation. Since the EKF is explicitly model-based, its gain com-putation relies on the assumed system parameters; in our implementation, the EKF is constructed using mismatched parameters to reflect realistic modeling errors. In contrast, the KBK filter computes the spectral representation and associated Riccati evolution using data generated from the true system, thereby avoiding direct reliance on the potentially inaccurate parametric model. This setup enables a direct comparison of robustness properties under structured modeling uncertainty. Let x = z v ξ⊤ denote altitude z, vertical velocity 
+
+v = ˙z, and an internal aerodynamic/actuator state ξ that captures unmodeled nonlinear effects such as propeller wake interactions or actuator saturation. 
+
+˙z = v + w1(t),
+
+˙v = −kz − θdcbase v + g(ξ) + bu + w2(t),
+
+˙ξ = −αξ + w3(t). (88) where, k > 0 represents local linearization of gravity about hover, θdcbase is an uncertain aerodynamic damping coefficient, 
+
+g(ξ) = 1 .2 tanh( ξ), models nonlinear internal dynamics, u
+
+is the thrust control input. Two key parameters are assumed unknown: θd (damping scaling), θm in the nonlinear measure-ment model 
+
+y = tanh( θmz) + v(t),
+
+representing sensor saturation or nonlinear altitude sensing. This setting captures realistic mismatch in both dynamics and sensing. The true parameters are: 
+
+k = 2 .0, cbase = 2 .0, α = 3 .0, b = 1 .0,θtrue  
+
+> d
+
+= 1 .6, θtrue  
+
+> m
+
+= 1 .0.
+
+The process noise intensity: R = diag(0 .02 2, 0.06 2, 0.05 2)
+
+and the measurement noise variance: Q = (0 .03) 2. The input excitation is 
+
+u(t) = 2 sin(0 .5t) + 1 .4 sin(1 .6t + 0 .7) ,
+
+which drives the system through nonlinear operating regimes. For the KBK filter design all the quantities were computed from the data. In particular, the eigenfunctions Φ( x) and the eigenmatrix Λ are computed from data. The true stochastic system is simulated over a horizon 
+
+T = 60 s, with time step dt = 2 × 10 −3 s. The total number of samples is N = Tdt = 30000 .. Time derivatives required for regression are computed using central finite differences, 
+
+˙xk ≈ xk+1 −xk−1 
+
+> 2dt
+
+, with forward/backward differences at the boundaries. The velocity dynamics are modeled as 
+
+˙v = −kz − cv + bu + g(ξ),14 
+
+where g(ξ) is unknown. The regression model uses the basis 
+
+{− z, −v, u, ξ, tanh( ξ)}. Thus we fit 
+
+˙v ≈ kest (−z) + cest (−v) + best u + aξ ξ + atanh tanh( ξ).
+
+This yields ghat (ξ) = aξ ξ + atanh tanh( ξ),. The Koop-man principal eigenvalues estimated from data equals λ1 =
+
+−0.8845 , λ2 = −2.2435 , λ3 = −3.013 which matches closely with the eigenvalues of the linearization of the system dynamics at the origin λ1 = −0.8517 , λ 2 = −2.3483 , λ3 =
+
+−3. The Koopman eigenfunctions are constructed as 
+
+ϕi(x) = w⊤
+
+> i
+
+zv
+
+
+
++ hλi (ξ), i = 1 , 2, ϕ3(x) = ξ, (89) The nonlinear correction term is computed using a finite-horizon approximation of the path integral 
+
+hλ(ξ) = 
+
+Z ∞
+
+> 0
+
+e−λt g(ξe −αt ) dt. (90) Numerically, we approximate this integral over a finite horizon of Th = 4 s. The numerical quadrature parameters are: dt int =10 −3 s, n int = 4000 .. Thus the approximation is 
+
+hλ(ξ) ≈
+
+> nint −1
+
+X
+
+> k=0
+
+e−λt k ghat (ξe −αt k ) dt int , tk = k dt int .
+
+The eigenfunction residual RMS errors are as follows. 
+
+RMS λ1 = 1 .742 × 10 −2, RMS λ2 = 3 .774 × 10 −2,
+
+RMS ξ = 7 .946 × 10 −14 .
+
+We project the nonlinear measurement into Koopman coordinates, h(x) ≈ CΦ( x). Least-squares yields C =1.4919 −0.8103 0.4857  , with projection RMS error 
+
+4.447 × 10 −2.The EKF is designed with incorrect parameters, θ0 
+
+> d
+
+=1.2, θ0 
+
+> m
+
+= 0 .6. as the EKF is designed based on the analytical system model and its linearization. Thus, both the dynamics and measurement models are inaccurate. In Figs. 3 and 4, we compare the performance of the EKF and the proposed KBK filter against parameter mismatch. In Fig. 3, we notice that the KBK error is close to zero whereas the state error for the EKF is nonzero. In Fig. 4, we vary the EKF assumed 
+
+θ0 
+
+> m
+
+and plot the aggregate root mean square error vs θ0
+
+> m
+
+.The EKF error increases rapidly with mismatch, while KBK remains essentially invariant. Note that the true value of the 
+
+θtrue m = 1 , where the EKF RMSE is the smallest. This example and the simulation results highlights the sensitivity of EKF to parametric model errors and the robustness of KBK under parametric uncertainty. 
+
+C. Example 3: Data-driven estimator for vehicle dynamics 
+
+Our third example considers a controlled dynamical system motivated by off-road vehicle applications and is designed to illustrate the data-driven capability of the proposed KBK filter. Although an analytical model is used to generate simulation data, the KBK filter itself does not require explicit knowledge of the system vector field for implementation. In particular, the principal Koopman eigenfunctions and the associated filter gain are computed directly from trajectory data using the 
+
+Fig. 3: Comparison of the KBK with the EKF filter: State error plots. 
+
+Fig. 4: Comparison of the KBK with the EKF filter proposed spectral and path-integral procedures, without lin-earization or access to the system Jacobian. This contrasts with classical approaches such as the extended Kalman filter, which rely explicitly on model-based linearization. The example therefore demonstrates that the KBK framework can operate as a purely data-driven estimator while retaining the structural advantages of Riccati-type filtering. Accurate estimation of the tire road friction coefficient 
+
+μ is essential for stability control, autonomous driving, and safety-critical decision making. The friction coefficient μ
+
+cannot be measured directly and enters the vehicle dynamics only through nonlinear tire forces, it must be inferred from measurable motion variables such as lateral acceleration and yaw rate. The estimation problem is challenging due to the nonlinear dependence of Fy,f and Fy,r on slip angles, the weak observability of μ under mild steering excitation, and the possibility of abrupt changes in road conditions that require fast yet stable adaptation. 15 
+
+The dynamic model used for estimation is a reduced lateral– yaw bicycle model with constant forward speed u0, where the state vector is x = [ v, r, μ ]⊤. The evolution equations are 
+
+˙v = 1
+
+m (Fy,f + Fy,r ) − u0r, ˙r = 1
+
+Iz
+
+(lf Fy,f − lr Fy,r ) ,
+
+˙μ = w(t). (91) where w ∈ R3 is the white Gaussian noise. To define the tire forces, we first define the slip angles as 
+
+αf = δ − v + lf ru0
+
+, αr = − v − lr ru0
+
+, (92) and the nonlinear lateral forces follow the Pacejka form 
+
+Fy,f = μF z,f sin  C arctan  Bα f − E(Bα f − arctan( Bα f ))  
+
+Fy,r = μF z,r sin  C arctan  Bα r − E(Bα r − arctan( Bα r ))  
+
+(93) with static normal loads Fz,f = mgl r  
+
+> lf+lr
+
+, Fz,r = mgl f  
+
+> lf+lr
+
+.. The measurement vector consists of the lateral acceleration and yaw rate, 
+
+y =
+
+ay
+
+r
+
+
+
++ v(t) = h(x) + v(t) ay = Fy,f + Fy,r 
+
+m .
+
+Since ay depends on μ through nonlinear tire dynamics, friction can be estimated from these outputs provided sufficient steering excitation. The various parameter values used in the simulation are as follows. 
+
+m = 1500 kg , Iz 3000 kg · m2, lf = 1 .2 m
+
+lr = 1 .6 m, u0 = 10 m/s , g = 9 .81 m/s 2,B = 10 .0, C = 1 .9, E = 0 .97 ,Fz,f = mgl r
+
+lf + lr
+
+= 8829 N, Fz,r = mgl f
+
+lf + lr
+
+= 6622 N.
+
+The measurement and noise covariance matrix and excitation steering input are chosen to be 
+
+Q = 4diag(0 .12, 0.01 2), δ(t) = 4 sin(1 .2πt )
+
+No process noise was added except for the small noise to the friction coefficient state. The Koopman-based lifting model is constructed directly from simulation data generated across multiple friction conditions. We simulate the nonlinear model (91) for four friction levels μ ∈ { 0.4, 0.6, 0.8, 1.0}, each over an 8 s horizon with ∆t = 0 .01 s, producing approximately 
+
+3 × 10 4 state-transition samples for DMD. These snapshot pairs are used to identify a global linear operator ADMD whose real-valued eigenvectors define the three linear Koopman co-ordinates, Φ = W ⊤x. Quadratic products of these coordinates form a nine-dimensional extended eigenfunction basis used for lifting. The nonlinear measurement map y = h(x) is similarly approximated from data by solving a least-squares regression 
+
+y ≈ ¯C ¯Φ( x) over all training trajectories. Together, the learned lifting map and output operator provide a fully data-driven representation used for computing the KBK gain in the original state space. The friction coefficient in the simulation is varied from μ =0.3 to μ = 0 .7 halfway through the experiment to evaluate estimator performance under abrupt road condition changes. 
+
+Fig. 5: KBK filter for the estimation of friction coefficient In Fig. 5, we show the performance of the KBK filter with the varying friction coefficient. From this plot it is clear that the filter can respond to sudden changes in the friction and estimate closely follows the true friction value demonstrating the effecitiveness of data-driven filter design. VI. C ONCLUSION 
+
+In this paper, we introduced a new framework for nonlin-ear state estimation based on the spectral properties of the Koopman operator. By lifting the nonlinear dynamics into the Koopman eigenfunction coordinates, we transformed the nonlinear estimation problem into a linear estimation problem in the Koopman spectral space. We showed that the optimal value function for the maximum-likelihood estimator admits a quadratic representation in terms of the principal Koopman eigenfunctions, and that the negative exponential of this value function yields a state-density representation that naturally captures estimation uncertainty. To enable the practical com-putation of the principal eigenfunctions, we proposed both a path-integral formulation and a class of dynamics-informed basis functions derived from the method of characteristics. These constructions provide principled mechanisms for ap-proximating the spectral structure governing the estimator. Future work will focus on developing numerically efficient algorithms for computing Koopman eigenfunctions using these path-integral and characteristic-based techniques, as well as addressing limitations that arise from the non-global nature of principal eigenfunctions in filter design. Together, these directions aim to extend the applicability and robustness of the proposed Koopman-based estimation framework. REFERENCES [1] A. H. Jazwinski, Stochastic Processes and Filtering Theory . Academic Press, 1970. [2] D. Simon, Optimal State Estimation: Kalman, H Infinity, and Nonlinear Approaches . Wiley, 2006. [3] B. D. Anderson and J. B. Moore, Optimal Filtering . Prentice Hall, 1979. [4] R. E. Kalman and R. S. Bucy, “New results in linear filtering and prediction theory,” Journal of Basic Engineering , vol. 83, no. 1, pp. 95–108, 1961. [5] S. J. Julier and J. K. Uhlmann, “Unscented filtering and nonlinear estimation,” Proceedings of the IEEE , vol. 92, no. 3, pp. 401–422, 2004. 16 
+
+[6] ——, “A new method for the nonlinear transformation of means and covariances,” IEEE Transactions on Automatic Control , vol. 45, no. 3, pp. 477–482, 2000. [7] A. Doucet, N. de Freitas, and N. Gordon, Sequential Monte Carlo Methods in Practice . Springer, 2001. [8] W. H. Fleming and R. W. Rishel, Deterministic and Stochastic Optimal Control . Springer, 1975. [9] R. Krishnan, U. Shalit, and D. Sontag, “Deep kalman filters,” arXiv preprint arXiv:1511.05121 , 2015. [10] M. Karl, M. Soelch, J. Bayer, and P. van der Smagt, “Deep variational bayes filters: Unsupervised learning of state space models from raw data,” in International Conference on Learning Representations (ICLR) ,2017. [11] R. T. Q. Chen, Y. Rubanova, J. Bettencourt, and D. Duvenaud, “Neu-ral ordinary differential equations,” in Neural Information Processing Systems (NeurIPS) , 2018. [12] A. Gu, K. Goel, and C. Re, “Efficiently modeling long sequences with structured state spaces,” in International Conference on Machine Learning (ICML) , 2022. [13] A. Gu and T. Dao, “Dss: Differentiable state space models,” in Advances in Neural Information Processing Systems (NeurIPS) , 2021. [14] B. O. Koopman, “Hamiltonian systems and transformation in hilbert space,” Proceedings of the national academy of sciences of the united states of america , vol. 17, no. 5, p. 315, 1931. [15] I. Mezi´ c, “Spectral properties of dynamical systems, model reduction and decompositions,” Nonlinear Dynamics , vol. 41, pp. 309–325, 2005. [16] ——, “Analysis of fluid flows via spectral properties of the Koopman operator,” Annual Review of Fluid Mechanics , vol. 45, pp. 357–378, 2013. [17] A. Mauroy and I. Mezi´ c, “Global stability analysis using the eigen-functions of the koopman operator,” IEEE Transactions on Automatic Control , vol. 61, no. 11, pp. 3356–3369, 2016. [18] I. Mezi´ c, “Koopman operator, geometry, and learning of dynamical systems,” Not. Am. Math. Soc , vol. 68, no. 7, pp. 1087–1105, 2021. [19] A. Surana and A. Banaszuk, “Linear observer synthesis for nonlin-ear systems using koopman operator framework,” IFAC-PapersOnLine ,vol. 49, no. 18, pp. 716–723, 2016. [20] M. O. Williams, I. G. Kevrekidis, and C. W. Rowley, “A data–driven approximation of the Koopman operator: Extending dynamic mode decomposition,” Journal of Nonlinear Science , vol. 25, no. 6, pp. 1307– 1346, 2015. [21] A. Surana, “Koopman operator based observer synthesis for control-affine nonlinear systems,” in 2016 IEEE 55th Conference on Decision and Control (CDC) . IEEE, 2016, pp. 6492–6499. [22] U. Vaidya, “When koopman meets hamilton and jacobi,” IEEE Trans-actions on Automatic Control , 2025. [23] A. Bain and D. Crisan, Fundamentals of stochastic filtering . Springer, 2009, vol. 3. [24] H. J. Kushner, “On the differential equations satisfied by conditional probability densities of markov processes,” SIAM Journal on Control ,vol. 2, no. 1, pp. 106–119, 1964. [25] M. Zakai, “On the optimal filtering of diffusion processes,” Zeitschrift für Wahrscheinlichkeitstheorie und Verwandte Gebiete , vol. 11, pp. 230– 243, 1969. [26] A. Lasota and M. C. Mackey, Chaos, Fractals, and Noise: Stochastic Aspects of Dynamics . New York: Springer-Verlag, 1994. [27] U. Vaidya and D. T. Castro, “Data-driven stochastic optimal control via linear transfer operator,” Accepted for Publication in IEEE TAC , 2023. [28] R. E. Mortensen, “Maximum-likelihood recursive nonlinear filtering,” 
+
+Journal of Optimization Theory and Applications , vol. 2, no. 6, pp. 386–394, 1968. [29] S. Peitz and S. Klus, “Koopman operator-based model reduction for switched-system control of pdes,” Automatica , vol. 106, pp. 184–191, 2019. [30] M. E. Villanueva, C. N. Jones, and B. Houska, “Towards global optimal control via Koopman lifts,” Automatica , vol. 132, p. 109610, 2021. [31] J. Borggaard, J. A. Burns, A. Surana, and L. Zietsman, “Control, estimation and optimization of energy efficient buildings,” in 2009 American Control Conference . IEEE, 2009, pp. 837–841. [32] I. Abraham and T. D. Murphey, “Active learning of dynamics for data-driven control using Koopman operators,” IEEE Transactions on Robotics , vol. 35, no. 5, pp. 1071–1083, 2019. [33] M. Korda and I. Mezi´ c, “Linear predictors for nonlinear dynamical sys-tems: Koopman operator meets model predictive control,” Automatica ,vol. 93, pp. 149–160, 2018. [34] A. Sootla, A. Mauroy, and D. Ernst, “Optimal control formulation of pulse-based control using Koopman operator,” Automatica , vol. 91, pp. 217–224, 2018. [35] S. E. Otto and C. W. Rowley, “Koopman operators for estimation and control of dynamical systems,” Annual Review of Control, Robotics, and Autonomous Systems , vol. 4, pp. 59–87, 2021. [36] K. Fackeldey, M. Oster, L. Sallandt, and R. Schneider, “Approxima-tive policy iteration for exit time feedback control problems driven by stochastic differential equations using tensor train format,” arXiv preprint arXiv:2010.04465 , 2020. [37] E. Kaiser, J. N. Kutz, and S. L. Brunton, “Data-driven discovery of Koopman eigenfunctions for control,” Machine Learning: Science and Technology , vol. 2, no. 3, p. 035023, 2021. [38] X. Ma, B. Huang, and U. Vaidya, “Optimal quadratic regulation of nonlinear system using Koopman operator,” in 2019 American Control Conference . IEEE, 2019, pp. 4911–4916. [39] B. Huang, X. Ma, and U. Vaidya, “Feedback stabilization using Koop-man operator,” in 2018 IEEE Conference on Decision and Control .IEEE, 2018, pp. 6434–6439. [40] B. Huang and U. Vaidya, “A convex approach to data-driven optimal control via Perron-Frobenius and Koopman operators,” IEEE Transac-tions on Automatic Control , 2022. [41] Y. Susuki, I. Mezic, F. Raak, and T. Hikihara, “Applied Koopman operator theory for power systems technology,” Nonlinear Theory and Its Applications, IEICE , vol. 7, no. 4, pp. 430–459, 2016. [42] B. Hamzi, H. Owhadi, and U. Vaidya, “Kernel methods for some trans-port equations with application to learning kernels for the approximation of koopman eigenfunctions: A unified approach via variational methods, green’s functions and the method of characteristics,” 2025. [43] J. Lee, B. Hamzi, B. Hou, H. Owhadi, G. Santin, and U. Vaidya, “Kernel methods for the approximation of the eigenfunctions of the koopman operator,” Physica D: Nonlinear Phenomena , p. 134662, 2025. [44] I. Mezi´ c, “Spectrum of the Koopman operator, spectral expansions in functional spaces, and state-space geometry,” Journal of Nonlinear Science , vol. 30, no. 5, pp. 2091–2145, 2020. [45] M. Budiši´ c, R. Mohr, and I. Mezi´ c, “Applied Koopmanism,” Chaos: An Interdisciplinary Journal of Nonlinear Science , vol. 22, no. 4, p. 047510, 2012. [46] V. I. Arnold, Geometrical methods in the theory of ordinary differential equations . Springer Science & Business Media, 2012, vol. 250. [47] A. J. Krener, “The convergence of the minimum energy estimator,” in 
+
+New Trends in Nonlinear Dynamics and Control and their Applications .Springer, 2004, pp. 187–208. [48] M. G. Crandall, H. Ishii, and P.-L. Lions, “User’s guide to viscosity solutions of second order partial differential equations,” Bulletin of the American Mathematical Society , vol. 27, no. 1, pp. 1–67, 1992. [49] S. A. Deka, S. S. Narayanan, and U. Vaidya, “Path-integral formula for computing koopman eigenfunctions,” in 2023 62nd IEEE Conference on Decision and Control (CDC) . IEEE, 2023, pp. 6641–6646. [50] S. A. Deka and U. Vaidya, “Finite-time extension of path-integral formula for computation of Koopman eigenfunctions,” in Accepted for Publication in 2024 62nd IEEE Conference on Decision and Control (CDC) . IEEE, 2024. 
+
+Umesh Vaidya (M’07, SM’19) received the Ph.D. degree in mechanical engineering from the Univer-sity of California at Santa Barbara, Santa Barbara, CA, in 2004. He was a Research Engineer at the United Technologies Research Center (UTRC), East Hartford, CT, USA. He is currently a professor in the Department of Mechanical Engineering, Clem-son University, S.C., USA. Before joining Clemson University in 2019, and since 2006, he was a faculty with the department of Electrical and Computer Engineering at Iowa State University. He is the recipient of 2012 National Science Foundation CAREER award. His current research interests include dynamical systems and control theory with appli-cations to power grid and robotics.

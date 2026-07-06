@@ -1,0 +1,94 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-06T23:10:18.287250+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.29257v1",
+      "source": "arxiv",
+      "title": "Multiphysical impedance spectroscopy of porous electrodes based on linear irreversible thermodynamics",
+      "abstract": "Porous electrodes couple electrical, chemical, mechanical, hydraulic, and thermal fields, yet conventional frequency-domain diagnostics interrogate only one of them: electrochemical impedance spectroscopy (EIS) the electrical response and dynamic mechanical analysis (DMA) the mechanical. Each reads a diagonal entry of the multiphysical constitutive matrix and is blind to the cross-couplings that govern structural evolution and degradation. Starting from linear irreversible thermodynamics, we formulate a general theory of multiphysical impedance spectroscopy, in which perturbing one field and measuring the conjugate response of another probes an off-diagonal entry of the constitutive matrix, recovering the static coupling coefficient and resolving its relaxation dynamics across frequency. Specializing to the electro-chemo-mechanical pathway yields a closed-form theory of mechano-electrochemical impedance spectroscopy (MEIS), in which a small harmonic current is applied and the stack stress is measured; the impedance factorizes into a chemical-accumulation term multiplying the sum of a chemo-mechanical and a poro-mechanical kernel. The porosity-accommodation bridge function is derived from a Helmholtz free energy -- following from a microstructural stiffness and viscosity rather than a fitted form -- and a three-phase (solid-fluid-void) closure interpolates continuously between unsaturated and Biot-saturated limits through a void-accommodation fraction. Non-dimensionalization reduces the spectrum to five groups, identifies the phase angle as the discriminator of the chemo-mechanical parameters, and locates the onset of second-quadrant behavior, which in a full cell arises from the competition between an expanding and a contracting electrode. MEIS emerges as one member of a family of cross-coupled spectroscopies the same framework brings within reach.",
+      "authors": [
+        "Junning Jiao",
+        "Juner Zhu"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "physics.app-ph"
+      ],
+      "published": "2026-06-28T07:55:27+00:00",
+      "link": "https://arxiv.org/pdf/2606.29257v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Proposes multiphysical impedance spectroscopy for probing cross-couplings in porous electrodes, relevant to equivalent circuit modeling for battery diagnostics.",
+      "llm_evidence_cn": "提出多物理场阻抗谱方法，探测多孔电极中的交叉耦合，可用于电池等效电路建模与诊断。",
+      "llm_evidence": "提出多物理场阻抗谱方法，探测多孔电极中的交叉耦合，可用于电池等效电路建模与诊断。",
+      "canonical_evidence": "提出多物理场阻抗谱方法，探测多孔电极中的交叉耦合，可用于电池等效电路建模与诊断。",
+      "llm_tldr_en": "Formulates a general theory of multiphysical impedance spectroscopy that probes off-diagonal couplings in porous electrodes, overcoming limitations of conventional EIS and DMA that only measure diagonal responses.",
+      "llm_tldr_cn": "传统阻抗谱仅能探测单一物理场响应，忽视多孔电极中电、化、力、热场间的交叉耦合，本论文从线性不可逆热力学出发，提出一种通用多物理场阻抗谱理论，通过扰动一个场并测量另一场的共轭响应来恢复静态耦合系数，为电极结构演变与退化诊断提供新工具。",
+      "llm_tldr": "传统阻抗谱仅能探测单一物理场响应，忽视多孔电极中电、化、力、热场间的交叉耦合，本论文从线性不可逆热力学出发，提出一种通用多物理场阻抗谱理论，通过扰动一个场并测量另一场的共轭响应来恢复静态耦合系数，为电极结构演变与退化诊断提供新工具。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.30487v1",
+      "source": "arxiv",
+      "title": "Discovering the Kalman-Bucy-Koopman Filter",
+      "abstract": "This paper introduces the Kalman-Bucy-Koopman (KBK) filter, a novel framework for nonlinear state estimation grounded in Koopman operator spectral theory. The nonlinear estimation problem is formulated as a maximum-likelihood (Mortensen) estimator whose solution is characterized by a Hamilton-Jacobi (HJ) partial differential equation. The proposed KBK filter provides a spectral, operator-theoretic realization of this nonlinear filtering problem by parameterizing the HJ value function in terms of principal Koopman eigenfunctions. This transformation converts the nonlinear estimation problem into a Riccati-type evolution in Koopman coordinates, yielding a linear-operator analogue of the classical Kalman-Bucy filter while preserving nonlinear structure in the original state variables. We develop a path-integral formulation for computing principal Koopman eigenfunctions and introduce a dynamics-informed, characteristics-inspired basis construction for their approximation. Theoretical error bounds are derived for value-function and state-estimation approximations. Simulation results demonstrate improved performance over the extended Kalman filter and illustrate the ability of the KBK framework to operate in data-driven settings without explicit model linearization.",
+      "authors": [
+        "Umesh Vaidya"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC",
+        "math.DS"
+      ],
+      "published": "2026-06-29T15:53:09+00:00",
+      "link": "https://arxiv.org/pdf/2606.30487v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "proposes a nonlinear state estimator based on Koopman operator that could be applied to SOC estimation",
+      "llm_evidence_cn": "提出一种基于Koopman算子的非线性状态估计器，可潜在应用于SOC估计",
+      "llm_evidence": "提出一种基于Koopman算子的非线性状态估计器，可潜在应用于SOC估计",
+      "canonical_evidence": "提出一种基于Koopman算子的非线性状态估计器，可潜在应用于SOC估计",
+      "llm_tldr_en": "Introduces a novel nonlinear state estimator, the Kalman-Bucy-Koopman filter, that transforms nonlinear estimation into a linear problem via Koopman theory, potentially advancing nonlinear filtering for battery state estimation.",
+      "llm_tldr_cn": "针对非线性状态估计问题，本文提出了一种基于Koopman算子谱理论的Kalman-Bucy-Koopman滤波器。该方法通过将Hamilton-Jacobi偏微分方程的值函数参数化为Koopman主特征函数，将非线性估计转化为Koopman坐标下的Riccati演化，从而得到经典Kalman-Bucy滤波器的线性算子模拟。这一通用非线性滤波方法有望用于电池荷电状态估计，提升模型精度。",
+      "llm_tldr": "针对非线性状态估计问题，本文提出了一种基于Koopman算子谱理论的Kalman-Bucy-Koopman滤波器。该方法通过将Hamilton-Jacobi偏微分方程的值函数参数化为Koopman主特征函数，将非线性估计转化为Koopman坐标下的Riccati演化，从而得到经典Kalman-Bucy滤波器的线性算子模拟。这一通用非线性滤波方法有望用于电池荷电状态估计，提升模型精度。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
