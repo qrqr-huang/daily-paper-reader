@@ -1,0 +1,246 @@
+Title: IonSense-QKG: A Quantum-Readiness Metadata Framework for Lithium-Ion Battery Dataset Discovery
+
+URL Source: https://arxiv.org/pdf/2607.01286v1
+
+Published Time: Fri, 03 Jul 2026 00:03:33 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# IonSense-QKG: A Quantum-Readiness Metadata Framework for Lithium-Ion Battery Dataset Discovery 
+
+# Sakthi Prabhu Gunasekar 
+
+Amrita School of Computing, Amrita Vishwa Vidyapeetham Coimbatore, India sakthiprabhu.g@gmail.com 
+
+# Prasanna Kumar Rangarajan 
+
+Amrita School of Computing, Amrita Vishwa Vidyapeetham Coimbatore, India r_prasannakumar@cb.amrita.edu 
+
+## Abstract 
+
+Public lithium-ion battery datasets support state-of-health esti-mation, remaining-useful-life prediction, anomaly detection, elec-trochemical characterisation, second-life analytics, and battery-safety research. However, these datasets remain difficult to reuse for near-term hybrid quantum–classical machine learning because they vary widely in chemistry, modality, scale, label quality, ac-cess status, sequence structure, and preprocessing complexity. This paper presents IonSense-QKG , a quantum-readiness metadata framework for lithium-ion battery dataset discovery. Starting from EV-Battery-IonSense, we enrich public battery dataset metadata with quantum-relevant fields including task, modality, chemistry, label type, sequence type, access status, preprocessing needs, esti-mated qubit range, and candidate quantum encodings. We define a weighted Quantum Readiness Score (QRS ) for ranking datasets by practical NISQ -era workflow feasibility. QRS is not a claim of quantum advantage and does not imply that quantum models were trained on all datasets; it is a transparent prioritisation heuristic for future hybrid quantum benchmarks. We demonstrate SQL-style discovery queries and release the metadata, scoring script, ranked table, robustness outputs, link-checking script, and query workload as an open artifact. 
+
+Artifact Availability. The source code, metadata schema, enriched annotations, Quantum Readiness Score computation script, ranked metadata table, robustness outputs, link-checking script, and query workload are available at https://github.com/SakthiGs/EV-Battery-IonSense. 
+
+## 1 Introduction 
+
+Battery analytics has become a central problem in electric mobility, renewable energy storage, battery second life, and safety-critical energy systems. Public datasets now cover state-of-health (SoH) estimation, state-of-charge (SoC) estimation, remaining useful life (RUL) prediction, thermal fault detection, impedance-based diagnos-tics, degradation mode analysis, field-usage modelling, and battery imaging. In parallel, hybrid quantum–classical machine learning is increasingly explored for scientific learning tasks where nonlin-ear feature maps, kernel-based similarity, and parameter-efficient models may be useful under constrained data regimes [2–5]. Despite these parallel developments, a practical barrier remains: 
+
+not every battery dataset is suitable for near-term quantum ma-chine learning . Some public datasets are extremely large, high-dimensional, irregularly sampled, image-heavy, weakly labelled, or difficult to access. Others are compact, well-labelled, and naturally suited to low-dimensional feature maps, short time-series encod-ings, or quantum-kernel benchmarking. Electrochemical impedance spectroscopy (EIS), for example, can often be represented as com-pact frequency-domain signatures, while fleet-scale EV telemetry may contain millions or billions of rows that require windowing, ag-gregation, or representation learning before any quantum encoding is feasible. Existing battery dataset repositories are valuable navigational in-dexes, but they rarely expose metadata needed by quantum comput-ing researchers: estimated qubit requirements, sequence-window feasibility, candidate encoding strategies, circuit-depth implica-tions, or NISQ suitability. As a result, researchers must manually inspect datasets, infer task compatibility, and estimate whether a dataset can support a feasible hybrid quantum workflow. This paper addresses that gap by proposing IonSense-QKG , a quantum-readiness metadata framework for lithium-ion battery dataset dis-covery. The framework builds on EV-Battery-IonSense [ 1], a cu-rated open-source index of public battery datasets and papers, and enriches it with metadata designed for hybrid quantum–classical analytics. The goal is not to claim quantum advantage, nor to introduce a new battery dataset. Instead, we ask a data-management ques-tion: Can a queryable metadata framework help researchers identify public lithium-ion battery datasets that are feasible, relevant, and benchmark-ready for NISQ -era hybrid quantum machine learning? 
+
+We make three contributions: (1) A quantum-ready metadata schema for battery dataset discovery. We extend a curated lithium-ion battery dataset index with knowledge-graph-compatible metadata fields cov-ering tasks, modalities, labels, sequence types, access status, preprocessing requirements, and candidate quantum encodings. (2) A heuristic Quantum Readiness Score for candidate selec-tion. We define a transparent scoring rubric that estimates the practical feasibility of using a dataset in NISQ -era hy-brid quantum–classical experiments. The score is intended for dataset prioritisation, not as evidence of quantum advantage. (3) A query workload for quantum battery dataset discovery. 
+
+We demonstrate SQL-style queries over enriched metadata to identify datasets suitable for NISQ -feasible hybrid QML, quan-tum time-series encoding, and limited-label anomaly/failure detection. By positioning dataset selection as a knowledge-management problem, IonSense-QKG supports reproducible and transparent quantum battery analytics while remaining distinct from dataset-descriptor work and model-benchmark papers. 
+
+> arXiv:2607.01286v1 [cs.LG] 1 Jul 2026 Sakthi Prabhu Gunasekar and Prasanna Kumar Rangarajan
+
+## 2 Background and Motivation 2.1 Battery datasets are heterogeneous 
+
+Open battery datasets vary substantially in experimental setting, scale, chemistry, modality, and annotation quality. EV-Battery-IonSense organises public resources into multiple battery-data cat-egories: (i) field EV telemetry and charging data; (ii) lab ageing and degradation datasets; (iii) safety, failure, and thermal-runaway resources; (iv) SoH/SoC/RUL state-estimation datasets; (v) electro-chemical characterisation such as EIS, OCV, and impedance; (vi) battery imaging and ultrasound resources; (vii) second-life and grid-storage datasets; and (viii) aerospace or specialised battery applications [ 1]. These categories differ strongly in scale, modal-ity, label quality, sequence structure, and preprocessing feasibility, motivating a quantum-readiness layer rather than a flat dataset index. Field telemetry datasets may contain voltage, current, temper-ature, power, and charging behaviour at high temporal resolu-tion. Lab ageing datasets may provide reference performance tests, charge/discharge curves, capacity trajectories, hybrid pulse power characterisation, or impedance measurements. Safety datasets may include rare failure labels, abuse tests, internal short-circuit ex-periments, or surface strain measurements. Imaging datasets may include CT, X-ray, synchrotron, or ultrasonic measurements across spatial scales. This heterogeneity is valuable for battery research but challeng-ing for quantum workflow design. A dataset that is excellent for classical deep learning may be poorly suited for direct quantum encoding, while a smaller electrochemical dataset may be more realistic for NISQ benchmarking. 
+
+## 2.2 Dataset discovery as quantum data management 
+
+Dataset discovery is usually treated as a manual literature-review task. Researchers search papers, inspect repositories, read data de-scriptors, and decide whether a dataset is suitable. Hybrid quantum– classical battery analytics introduces additional constraints: How many features must be encoded into a quantum circuit? Is the sig-nal tabular, time-series, spectral, image-based, or graph-structured? Can the sequence be windowed or compressed into a short input vector? Are labels available for SoH, SoC, RUL, failure, thermal runaway, or anomaly detection? Is the dataset publicly accessible with sufficient documentation? What encoding strategy is plausi-ble: angle encoding, amplitude encoding, quantum kernel, quantum reservoir, or variational quantum head? These questions are not purely battery-domain questions; they are metadata, indexing, retrieval, provenance, and knowledge-representation questions. This places the problem within the scope of quantum computing and data/knowledge management. 
+
+## 2.3 Why quantum readiness matters 
+
+Near-term quantum devices have limited qubit counts, noisy gates, finite shot budgets, and circuit-depth constraints. Even when using simulators, practical hybrid quantum ML workflows require feature selection, dimensionality reduction, and encoding design. There-fore, not all datasets should be treated equally. A billion-row field telemetry dataset may be valuable, but it is not directly NISQ -ready. Conversely, a compact impedance dataset with well-defined labels may be suitable for quantum-kernel or variational-head experi-ments. IonSense-QKG introduces a dataset-level quantum-readiness layer to make such distinctions explicit. 
+
+## 3 Source Corpus and Artifact 
+
+EV-Battery-IonSense is a curated open-source intelligence hub for lithium-ion and EV battery monitoring, degradation research, and AI-powered health estimation [ 1]. It indexes public battery datasets, source links, related publications, and structured categories. The repository acts as a navigational index and does not host or re-distribute original datasets. This is important for licensing and attribution: each dataset remains the property of its original pub-lisher, and users are directed to cite and follow the terms of the original sources. For IonSense-QKG, the repository is used as the seed corpus . The artifact now contains (i) a quantum-readiness schema, (ii) seed, enriched, and ranked metadata tables, (iii) a deterministic QRS computation script, (iv) robustness outputs for the scoring variants, (v) a SQL query workload, and (vi) link-checking and contribution utilities. The prototype does not claim complete coverage of all public battery datasets; rather, it provides a structured path from a curated index to a queryable quantum-readiness layer. Representative examples include multi-year field measurements with voltage, current, power, and temperature time-series; BMS cloud datasets with rare critical failure classes; early cycle-life prediction datasets; EIS and impedance datasets; voltage relax-ation datasets; battery failure and abuse-test resources; CT/X-ray/ultrasound imaging datasets; and NASA battery prognostics datasets. These examples span the range from highly NISQ -feasible compact tabular/spectral datasets to large-scale field and imaging datasets requiring substantial preprocessing. 
+
+## 4 IonSense-QKG Design 4.1 Entity model 
+
+IonSense-QKG represents battery datasets and quantum-readiness metadata as linked entities. The graph uses re-lationships such as hasTask , hasModality , hasChemistry ,
+
+hasLabelType , hasSequenceType , requiresPreprocessing ,
+
+supportsEncoding , hasAccessStatus , citedBy , and 
+
+hasNISQFeasibility . The core entities are listed in Table 1. This representation enables both human-readable browsing and machine-queryable dataset selection. The current artifact realises this model as CSV metadata and SQL-style queries; a native RDF/SPARQL or graph-database backend is left for future work. 
+
+## 4.2 Metadata record and seed annotations 
+
+Each dataset entry is enriched with a structured metadata record. A minimal example is shown below. 
+
+dataset_id: wmg_dib_eis name: WMG-DIB EIS Dataset tasks: [SoH estimation, capacity estimation] modalities: [EIS, temperature, SOC-conditioned] sequence_type: spectral/tabular IonSense-QKG     
+
+> EV-Battery-IonSense seed index
+> Quantum-ready metadata enrichment
+> IonSense-QKG metadata layer
+> Weighted QRS ranking
+> Discovery queries and candidate datasets
+> Corpus Enrichment Representation Scoring Retrieval
+> task, modality, sequence type, label type, access status, preprocessing, encodings
+> feature compactness, sequence suitability, modality compatibil-ity, label availability, preprocessing feasi-bility, reproducibility
+
+Figure 1: IonSense-QKG workflow. A curated battery dataset index is enriched with quantum-relevant metadata, represented as a KG-compatible metadata layer, ranked using a weighted Quantum Readiness Score (QRS), and queried to identify candidate datasets for future hybrid quantum–classical benchmarking. Table 1: Core entities in IonSense-QKG. 
+
+Entity Description 
+
+Dataset A public battery dataset or repository 
+
+Paper Publication associated with a dataset 
+
+Task SoH, SoC, RUL, anomaly, failure, capacity, degradation 
+
+Modality BMS time-series, EIS, OCV, voltage relaxation, imaging, strain, thermal, magnetic 
+
+Chemistry LFP, NMC, NCA, LCO, mixed, unknown 
+
+Label Continuous, class, anomaly/failure event, weak, missing 
+
+SequenceType Tabular, time-series, spectral, curve, image, video, graph, simulation 
+
+AccessStatus Public, restricted, code-only, unavailable 
+
+EncodingCandidate Angle, amplitude, basis, quantum kernel, reservoir, variational head 
+
+NISQFeasibility High, medium, low 
+
+label_type: continuous SoH preprocessing_required: [feature extraction, normalisation] quantum_encoding_candidates: [angle encoding, quantum kernel, variational head] estimated_qubit_range: 4-8 nisq_feasibility: high access_status: public 
+
+Representative seed annotations are released in the artifact and include dataset-level task signals, modalities, candidate quantum en-codings, estimated qubit ranges, preprocessing notes, and feasibility labels. These annotations are used to support query-based dataset selection and QRS ranking, but they are not empirical quantum benchmark results. 
+
+## 5 Quantum Readiness Score 5.1 Design principle 
+
+The Quantum Readiness Score (QRS) is a dataset-selection heuristic rather than a proof of quantum advantage. It estimates how suitable a dataset is for near-term hybrid quantum ML experiments. A high score indicates compact or compressible input features, clear labels, manageable sequence length, public access, high preprocessing fea-sibility, relevance to battery-health tasks, plausible encoding using 4–12 qubits, and potential for fair classical-vs.-quantum benchmark-ing. We define: 
+
+QRS (𝐷 ) =∑︁   
+
+> 𝑖 ∈ { 𝑓 ,𝑠,𝑚,𝑙,𝑝,𝑎 }
+
+𝑤 𝑖 𝐶 𝑖 (𝐷 ), (1) where the criteria 𝐶 𝑖 (𝐷 ) correspond to feature compactness and estimated qubit feasibility, sequence suitability, modality compatibility, label availability, preprocessing feasibility, and ac-cess/reproducibility readiness. For this workshop version, the weights are expert-defined and transparent. Later versions can validate or learn these weights from benchmark outcomes or user feedback. Table 2 defines the discrete component scores used by the QRS formulation. 
+
+## 5.2 Initial QRS computation 
+
+For the workshop artifact, we instantiate the scoring rubric on an initial enriched seed set of 15 representative battery dataset resources selected from EV-Battery-IonSense. The goal of this com-putation is not to empirically validate quantum advantage, but to demonstrate that the proposed metadata schema and QRS rubric can produce a reproducible first-pass ranking for dataset selection. Each dataset is assigned six component scores: feature compact-ness, sequence suitability, modality compatibility, label availability, preprocessing readiness, and access/reproducibility. For this ini-tial implementation, each component is discretised as high = 1.0, 
+
+medium = 0.5, and low = 0.0, then combined using the weighted QRS formula: 
+
+QRS (𝐷 ) = 0.25 𝐹 (𝐷 ) + 0.20 𝑆 (𝐷 ) + 0.20 𝑀 (𝐷 )+ 0.15 𝐿 (𝐷 ) + 0.15 𝑃 (𝐷 ) + 0.05 𝐴 (𝐷 ). (2) The weights intentionally prioritise quantum-workflow constraints: feature compactness, sequence suitability, and modality compatibil-ity jointly account for 65% of the score because they directly affect qubit count, circuit depth, and encoding feasibility. The resulting ranked table is released in the arti-fact as metadata/datasets_qkg_ranked.csv , while Sakthi Prabhu Gunasekar and Prasanna Kumar Rangarajan 
+
+Table 2: QRS component rubric. Scores are feasibility labels for NISQ workflow readiness, not empirical quantum-performance metrics.                          
+
+> Sym. Criterion High / 1.0 Medium / 0.5 Low / 0.0
+> 𝐹 Feature compactness ≤16 features or compact curves/spectra 16–128 features after preprocessing Raw images, videos, or large streams
+> 𝑆 Sequence suitability Short curves, EIS, relaxation, or cycle sum-maries Windowable telemetry or lab trajectories Irregular logs or unclear sampling
+> 𝑀 Modality compatibility EIS, impedance, voltage/capacity curves, com-pact BMS windows Thermal, strain, ultrasound, magnetic, or me-chanical signals after features Raw CT, X-ray, video, or voxel data with-out embeddings
+> 𝐿 Label availability Clear SoH, SoC, RUL, failure, anomaly, or second-life labels Weak, derived, partial, or noisy labels Missing or unclear labels
+> 𝑃 Preprocessing feasibility Cleaning and normalisation sufficient Windowing, aggregation, PCA, or feature ex-traction required Heavy segmentation, reconstruction, or domain-specific preprocessing
+> 𝐴 Access readiness Public, documented, downloadable, and citable Partially documented or source-data only Restricted, unavailable, or unclear li-censing
+
+the enriched component-level metadata is released as 
+
+metadata/datasets_qkg_enriched.csv . This ranking should be interpreted as a transparent candidate-selection heuristic for future hybrid quantum–classical experiments, not as evidence that the highest-ranked datasets will necessarily yield quantum advantage. In addition to the primary weighted additive score, the released artifact computes two robustness variants: a gated score that em-phasises hard NISQ constraints and a continuous metadata-derived score that relaxes the high/medium/low discretisation. 
+
+Robustness check. To assess whether the QRS ranking is an arti-fact of the chosen weights, we performed an internal robustness check. Under 2000 Gaussian weight perturbations ( 𝜎 = 0.05 , renor-malised), the ranking retained a mean Spearman correlation of 
+
+𝜌 ≈ 0.999 with the base ranking, with all five top-ranked datasets remaining in the top five in every run. In cross-method compari-son, the gated score produced identical rank agreement ( 𝜌 = 1.00 ), while the continuous metadata-derived score showed high agree-ment ( 𝜌 ≈ 0.90 ). These checks indicate internal consistency of the annotation scheme, not empirical validation of quantum advantage. 
+
+## 5.3 Encoding candidates by modality 
+
+Table 3 maps battery modalities to plausible quantum encodings. The mapping is intentionally conservative: raw images and billion-row telemetry are not treated as directly NISQ -ready, but may become feasible after classical compression, windowing, or repre-sentation learning. 
+
+## 6 Query Workload 
+
+IonSense-QKG is designed around dataset-discovery queries. The purpose is not to run quantum models on every dataset, but to show that enriched metadata can guide researchers toward feasible and relevant benchmark choices. 
+
+## 6.1 Q1: NISQ-feasible hybrid QML datasets 
+
+SELECT dataset_name, modality, task_type, estimated_qubits_max, qrs FROM IonSenseQKG WHERE access_status = 'public '
+
+AND estimated_qubits_max <= 8 AND label_type IS NOT NULL ORDER BY qrs DESC; 
+
+Table 3: Battery modalities and candidate quantum encod-ings. 
+
+Modality Candidate quantum encoding EIS / impedance angle encoding, amplitude encoding, quantum kernel Voltage relaxation curves angle encoding, quantum reservoir, PQC head BMS time-series win-dows recurrent/reservoir encoding, data re-uploading Cycle-summary fea-tures angle encoding, quantum kernel, PQC head Capacity / differential-capacity curves curve-shape encoding, quantum kernel Strain / ultrasound sig-nals feature extraction plus quantum classifier CT / X-ray / imaging classical embedding plus quantum head/kernel Expected high-ranking datasets include EIS, impedance, voltage-relaxation, early-cycle prediction, and compact cycle-summary datasets. 
+
+## 6.2 Q2: Quantum time-series encoding 
+
+SELECT dataset_name, task_type, modality, preprocessing_need FROM IonSenseQKG WHERE sequence_type LIKE '%time-series% '
+
+OR preprocessing_need LIKE '%windowing% '
+
+OR preprocessing_need LIKE '%aggregation% '
+
+OR preprocessing_need LIKE '%feature extraction% ';
+
+This query returns datasets that either contain time-series structure or require windowing, aggregation, or feature extraction before quantum encoding. In the current seed artifact, results include compact diagnostic datasets such as WMG-DIB EIS and Stanford-MIT early-cycle data, lab and pack time-series such as NASA, PHEV thermal-fault, and WLTP/constant-discharge resources, and field or sensor-derived datasets such as BMS cloud, OSF magnetometry, Tsinghua EV charging, BEV energy dynamics, and home-storage measurements. IonSense-QKG 
+
+## 6.3 Q3: Limited-label anomaly and failure detection 
+
+SELECT dataset_name, modality, label_type, qrs FROM IonSenseQKG WHERE task_type LIKE '%fault% '
+
+OR task_type LIKE '%anomaly% '
+
+OR task_type LIKE '%failure% '
+
+ORDER BY qrs DESC; 
+
+In the current seed artifact, this query returns NREL abuse/failure data, PHEV thermal-fault data, and BMS cloud fault-diagnosis data. These examples illustrate how IonSense-QKG can identify limited-label failure and anomaly resources for future quantum-kernel or compact hybrid-classifier benchmarks. 
+
+## 7 Initial Findings 
+
+We applied the QRS rubric to an initial enriched seed set of 15 rep-resentative battery dataset resources. Table 4 shows the resulting metadata-driven ranking. The ranking is intended as a dataset-selection aid: it prioritises datasets that are compact, label-rich, accessible, and compatible with low-dimensional quantum encod-ings. It does not imply empirical quantum advantage. Using EV-Battery-IonSense as a seed corpus and the representa-tive QRS results in Table 4, IonSense-QKG supports five preliminary observations. 
+
+Finding 1: NISQ-feasible battery datasets are usually com-pact diagnostic datasets, not the largest field datasets. Large-scale field datasets are valuable for real-world validation, but their raw scale makes them less directly suitable for NISQ experiments. In contrast, EIS, impedance, voltage relaxation, early-cycle sum-mary, and controlled ageing datasets often provide compact feature structures suitable for 4–12 qubit hybrid models. Quantum battery benchmarking should therefore begin with diagnostic and cycle-summary datasets before scaling to raw fleet telemetry. 
+
+Finding 2: Time-series datasets require a representation layer before quantum encoding. Many EV and BMS datasets provide high-resolution voltage, current, temperature, power, and charging behaviour. These are promising for quantum time-series methods, but direct encoding of long sequences is infeasible on near-term devices. Practical workflows require windowing, aggregation, recurrence summaries, reservoir states, or classical embeddings before quantum processing. 
+
+Finding 3: Failure and anomaly datasets are promising for limited-label quantum learning. Battery failure datasets are often small, imbalanced, or rare-event driven. This makes them interesting for quantum kernel methods, compact classifiers, or hybrid models under limited labels. 
+
+Finding 4: EIS and voltage-relaxation modalities are strong candidates for quantum feature maps. EIS, impedance, and voltage-relaxation data are naturally structured as curves or spectra. They are often more compact than raw field telemetry or imaging data, while retaining rich electrochemical information. This makes them strong candidates for angle encoding, amplitude encoding, quantum kernels, and variational quantum heads. 
+
+Finding 5: Imaging data is scientifically rich but not di-rectly NISQ-ready. Battery CT, X-ray, synchrotron, and ultrasonic datasets provide valuable structural and diagnostic information. However, raw image or voxel data is too high-dimensional for di-rect NISQ encoding. A more realistic workflow is classical feature extraction or representation learning followed by a quantum ker-nel/classifier/head. 
+
+## 8 Prototype Implementation 
+
+IonSense-QKG is implemented as a lightweight, repository-level artifact rather than as a redistribution of battery data. The proto-type has three layers. The metadata extraction layer uses EV-Battery-IonSense as the seed corpus and extracts dataset names, categories, scale descriptions, access links, and related papers. The 
+
+manual/assisted enrichment layer adds quantum-relevant fields such as modality, task, sequence type, label type, estimated qubit range, preprocessing requirement, candidate quantum encoding, and NISQ feasibility. The query and ranking layer stores enriched metadata as CSV and computes a deterministic QRS ranking using the rubric in Section 5. The current public artifact implements this first lightweight version. It includes the quantum-readiness schema, an initial seed metadata table, an enriched metadata table, a ranked QRS output, a link-checking script, a deterministic QRS computation script, robustness outputs, example discovery queries, and contribution guidelines. The artifact is organised in the public repository under 
+
+metadata/ , scripts/ , and examples/ , with the ranked metadata, QRS computation script, robustness report, and query workload released alongside the schema. The prototype does not redistribute original battery datasets. It provides curated links, quantum-readiness metadata, a determinis-tic QRS computation script, a ranked metadata table, and example dataset-discovery queries. This keeps the artifact lightweight while still making the proposed metadata schema and QRS ranking re-producible. 
+
+## 9 Discussion 9.1 Relation to quantum data/knowledge management 
+
+IonSense-QKG contributes to quantum data and knowledge man-agement by treating quantum ML dataset selection as a queryable metadata problem. Rather than asking whether a particular quan-tum model outperforms a classical model, the framework asks which datasets are appropriate for different quantum workflow designs. This aligns with data-centric quantum research, where progress depends not only on algorithms but also on benchmark selection, metadata quality, provenance, and reproducibility. 
+
+## 9.2 Justification and interpretation of QRS 
+
+The proposed Quantum Readiness Score is not intended to be a ground-truth measure of quantum advantage. At present, no pub-lic benchmark provides empirical labels indicating which battery datasets are truly favourable for hybrid quantum–classical learn-ing. Therefore, QRS should be interpreted as a transparent dataset-selection heuristic rather than as a validated performance predictor. The justification for QRS is constraint-based. Near-term hybrid quantum workflows are limited by input dimensionality, circuit Sakthi Prabhu Gunasekar and Prasanna Kumar Rangarajan 
+
+Table 4: Representative datasets under weighted QRS and alternative scoring variants. QRS 𝑔 denotes the gated score and QRS 𝑐 denotes the continuous metadata-derived score. These variants are internal robustness checks, not empirical quantum-performance metrics. 
+
+Rank Dataset Signal Band QRS QRS 𝑔 QRS 𝑐 Interpretation 1 Impedance-Based Forecasting Dataset Impedance/EIS High 0.925 0.900 0.763 Compact diagnostic candidate 2 PulseBat Retired-Cell Dataset Pulse response High 0.925 0.900 0.753 Retired-cell SoH/second-life 3 Voltage Relaxation Capacity Estimation Dataset Relaxation curve High 0.925 0.900 0.763 Curve-based capacity task 4 WMG-DIB EIS Dataset EIS spectra High 0.925 0.900 0.763 Feature-map candidate 5 Stanford-MIT Early Cycle Life Dataset Cycle summaries High 0.900 0.850 0.632 Early-cycle RUL prediction 6 NASA Li-ion Battery Aging Dataset V/I/T series Medium 0.600 0.450 0.547 Windowing required 11 OSF Battery Magnetometry Archive Magnetic scans Medium 0.525 0.400 0.555 Feature extraction needed 14 Home-Storage Field Measurements Field telemetry Lower 0.500 0.375 0.462 Aggregation required 15 Battery Imaging Library CT/X-ray Low 0.125 0.000 0.181 Classical embedding required 
+
+depth, shot budgets, noise, and the availability of meaningful la-bels. The six QRS components therefore correspond to practical constraints that directly affect whether a dataset can be used in a NISQ-era workflow: feature compactness controls the number of encoded variables; sequence suitability captures whether time-series data can be windowed or compressed; modality compatibility reflects whether the signal type naturally supports quantum feature maps; label availability determines whether supervised or evalua-tion tasks are possible; preprocessing feasibility captures the cost of producing quantum-ready inputs; and access/reproducibility determines whether results can be independently reproduced. This makes QRS useful as a first-pass filtering and prioritisa-tion tool. A high QRS does not imply that a quantum model will outperform classical baselines. It only indicates that the dataset is likely to be feasible for near-term hybrid quantum experimentation. Conversely, a low QRS does not mean that a dataset is scientifically unimportant; it may simply require stronger classical preprocess-ing, feature extraction, or embedding before quantum processing. Empirical validation of QRS through downstream quantum bench-marks is left as future work. 
+
+## 9.3 Avoiding overlap with dataset-descriptor work 
+
+This work is not a new battery dataset and does not duplicate any dataset descriptor submission. It does not generate new battery signals, host original data, or claim ownership over source datasets. Its contribution is a KG-compatible quantum-readiness metadata layer over an existing public index. This separation is important for avoiding overlap with dataset descriptor papers and for keeping the contribution aligned with data-centric battery and quantum-workflow research. 
+
+## 9.4 Limitations and future work 
+
+The current framework has several limitations. First, QRS is an expert-defined, metadata-driven heuristic and does not have ground-truth labels for validation. It should therefore be inter-preted as a candidate-selection score rather than as a predictor of quantum advantage or downstream accuracy. Second, some meta-data fields require manual annotation because dataset descriptions are inconsistent. Third, access status and licensing may change over time. Fourth, estimated qubit requirements depend on pre-processing choices and model design. Finally, future work should validate the QRS ranking by running selected high-, medium-, and low-readiness datasets through common hybrid quantum pipelines and measuring whether QRS correlates with feasibility, runtime, reproducibility, and downstream performance. 
+
+## 10 Conclusion 
+
+This paper introduced IonSense-QKG, a quantum-readiness meta-data framework for lithium-ion battery dataset discovery. Starting from EV-Battery-IonSense, the proposed framework enriches pub-lic battery dataset metadata with quantum-relevant annotations, including task type, modality, sequence structure, label availability, preprocessing requirements, candidate quantum encodings, esti-mated qubit feasibility, and a Quantum Readiness Score. Through a set of dataset-discovery queries, IonSense-QKG helps identify which public battery datasets are feasible for NISQ -era hybrid QML, which datasets support quantum time-series encoding, which re-sources are suitable for limited-label anomaly/failure detection, and which modalities are most promising for quantum feature maps. The work positions dataset selection as a knowledge-management problem and provides a practical step toward reproducible, data-centric quantum battery analytics. 
+
+## Acknowledgments 
+
+The authors acknowledge the maintainers and original publish-ers of the public battery datasets indexed by EV-Battery-IonSense. This work does not redistribute original datasets; users should cite and follow the terms of each source dataset. Any errors in meta-data interpretation or quantum-readiness annotation remain the responsibility of the authors. 
+
+## References       
+
+> [1] S. P. Gunasekar, “EV-Battery-IonSense: Public EV battery datasets and literature index,” GitHub repository. [Online]. Available: https://github.com/SakthiGs/EV-Battery-IonSense [2] J. Biamonte, P. Wittek, N. Pancotti, P. Rebentrost, N. Wiebe, and S. Lloyd, “Quan-tum machine learning,” Nature , vol. 549, pp. 195–202, 2017. [3] M. Schuld and N. Killoran, “Quantum machine learning in feature Hilbert spaces,”
+> Physical Review Letters , vol. 122, no. 4, p. 040504, 2019. [4] M. Cerezo et al., “Variational quantum algorithms,” Nature Reviews Physics , vol. 3, pp. 625–644, 2021.
+
+IonSense-QKG 
+
+[5] V. Havlíček et al., “Supervised learning with quantum-enhanced feature spaces,” 
+
+Nature , vol. 567, pp. 209–212, 2019. [6] K. A. Severson et al., “Data-driven prediction of battery cycle life before capacity degradation,” Nature Energy , vol. 4, pp. 383–391, 2019. [7] P. M. Attia et al., “Closed-loop optimization of fast-charging protocols for batter-ies with machine learning,” Nature , vol. 578, pp. 397–402, 2020. [8] M. D. Wilkinson et al., “The FAIR Guiding Principles for scientific data manage-ment and stewardship,” Scientific Data , vol. 3, p. 160018, 2016. [9] A. Hogan et al., “Knowledge graphs,” ACM Computing Surveys , vol. 54, no. 4, pp. 1–37, 2021. [10] S. Chen et al., “A review of data-driven battery health estimation and remaining useful life prediction,” Renewable and Sustainable Energy Reviews , vol. 182, p. 113391, 2023. [11] M. Berecibar et al., “Critical review of state of health estimation methods of Li-ion batteries for real applications,” Renewable and Sustainable Energy Reviews ,vol. 56, pp. 572–587, 2016.
