@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-08",
+  "date": "2026-07-08",
+  "generated_at": "2026-07-08T23:08:28",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/08/2607.05030v1-a-mutual-information-based-ensemble-kalman-filter",
+      "section": "quick",
+      "title_en": "A Mutual Information-Based Ensemble Kalman Filter",
+      "authors": "Tadashi Tsuyuki, Shunji Kotsuki",
+      "date": "2026-07-06",
+      "pdf": "https://arxiv.org/pdf/2607.05030v1",
+      "score": "7.0",
+      "evidence": "基于互信息的自适应集合卡尔曼滤波",
+      "tldr": "针对确定性集合卡尔曼滤波（LETKF）在强非线性系统中精度不佳的问题，提出基于互信息的MI-EnKF，通过自适应随机项权重优化融合确定性与随机方法。利用互信息恒等式对独立模态优化，并借助熵和查找表加速。在Lorenz-96模型上，强非线性观测下MI-EnKF精度显著优于LETKF和随机EnKF，且优化第一模态即可大幅提升。该方法为非线性数据同化提供了有效新途径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Ensemble Kalman filters (EnKFs) are widely used for data assimilation in geophysical systems. Among various implementations, the local ensemble transform Kalman filter (LETKF) has gained popularity because of its computational efficiency. However, the deterministic EnKF such as the LETKF is known to be less robust than the stochastic EnKF in strongly nonlinear regimes. We generalize the LETKF such that it contains a stochastic term and includes the stochastic EnKF within it. We adaptively optimize the parameter that determines the weight of the stochastic term based on an identity of mutual information, which is satisfied by the Kalman filter in linear Gaussian systems. As the analysis perturbation equations of EnKFs are decomposed into a system of equations for modes that are uncorrelated with each other, the application of mutual information is easily achieved. The generalized LETKF thus optimized is named the mutual information-based ensemble Kalman filter (MI-EnKF). The MI-EnKF indirectly uses the third- and fourth-order moments of the forecast ensemble through entropy. To speed up calculations of entropy, we create a lookup table based on maximum entropy distributions. We conduct data assimilation experiments using the Lorenz-96 model to confirm the validity of the optimization method of MI-EnKF. When the observation operator is linear, the ML-EnKF shows the same analysis accuracy as the LETKF. When the observation operator is strongly nonlinear, the MI-EnKF is more accurate than both LETKF and stochastic EnKF regardless of ensemble size. Optimizing just the first mode can lead to significant improvements, but positive impacts of increasing the number of optimized modes are not observed unless the ensemble size is large. The optimized parameter values indicate that the optimal EnKF lies between the deterministic EnKF and the stochastic EnKF.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/08/2607.04734v1-risk-sensitive-filtering-for-singular-systems-subject-to-round-robin-protocol",
+      "section": "quick",
+      "title_en": "Risk Sensitive Filtering for Singular Systems subject to Round-Robin Protocol",
+      "authors": "Ashna Goel, Shovan Bhaumik, Nutan Kumar Tomar",
+      "date": "2026-07-06",
+      "pdf": "https://arxiv.org/pdf/2607.04734v1",
+      "score": "6.0",
+      "evidence": "针对通信约束奇异系统开发风险敏感卡尔曼滤波器，为自适应滤波方法",
+      "tldr": "针对通信受限下离散线性奇异系统的状态估计，提出了风险敏感卡尔曼滤波框架。基于Weierstrass正则形式将系统转化为周期模型，通过贝叶斯方法最小化指数二次代价导出递归滤波方程。引入自适应风险机制在线调节参数，确保协方差正定性并增强鲁棒性，数值仿真证实了相比标准卡尔曼滤波的性能提升。该框架统一了奇异系统与标准情形下的滤波设计，为带宽约束估计提供了新途径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "This paper develops a risk sensitive (RS) Kalman filtering framework for discrete-time linear stochastic singular systems operating under communication constraints imposed by a round-robin protocol. Due to limited network bandwidth, only a subset of the available measurements can be transmitted at each sampling instant, resulting in a periodically varying measurement structure. By employing the Weierstrass canonical form (WCF), the singular system is transformed into an equivalent augmented state space model, yielding a round-robin induced periodic system (RRIPS). A recursive risk sensitive Kalman filter (RSKF) is then developed for the RRIPS through a Bayesian formulation and the minimization of an exponential quadratic cost function, from which the recursive filtering equations are obtained for the original singular system. To enhance robustness against modeling uncertainties and disturbances, an adaptive RS mechanism is introduced in which the risk parameter is adjusted online according to the available covariance information. This adaptive strategy guarantees the positive definiteness of the predicted covariance matrix while adjusting the degree of risk sensitivity to the prevailing estimation uncertainty. Furthermore, sufficient conditions ensuring the filter stability are established using the observability and controllability concepts of periodic systems. The proposed framework reduces to the standard KF for singular systems when the RS parameter vanishes and recovers the standard RSKF when the singular matrix reduces to the identity matrix. Finally, numerical results are presented to demonstrate the effectiveness, robustness, and improved estimation performance of the proposed approach in comparison with the standard KF.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

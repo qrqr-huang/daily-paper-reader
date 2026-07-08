@@ -6,26 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-07
-- 运行时间：2026-07-07 23:11:47 UTC
+- 最新运行日期：2026-07-08
+- 运行时间：2026-07-08 23:08:20 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：2
 - 精读区：0
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日浅读一篇量子与电池数据交叉的前沿框架，探索锂电数据集的“量子就绪”元数据方案。  
-核心发现：利用知识图谱为电池数据集构建结构化元数据，让数据更易被量子计算等新技术复用。  
-若对此方向感兴趣，可进一步追踪该框架在真实电池研发场景中的落地验证。
-- 详情：[/202607/07/README](/202607/07/README)
+今日速读两篇滤波前沿论文，聚焦提升估计器的鲁棒性与信息效率。  
+基于互信息的集成卡尔曼滤波与风险敏感奇异系统滤波，分别从信息论和协议约束角度提供了新颖应对策略。  
+推荐关注互信息方法对非高斯噪声的普适改进，后续可对比二者的实际工业仿真效果。
+- 详情：[/202607/08/README](/202607/08/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [IonSense-QKG: A Quantum-Readiness Metadata Framework for Lithium-Ion Battery Dataset Discovery](/202607/07/2607.01286v1-ionsense-qkg-a-quantum-readiness-metadata-framework-for-lithium-ion-battery-dataset-discovery)  
-   标签：评分：6.0/10、query:soc-soh
-   evidence：锂离子电池数据集发现的元数据框架，支持健康状态估计
+1. [A Mutual Information-Based Ensemble Kalman Filter](/202607/08/2607.05030v1-a-mutual-information-based-ensemble-kalman-filter)  
+   标签：评分：7.0/10、query:lfp-soc
+   evidence：基于互信息的自适应集合卡尔曼滤波
+2. [Risk Sensitive Filtering for Singular Systems subject to Round-Robin Protocol](/202607/08/2607.04734v1-risk-sensitive-filtering-for-singular-systems-subject-to-round-robin-protocol)  
+   标签：评分：6.0/10、query:lfp-soc
+   evidence：针对通信约束奇异系统开发风险敏感卡尔曼滤波器，为自适应滤波方法
 
 
 <div class="dpr-home-promo-card">

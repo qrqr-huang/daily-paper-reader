@@ -1,0 +1,1541 @@
+Title: Risk Sensitive Filtering for Singular Systems subject to Round-Robin Protocol
+
+URL Source: https://arxiv.org/pdf/2607.04734v1
+
+Published Time: Tue, 07 Jul 2026 03:41:08 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# Risk Sensitive Filtering for Singular Systems subject to Round-Robin Protocol ⋆
+
+# Ashna Goel a, Shovan Bhaumik b, Nutan Kumar Tomar a
+
+> a
+
+Department of Mathematics, Indian Institute of Technology Patna, India 
+
+> b
+
+Department of Electrical Engineering, Indian Institute of Technology Patna, India 
+
+Abstract 
+
+This paper develops a risk sensitive (RS) Kalman filtering framework for discrete-time linear stochastic singular systems oper-ating under communication constraints imposed by a round-robin protocol. Due to limited network bandwidth, only a subset of the available measurements can be transmitted at each sampling instant, resulting in a periodically varying measurement structure. By employing the Weierstrass canonical form (WCF), the singular system is transformed into an equivalent aug-mented state space model, yielding a round-robin induced periodic system (RRIPS). A recursive risk sensitive Kalman filter (RSKF) is then developed for the RRIPS through a Bayesian formulation and the minimization of an exponential quadratic cost function, from which the recursive filtering equations are obtained for the original singular system. To enhance robust-ness against modeling uncertainties and disturbances, an adaptive RS mechanism is introduced in which the risk parameter is adjusted online according to the available covariance information. This adaptive strategy guarantees the positive definite-ness of the predicted covariance matrix while adjusting the degree of risk sensitivity to the prevailing estimation uncertainty. Furthermore, sufficient conditions ensuring the filter stability are established using the observability and controllability con-cepts of periodic systems. The proposed framework reduces to the standard KF for singular systems when the RS parameter vanishes and recovers the standard RSKF when the singular matrix reduces to the identity matrix. Finally, numerical results are presented to demonstrate the effectiveness, robustness, and improved estimation performance of the proposed approach in comparison with the standard KF. 
+
+Key words: Singular systems; Networked control systems; Round-robin protocol; Weierstrass canonical form; Kalman filtering; Risk sensitive filtering 
+
+1 Introduction 
+
+State estimation is a fundamental task in modern con-trol and signal processing systems, where the complete state vector is often inaccessible through direct mea-surement. For linear stochastic systems represented in the state space framework, the KF has emerged as one of the most widely adopted estimation techniques due to its recursive structure and optimal minimum mean square error performance under Gaussian noise assumptions [1], [2]. Consequently, KF based methods have found widespread applications in aerospace sys-tems [3], robotics [4], industrial automation [5], and 
+
+⋆ This paper was not presented at any IFAC meeting. Cor-responding author N. K. Tomar. 
+
+Email addresses: ashna 2021ma10@iitp.ac.in (Ashna Goel), shovan.bhaumik@iitp.ac.in (Shovan Bhaumik), 
+
+nktomar@iitp.ac.in , nktomar@iitp.ac.in (Nutan Kumar Tomar). 
+
+power networks [6]. With the increasing integration of communication technologies into control architectures, many practical systems now rely on shared communica-tion networks to exchange information among sensors, controllers, and actuators, leading to the emergence of Networked Control Systems (NCS) [7]. Compared with conventional control architectures, NCSs offer several advantages, such as lower installation and maintenance costs, improved flexibility, ease of system expansion, and support for geographically distributed sensing and control [8], [9]. Despite these benefits, communication networks intro-duces several challenges that can degrade estimation and control performance. Typical network-induced ef-fects include transmission delays [10], packet dropouts [11], quantization effects [12], and bandwidth limitations [13]. In particular, when multiple sensors nodes share a common communication channel, it is generally im-possible to transmit all measurement data simultane-
+
+Preprint submitted to Automatica 7 July 2026 
+
+> arXiv:2607.04734v1 [math.OC] 6 Jul 2026
+
+ously. To regulate network access and efficiently utilize communication resources, various scheduling protocols have been proposed, including the Round-Robin Pro-tocol (RRP) [14], the Try-Once-Discard (TOD) proto-col [15], and other deterministic or stochastic schedul-ing schemes [16]. Among these, the RRP is particularly attractive due to its simplicity, fairness, and determin-istic periodic structure, in which sensor measurements are transmitted sequentially according to a predefined schedule. Motivated by the challenges arising in NCSs, consider-able research efforts have been devoted to state estima-tion under round-robin scheduling. Existing studies have investigated the dynamics by round-robin induced sys-tems by modeling them as delayed switched system and establishing stability conditions using Lyapunov-based methods [17]. The observability and exponential stabil-ity of the RRIPS have also been examined in [18]. Fur-thermore, state estimation problem for NCSs subject to packet disorders under the round-robin scheduling, as well as sensor scheduling schemes have been addressed in [19], [20]. Building upon these developments, several estimation algorithms have been developed for remotely available measurements [21], [22]. Despite their effectiveness, KF based estimators rely heavily on accurate system models and noise statistics. In the presence of modeling uncertainties, parameter variations, and unmodeled dynamics their estimation performance may deteriorate significantly. This limita-tion has motivated the development of robust estima-tion methods, among which the H∞ filter and the RSKF are particularly prominent. While the H∞ filter atten-uates the worst-case effect of disturbances, the RSKF minimizes an exponential quadratic cost function that imposes a larger penalty on large estimation errors [23], [24]. The foundations of RS estimation were established by the pioneering works of [25], while its robustness prop-erties were rigorously established in [26]. Owing to its enhanced robustness against model uncertainty, RS fil-tering has attracted considerable attention in stochas-tic and networked systems, and has been extended to systems with delayed measurements and communication constraints [27]. Nevertheless, compared with the exten-sive literature on Kalman and H∞ filtering for NCSs, RS filtering under explicit communication scheduling pro-tocols, particularly the RRP, remains relatively unex-plored. While the aforementioned studies primarily focused on state space systems, many practical processes are more naturally described by singular or descriptor sys-tems. Such systems arise in the presence of algebraic constraints coupled with dynamic equations and are frequently encountered in electrical circuits, power sys-tems, constrained mechanical systems, and chemical processes [28], [29]. Due to their ability to capture both dynamic and algebraic relationships, singular systems provide a more general modeling framework, with a special case of state space systems. However, the singu-lar structure introduces additional challenges in state estimation, since the standard Kalman filtering recur-sion is not directly applicable. Following the pioneering work of [30], extensive research has been devoted to state estimation for singular systems including Kalman filtering [31], unbiased minimum variance estimation [32], observer design [33], and robust H∞ filtering [34]. These studies have established a solid theoretical foun-dation for robust filtering of singular systems under uncertainty. The state estimation problem becomes even more chal-lenging when singular systems operate over communi-cation network. Consequently, increasing attention has been directed toward state estimation for networked sin-gular systems. Existing works have addressed estimation problems in the presence of packet dropouts, communi-cation delays, missing measurements, and limited band-width [35]. Distributed filtering, fusion estimation, and 
+
+H∞ filtering methods for networked singular systems have also been reported in [36], [37]. More recently, a Kalman-type recursive estimator was developed for sin-gular systems operating under a round-robin communi-cation protocol, where measurements are transmitted se-quentially to accommodate bandwidth limitations [38]. Despite the significant advances in state estimation for NCSs and networked singular systems, an important re-search gap still exists. Although RS filtering has been extensively studied for state space systems and shown to provide enhanced robustness against modeling uncer-tainties and disturbances, its extension to networked sin-gular systems remains largely unexplored [39]. Moreover, existing estimation results for singular systems operat-ing under round-robin scheduling are largely confined to the standard Kalman filtering framework and minimum variance estimation [40], [41]. To the best of the authors’ knowledge, RS filtering for singular systems subject to RRP has not yet been investigated. This gap is particu-larly important because networked singular systems are simultaneously affected by communication constraints and the inherent complexities of singular systems. Motivated by this gap, this paper develops a RS Kalman filtering framework for discrete-time stochastic singular systems operating under RRP. By employing the WCF, the original singular system is transformed into an equiv-alent RRIPS, for which a recursive RSKF is derived us-ing a Bayesian formulation and an exponential quadratic cost criterion. Furthermore, an adaptive RS mechanism is introduced to improve robustness against modeling uncertainties, and sufficient conditions are established for filter boundedness and stability. Numerical examples are provided to demonstrate the effectiveness of the pro-posed approach in comparison with the standard KF. The remainder of the paper is organized as follows. Sec-2tion 2 presents the necessary preliminaries on singular systems and formulates the state estimation problem un-der RRP. Section 3 develops the proposed RS Kalman filtering framework for singular systems subject to RRP. The observability and stability properties of the pro-posed filter are analyzed in Section 4. Numerical exam-ples illustrating the effectiveness of the proposed filter are provided in Section 5. Finally, concluding remarks and future research directions are presented in Section 6. 
+
+2 Problem Formulation 
+
+2.1 System transformation 
+
+Consider the class of discrete-time stochastic singular systems described by 
+
+Ex k+1 = ( A + ∆ A)xk + Bw k , (1a) 
+
+yk = Hx k + vk, (1b) where E ∈ Rn×n is a singular matrix with rank( E) < n ,and A ∈ Rn×n, B ∈ Rn×r and H ∈ Rq×n are known constant matrices. The vectors xk ∈ Rn and yk ∈ Rq de-note the system state and measurement output at time instant k, respectively. The vectors wk ∈ Rr and vk ∈ Rq
+
+represent the process and measurement noises, respec-tively. It is assumed that the uncertainty term ∆ A is de-terministic but unknown to the estimator. As a result, the filter has access only to the nominal dynamics and uses the model of the form 
+
+Ex k+1 = Ax k + Bw k . (2) In contrast, the measurement equation is presumed to be known without uncertainty and is therefore same as (1b). Owing to the singularity of the matrix E, the vector 
+
+xk cannot be regarded as a conventional state vector for arbitrary initial conditions, cf . Eq. (5b). However, 
+
+xk completely characterizes the system behavior at time instant k. An initial condition is said to be consistent if there exists a solution trajectory satisfying (1a) and (2). The following assumptions are adopted throughout the paper. 
+
+Assumption 1: The matrix pair ( E, A ) is regular, i.e. ,det( λE − A) 6 ≡ 0, where det( λE − A) is not identically zero as a polynomial in λ.
+
+Assumption 2: The process noise wk and measurement noise vk are assumed to be zero mean Gaussian ran-dom vectors satisfying E[wk wk⊤] = Qk, E[vk vk⊤] = 
+
+Rk, and E[wk vj ⊤] = 0 ∀k and j.
+
+Assumption 3: The initial state x0 is assumed to be a zero-mean random vector with known covariance. More-over, x0 is independent of vk, but may be correlated with 
+
+w0 and a finite number of future noise terms wk+l due to the non-causal nature of the system. Under Assumption 1, the regularity of the matrix pair (E, A ) ensures the existence of a unique solution to (1a) for every consistent initial condition [42]. It is well known that the matrix pair ( E, A ) is regular if and only if there exist non-singular matrices U, V ∈ Cn×n such that 
+
+U EV =
+
+[In1 00 N
+
+]
+
+and U AV =
+
+[A1 00 In2
+
+]
+
+, (3) where n1 is the degree of the polynomial det( λE − A), 
+
+n2 = n−n1, A1 ∈ Rn1×n1 and N ∈ Rn2×n2 is a nilpotent matrix with nilpotency index h, namely, N h = 0. The above form (3) is referred to as the WCF of a matrix pair ( E, A ). The reader is referred to [43] for more details on the WCF and the construction of the transformation matrices U and V .Let U B =
+
+[
+
+B⊤ 
+
+> 1
+
+B⊤
+
+> 2
+
+]⊤
+
+and HV =
+
+[
+
+H1 H2
+
+]
+
+, where the partitions conform to the dimensions n1 and n2. By in-troducing the coordinate transformation xk = V
+
+[x1,k 
+
+x2,k 
+
+]
+
+,the system (1) can be decomposed into 
+
+x1,k +1 = A1x1,k + B1wk, (4a) 
+
+N x 2,k +1 = x2,k + B2wk, (4b) 
+
+yk = H1x1,k + H2x2,k + vk, (4c) where x1,k ∈ Rn1 and x2,k ∈ Rn2 . The subsystem (4a) represents the dynamic part of the system in state space form, whereas subsystem (4b) represents its algebraic component. Due to the nilpotency of N , the subsystem (4b) admits an explicit solution [28, pp. 47]. As a result, the solutions of (4a) and (4b) can be expressed as 
+
+x1,k = Ak 
+
+> 1
+
+x1,0 +
+
+> k−1
+
+∑
+
+> i=0
+
+Ak−i−11 B1wi, (5a) 
+
+x2,k = −
+
+> h−1
+
+∑
+
+> i=0
+
+N iB2wk+i. (5b) By combining the expressions for x1,k and x2,k , the sys-tem (4) can be transformed into the following system [39] ¯xk+1 = ¯A¯xk + ¯B(z)wk, (6a) 
+
+yk = ¯H ¯xk + vk, (6b) 3where ¯ xk =
+
+[x1,k 
+
+x2,k 
+
+]
+
+and the matrices are ¯A =
+
+[A1 00 0
+
+]
+
+, ¯H =
+
+[
+
+H1 H2
+
+]
+
+,
+
+¯B(z) = B(0) + B(1) z + · · · + B(h)zh,B(0) =
+
+[B1
+
+0
+
+]
+
+, B (i) = −
+
+[ 0
+
+N i−1B2
+
+]
+
+, i = 1 , 2, . . . , h 
+
+and z is the forward shift operator, i.e. zw k = wk+1 .
+
+Remark 1 It should be noted that the process noise covariance associated with the model (6) is given by ¯Qk = E[( ¯B(z)wk)( ¯B(z)wk)⊤]. By expanding 
+
+¯B(z)wk, the equivalent covariance can be expressed as 
+
+¯Qk = h∑
+
+> i=0
+> h
+
+∑
+
+> j=0
+
+B(i)E[wk+iw⊤ 
+
+> k+j
+
+]( B(j))⊤ which is equiv-alent to ¯Qk = h∑
+
+> i=0
+
+B(i)Qk+i(B(i))⊤. Therefore, despite the presence of forward shift operator and non-causal structure of (6) , the process noise covariance admits an equivalent matrix representation. 
+
+Remark 2 It follows from (6) , that the resulting model is non-singular but non-causal. For the causal subsystem (4a) , the initial state x1,0 is assumed to be a zero-mean random vector with covariance P1,and is uncorrelated with the noise sequences wk and 
+
+vk. In contrast, (4b) describes the non-causal sub-system. From (5b) , the corresponding initial state can be expressed as x2,0 = − h−1∑
+
+> i=0
+
+N iB2wi. Hence, 
+
+x2,0 is a zero mean random vector with covariance 
+
+E[x2,0x⊤
+
+> 2,0
+
+] = P2 = h−1∑
+
+> i=1
+
+N i−1B2Qi(N i−1B2)⊤. Since 
+
+x0 = V ¯x0 = V
+
+[x1,0
+
+x2,0
+
+]
+
+, the initial state x0 is also zero mean with covariance E[x0x⊤ 
+
+> 0
+
+] = V diag {P1, P 2}V ⊤.
+
+Furthermore, due to the non-causal structure in (5b) ,the initial state x0 is correlated with process noises 
+
+w0, w 1, . . . , w h−1. This property distinguishes singular systems from state space systems, where the initial state is typically assumed to be independent of both process and measurement noises. 2.2 Measurement transmitted with round-robin protocol 
+
+In this paper, the estimation center is assumed to be far from the sensors, and the measurement data are trans-mitted through a shared communication network. Due to the limited bandwidth of the communication channel, it is assumed that the complete measurement vector yk
+
+cannot be transmitted at any instant k. To address this limitation, the measurement vector is partitioned, and each part of the measurements is transmitted accord-ing to a predefined schedule. Specifically, a round-robin protocol is adopted to overcome the communication ca-pacity constraints. Suppose that, at each time instant k, the communica-tion channel can transmit only q′ measurement compo-nents out of the total q components. Define the period of RRP as σ = ⌈ q 
+
+> q′
+
+⌉, where ⌈.⌉ denotes a ceiling function that returns the smallest successive integer. Then, the transmission schedule is characterized by the periodic index as mk = mod( k, σ ) + 1, where mod( k, σ ) repre-sents the non-negative remainder obtained upon divid-ing k by σ. Since mk ∈ φσ with φl = {1, 2, . . . , l }, the index mk cycles through the set φσ in a periodic manner. Thus, based on the capacity of the network channel, the measurement vector yk is partitioned into subsets, and only the subset associated with the period σ and index 
+
+mk is transmitted. Finally, we create partitions ymk 
+
+> k
+
+of the measurement vector yk as follows: 
+
+ymk 
+
+> k
+
+=
+
+[
+
+yk,a 1 yk,a 2 · · · yk,a q′
+
+]⊤
+
+, mk ∈ φσ−1 ,
+
+[yk,a 1 yk,a 2 · · · yk,q 
+
+]⊤ , mk = σ. 
+
+(7) where j = 1 , 2, . . . , q ′, aj = ( mk − 1) q′ + j, and yk,a j
+
+is the ath j component of the vector yk. It should be noted that the partition corresponding to mk = σ
+
+may contain fewer than q′ measurement components. In this situation, additional entries selected from the set {yk, 1, y k, 2, . . . , y k, (σ−1) q′ } are appended so that the dimension of yσk becomes q′ [44]. Now, based on the communication capacity of the net-work channel, the period σ and the scheduling index mk
+
+are specified. Subsequently, the measurement vector yk
+
+in (6) is partitioned into subsets ymk 
+
+> k
+
+as defined in (7). Thus the system (6) can be represented by the following round-robin induced periodic system (RRIPS): ¯xk+1 = ¯A¯xk + ¯B(z)wk, (8a) 
+
+ymk 
+
+> k
+
+= ¯Hmk ¯xk + vmk 
+
+> k
+
+, (8b) where vmk 
+
+> k
+
+is formed by partitioning vk in the same man-ner that as ymk 
+
+> k
+
+is generated from yk, and ¯Hmk consists of the corresponding rows of ¯H, i.e. ,¯Hmk =
+
+{[ ¯H⊤
+
+> m1
+
+¯H⊤ 
+
+> m2
+
+. . . ¯H⊤ 
+
+> mq′
+
+]⊤, for mk ∈ φσ−1,
+
+[ ¯H⊤ 
+
+> m1
+
+. . . ¯H⊤ 
+
+> q
+
+]⊤, for mk = σ. 
+
+where ¯Hmj is the mth j row of matrix ¯H.43 Risk Sensitive State Estimation 
+
+The objective of this paper is to construct a recursive optimal estimate ˆ xk|k using the available measurements 
+
+y1: k. To achieve this goal, the estimation problem is for-mulated for the RRIPS (8), from which the estimate of the system (1) can subsequently be obtained. Within the RS framework, the estimator is obtained by minimizing an exponential cost that penalizes estimation errors ac-cording to prescribed risk parameters. Accordingly, the optimal estimate at each time step is obtained by mini-mizing the cost function 
+
+Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+) = E[exp( 
+
+> k−1
+
+∑
+
+> i=1
+
+μ1,i ρ1(ei|i) + μ2,k ρ2(ek|k)] ,
+
+(9) where ˆ ¯xi|i denotes the posterior estimate and ei|i =¯xi − ˆ¯xi|i denotes the posterior estimation error at time instant i. The parameters μ1 ≥ 0 and μ2 > 0 charac-terize the degree of risk sensitivity associated with past and current estimation errors, respectively. Moreover, the functions ρ1(·) and ρ2(·) are both strictly convex, continuous and bounded from below, attaining global minima at 0. In particular, the minimum RS estimate (MRSE) is defined by ˆ¯x⋆k|k = arg min 
+
+> ˆ¯xk|k
+
+Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+). (10) In this paper, to obtain a recursive filtering algo-rithm, the convex functions ρ1(·) and ρ2(·) are cho-sen as quadratic forms, namely, ρ1(ei|i) = e⊤
+
+> i|i
+
+ei|i and 
+
+ρ2(ek|k) = e⊤
+
+> k|k
+
+ek|k. Under this choice, the cost function (9) becomes 
+
+Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+) = E[exp( 
+
+> k−1
+
+∑
+
+> i=1
+
+μ1,i e⊤
+
+> i|i
+
+ei|i + μ2,k e⊤
+
+> k|k
+
+ek|k)] ,
+
+(11) 
+
+3.1 Bayesian formulation of the MRSE 
+
+For the development of the proposed estimator, the op-timization problem (10) is formulated within a Bayesian estimation framework. Let ymk 
+
+> 1: k
+
+= {ymk 
+
+> 1
+
+, . . . , y mk 
+
+> k
+
+} de-note the available measurement sequence at the estima-tion center up to time instant k. Then, the posterior probability density of ¯ x0: k conditioned on ymk 
+
+> 1: k
+
+, can be expressed as [45] 
+
+p(¯ x0: k|ymk 
+
+> 1: k
+
+) = p(ymk 
+
+> k
+
+|¯x0: k , y mk
+
+> 1: k−1
+
+)p(¯ x0: k|ymk
+
+> 1: k−1
+
+)
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) ,
+
+with 
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) = 
+
+∫
+
+p(ymk 
+
+> k
+
+|¯x0: k , y mk
+
+> 1: k−1
+
+)p(¯ x0: k|ymk
+
+> 1: k−1
+
+)d¯x0: k ,
+
+According to the measurement model (6b), the current measurement ymk 
+
+> k
+
+is completely determined by the cur-rent state ¯ xk. Therefore, conditioned on ¯ xk , the mea-surement ymk 
+
+> k
+
+is independent of the past states ¯ x0: k−1 as well as the previous received measurements ymk
+
+> 1: k−1
+
+. This conditional independence property implies that 
+
+p(ymk 
+
+> k
+
+|¯x0: k, y mk
+
+> 1: k−1
+
+) = p(ymk 
+
+> k
+
+|¯xk ).
+
+Assuming that the optimal estimates ˆ ¯x⋆
+
+> 0|0
+
+, . . . , ˆ¯x⋆k−1|k−1
+
+are available up to time instant k − 1, the posterior den-sity of state ¯ xk can be written as 
+
+p(¯ xk |ymk 
+
+> 1: k
+
+) = p(ymk 
+
+> k
+
+|¯xk)p(¯ xk |ymk
+
+> 1: k−1
+
+)
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) .
+
+Using the Chapman-Kolmogorov relation for p(¯ xk |ymk
+
+> 1: k−1
+
+), the posterior density can be written as 
+
+p(¯ xk|ymk 
+
+> 1: k
+
+) = p(ymk 
+
+> k
+
+|¯xk) ∫ p(¯ xk|¯xk−1)p(¯ xk−1 |ymk
+
+> 1: k−1
+
+)d¯xk−1
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) .
+
+(12) To account for the accumulated risk associated with past estimation errors, introduce the information state as Φk , p(¯ xk |I k) = exp( 
+
+> k−1
+
+∑
+
+> i=0
+
+μ1,i e⊤
+
+> i|i
+
+ei|i)p(¯ xk |ymk 
+
+> 1: k
+
+), (13) where Ik = {ymk 
+
+> 1: k
+
+, e 1|1, ..., e k−1|k−1} denotes the infor-mation set at time instant k [46] and the initialization is taken as Φ 0 = p(¯ x0). Now, substituting (12) into (13) yields Φk = p(ymk 
+
+> k
+
+|¯xk)
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+)
+
+∫
+
+p(¯ xk |¯xk−1) exp( 
+
+> k−2
+
+∑
+
+> i=0
+
+μ1,i e⊤
+
+> i|i
+
+ei|i)exp( μ1,k −1e⊤
+
+> k−1|k−1
+
+ek−1|k−1)p(¯ xk−1 |ymk
+
+> 1: k−1
+
+) d¯xk−1,
+
+which is equivalent to Φk = p(ymk 
+
+> k
+
+|¯xk)
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+)
+
+∫
+
+p(¯ xk |¯xk−1)exp( μ1,k −1e⊤
+
+> k−1|k−1
+
+ek−1|k−1)Φ k−1 d¯xk−1 .
+
+(14) Define the predicted information state, p(¯ xk|¯Ik−1), as 
+
+p(¯ xk|¯Ik−1) = 
+
+∫
+
+p(¯ xk|¯xk−1) exp( μ1,k −1e⊤
+
+> k−1|k−1
+
+ek−1|k−1)
+
+× Φk−1 d¯xk−1 ,
+
+(15) where ¯Ik−1 = {I k−1, e k−1|k−1} denotes the prior infor-mation set. 5Using (15), the information state Φ k can be written as Φk , p(¯ xk|I k) = p(ymk 
+
+> k
+
+|¯xk)p(¯ xk |¯Ik−1)
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) . (16) Using the definition of expectation in the cost function (11) yields 
+
+Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+) = 
+
+∫
+
+exp( 
+
+> k−1
+
+∑
+
+> i=1
+
+μ1,i e⊤
+
+> i|i
+
+ei|i + μ2,k e⊤
+
+> k|k
+
+ek|k)
+
+× p(¯ xk|ymk 
+
+> 1: k
+
+) d¯xk ,
+
+and by (13), it reduces to 
+
+Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+) = 
+
+∫
+
+exp( μ2,k e⊤
+
+> k|k
+
+ek|k)Φ k d¯xk. (17) Therefore, the minimum RS estimate is obtained by re-cursively solving (10) together with (15)-(17). It is im-portant to note that the past estimation errors are em-bedded in the information state Φ k, whereas the cost function in (17) depends solely on the current estimation error. 
+
+Remark 3 For μ1,k −1 = 0 and μ2,k > 0, no risk penalty is assigned to the previous estimation errors. In this case, the information state coincides with the posterior density, namely, p(¯ xk|I k) = p(¯ xk |ymk 
+
+> 1: k
+
+), and the cost function Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+) reduces to a standard exponential quadratic form. 3.2 Risk sensitive filtering for σ-periodic system 
+
+The objective of this subsection is to obtain a recur-sive expression for the estimate ˆ ¯xk|k of the RRIPS (8) through the minimization of Jk(ˆ ¯xk|k |ymk 
+
+> 1: k
+
+). To obtain a recursive solution, Φ k is assumed to be an unnormal-ized Gaussian density for sufficiently small nonnegative scalar μ1,k −1 [26]. Since Φ 0 = p(¯ x0) is Gaussian, this property is preserved recursively and Φ k remains Gaus-sian whenever Φ k−1 is Gaussian. 
+
+Theorem 1 For the RRIPS (8) , the predicted mean and error covariance can be obtained as 
+
+ˆ¯xk|k−1 = ¯Aˆ¯xk−1|k−1 ,
+
+¯Pk|k−1 = ¯ A( ¯ P −1 
+
+> k−1|k−1
+
+− 2μ1,k −1I)−1 ¯A⊤ + ¯ Qk, (18) 
+
+where ¯Pk−1|k−1 is the posterior error covariance. 
+
+Proof. To determine the prediction expressions, con-sider the predicted information state given in (15). Now, suppose that Φ k−1 admits the Gaussian distribution, then we can write Φk−1 = exp( − 1 
+
+> 2
+
+e⊤ 
+
+> k−1|k−1
+
+¯P −1 
+
+> k−1|k−1
+
+ek−1|k−1)
+
+p(ymk
+
+> k−1
+
+|ymk
+
+> 1: k−2
+
+)
+
+√
+
+(2 π)n| ¯Pk−1|k−1 |
+
+where ek−1|k−1 = ¯ xk−1 − ˆ¯xk−1|k−1 is the estimation er-ror. Substituting the above expression into (15) and com-bining the quadratic terms appearing in the exponent yields Φk−1 = ((2 π)n| ¯Pk−1|k−1|)−1/2
+
+p(ymk
+
+> k−1
+
+|ymk
+
+> 1: k−2
+
+)
+
+∫
+
+p(¯ xk |¯xk−1)
+
+× exp( − 1
+
+2 e⊤
+
+> k−1|k−1
+
+Ωk−1ek−1|k−1) d¯xk−1 .
+
+(19) where Ω k−1 = ¯P −1 
+
+> k−1|k−1
+
+− 2μ1,k −1I and the risk param-eter μ1,k −1 is selected such that 2 μ1,k −1 ¯Pk−1|k−1 < I .Under this condition, the exponential term in (19) can be interpreted as a Gaussian density up to a normaliza-tion constant. Hence, 
+
+p(¯ xk|¯Ik−1) = 
+
+∫ p(¯ xk|¯xk−1 )N (¯ xk−1 ; ˆ ¯xk−1|k−1 , Ω−1
+
+> k−1
+
+)d¯xk−1
+
+p(ymk
+
+> k−1
+
+|ymk
+
+> 1: k−2
+
+) .
+
+(20) Using the state transition model associated with (6), we have p(¯ xk |¯xk−1) = N (¯ xk ; ¯A¯xk−1, ¯Qk) [25] and substi-tuting it into (20), the Gaussian product identity [47] yields 
+
+p(¯ xk|˜Ik−1 ) = 
+
+∫ N (¯ xk ; Π 1, Γ1)N (¯ xk−1 ; Π 2, Γ2)d¯xk−1
+
+p(ymk
+
+> k−1
+
+|ymk
+
+> 1: k−2
+
+) ,
+
+(21) where Π 1 = ¯Aˆ¯xk−1|k−1, Γ 1 = ¯AΩ−1 
+
+> k−1
+
+¯A⊤ + ¯Qk, Λ = Ω−1 
+
+> k−1
+
+¯A⊤S−11 , Π 2 = ˆ ¯xk−1|k−1 + Λ(¯ xk − ¯Aˆ¯xk−1|k−1 ), Γ 2 =(I − Λ ¯A)Ω −1
+
+> k−1
+
+.Since the Gaussian density involving ¯ xk is independent of ¯ xk−1, it can be taken outside the integral in (21). Using ∫ N (¯ xk−1 ; ·) d¯xk−1 = 1, the predicted information state in (21) can be obtained, up to normalization, as 
+
+p(¯ xk|˜Ik−1 ) ∼ N (¯ xk; ¯Aˆ¯xk−1|k−1, ¯AΩ−1 
+
+> k−1
+
+¯A⊤ + ¯Qk). (22) The prediction formulas in (18) follows directly from the corresponding mean and covariance of (22). 
+
+To derive the posterior information state p(¯ xk |I k), it is necessary to obtain expressions for the conditional mean of the measurement, the innovation covariance, and the cross covariance. The corresponding results are established in the following lemmas. 
+
+Lemma 2 For the measurement ymk 
+
+> k
+
+, the conditional mean and covariance conditioned on ¯Ik−1 are obtained 
+
+6as 
+
+E[ymk 
+
+> k
+
+|¯Ik−1 ] = ¯Hmk ˆ¯xk|k−1,
+
+¯P mk 
+
+> yy
+
+= ¯Hmk
+
+¯Pk|k−1 ¯H⊤ 
+
+> mk
+
++ Rmk
+
+> k
+
+(23) 
+
+where Rmk 
+
+> k
+
+= E[vmk 
+
+> k
+
+vmk
+
+> k
+> ⊤
+
+] is the partitioned measure-ment noise covariance. 
+
+Proof. Since the measurement ymk 
+
+> k
+
+is independent of the past estimation errors e1|1, . . . , e k−1|k−1, the conditional expectation with respect to ¯Ik−1 is equivalent to condi-tioning on ymk
+
+> 1: k−1
+
+. Consequently, using the measurement model (6b), we obtain 
+
+E[ymk 
+
+> k
+
+|˜Ik−1] = E[ ¯ Hmk ¯xk + vmk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+] = ¯ Hmk ˆ¯xk|k−1 .
+
+Next, the innovation covariance matrix is defined as ¯P mk 
+
+> yy
+
+= E[(¯ ymk 
+
+> k
+
+)(¯ ymk 
+
+> k
+
+)⊤],
+
+where ¯ ymk 
+
+> k
+
+= ymk 
+
+> k
+
+− E[ymk 
+
+> k
+
+|¯Ik−1] is the innovation error. By substituting ymk 
+
+> k
+
+and E[ymk 
+
+> k
+
+|¯Ik−1] derived above, it follows that ¯P mk 
+
+> yy
+
+= E[( ¯Hmk ¯xk + vmk 
+
+> k
+
+− ¯Hmk ˆ¯xk|k−1 )
+
+× ( ¯Hmk ¯xk + vmk 
+
+> k
+
+− ¯Hmk ˆ¯xk|k−1 )⊤]= E[( ¯Hmk ek|k−1 + vmk 
+
+> k
+
+)( ¯Hmk ek|k−1 + vmk 
+
+> k
+
+)⊤]where ek|k−1 = ¯xk − ˆ¯xk|k−1 represents the predicted error. Using the fact that ek|k−1 is uncorrelated with 
+
+vmk 
+
+> k
+
+, together with the prescribed noise statistics, we obtain ¯P mk 
+
+> yy
+
+= ¯Hmk
+
+¯Pk|k−1 ¯H⊤ 
+
+> mk
+
++ Rmk 
+
+> k
+
+. (24) 
+
+
+
+Lemma 3 The cross covariance matrix is obtained as 
+
+¯P mk 
+
+> ¯xy
+
+= ¯Pk|k−1 ¯H⊤ 
+
+> mk
+
+.
+
+Proof. From the definition of ¯P mk 
+
+> ¯xy
+
+= E[(¯ xk −
+
+ˆ¯xk|k−1)(¯ ymk 
+
+> k
+
+)⊤] and using the derivation steps analo-gous to those in Lemma 2, we obtain ¯P mk 
+
+> ¯xy
+
+= E[ek|k−1( ¯Hmk ¯xk + vmk 
+
+> k
+
+− ¯Hmk ˆ¯xk|k−1 )⊤]¯P mk 
+
+> ¯xy
+
+= E[ek|k−1( ¯Hmk ek|k−1 + vmk 
+
+> k
+
+)⊤]= ¯Pk|k−1 ¯H⊤ 
+
+> mk
+
+.
+
+(25) 
+
+
+
+Theorem 4 For the RRIPS (8) , the posterior estimate and error covariance are obtained as 
+
+ˆ¯xk|k = ˆ ¯xk|k−1 + ¯P mk 
+
+> ¯xy
+
+( ¯P mk 
+
+> yy
+
+)−1(ymk 
+
+> k
+
+− ¯Hmk ˆ¯xk|k−1 ),
+
+¯Pk|k = ¯Pk|k−1 − ¯P mk 
+
+> ¯xy
+
+( ¯P mk 
+
+> yy
+
+)−1( ¯P mk 
+
+> ¯xy
+
+)⊤.
+
+(26) 
+
+Proof. The posterior information density can be ob-tained by incorporating the newly received measurement 
+
+ymk 
+
+> k
+
+into the predicted information state p(¯ xk|¯Ik−1). In view of (16), we have 
+
+p(¯ xk|I k) = p(¯ xk , y mk 
+
+> k
+
+|¯Ik−1 )
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) .
+
+Assuming that p(ymk 
+
+> k
+
+|¯Ik−1 ) is Gaussian, i.e., 
+
+p(ymk 
+
+> k
+
+|¯Ik−1) ∼ N (ymk 
+
+> k
+
+; E[ymk 
+
+> k
+
+|¯Ik−1], ¯P mk 
+
+> yy
+
+),
+
+where E[ymk 
+
+> k
+
+|¯Ik−1] is obtained from Lemma 2. Fur-thermore, Eqs. (18) and (22) imply that p(¯ xk|¯Ik−1) ∼N (¯ xk; ˆ ¯xk|k−1 , ¯Pk|k−1). Since both the predicted state and the measurement are jointly Gaussian, their joint Gaussian density can be written as 
+
+p(¯ xk|I k) = 
+
+N
+
+([ ymk
+
+> k
+
+¯xk
+
+]
+
+;
+
+[E[ymk 
+
+> k
+
+|¯Ik−1 ]ˆ¯xk|k−1
+
+]
+
+,
+
+[ ¯P mk 
+
+> yy
+
+¯P mk 
+
+> y¯x
+
+¯P mk 
+
+> ¯xy
+
+¯P¯x¯x
+
+]) 
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) ,
+
+(27) where ¯P¯x¯x = ¯Pk|k−1. By rearranging the quadratic terms appearing in (27) and completing the square (for more details, we refer to [27]), the posterior density, p(¯ xk |I k), can be expressed in the form 
+
+p(¯ xk |I k) = exp( − 1 
+
+> 2
+
+ˆe⊤
+
+> k|k
+
+Θ−1 ˆek|k)
+
+p(ymk 
+
+> k
+
+|ymk
+
+> 1: k−1
+
+) . (28) where ˆ ek|k = ek|k−1 − ¯P mk 
+
+> ¯xy
+
+( ¯P mk 
+
+> yy
+
+)−1 ¯ymk 
+
+> k
+
+and Θ = ¯P¯x¯x −
+
+¯P mk 
+
+> ¯xy
+
+( ¯P mk 
+
+> yy
+
+)−1 ¯P mk  
+
+> y¯x
+
+.The condition 2 μ1,k −1 ¯Pk−1|k−1 < I , together with the nonsingularity of the covariance matrices, guarantees that (28) defines a Gaussian density. Therefore, the pos-terior mean and covariance are obtained from the pa-rameters of p(¯ xk|I k). Finally, the update equations in (26) are obtained by combining (28) with the results es-tablished in Lemma 2. 
+
+Remark 4 It is worth noting that when μ1,k −1 = 0 ,the contribution of the past estimation errors van-ishes from the criterion (11) , and the resulting cost function reduces to the standard exponential quadratic form. In this case, the proposed RSKF degenerates to the standard KF. Moreover, if the update esti-mate is written as ˆ¯xk|k = Lk ˆ¯xk|k−1 + Kkymk 
+
+> k
+
+, where 
+
+Lk = I − Kk ¯H, Kk = ¯P mk 
+
+> ¯xy
+
+( ¯P mk 
+
+> yy
+
+)−1, then, from the Proposition 1 of [48], the proposed estimator remains unbiased, i.e. , E[¯ xk − ˆ¯xk|k] = 0 , provided that μ2,k > 0
+
+and μ1,k −1 is selected as a sufficiently small non-negative scalar satisfying 2μ1,k −1 ¯Pk−1|k−1 < I , ∀ k.
+
+7Remark 5 Once the estimate ˆ¯xk|k of the transformed state vector is obtained from the proposed filter for the RRIPS (8) , the estimate of the original state xk can be obtained as 
+
+ˆxk|k = V ˆ¯xk|k , (29) 
+
+where V is the WCF transformation matrix. Therefore, the state estimation problem for the singular system (1) 
+
+can be addressed in the transformed coordinates by es-timating ¯xk, after which the corresponding estimate in the original state is recovered through the transformation matrix V .3.3 Selection of risk sensitive parameter 
+
+Most existing RS filtering approaches, such as [26], [49], employ fixed values of the RS parameters throughout the estimation process. However, such a restriction is not es-sential for the proposed framework. Specifically, the RS parameter μ2,k affects only the scaling of the cost func-tion and does not alter the resulting estimate provided that μ2,k > 0. In contrast, the RS parameter μ1,k −1
+
+determines the degree to which past estimation errors influence the current estimation update. To ensure the well-posedness of the filter recursion, the predicted co-variance matrix must remain positive definite. This re-quires ¯P −1 
+
+> k−1|k−1
+
+− 2μ1,k −1I > 0, which imposes a covari-ance dependent constraint on the admissible values of 
+
+μ1,k −1. Motivated by this observation, an adaptive se-lection mechanism is adopted in which μ1,k −1 is updated online using the current covariance information. As a re-sult, the level of risk sensitivity is adjusted dynamically according to the prevailing estimation uncertainty. The proposed adaptation offers two key benefits. On the one hand, it ensures that the predicted covariance matrix remains positive definite, thereby preserving the feasibility of the recursive filtering procedure. On the other hand, it allows the degree of risk sensitivity to vary with the current level of estimation uncertainty. As a re-sult, the filter exhibits enhanced robustness and achieve improved estimation accuracy relative to the standard RSKF methods which employs the fixed RS parameters. 
+
+4 Observability and Stability 
+
+Before discussing the stability of the proposed RSKF, the next theorem provides a characterization for observ-ability of (8). The proof proceeds along the same lines as that of Proposition 4 .4 in [50] and hence it is omitted. 
+
+Theorem 5 The σ-periodic system (8) is observable at time instant k, if and only if, for each eigenpair (ε, ω )
+
+of ¯Aσ , the conditions ¯Aσ ω = εω and ¯Hms ¯As−kω = 0 
+
+imply that ω = 0 ∀s ∈ { k, k + 1 , · · · k + σ − 1}.
+
+The filter developed in this paper is based on the nomi-nal augmented model (8). To analyze the effect of model uncertainty on the estimation performance, we now con-sider the uncertain singular system (1). Applying the concept of WCF as described in Section 2.1, the uncer-tain system can be transformed as the following aug-mented state space representation ¯xk+1 = ( ¯A + ∆ ¯A)¯ xk + ¯B(z)wk, (30a) 
+
+ymk 
+
+> k
+
+= ¯Hmk ¯xk + vmk 
+
+> k
+
+. (30b) The matrix ∆ ¯A denotes the uncertainty in the trans-formed model arising from the uncertainty ∆ A in (1). It is assumed that ¯A, ¯A + ∆ ¯A, and ¯Hmk are bounded, and that ¯A+∆ ¯A remains invertible whenever ¯A is invertible. Due to the nonsingularity of the WCF transformation matrices, bounded uncertainties in the original singular system induce bounded uncertainties in the augmented model (30). Consequently, the robustness analysis can be performed in the transformed state space framework without loss of generality. Although the RSKF is an optimal filter [26], optimality alone is insufficient to ensure filter stability [51]. Assume that the state trajectory of the nominal RRIPS (8) re-mains bounded. For the uncertain RRIPS system (30), define the transition matrices as ¯Ai,k = ( ¯ Ai,k + ∆ ¯ Ai,k ) = ( ¯ A + ∆ ¯ A)i−k,
+
+¯Ak,i = ( ¯Ak,i + ∆ ¯Ak,i ) = ( ¯A + ∆ ¯A)k−i, 0 ≤ i < k, 
+
+(31) where ¯Ak,k = ( ¯Ak,k + ∆ ¯Ak,k ) = I. The matrices ¯Ai,k 
+
+and ¯Ak,i describe the backward and forward propagation of the state, respectively. In addition, ∆ ¯Ai,k = ( ¯A +∆ ¯A)i−k − ¯Ai−k , ∆ ¯Ak,i = ( ¯A + ∆ ¯A)k−i − ¯Ak−i, and whenever ¯A is nonsingular ¯Ak−1,k = ¯A−1 
+
+> k,k −1
+
+= ¯A−1.Using the above transition matrices, the observability and controllability Gramians over the interval [ k − l, k ], where k ≥ l and l ∈ Z>0, are defined as ¯Ok,k −l =
+
+> k
+
+∑
+
+> i=k−l
+
+¯A⊤ 
+
+> i,k
+
+¯H⊤ 
+
+> mk
+
+(Rmk 
+
+> i
+
+)−1 ¯Hmk
+
+¯Ai,k ,
+
+¯Ck,k −l =
+
+> k−1
+
+∑
+
+> i=k−l
+
+¯A⊤ 
+
+> k,i +1
+
+¯Qi ¯Ak,i +1 .
+
+(32) The uncertain RRIPS (30) is said to be uniformly com-pletely observable and uniformly completely control-lable, if there exists positive constants k1, k 2, k 3, and k4
+
+such that 0 < k 1I ≤ ¯Ok,k −l ≤ k2I, 0 < k 3I ≤ ¯Ck,k −l ≤ k4I, 
+
+(33) for all admissible values of k. Equivalently, both ¯Ok,k −l
+
+and ¯Ck,k −l remain uniformly bounded and positive def-inite over the prescribed horizon [51]. 8Remark 6 For ∆ ¯A = 0 , the nominal system observabil-ity and controllability matrices reduces to 
+
+Ok,k −l =
+
+> k
+
+∑
+
+> i=k−l
+
+¯A⊤ 
+
+> i,k
+
+¯H⊤ 
+
+> mk
+
+(Rmk 
+
+> i
+
+)−1 ¯Hmk
+
+¯Ai,k ,Ck,k −l =
+
+> k−1
+
+∑
+
+> i=k−l
+
+¯A⊤ 
+
+> k,i +1
+
+¯Qi ¯Ak,i +1 .
+
+Furthermore, the boundedness and positive definiteness of ¯Ok,k −l and ¯Ck,k −l imply the corresponding properties for Ok,k −l and Ck,k −l .
+
+We now investigate the uniformly boundedness of the posterior error covariance associated with the proposed RSKF. Since the filter is developed for the RRIPS, it suf-fices to analyze the covariance matrix ¯Pk|k of the trans-formed system. Furthermore, it is known that ¯Pk|k re-main positive definite for all k ≥ 0 under standard fil-tering assumptions [51]. 
+
+Theorem 6 Assume that the system (30) is uniformly completely observable and uniformly completely control-lable, with ¯P0 > 0. Furthermore, let the RS parameter be chosen such that 2μ1,k −1 ¯Pk−1|k−1 < I . Then the pos-terior error covariance matrix ¯Pk|k remains uniformly bounded for all k ≥ 1, provided that the uncertainty satisfies −I < O −1
+
+> k,k −l
+
+∆Ok,k −l < I , where ∆Ok,k −l =
+
+> k
+
+∑
+
+> i=k−l
+
+¯A⊤ 
+
+> i,k
+
+¯H⊤ 
+
+> mk
+
+(Rmk 
+
+> i
+
+)−1 ¯Hmk ∆ ¯Ai,k .
+
+Proof. Considering the assumptions stated above and following the Appendix B of [27], the above theorem can be proved. 
+
+5 Simulation Results 
+
+Consider the discrete-time stochastic singular system de-scribed by (1), where the associated system matrices are given by 
+
+E =
+
+
+
+1 0 0 0 1 0 0 0 0 
+
+ , A =
+
+
+
+0.99 0 .01 00 0.99 01 −1 −1
+
+ , B =
+
+
+
+0.04 0.02 0.05 
+
+ , and 
+
+H =
+
+[1 0 1 0 1 0 
+
+]
+
+.
+
+It can be readily verified that E is singular and the ma-trix pair ( E, A ) satisfies the regularity condition. The model uncertainty is taken as ∆ A = diag( δ, δ, δ ), where 
+
+δ represents the uncertainty level. The process and mea-surement noise, denoted by wk and vk, are assumed to be mutually independent, zero mean Gaussian se-quences with covariance matrices Q = 0 .09 and R =diag(0 .5, 0.5), respectively. The initial state vector is chosen as x0 = [1 3 − 2] ⊤. Applying the transformation procedure outlined in Section 2.1 yields the transformed state components x1,k and x2,k . Subsequently, by aug-menting these components, the singular system can be represented in the augmented form (6). For the imple-mentation of the proposed filter, the initial estimates of the transformed states are generated from a standard Gaussian distribution while the initial error covariance matrix is selected as ¯P0|0 = diag(9 , 1, 4). To validate the performance of the proposed RSKF, comparisons are carried out with the standard KF us-ing the root mean square error (RMSE) and the time averaged mean square error (Avg-MSE) as evaluation metrics. All simulation results are obtained from 500 Monte Carlo runs. The RS parameter μ1,k −1, is selected adaptively so that it remains below the smallest positive root of | ¯P −1 
+
+> k−1|k−1
+
+− 2μ1,k −1I| = 0, thereby ensuring that ( ¯P −1 
+
+> k−1|k−1
+
+− 2μ1,k −1I) remains positive definite and that the covariance recursion is well defined. Figs. 1 and 2 present the RMSE trajectories of the first and second state components for the uncertainty level 
+
+δ = 0 .01. It can be observed that the proposed RSKF produces consistently smaller RMSE values than the standard KF and demonstrating its enhanced estima-tion capability in the presence of modeling uncertainty. To further examine the robustness of the proposed ap-proach, the Avg-MSE is computed for δ ∈ [−0.01 , 0.01], and the corresponding results are shown in Fig. 3. As the uncertainty magnitude increases, the RSKF maintains lower Avg-MSE values than the KF, whereas the per-formance of both filters becomes nearly indistinguish-able when δ is close to zero. Consequently, these results highlight the improved robustness and estimation per-formance of the proposed RSKF under uncertain system dynamics.           
+
+> 010 20 30 40 50 60 70 80 90 100
+> Time
+> 00.2 0.4 0.6 0.8 11.2 1.4
+> RMSE
+> KF
+> RSKF
+
+Fig. 1. RMSE comparison for first state of x
+
+90 10 20 30 40 50 60 70 80 90 100 
+
+> Time
+> 00.5 11.5 22.5 3
+> RMSE
+> KF
+> RSKF
+
+Fig. 2. RMSE comparison for second state of x          
+
+> -0.01 -0.008 -0.006 -0.004 -0.002 00.002 0.004 0.006 0.008 0.01
+> 00.1 0.2 0.3 0.4 0.5 0.6 0.7
+> Average MSE
+> KF
+> RSKF
+
+Fig. 3. Average MSE comparison for first state of x
+
+6 Conclusion 
+
+This paper has developed a RS Kalman filtering frame-work for linear discrete-time networked singular sys-tems operating under RRP. By employing the WCF, the singular system is transformed into an equivalent RRIPS, which enables the derivation of recursive RS filtering equations through a Bayesian formulation and an exponential quadratic cost criterion. An adaptive RS mechanism is further introduced to enhance robust-ness against modeling uncertainties while preserving the positive definiteness of the predicted covariance ma-trix. Moreover, observability and stability properties of the proposed filer are established using the uniformly complete observability and controllability criteria. Nu-merical results demonstrated that the proposed RSKF provides improved robustness and estimation perfor-mance compared with the standard KF under com-munication constraints and model uncertainty. Future research will focus on extending the proposed frame-work to networked singular systems under more general communication constraints such as one-step or finite-step packet dropouts, random measurement delays, and missing measurements. 
+
+References 
+
+[1] R. E. Kalman, “A new approach to linear filtering and prediction problems,” Journal of Basic Engineering , 1960. [2] B. D. Anderson and J. B. Moore, Optimal filtering . New Jersey: Englewood Cliffs, N J: Prentice-Hall, 1979. [3] S. F. Schmidt, “The Kalman filter-Its recognition and development for aerospace applications,” Journal of Guidance and Control , vol. 4, no. 1, pp. 4–7, 1981. [4] R. Hartley, M. Ghaffari, R. M. Eustice, and J. W. Grizzle, “Contact-aided invariant extended Kalman filtering for robot state estimation,” The International Journal of Robotics Research , vol. 39, no. 4, pp. 402–430, 2020. [5] C. Garriz and R. Domingo, “Development of trajectories through the Kalman algorithm and application to an industrial robot in the automotive industry,” IEEE Access ,vol. 7, pp. 23570–23578, 2019. [6] N. Hoffmann and F. W. Fuchs, “Minimal invasive equivalent grid impedance estimation in inductive-resistive power networks using extended Kalman filter,” IEEE Transactions on Power Electronics , vol. 29, no. 2, pp. 631–641, 2013. [7] R. A. Gupta and M.-Y. Chow, “Networked control system: Overview and research trends,” IEEE Transactions on Industrial Electronics , vol. 57, no. 7, pp. 2527–2535, 2009. [8] W. Zhang, M. S. Branicky, and S. M. Phillips, “Stability of networked control systems,” IEEE control systems magazine ,vol. 21, no. 1, pp. 84–99, 2001. [9] X.-M. Zhang, Q.-L. Han, X. Ge, D. Ding, L. Ding, D. Yue, and C. Peng, “Networked control systems: A survey of trends and techniques,” IEEE/CAA Journal of Automatica Sinica ,vol. 7, no. 1, pp. 1–17, 2019. [10] L. Zhang, H. Gao, and O. Kaynak, “Network-induced constraints in networked control systems—a survey,” IEEE Transactions on Industrial Informatics , vol. 9, no. 1, pp. 403– 416, 2012. [11] J. Wu and T. Chen, “Design of networked control systems with packet dropouts,” IEEE Transactions on Automatic control , vol. 52, no. 7, pp. 1314–1319, 2007. [12] Y. Xia, M. Fu, and G.-P. Liu, Analysis and synthesis of networked control systems . Berlin: Springer Verlag, 2011. [13] Y. Wang, S. Wu, C. Lei, J. Jiao, and Q. Zhang, “A review on wireless networked control system: The communication perspective,” IEEE Internet of Things Journal , vol. 11, no. 5, pp. 7499–7524, 2023. [14] S. Fan, M. Meng, Y. Fu, and C. Deng, “Distributed adaptive tracking control for fuzzy nonlinear mass under round-robin protocol,” IEEE Transactions on Fuzzy Systems , vol. 33, no. 5, pp. 1488–1498, 2025. [15] J. Wang, C. Yang, J. Xia, Z.-G. Wu, and H. Shen, “Observer-based sliding mode control for networked fuzzy singularly perturbed systems under weighted try-once-discard protocol,” IEEE Transactions on Fuzzy Systems ,vol. 30, no. 6, pp. 1889–1899, 2021. 
+
+10 [16] L. Zou, Z. Wang, and H. Gao, “Observer-based H∞ control of networked systems with stochastic communication protocol: The finite-horizon case,” Automatica , vol. 63, pp. 366–373, 2016. [17] K. Liu, E. Fridman, K. H. Johansson, and Y. Xia, “Quantized control under round-robin communication protocol,” IEEE Transactions on Industrial Electronics , vol. 63, no. 7, pp. 4461–4471, 2016. [18] L. Zhang and D. Hristu-Varsakelis, “Communication and control co-design for networked control systems,” 
+
+Automatica , vol. 42, no. 6, pp. 953–958, 2006. [19] D. Liu, Z. Wang, Y. Liu, F. E. Alsaadi, and F. E. Alsaadi, “Recursive state estimation for stochastic complex networks under round-robin communication protocol: Handling packet disorders,” IEEE Transactions on Network Science and Engineering , vol. 8, no. 3, pp. 2455–2468, 2021. [20] L. Shi, P. Cheng, and J. Chen, “Sensor data scheduling for optimal state estimation with communication energy constraint,” Automatica , vol. 47, no. 8, pp. 1693–1698, 2011. [21] Y. Liu, F. E. Alsaadi, X. Yin, and Y. Wang, “Robust 
+
+H∞ filtering for discrete nonlinear delayed stochastic systems with missing measurements and randomly occurring nonlinearities,” International Journal of General Systems ,vol. 44, no. 2, pp. 169–181, 2015. [22] H. Gao and T. Chen, “ H∞ estimation for uncertain systems with limited communication capacity,” IEEE Transactions on Automatic Control , vol. 52, no. 11, pp. 2070–2084, 2007. [23] S. Sadhu, S. Bhaumik, A. Doucet, and T. K. Ghoshal, “Particle-method-based formulation of risk-sensitive filter,” 
+
+Signal Processing , vol. 89, no. 3, pp. 314–319, 2009. [24] L. Xie, Y. C. Soh, and C. E. De Souza, “Robust Kalman filtering for uncertain discrete-time systems,” IEEE Transactions on Automatic Control , vol. 39, no. 6, pp. 1310– 1314, 1994. [25] Y. C. Ho and R. Lee, “A Bayesian approach to problems in stochastic estimation and control,” IEEE Transactions on Automatic Control , vol. 9, no. 4, pp. 333–339, 1964. [26] R. K. Boel, M. R. James, and I. R. Petersen, “Robustness and risk-sensitive filtering,” IEEE Transactions on Automatic Control , vol. 47, no. 3, pp. 451–461, 2002. [27] R. K. Tiwari and S. Bhaumik, “Risk sensitive filtering with randomly delayed measurements,” Automatica , vol. 142, p. 110409, 2022. [28] A. A. Belov, O. G. Andrianova, and A. P. Kurdyukov, Control of discrete-time descriptor systems , vol. 39. Switzerland: Springer International Publishing, 2018. [29] A. Goel, S. Bhaumik, and N. K. Tomar, “State estimation for singular systems with finite random measurement delays and packet dropouts,” Circuits, Systems, and Signal Processing ,pp. 1–21, 2025. [30] L. Dai, “State estimation schemes for singular systems,” 
+
+IFAC Proceedings Volumes , vol. 20, no. 5, pp. 209–213, 1987. [31] L. Dai, “Filtering and LQG problems for discrete-time stochastic singular systems,” IEEE Transactions on Automatic Control , vol. 34, no. 10, pp. 1105–1108, 1989. [32] X. Yu and J. Li, “Optimal filtering and a smoothing algorithm for a singular system with a complex stochastic uncertain parameter matrix,” IEEE Transactions on Circuits and Systems II: Express Briefs , vol. 67, no. 4, pp. 780–784, 2019. [33] M. Hou and P. Muller, “Observer design for descriptor systems,” IEEE Transactions on Automatic Control , vol. 44, no. 1, pp. 164–169, 2002. [34] D. Yue and Q. L. Han, “Robust H∞ design of uncertain descriptor systems with discrete and distributed delays,” 
+
+IEEE Transactions on Signal Processing , vol. 52, no. 11, pp. 3200–3212, 2004. [35] J. Feng and M. Zeng, “Descriptor recursive estimation for multiple sensors with different delay rates,” International journal of control , vol. 84, no. 3, pp. 584–596, 2011. [36] Z.-X. Li, H.-Y. Su, Y. Gu, and Z.-G. Wu, “H∞
+
+filtering for discrete-time singular networked systems with communication delays and data missing,” International Journal of Systems Science , vol. 44, no. 4, pp. 604–614, 2013. [37] J. Zheng and C. Ran, “Distributed fusion robust filter for multisensor networked singular control system with uncertain variances and missing measurement,” Optimal Control Applications and Methods , vol. 44, no. 6, pp. 3080– 3098, 2023. [38] A. Goel, S. Bhaumik, and N. K. Tomar, “Kalman filtering for linear singular systems subject to round-robin protocol,” 
+
+Control Theory and Technology , vol. 22, no. 4, pp. 543–551, 2024. [39] H. Zhang, L. Xie, and Y. C. Soh, “Risk-sensitive filtering, prediction and smoothing for discrete-time singular systems,” 
+
+Automatica , vol. 39, no. 1, pp. 57–66, 2003. [40] X. Wan, Z. Wang, M. Wu, and X. Liu, “H∞ state estimation for discrete-time nonlinear singularly perturbed complex networks under the round-robin protocol,” IEEE transactions on neural networks and learning systems , vol. 30, no. 2, pp. 415–426, 2018. [41] Y. Li, L. Wei, J. Liu, X. Xie, and E. Tian, “Secure recursive state estimation for singularly perturbed discrete sequential systems under round-robin-like multichannel access policy,” 
+
+IEEE Transactions on Automation Science and Engineering ,vol. 22, pp. 3719–3730, 2024. [42] G. R. Duan, Analysis and design of descriptor linear systems ,vol. 23. New York: Springer Science & Business Media, 2010. [43] T. Berger and S. Trenn, “The quasi-Kronecker form for matrix pencils,” SIAM Journal on Matrix Analysis and Applications , vol. 33, no. 2, pp. 336–368, 2012. [44] Y. Xu, W. Lv, W. Lin, R. Lu, and D. E. Quevedo, “On extended state estimation for nonlinear uncertain systems with round-robin protocol,” Automatica , vol. 138, p. 110154, 2022. [45] M. S. Arulampalam, S. Maskell, N. Gordon, and T. Clapp, “A tutorial on particle filters for online nonlinear/non-gaussian bayesian tracking,” IEEE Transactions on Signal Processing ,vol. 50, no. 2, pp. 174–188, 2002. [46] Y. Bar Shalom, X. R. Li, and T. Kirubarajan, Estimation with applications to tracking and navigation: theory algorithms and software . John Wiley & Sons, 2001. [47] S. Challa, Fundamentals of object tracking . Cambridge University Press, 2011. [48] A. Ray, L. Liou, and J. Shen, “State estimation using randomly delayed measurements,” Journal of Dynamic Systems, Measurement, and Control , 1993. [49] S. Dey and J. B. Moore, “Risk-sensitive filtering and smoothing via reference probability methods,” IEEE Transactions on Automatic Control , vol. 42, no. 11, pp. 1587– 1591, 2002. [50] S. Bittanti and P. Colaneri, Periodic systems: Filtering and control , vol. 5108985. New York: Springer Science & Business Media, 2009. [51] A. H. Jazwinski, Stochastic processes and filtering theory .New York: Academic Press, 2007. 
+
+11
