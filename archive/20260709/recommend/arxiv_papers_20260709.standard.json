@@ -1,0 +1,97 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-09T22:13:44.428319+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.07594v1",
+      "source": "arxiv",
+      "title": "Koopman Spectral Analysis of Lithium-Ion Battery Dynamics: State of Charge as a Marginally Stable Observable",
+      "abstract": "Accurate state-of-charge (SOC) estimation remains a fundamental challenge in lithium-ion battery management systems because battery dynamics are highly nonlinear, operating-condition dependent, and sensitive to parameter variations caused by aging and temperature. Conventional model-based estimators, such as equivalent circuit model (ECM) and Kalman-filter-based approaches, rely heavily on repeated parameter identification and accurate electrochemical modeling, whereas purely data-driven methods often sacrifice physical interpretability.   This work proposes a Koopman-theoretic, data-driven framework for SOC estimation using Dynamic Mode Decomposition with control (DMDc) combined with Hankel time-delay embedding. Instead of explicitly identifying ECM parameters, the proposed approach reconstructs a lifted dynamical state space directly from measured terminal voltage and current obtained through Hybrid Pulse Power Characterization (HPPC) testing. Spectral decomposition of the identified DMDc operator reveals intrinsic battery dynamics in terms of Koopman modes and eigenvalues. The SOC dynamics naturally emerge as the slowest marginally stable mode whose eigenvalue lies closest to the unit circle, consistent with the integrator-type behavior of charge conservation. The corresponding modal coordinate is subsequently utilized as an SOC-sensitive observable.",
+      "authors": [
+        "Bakhtiar Nafis",
+        "Khalid Mahmud Labib",
+        "Saad Waheed",
+        "Shabbir Ahmed"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-07-08T16:13:20+00:00",
+      "link": "https://arxiv.org/pdf/2607.07594v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Proposes a Koopman-theoretic data-driven SOC estimation method for lithium-ion batteries",
+      "llm_evidence_cn": "提出基于Koopman理论的数据驱动锂离子电池SOC估计方法",
+      "llm_evidence": "提出基于Koopman理论的数据驱动锂离子电池SOC估计方法",
+      "canonical_evidence": "提出基于Koopman理论的数据驱动锂离子电池SOC估计方法",
+      "llm_tldr_en": "A Koopman-theoretic data-driven framework using DMDc and Hankel embedding is proposed for accurate SOC estimation in lithium-ion batteries, addressing nonlinearities and parameter variations.",
+      "llm_tldr_cn": "该文针对锂离子电池荷电状态（SOC）估计中的非线性与参数变化挑战，提出一种基于Koopman理论的数据驱动框架，利用动态模式分解与控制（DMDc）结合Hankel时延嵌入，在保证物理可解释性的同时提升估计精度。",
+      "llm_tldr": "该文针对锂离子电池荷电状态（SOC）估计中的非线性与参数变化挑战，提出一种基于Koopman理论的数据驱动框架，利用动态模式分解与控制（DMDc）结合Hankel时延嵌入，在保证物理可解释性的同时提升估计精度。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.06791v1",
+      "source": "arxiv",
+      "title": "Machine Learning-Based Battery State-of-health Prediction for Unmanned Aerial Vehicles Predictive Maintenance",
+      "abstract": "Battery state-of-health (SoH) prediction aims to estimate the remaining capacity by modeling battery degradation through its life cycle. Machine learning (ML)-based SoH models can accurately predict the battery remaining capacity based on voltage, current, and temperature. Battery SoH prediction for unmanned aerial vehicles (UAVs) is a crucial yet overlooked domain with data scarcity and high variability. Accurate battery SoH information contributes to efficient predictive maintenance, enhancing UAV profitability and flight safety. However, UAVs are compatible with a variety of batteries and the available data for each type of battery are scarce. Furthermore, the available input features from UAV batteries are limited to the built-in sensors because of the lightweight requirements. This research aims to develop an ML pipeline for UAV battery SoH prediction while mitigating data scarcity using knowledge transfer. 342 and 289 flight experiments have been conducted to collect operational data from lithium polymer batteries of 2200 mAh and 1100 mAh, respectively. Voltage, current, and throttle are selected as the input features of the ML model according to the existing literature and sensor availability. The remaining capacity is measured at every 10th experiment to label the dataset. To address data scarcity, the time-series data acquired from the experiments are transformed into images to utilize the image feature extraction capability of a pretrained ResNet-50. Finally, accurate SoH prediction models were obtained using transfer learning between two battery types.",
+      "authors": [
+        "Jiarui Xie",
+        "Lingchen Kong",
+        "Mohamed Rami Latreche",
+        "Sean Smith",
+        "Elaine Mosconi",
+        "Yaoyao Fiona Zhao"
+      ],
+      "primary_category": "cs.CE",
+      "categories": [
+        "cs.CE"
+      ],
+      "published": "2026-07-07T20:37:38+00:00",
+      "link": "https://arxiv.org/pdf/2607.06791v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "ML-based SOH prediction using V, I, T for UAV batteries",
+      "llm_evidence_cn": "基于电压、电流、温度的机器学习电池健康状态预测",
+      "llm_evidence": "基于电压、电流、温度的机器学习电池健康状态预测",
+      "canonical_evidence": "基于电压、电流、温度的机器学习电池健康状态预测",
+      "llm_tldr_en": "Addresses data-scarce battery SOH prediction for UAVs with ML models using voltage, current, temperature, enabling predictive maintenance and flight safety.",
+      "llm_tldr_cn": "针对无人机电池健康状态预测面临的数据稀缺和工况多变难题，提出利用电压、电流和温度特征的机器学习模型估算剩余容量。实验验证在有限数据下仍能实现准确预测，为无人机预测性维护和飞行安全提供了可靠方法。",
+      "llm_tldr": "针对无人机电池健康状态预测面临的数据稀缺和工况多变难题，提出利用电压、电流和温度特征的机器学习模型估算剩余容量。实验验证在有限数据下仍能实现准确预测，为无人机预测性维护和飞行安全提供了可靠方法。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
