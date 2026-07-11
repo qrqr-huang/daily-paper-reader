@@ -6,29 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-09
-- 运行时间：2026-07-09 22:16:12 UTC
+- 最新运行日期：2026-07-11
+- 运行时间：2026-07-11 20:37:17 UTC
 - 运行状态：成功
 - 本次总论文数：2
-- 精读区：2
-- 速读区：0
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-精读两篇高价值论文，聚焦电池状态预测的动力学分析与无人机场景下的数据驱动健康管理。  
-最值得关注：库普曼谱分析揭示荷电状态具有边缘稳定性，可改进电池建模；机器学习预测无人机电池健康状态，推动预测性维护落地。  
-建议深入理解这两项工作的结合点，关注物理模型与数据驱动融合的电池管理新趋势。
-- 详情：[/202607/09/README](/202607/09/README)
+今日深挖电池动力学：从库普曼谱分析看充电状态，到有限时间热力学中的放电最优平衡。  
+精读证实锂离子电池的SOC可建模为“边缘稳定观测量”，速读则给出功率与效率的明确取舍关系。  
+建议读者关注如何将这套谱分析方法用于电池寿命预测，或结合热力学边界制定更聪明的充电策略。
+- 详情：[/202607/11/README](/202607/11/README)
 
 ### 精读区论文标签
-1. [Koopman Spectral Analysis of Lithium-Ion Battery Dynamics: State of Charge as a Marginally Stable Observable](/202607/09/2607.07594v1-koopman-spectral-analysis-of-lithium-ion-battery-dynamics-state-of-charge-as-a-marginally-stable-observable)  
-   标签：评分：9.0/10、query:lfp-soc
-   evidence：提出基于Koopman理论的数据驱动锂离子电池SOC估计方法
-2. [Machine Learning-Based Battery State-of-health Prediction for Unmanned Aerial Vehicles Predictive Maintenance](/202607/09/2607.06791v1-machine-learning-based-battery-state-of-health-prediction-for-unmanned-aerial-vehicles-predictive-maintenance)  
-   标签：评分：8.0/10、query:soc-soh
-   evidence：基于电压、电流、温度的机器学习电池健康状态预测
+1. [Koopman Spectral Analysis of Lithium-Ion Battery Dynamics: State of Charge as a Marginally Stable Observable](/202607/11/2607.07594v2-koopman-spectral-analysis-of-lithium-ion-battery-dynamics-state-of-charge-as-a-marginally-stable-observable)  
+   标签：评分：10.0/10、query:lfp-soc
+   evidence：提出基于Koopman的SOC估计，提及ECM和卡尔曼滤波
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Finite-Time Thermodynamics of Battery Discharging: Power-Efficiency Trade-Off and Optimization](/202607/11/2607.03157v1-finite-time-thermodynamics-of-battery-discharging-power-efficiency-trade-off-and-optimization)  
+   标签：评分：7.0/10、query:lfp-soc
+   evidence：电池放电功率-效率权衡与快速放电优化
 
 
 <div class="dpr-home-promo-card">

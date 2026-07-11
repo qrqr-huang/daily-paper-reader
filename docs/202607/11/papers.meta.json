@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-11",
+  "date": "2026-07-11",
+  "generated_at": "2026-07-11T20:37:26",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/11/2607.07594v2-koopman-spectral-analysis-of-lithium-ion-battery-dynamics-state-of-charge-as-a-marginally-stable-observable",
+      "section": "deep",
+      "title_en": "Koopman Spectral Analysis of Lithium-Ion Battery Dynamics: State of Charge as a Marginally Stable Observable",
+      "authors": "Bakhtiar Nafis, Khalid Mahmud Labib, Saad Waheed, Shabbir Ahmed",
+      "date": "2026-07-08",
+      "pdf": "https://arxiv.org/pdf/2607.07594v2",
+      "score": "10.0",
+      "evidence": "提出基于Koopman的SOC估计，提及ECM和卡尔曼滤波",
+      "tldr": "锂离子电池荷电状态(SOC)估计面临强非线性、工况敏感及参数变化挑战，传统模型依赖重复参数辨识，纯数据驱动方法缺乏可解释性。本文提出Koopman理论驱动框架，采用带控制的动态模式分解(DMDc)与Hankel时延嵌入，从HPPC测试的电压电流数据重构升维状态空间。谱分解揭示SOC动态为最慢边际稳定模态，特征值最接近单位圆，符合电荷守恒积分特性，所得模态坐标可直接作为SOC敏感观测量，兼具准确性与物理洞察力。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Accurate state-of-charge (SOC) estimation remains a fundamental challenge in lithium-ion battery management systems because battery dynamics are highly nonlinear, operating-condition dependent, and sensitive to parameter variations caused by aging and temperature. Conventional model-based estimators, such as equivalent circuit model (ECM) and Kalman-filter-based approaches, rely heavily on repeated parameter identification and accurate electrochemical modeling, whereas purely data-driven methods often sacrifice physical interpretability.   This work proposes a Koopman-theoretic, data-driven framework for SOC estimation using Dynamic Mode Decomposition with control (DMDc) combined with Hankel time-delay embedding. Instead of explicitly identifying ECM parameters, the proposed approach reconstructs a lifted dynamical state space directly from measured terminal voltage and current obtained through Hybrid Pulse Power Characterization (HPPC) testing. Spectral decomposition of the identified DMDc operator reveals intrinsic battery dynamics in terms of Koopman modes and eigenvalues. The SOC dynamics naturally emerge as the slowest marginally stable mode whose eigenvalue lies closest to the unit circle, consistent with the integrator-type behavior of charge conservation. The corresponding modal coordinate is subsequently utilized as an SOC-sensitive observable.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/11/2607.03157v1-finite-time-thermodynamics-of-battery-discharging-power-efficiency-trade-off-and-optimization",
+      "section": "quick",
+      "title_en": "Finite-Time Thermodynamics of Battery Discharging: Power-Efficiency Trade-Off and Optimization",
+      "authors": "Rui-Han Liu, Yun-Qian Lin, Yu-Han Ma",
+      "date": "2026-07-03",
+      "pdf": "https://arxiv.org/pdf/2607.03157v1",
+      "score": "7.0",
+      "evidence": "电池放电功率-效率权衡与快速放电优化",
+      "tldr": "电池放电过程中，内部耗散导致功率与效率存在根本权衡，形成抛物线关系，最大功率点效率恰为1/2。为将此界限转化为实际调度规则，本文提出多阶段恒流放电策略，并利用KKT条件获得解析最优解：每个阶段电流取最低需求电流与截止期限决定的统一基线电流的较大值。通过耗散—时间帕累托前沿分析，量化了内阻对运行边界的影响。该研究为电池管理系统调度层提供了可靠热力学基准，并可扩展至非线性模型。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Battery discharging is governed by a fundamental trade-off between output power and energy conversion efficiency due to internal dissipation. In this paper, we demonstrate that such a trade-off universally yields a parabolic envelope $P\\proptoη(1-η)$. The efficiency at maximum power is exactly one half, mirroring the well-known half-Carnot limit in finite-time thermodynamics. To extend this bound into practical operational rules, we formulate a multistage constant-current discharging (MSCD) schedule subject to simultaneous real-time load demands and a global discharging deadline. Analytical resolution via the Karush--Kuhn--Tucker conditions reveals a remarkably compact optimal policy: $I_{i}^{\\star}=\\max(I_{i}^{-},I_{0})$. Under this rule, stages limited by external demand run exactly at their minimum required currents, while all remaining stages are elevated to a uniform baseline $I_{0}$ fixed by the deadline constraint. By tracing the dissipation--time Pareto front, we quantify how internal resistance shifts the operational boundaries and sharpens the trade-off corner. This analysis establishes a rigorous thermodynamic baseline for the scheduling layer of battery management systems, offering natural extensions to nonlinear models incorporating temperature and state-of-charge dependencies.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

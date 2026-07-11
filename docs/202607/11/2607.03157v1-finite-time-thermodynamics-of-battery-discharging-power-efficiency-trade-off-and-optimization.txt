@@ -1,0 +1,635 @@
+Title: Finite-Time Thermodynamics of Battery Discharging: Power-Efficiency Trade-Off and Optimization
+
+URL Source: https://arxiv.org/pdf/2607.03157v1
+
+Published Time: Tue, 07 Jul 2026 00:47:12 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Finite-Time Thermodynamics of Battery Discharging: Power-Efficiency Trade-Off and Optimization 
+
+Rui-Han Liu 1, Yun-Qian Lin 1,∗, and Yu-Han Ma 1,2,† 
+
+> 1
+
+School of Physics and Astronomy, Beijing Normal University, Beijing 100875, China  
+
+> 2
+
+Key Laboratory of Multiscale Spin Physics, Ministry of Education, Beijing Normal University, Beijing 100875, China  
+
+> ∗
+
+Correspondence: linyq@mail.bnu.edu.cn; † Correspondence: yhma@bnu.edu.cn 
+
+July 7, 2026 
+
+Abstract 
+
+Battery discharging is governed by a fundamental trade-off between output power and energy conversion efficiency due to internal dissipation. In this paper, we demonstrate that such a trade-off universally yields a parabolic envelope P ∝ η(1 − η). The efficiency at maximum power is exactly one half, mirroring the well-known half-Carnot limit in finite-time thermodynamics. To extend this bound into practical operational rules, we formulate a multistage constant-current discharging (MSCD) schedule subject to simultaneous real-time load demands and a global discharging deadline. Analytical resolution via the Karush– Kuhn–Tucker conditions reveals a remarkably compact optimal policy: I⋆i = max (I− 
+
+> i
+
+, I 0).Under this rule, stages limited by external demand run exactly at their minimum required currents, while all remaining stages are elevated to a uniform baseline I0 fixed by the deadline constraint. By tracing the dissipation–time Pareto front, we quantify how internal resistance shifts the operational boundaries and sharpens the trade-off corner. This analysis establishes a rigorous thermodynamic baseline for the scheduling layer of battery management systems, offering natural extensions to nonlinear models incorporating temperature and state-of-charge dependencies. 
+
+Keywords: battery management system;battery discharging; finite-time thermodynamics; power-efficiency trade-off; multistage constant-current discharging; Pareto front 
+
+# 1 Introduction 
+
+To reduce dependence on fossil fuels and lower carbon emissions, clean energy has attracted increasing attention [1]. However, the intermittent nature of renewable energy sources poses a challenge for stable energy supply [2]. Batteries provide a practical solution to this chal-lenge and have been widely used in electric vehicles, smartphones, and other electronic de-vices. Nevertheless, improper operation, such as over-charging [2], over-discharging [3], and high temperatures [4], can degrade battery performance and compromise safety. Therefore, ef-fective battery management is crucial for extending battery lifetime and improving operational safety and efficiency. Massive efforts have been dedicated to enhancing battery performance, encompassing novel battery designs [5–7], advanced battery materials [8–11], and optimized charging/discharging strategies [12–14]. The core of battery operation lies in these charging and discharging cycles. In practice, Battery Management Systems (BMS) [15] schedule these cycles by tracking observable proper-ties such as cell voltage, current, and temperature. However, existing BMS models inevitably face a practical compromise between physical precision and computational feasibility [1, 2]: de-tailed electrochemical models are computationally prohibitive, equivalent-circuit models require 1
+
+> arXiv:2607.03157v1 [cond-mat.stat-mech] 3 Jul 2026
+
+constant parameter recalibration against shifting dynamics [16], and data-driven approaches risk out-of-distribution failure. To overcome these model-dependent compromises and uncover universal performance boundaries, finite-time thermodynamics (FTT) provides a physically tractable framework [17–24]. At its core, FTT establishes that driving energy transfer at a finite rate invariably incurs irreversible dissipation. In a battery, this manifests as a direct competition: extracting stored electrochemical energy at a larger current accelerates power de-livery, but induces quadratic Joule heat across the internal resistance, thereby suppressing the discharge efficiency η. This trade-off serves as the exact electrochemical analogue of the typical constraint relations analyzed in finite-time thermodynamic cycles [25–41]. Recently, two of the present authors and their collaborators successfully extended the FTT perspective to the battery charging [42]. By deriving the exact thermodynamic power-efficiency trade-off for RC circuits, they provided a theoretical foundation for empirical multistage constant-current (MSCC) protocols [43–45] and determined optimal schedules through time minimiza-tion. A corresponding FTT analysis for the discharging process, however, remains absent. Unlike charging, discharging cannot be treated as a simple time-reversed step. While a charger actively tunes the input current to suppress heat, discharging is strictly load-driven [46] and tightly constrained by external power demands alongside instantaneous voltage, current, and state-of-charge (SOC) limits [47]. Delivering high power requires large currents, which in-evitably exacerbate internal dissipation and spatial nonuniformity, driving the cell prematurely to its cutoff potential and shrinking its usable capacity [48]. Furthermore, repeated high-current pulses accelerate internal resistance growth and battery degradation [49, 50]. Since practical BMS track these degradation states through the aforementioned model approximations, the fundamental thermodynamic boundary governing the discharging process itself remains unde-fined. In this paper, we bridge this gap by applying the FTT approach to battery discharging. To unveil the underlying physical constraints, we address two core questions: i) does a battery discharging under a time-varying load obey a universal thermodynamic bound? ii) can this bound yield a closed-form optimal scheduling rule? This paper is organized as follows. In Section 2, we examine three discharging models of increasing realism, encompassing constant electromotive force, finite-capacitance RC dynamics, and active constant-current control. Across all three models, we show that battery discharging obeys the same parabolic envelope P ∝
+
+η(1 −η), with the efficiency at maximum power equal to exactly one half. We then compare active constant-current (CC) discharge with passive resistive discharge at the same voltage window and total discharge time, showing that active control gives a lower internal heat loss. Next, Section 3 introduces a multistage constant-current discharging (MSCD) schedule and solves the optimization analytically using the Karush–Kuhn–Tucker (KKT) conditions. The optimum has a simple structure: demand-limited stages operate at their minimum required currents, while the remaining stages share a uniform baseline current set by the global deadline. We then characterize the feasible operating regimes imposed by efficiency and load-power bounds, construct the dissipation–time ( Q–τ ) Pareto front, and extend the analysis to the internal-resistance parameter space. Finally, Section 4 concludes the results and discusses possible extensions. 22 Power–efficiency parabola of battery discharging 
+
+2.1 Infinite-capacitance regime: constant electromotive force and matched-load limit 
+
+Figure 1: Equivalent-circuit schematics for the discharge models. (a) the constant electromotive force model, with an ideal source in series with internal resistance r driving a resistive load RL.Middle: the finite-capacitance model, where a capacitor with internal resistance r is coupled to a DC-DC converter that regulates the cell current I(t). (b) the prescribed external conditions used in the analysis, namely fixed output power P0 or fixed current I.Starting with the simplest discharging model, we assume that the battery consists of an ef-fectively infinite capacitor and an internal resistance, so that its internal electromotive force remains constant during the entire discharging process. The circuit can therefore be illustrated as a constant voltage source ε with internal resistance r supplying a load, as shown in Fig. 1(a). With Kirchhoff’s voltage law and energy conservation, the load power is given by 
+
+P (I) = εI − I2r, (1) where εI is the total chemical power of the battery, and I2r is the dissipative power due to circuit heating. Thus, the discharging efficiency is the ratio of load power to the total chemical power supplied by the battery, namely 
+
+η = P /( εI ) = 1 − Ir /ε. (2) Combining Eq. (1) and Eq. (2) and eliminating I yields 
+
+P (η) = ε2
+
+r η(1 − η). (3) Equation (3) shows that the output power is a concave parabola as a function of efficiency η,vanishing at the no-load point (η = 1 , I = 0) and the short-circuit point (η = 0 , I = ε/r).The efficiency at maximum power and the corresponding peak power Pmax are achieved when 
+
+∂P /∂η = 0 , yielding 
+
+ηEMP = 12 , Pmax = ε2
+
+4r . (4) 
+
+Pmax is the largest instantaneous power that the battery can supply to any external load. It is attained when the load resistance exactly matches the internal resistance r, with the corre-sponding optimal current being I⋆ = ε/(2 r). At the EMP point, exactly one half of the chemical power flux is dissipated as Joule heat; this fraction is independent of the electrochemistry and is the minimum dissipation the battery incurs. The battery result ηEMP = 1/2 has the same structure as the linear-response result for heat engines, where the efficiency at maximum power 3is one half of the Carnot bound, ηEMP = ηC /2 [26, 29]. When operating at maximum power, half of the energy flux is inevitably dissipated as Joule heat, which can strongly affect bat-tery performance by promoting thermal runaway and accelerating aging under high discharge currents [51, 52]. 
+
+2.2 Finite-capacitance regime: two-branch structure and instantaneous power limit 
+
+In Section 2.1, the current is strictly constrained by ε and the load resistance RL, namely 
+
+I = ε/( r + RL). In practice, the external device usually requires a prescribed power P0. To meet this demand, the battery is typically interfaced with the device through a power-electronic converter, such as a DC–DC converter, inverter, or motor controller, which actively regulates the current I(t) drawn from the battery. We therefore replace the constant source ε by a finite capacitor C with voltage V (t) decreas-ing from V (0) = V0 (Fig. 1(b)). For a fixed output power P0, the instantaneous power balance and charge conservation are 
+
+V (t)I(t) = P (t) + rI 2(t), I(t) = −C dV (t)
+
+dt , (5) where r is the internal resistance of the battery. With P (t) = P0, a real solution of the power balance in Eq. (5) exists only when V 2 − 4rP 0 ≥ 0, setting the instantaneous power limit 
+
+P0 ≤ Pmax (t) = V 2(t)4r , (6) taking the same form as Pmax in Eq. (4). For 0 < P 0 < P max (t), the solution of current is given by 
+
+I±(t) = V (t) ± √V 2(t) − 4rP 0
+
+2r . (7) The instantaneous discharging efficiency η = P /( V I ) = 1 − rI /V follows directly from Eq. (5). Substituting I± into this relation yields 
+
+η∓(t) = 1 ± √1 − p
+
+2 , p ≡ P0
+
+Pmax (t) = 4rP 0
+
+V 2(t) , (8) where p ∈ [0 , 1] is the dimensionless instantaneous power. Inverting the efficiency reveals that 
+
+p = 4 η(1 − η), (9) which is identical in form to Eq. (3). Furthermore, the low-current branch I− has η+ > 1/2 ,while the high-current branch I+ has η− < 1/2 . Although the two current branches can supply the load power, the low-current branch is preferred because it dissipates less and operates at a lower C-rate, both favorable for cycle life [52, 53]. At P0 = Pmax (t) the branches merge at 
+
+I = V /(2 r). Since Pmax (t) ∝ V 2(t), the deliverable peak power decreases with SOC. 
+
+2.3 Constant-current discharging and universality of the parabola 
+
+Constant-current (CC) discharging is a basic strategy in battery operation and BMS capacity testing[2, 54], which can be implemented by converter control. Here we consider a finite bat-tery with a constant current demand undergoing a full discharging process from V0 to the cut potential Vf [55]. With charge conservation, the total discharge time tf = C(V0 − Vf )/ I and the instantaneous potential V (t) = V0 − (I/C)t are maintained. 4Moreover, the released free energy during discharging follows ∆E = C(V 20 − V 2 
+
+> f
+
+)/2 , while the cumulative Joule heat is Q = rIC (V0 − Vf ). According to the first law of thermodynamics, 
+
+Wout = ∆ E − Q is obtained as 
+
+Wout = C(V0 − Vf )
+
+( V0 + Vf
+
+2 − rI 
+
+)
+
+. (10) To quantify the thermodynamic performance of the discharging process, we introduce the dis-charging efficiency η ≡ Wout /∆ E and the discharging power P = Wout /tf , which read 
+
+η ≡ 1 − rI V , P (I) = C V0 − Vf
+
+tf
+
+( V0 + Vf
+
+2 − rI 
+
+)
+
+, (11) where V ≡ V0+Vf 
+
+> 2
+
+.Substituting I = ( V /r)(1 − η) into P (I) gives 
+
+P (η) = V 2
+
+r η(1 − η). (12) Thus the CC process has the same parabola as Eq. (3), with ε replaced by the mean open-circuit voltage V = ( V0 + Vf )/2 .Figure 2 plots Eq. (12) with a series of cut-off ratios Vf /V0. The curves exhibit the same parabolic dependence on η: the curves vanish at η = 0 and 1, and peak at η = 1/2 . As 
+
+Vf /V0 increases, the curve is lifted due to the larger vertical scale V 2/r. Therefore, a shallower discharge permits a higher average power at fixed efficiency, which is consistent with the per-formance improvement observed in pulsed-discharge protocols [56]. In the limit Vf /V0 → 1, the peak approaches the constant-EMF value with ε = V0.
+
+Figure 2: Normalised average power P r /V 20 versus process-averaged efficiency η for constant-current discharging at five cut-off ratios from deep to shallow discharge. From bottom to top, the curves correspond to Vf /V0 = 0 .20 , 0.40 , 0.60 , 0.80 , and 0.90 . The dotted vertical line marks the maximum-power efficiency η = 1/2 .5The emergence of the identical parabolic envelope P ∝ η(1 − η) across all three models discussed in the current section reveals a robust thermodynamic universality. It establishes that the efficiency at maximum power is exactly η = 1/2 . Because the theoretical reversible limit for battery discharging is unity ( ηrev = 1 ), this optimum represents exactly half of the reversible bound, mapping rigorously to the well-known ηC /2 efficiency at maximum power (the half-Carnot limit) in finite-time heat engines [23, 24, 26, 27, 29, 30]. This yields a fundamental takeaway: while internal chemistry and external control of the battery dictate the absolute power scale, the normalized parabolic envelope remains an invariant signature of Ohmic dissipation. 
+
+2.4 Performance of CC Discharging 
+
+In the passive circuit, no converter is present to regulate the current or output power. The battery simply discharges through a fixed external load RL, leading to the uncontrolled RC relaxation 
+
+V (t) = V0e−t/[( r+RL)C], (13) where the capacitor is finite. By contrast, in CC discharge, a power-electronic controller is introduced to enforce a prescribed current profile. Here, we compare the performance of CC discharging with passive discharging under a fixed total discharge time tf over the same voltage window [Vf , V 0].Fixing Vf yields the total resistance in the circuit r + RL = tf /[ C ln (V0/Vf )] , with which the dissipation induced by the internal resistance r is given by 
+
+Qdiss ,passive = 12 C(V 20 − V 2 
+
+> f
+
+) rC ln (V0/Vf )
+
+tf
+
+. (14) Under the constraint of charge C(V0 −Vf ), the current in CC discharge is thus I = C(V0 −Vf )/ tf ,revealing that the internal dissipation 
+
+Qdiss ,active = C2r(V0 − Vf )2
+
+tf
+
+. (15) We quantify the performance of the active control by 
+
+f (x) ≡ Qdiss ,active 
+
+Qdiss ,passive 
+
+= 2(1 − x)(x + 1) ln (1/ x) , (16) where x = Vf /V0 is the voltage ratio, so that (1 − x) characterizes the discharge depth. Figure 3 plots f (x), which remains below unity over the whole range 0 < x < 1. In other words, active CC control always dissipates less heat than passive discharge under the same voltage window and discharge time. 
+
+Figure 3: Heat ratio f (x) = Qdiss ,active /Qdiss ,passive is the function of the voltage ratio x = Vf /V0.The green region is the saving fraction of dissipation 1 − f .63 Multistage constant-current discharging (MSCD) 
+
+Section 2.2 shows that, for a prescribed power demand P , operation on the high-efficiency branch imposes a minimum admissible current I−. Increasing the current can accelerate discharging, but only at the expense of enhanced ohmic dissipation and reduced efficiency. Therefore, fast discharge naturally becomes a constrained optimization problem: the current should be in-creased to shorten the discharge time, while remaining within the admissible range set by the power demand and efficiency constraint. Motivated by the multistage constant-current (MSCC) protocol widely used in charging [43– 45], we introduce a multistage constant-current discharging (MSCD) protocol. In this protocol, the discharge process is divided into stages, and a constant current Ii is assigned to each stage while satisfying the stagewise requirement Ii ≥ I− 
+
+> i
+
+. The resulting problem is not a simple time reversal of charging: the load-power demand imposes lower bounds on the stage currents, while all stages are coupled through the global discharge-time constraint. The optimal MSCD schedule is therefore obtained by solving the Karush–Kuhn–Tucker (KKT) conditions [57, 58], as detailed in Sec. 3.2. 
+
+3.1 Stage-wise description and the unconstrained minimum-dissipation bound 
+
+We partition the voltage window [Vf , V 0] into N stages by the levels V0 > V 1 > · · · > V N = Vf .The initial voltage and the discharging current in the ith stage are Vi−1 and Ii. The discharging time ∆ti, the released charge ∆qi, and the stage Joule heat Qi are respectively given by: 
+
+∆ti = C(Vi−1 − Vi)
+
+Ii
+
+, (17) 
+
+∆qi = C(Vi−1 − Vi), (18) 
+
+Qi = I2 
+
+> i
+
+r ∆ti = rC (Vi−1 − Vi)Ii. (19) Therefore, the total discharge time τ and the total dissipated Joule heat Q are 
+
+τ =
+
+> N
+
+∑
+
+> i=1
+
+C(Vi−1 − Vi)
+
+Ii
+
+, (20) 
+
+Q =
+
+> N
+
+∑
+
+> i=1
+
+rC (Vi−1 − Vi)Ii. (21) Supposing only V0, Vf and the total time τ are prescribed and r , C are constants, the Cauchy– Schwarz inequality gives Qτ ≥ [rC 2 ∑
+
+> i
+
+(Vi−1 − Vi)]2 = rC 2(V0 − Vf )2. Equality holds if all 
+
+Ii are equal, namely a single-current discharge. This is the discrete-stage counterpart of the Salamon–Berry thermodynamic-length result [21, 59] and sets the baseline against which the constrained optimum of Sec. 3.2 is measured. 
+
+3.2 Optimal protocol under power and deadline constraints 
+
+Although the protocol is now multistage, each stage individually is still governed by the dis-cussion in Sec. 2.2. Evaluating the high-efficiency branch of Eq. (7) at V = Vi and P0 = P req 
+
+> i
+
+gives 
+
+I− 
+
+> i
+
+= Vi −
+
+√
+
+V 2 
+
+> i
+
+− 4rP req 
+
+> i
+
+2r , P req  
+
+> i
+
+≤ V 2
+
+> i
+
+4r . (22) 7The MSCD optimisation problem is then min 
+
+> {Ii}
+> N
+
+∑
+
+> i=1
+
+rC (Vi−1 − Vi)Ii,
+
+s.t. 
+
+> N
+
+∑
+
+> i=1
+
+C(Vi−1 − Vi)
+
+Ii
+
+≤ τmax , Ii ≥ I− 
+
+> i
+
+.
+
+(23) MSCD differs from MSCC through its stagewise lower bound. In the MSCC treatment of Lei et al. [42], the free stage currents are obtained by minimizing the total charging time, yielding 
+
+I2 
+
+> i
+
+= Ii−1Ii+1 and hence a decreasing current sequence with equal stage times. However, in MSCD, each stage must satisfy the lower bound Ii ≥ I− 
+
+> i
+
+. Because it is not known in advance which lower bounds will bind, the optimum must be determined from the KKT complementary-slackness conditions, leading to the two groups in Eq. (26). To incorporate the two constraints, we introduce a Lagrange multiplier λ ≥ 0 for the global discharge deadline and multipliers μi ≥ 0 for each lower bound Ii ≥ I− 
+
+> i
+
+. The Lagrangian is 
+
+L = ∑
+
+> i
+
+r∆qiIi + λ
+
+(∑
+
+> i
+
+∆qi
+
+Ii
+
+− τmax 
+
+)
+
+− ∑
+
+> i
+
+μi(Ii − I− 
+
+> i
+
+), (24) where the stage charge ∆qi = C(Vi−1 − Vi) from Eq. (18), the total heat and time simplify to 
+
+Q = ∑ 
+
+> i
+
+r∆qiIi and τ = ∑ 
+
+> i
+
+∆qi/Ii.The KKT stationarity condition applies to each stage current: ∂L/∂I i = 0 , revealing 
+
+I2 
+
+> i
+
+= λ/r
+
+1 − μi/( r∆qi) . (25) The complementary-slackness condition, μi(Ii − I− 
+
+> i
+
+) = 0 , encodes the active-bound structure of the lower-current constraint. For μi = 0 , the stage shares the common current I0 ≡ √λ/r.When μi > 0, the lower bound is active, enforcing Ii = I− 
+
+> i
+
+, so that the stage current is fixed at its minimum admissible value. Combining the two cases gives 
+
+I⋆i = max (I− 
+
+> i
+
+, I 0
+
+), (26) where I0 ≡ √λ/r is shared by all unpinned stages, while pinned stages remain at I− 
+
+> i
+
+. With the global discharge deadline, I0 is governed by 
+
+> N
+
+∑
+
+> i=1
+
+C(Vi−1 − Vi)
+
+max (I− 
+
+> i
+
+, I 0) = τmax . (27) Since the left-hand side decreases monotonically with I0, I0 can be efficiently obtained by bisection. Substituting I⋆i into the heat loss, we obtain 
+
+QMSCD (τmax ) = 
+
+> N
+
+∑
+
+> i=1
+
+rC (Vi−1 − Vi) I⋆i (τmax ). (28) Figure 4 compares the optimized MSCD protocol with conventional CC discharge. The load demand is prescribed in a stepwise manner and remains constant within each stage, as shown in Fig. 4(a). To meet this demand, the MSCD protocol assigns a stage-dependent constant current, whereas the CC protocol applies the peak required current throughout the entire discharge process, as shown in Fig. 4(b). The corresponding accumulated heat losses are plotted in Fig. 4(c). Compared with CC discharge for which Q = rIC (V0 − Vf ), the MSCD protocol gives the stagewise result in Eq. (28) and reduces the total dissipation by lowering the 8current with lower load demands. This result shows that adapting the current to the stagewise load demand suppresses unnecessary Joule heating while still satisfying the required power output. 
+
+Figure 4: Comparison of two discharging protocols under a stepwise dynamic load. (a) Load-power demand Pload (t). (b) The discharging current applied in MSCD (green solid line) and CC discharge (red dashed line). (c) Accumulated Joule heat Qdiss (t) during discharging. As a practical five-stage example, we use the positive discharge-power steps of the DOE/INL PHEV charge-depleting cycle-life test profile [60]. The system-level powers are Psys ,i = {50 , 45 , 28 .125 ,
+
+22 .5, 11 .25 }kW. Following the Battery Size Factor (BSF) scaling rule in the same manual, we take BSF = 1400 and obtain the stage load on a single battery demanding 
+
+P req  
+
+> i
+
+= Psys ,i 
+
+BSF = {35 .71 , 32 .14 , 20 .09 , 16 .07 , 8.04 } W. (29) We use the representative voltage grid (V0, V 1, . . . , V 5) = {4.2, 4.0, 3.75 , 3.5, 3.25 , 3.0} V, to-gether with an internal resistance r = 0 .08 Ω [61, 62]. The effective capacitance is set to 
+
+C = 1 .103 × 10 4 F, corresponding to an effective capacity of 3.68 Ah over the voltage win-dow 4.2 − 3.0 V. For these parameters, Eq. (22) gives the minimum admissible currents 
+
+I− 
+
+> i
+
+= {11 .64 , 11 .29 , 6.80 , 5.76 , 2.90 } A. If each stage operates at its lower bound, the re-sulting load-following schedule takes τreq ≃ 37 .8 min. To illustrate the deadline-constrained optimization, we impose a tighter total discharge time, τmax = 21 .94 min, corresponding to the Pareto-knee point determined later in Section 3.4. Solving Eq. (27) yields I0 ≃ 9.37 A. Therefore, the first two stages remain pinned to I− 
+
+> i
+
+, while the last three are raised to I0,giving I⋆i = {11 .64 , 11 .29 , 9.37 , 9.37 , 9.37 } A. Substituting these currents into Eq. (28) gives 
+
+QMSCD ≃ 10 .75 kJ and ηMSCD ≃ 77 .4%. Compared with the single-peak-current benchmark, which holds max i I− 
+
+> i
+
+throughout all stages, MSCD reduces Joule heat from 12 .32 kJ to 10 .75 kJ, corresponding to a 12 .8% reduction, and raises the efficiency from 74 .1% to 77 .4%. 
+
+3.3 Feasibility under efficiency and load bounds 
+
+The same KKT analysis also applies when the constraint is placed on instantaneous efficiency. For a finite-capacitance battery, when no external power demand is imposed, a natural alter-native optimization problem is to minimize dissipation over a prescribed discharge time while enforcing a lower bound η0 on the instantaneous efficiency. In a MSCD stage, the instantaneous efficiency is given by 
+
+ηi(V ) = 1 − rI i
+
+V . (30) Since V decreases within the stage, the minimum efficiency occurs at the stage end Vi. The constraint ηi(Vi) ≥ η0 therefore yields the stagewise current upper bound 
+
+Ii ≤ Iηi = (1 − η0)Vi
+
+r . (31) 9Repeating the KKT analysis gives the analogous form 
+
+I⋆i = min (Ic, I ηi ), (32) where the common current Ic is governed by 
+
+> N
+
+∑
+
+> i=1
+
+C(Vi−1 − Vi)
+
+min (Ic, I ηi ) = τmax . (33) Thus, the efficiency constraint sets the upper bound on stagewise current, whereas the load-power constraint in Eq. (26) sets the lower bound. For a fixed efficiency lower limit η0, the current upper bounds Iηi are fixed, and changing the deadline only changes the common current Ic in Eq. (33). The shortest feasible discharge occurs when all stages are driven at their upper bounds, 
+
+τ η 
+
+> min
+
+=
+
+> N
+
+∑
+
+> i=1
+
+C(Vi−1 − Vi)
+
+Iηi
+
+. (34) If τmax < τ η
+
+> min
+
+, the discharge is infeasible. As τmax increases, Ic decreases: just above τ η
+
+> min
+
+,low-voltage stages are held at their upper bounds, while for a loose deadline all upper bounds become inactive and the solution reduces to ordinary constant-current discharge. This behavior is summarized in panel (a) of Fig. 5, where the efficiency lower limit η0 ∈
+
+[0 .5, 1) is plotted against the deadline τmax for the high-efficiency range considered here. The solid curve gives the minimum feasible time, τmax = τ η
+
+> min
+
+, for a given η0 so that region I is infeasible. The dashed curve is the upper-bound inactivity bound, Ic = min i Iηi , at which the constrained MSCD solution reduces to CC discharge. Region II is the efficiency-bounded MSCD region between the two curves, where at least one low-voltage stage is held at its current upper bound. Region III is the CC region, where the common current is below all stage current upper bounds. The load-constrained case has the opposite structure, because the prescribed stage powers set current lower bounds rather than upper bounds. For fixed load demands P req  
+
+> i
+
+, the lower bounds I− 
+
+> i
+
+are fixed. A shorter deadline requires a larger common current I0, whereas a longer deadline allows a smaller I0. The shortest feasible time is obtained when every stage is driven at the maximum-power current Vi/(2 r),
+
+τ P 
+
+> min
+
+=
+
+> N
+
+∑
+
+> i=1
+
+C(Vi−1 − Vi)
+
+Vi/(2 r) . (35) If τmax < τ P
+
+> min
+
+, the discharge is infeasible. As τmax increases, I0 decreases, so the solution moves from the single-current region, where all stages share the same current, to the demand-limited region, where stages with I− 
+
+> i
+
+> I 0 remain at their lower bounds and the remaining stages share 
+
+I0.This behavior is summarized in panel (b) of Fig. 5. The map uses the five-stage load profile introduced in Section 3.2, with its relative shape fixed and only the overall power amplitude scaled. The vertical axis is the largest stage-power ratio max i P req  
+
+> i
+
+/Pmax ,i , and the horizontal axis is the deadline tightness τ P
+
+> min
+
+/τmax , where Pmax ,i = V 2 
+
+> i
+
+/(4 r). The curve I0 = max i I−
+
+> i
+
+separates the demand-limited MSCD region from the single-current region. Above the curve, at least one stage has I− 
+
+> i
+
+> I 0 and therefore remains at its lower bound, while the other stages share I0. Below the curve, I0 > max i I− 
+
+> i
+
+, so all stages share one current. The green demand-limited region is therefore the part of the parameter space where MSCD reduces heat relative to the peak-current benchmark. Together, the two panels show the same KKT separation applied to two types of current bounds: the efficiency constraint sets upper bounds, while the load demands set lower bounds. In the following section, we focus on the load-constrained problem with prescribed stage powers 
+
+P req  
+
+> i
+
+and use Eq. (26) to construct the Q–τ Pareto front. 10 Figure 5: Feasibility maps for the two stagewise bounds in MSCD. (a) A minimum instantaneous efficiency η0 sets current upper bounds Iηi . The solid and dashed curves denote τmax = τ η
+
+> min
+
+and Ic = min i Iηi , respectively. They divide the plane into the infeasible region (I), bounded-MSCD region (II), and CC region (III). (b) In the load-power-constrained case, prescribed stage powers set current lower bounds I− 
+
+> i
+
+. The axes are max i P req  
+
+> i
+
+/Pmax ,i and τ P
+
+> min
+
+/τmax , and the curve I0 = max i I− 
+
+> i
+
+separates the demand-limited MSCD region from the single-current region. 
+
+3.4 Internal resistance and the three-dimensional surface 
+
+Sweeping τmax over the feasible part of [10 , 40] min in Eq. (27) and substituting the result into Eq. (28) traces the Q–τ Pareto front: the set of schedules for which heat cannot be reduced without increasing the discharge time [63]. Shorter deadlines force a larger I0 and produce more heat. Longer deadlines reduce I0, so the schedule approaches the stagewise lower bounds 
+
+I− 
+
+> i
+
+and the dissipation decreases. A knee point therefore provides a convenient representative compromise between time and heat. Normalizing discharging time and dissipation, we define 
+
+x(τ ) = τ − τ min scan 
+
+τ max scan − τ min scan 
+
+, y(τ ) = Q(τ ) − Qmin 
+
+Qmax − Qmin 
+
+, (36) where τ min scan and τ max scan are the lower and upper endpoints of the deadline scan, and Qmin and 
+
+Qmax are the corresponding endpoint values of Q. The knee point is taken as the point of maximum perpendicular distance from the secant x + y = 1 joining the two endpoints [64], 
+
+τc = arg max 
+
+> τ
+
+|x(τ ) + y(τ ) − 1|√2 . (37) We now return to the five-stage example introduced in Section 3.2 and use it to quantify the knee point of the Q–τ Pareto front. Sweeping τmax over the feasible part of [10 , 40] min in Eq. (27) and substituting the resulting currents into Eq. (28) gives the front. Applying the knee criterion gives τc ≃ 21 .94 min, Qc ≃ 10 .75 kJ, ηc ≃ 77 .45 %, and I0 ≃ 9.37 A. Other points on the Pareto front remain feasible and may be chosen when an application deliberately prioritizes speed or efficiency. The preceding Q–τ Pareto front was obtained at a fixed internal resistance. Since the internal resistance varies among cells and can increase during aging [52, 65], we finally examine how internal resistance r reshapes the trade-off. Varying r over [0 .04 , 0.10] Ω and solving Eq. (27) 11 and Eq.(28) at each value, the surface QMSCD (τ, r ) is obtained, as shown in Fig. 6. The surface shows two trends. At fixed discharge time τ , larger r produces larger Joule heat. Each two-dimensional slice has its own knee point on the Q–τ front for a fixed r. As r increases, this knee-point locus moves toward larger Q and larger τ , showing that a higher-resistance cell dissipates more heat when tight deadlines must be met. Reducing r lowers the whole surface and allows shorter deadlines to be reached with less dissipation. 
+
+Figure 6: Three-dimensional Pareto surface QMSCD (τ, r ) obtained by sweeping the deadline for 
+
+r ∈ [40 , 100] mΩ, using P req  
+
+> i
+
+= {35 .71 , 32 .14 , 20 .09 , 16 .07 , 8.04 } W. Color encodes Qdiss . The blue ridge marks the baseline r = 80 mΩ, and the orange dashed locus traces the corner of each 
+
+r-slice. 
+
+# 4 Summary and Outlook 
+
+In this paper, we investigated battery discharging from a finite-time thermodynamic perspec-tive. By evaluating three representative models, namely, the constant electromotive force, finite-capacitance RC dynamics, and active constant-current control, we identified a universal parabolic power-efficiency envelope, P ∝ η(1 − η). Across all models, the efficiency at maximum power is fixed at one half, serving as the exact electrochemical counterpart to the half-Carnot limit [26]. Building upon this fundamental bound, we formulated the multistage constant-current discharging (MSCD) optimization under stagewise load demands and a global dead-line. The Karush–Kuhn–Tucker (KKT) conditions yield a remarkably compact optimal policy: 
+
+I⋆i = max (I− 
+
+> i
+
+, I 0), where the uniform baseline I0 is fixed by the deadline. Conversely, a mini-mum instantaneous-efficiency constraint yields the dual upper-bound structure I⋆i = min (Ic, I ηi ).These complementary solutions successfully extend the multistage charging framework [42–45] into the load-driven discharging regime. 12 For the load-constrained MSCD problem, sweeping the deadline traces a robust dissipation– time ( Q–τ ) Pareto front [63, 64]. As demonstrated in our PHEV analysis, the MSCD strategy significantly mitigates Joule heating compared to peak-current benchmarks. We also quantified how increasing the internal resistance globally shifts this operational boundary, elevating the dissipated heat and pushing the Pareto knee point toward longer discharging times. Crucially, the current study, together with our previous work on optimal charging [42], establishes a com-plete and unified finite-time thermodynamic framework for the entire battery charge-discharge cycle. This comprehensive paradigm paves the way for analyzing multidimensional performance trade-offs in practical energy storage. Future work will bridge the gap between these idealized thermodynamic bounds and prac-tical applications by relaxing the assumption of a constant internal resistance. Formulating the resistance dynamically as a function of temperature and state of charge (SOC) will naturally couple the discharging dynamics to a rigorous thermal balance framework [66, 67]. The analysis can be further enriched by incorporating advanced electrochemical models to capture internal concentration gradients [68–70], and by integrating long-term degradation costs as competing optimization objectives [52, 65]. Ultimately, these realistic extensions will directly empower the scheduling layer of modern battery management systems while preserving the elegantly compact KKT current-bound structure established here. 
+
+# Author Contributions 
+
+Investigation, writing–original draft preparation, writing–review and editing, R.-H.L., Y.-Q. L. and Y.-H.M.; supervision, Y.-Q. L. and Y.-H.M.; conceptualization and funding acquisition, Y.-H.M. All authors have read and agreed to the published version of the manuscript. 
+
+# Funding 
+
+This research was funded by the National Natural Science Foundation of China under grant No. 12305037. 
+
+# Data Availability Statement 
+
+The original contributions presented in this study are included in the article. Further inquiries can be directed to the corresponding author. 
+
+# Acknowledgments 
+
+The authors thank Jia-Rui Lei for their valuable comments on this study. 
+
+# Conflicts of Interest 
+
+The authors declare no conflicts of interest. 
+
+# References 
+
+[1] W. Liu, T. Placke, and K. Chau, Energy Rep. 8, 4058 (2022). [2] R. R. Kumar, C. Bharatiraja, K. Udhayakumar, S. Devakirubakaran, K. S. Sekar, and L. Mihet-Popa, IEEE Access 11 , 105761 (2023). 13 [3] R. Guo, L. Lu, M. Ouyang, and X. Feng, Sci. Rep. 6, 30248 (2016). [4] H. Maleki and J. N. Howard, J. Power Sources 160 , 1395 (2006). [5] C. P. Grey and D. S. Hall, Nat. Commun. 11 , 6279 (2020). [6] R. Usiskin, Y. Lu, J. Popovic, M. Law, P. Balaya, Y.-S. Hu, and J. Maier, Nat. Rev. Mater. 
+
+6, 1020 (2021). [7] J. Janek and W. G. Zeier, Nat. Energy 8, 230 (2023). [8] Y. Liu, Y. Zhu, and Y. Cui, Nat. Energy 4, 540 (2019). [9] R. Borah, F. Hughson, J. Johnston, and T. Nann, Mater. Today Adv. 6, 100046 (2020). [10] J. He, J. Meng, and Y. Huang, J. Power Sources 570 , 232965 (2023). [11] Z. He, Y. Huang, H. Liu, Z. Geng, Y. Li, S. Li, W. Deng, G. Zou, H. Hou, and X. Ji, Nano Energy 129 , 109996 (2024). [12] T. F. Fuller, M. Doyle, and J. Newman, J. Electrochem. Soc. 141 , 982 (1994). [13] T. T. Vo, X. Chen, W. Shen, and A. Kapoor, J. Power Sources 273 , 413 (2015). [14] Q. Lin, J. Wang, R. Xiong, W. Shen, and H. He, Energy 183 , 220 (2019). [15] M. Lelie, T. Braun, M. Knips, H. Nordmann, F. Ringbeck, H. Zappen, and D. U. Sauer, Appl. Sci. 8, 10.3390/app8040534 (2018). [16] Y. Hu and Y.-Y. Wang, IEEE Trans. Control Syst. Technol. 23 , 1180 (2015). [17] F. L. Curzon and B. Ahlborn, Am. J. Phys. 43 , 22 (1975). [18] B. Andresen, P. Salamon, and R. S. Berry, Phys. Today 37 , 62 (1984). [19] A. Bejan, Entropy Generation Minimization: The Method of Thermodynamic Optimization of Finite-Size Systems and Finite-Time Processes (CRC Press, Boca Raton, 1996). [20] K. H. Hoffmann, J. M. Burzler, and S. Schubert, J. Non. Equilib. Thermodyn. 22 , 311 (1997). [21] B. Andresen, Angewandte Chemie International Edition 50 , 2690 (2011). [22] Z.-C. Tu, Front. Phys. 16 , 33202 (2021). [23] Y. Qiu, M. Nomura, Z. Zhang, et al. , Front. Phys. 20 , 065500 (2025). [24] X.-H. Zhao and Y.-H. Ma, Entropy 27 , 195 (2025). [25] L. Chen and Z. Yan, J. Chem. Phys. 90 , 3740 (1989). [26] C. Van den Broeck, Phys. Rev. Lett. 95 , 190602 (2005). [27] Z. C. Tu, J. Phys. A: Math. Theor. 41 , 312003 (2008). [28] T. Schmiedl and U. Seifert, Europhys. Lett. 81 , 20003 (2008). [29] M. Esposito, R. Kawai, K. Lindenberg, and C. Van den Broeck, Phys. Rev. Lett. 105 ,150603 (2010). [30] K. Proesmans, B. Cleuren, and C. Van den Broeck, Phys. Rev. Lett. 116 , 220601 (2016). 14 [31] N. Shiraishi, K. Saito, and H. Tasaki, Phys. Rev. Lett. 117 , 190601 (2016). [32] P. Pietzonka and U. Seifert, Phys. Rev. Lett. 120 , 190602 (2018). [33] Y.-H. Ma, D. Xu, H. Dong, and C.-P. Sun, Phys. Rev. E 98 , 042112 (2018). [34] Y.-H. Ma, C. P. Sun, and H. Dong, Commun. Theor. Phys. 73 , 125101 (2021). [35] Z. Fei, J.-F. Chen, and Y.-H. Ma, Phys. Rev. A 105 , 022609 (2022). [36] H. Yuan, Y.-H. Ma, and C. P. Sun, Phys. Rev. E 105 , L022101 (2022). [37] Y.-H. Ma, J.-F. Chen, C. P. Sun, and H. Dong, Phys. Rev. E 106 , 034112 (2022). [38] T.-J. Zhou, Y.-H. Ma, and C. P. Sun, Phys. Rev. Res. 6, 043001 (2024). [39] X.-H. Zhao, Z. C. Tu, and Y.-H. Ma, Phys. Rev. E 110 , 034105 (2024). [40] Y.-H. Ma and C. Fu, Phys. Rev. E 112 , 054130 (2025). [41] Y. Wang, E. Lei, Y.-H. Ma, Z. C. Tu, and G. Li, Phys. Rev. E 112 , 054124 (2025). [42] J.-R. Lei, Y.-Q. Lin, S.-G. Ou, and Y.-H. Ma, Front. Phys. 20 , 042202 (2025). [43] P. H. L. Notten, J. H. G. Op het Veld, and J. R. G. van Beek, J. Power Sources 145 , 89 (2005). [44] S. S. Zhang, J. Power Sources 161 , 1385 (2006). [45] C.-H. Lee, M.-Y. Chen, S.-H. Hsu, and J.-A. Jiang, J. Energy Storage 18 , 528 (2018). [46] E. Banguero, A. Correcher, ￿. Pérez-Navarro, F. Morant, and A. Aristizabal, Energies 11 ,10.3390/en11041021 (2018). [47] C.-F. Chiasserini and R. Rao, IEEE J. Sel. Areas Commun. 19 , 1235 (2001). [48] A. Masakure, A. Gill, and M. Singh, in Proceedings of the 2023 IEEE Asian Conference on Innovation in Technology (ASIANCON) (2023) pp. 1–5. [49] M. Dubarry, A. Devie, and K. McKenzie, J. Power Sources 358 , 39 (2017). [50] A. Dehghani-Sanij, E. Tharumalingam, M. Dusseault, and R. Fraser, Renewable and Sus-tainable Energy Reviews 104 , 192 (2019). [51] T. M. Bandhauer, S. Garimella, and T. F. Fuller, J. Electrochem. Soc. 158 , R1 (2011). [52] J. Vetter, P. Novák, M. R. Wagner, C. Veit, K.-C. Möller, J. O. Besenhard, M. Winter, M. Wohlfahrt-Mehrens, C. Vogler, and A. Hammouche, J. Power Sources 147 , 269 (2005). [53] A. Tomaszewska, Z. Chu, X. Feng, S. O’Kane, X. Liu, J. Chen, C. Ji, E. Endler, R. Li, L. Liu, et al. , eTransportation 1, 100011 (2019). [54] S.-J. Park, Y.-W. Song, B.-S. Kang, W.-J. Kim, Y.-J. Choi, C. Kim, and Y.-S. Hong, J. Energy Storage 59 , 106477 (2023). [55] J. O. Besenhard, Handbook of battery materials (John Wiley & Sons, 2008). [56] H. Lv, X. Huang, and Y. Liu, Ionics 26 , 1749 (2020). [57] S. Boyd and L. Vandenberghe, Convex Optimization (Cambridge University Press, Cam-bridge, 2004). 15 [58] D. P. Bertsekas, Nonlinear Programming , 2nd ed. (Athena Scientific, Belmont, MA, 1999). [59] P. Salamon and R. S. Berry, Phys. Rev. Lett. 51 , 1127 (1983). [60] J. R. Belt, Battery Test Manual for Plug-In Hybrid Electric Vehicles , Tech. Rep. INL/EXT-07-12536 (Idaho National Laboratory, 2010). [61] X. Hu, S. Li, and H. Peng, J. Power Sources 198 , 359 (2012). [62] G. L. Plett, Battery Management Systems, Volume I: Battery Modeling (Artech House, Norwood, MA, 2015). [63] K. Miettinen, Nonlinear Multiobjective Optimization (Kluwer Academic Publishers, Boston, 1999). [64] V. Satopaa, J. Albrecht, D. Irwin, and B. Raghavan, 31st International Conference on Distributed Computing Systems Workshops , 166 (2011). [65] Y. Wang, J. Tian, Z. Sun, L. Wang, R. Xu, M. Li, and Z. Chen, Renew. Sustain. Energy Rev. 131 , 110015 (2020). [66] A. A. Pesaran, J. Power Sources 110 , 377 (2002). [67] Q. Wang, B. Jiang, B. Li, and Y. Yan, Renew. Sustain. Energy Rev. 64 , 106 (2016). [68] J. Newman and W. Tiedemann, AIChE Journal 21 , 25 (1975). [69] M. Doyle, T. F. Fuller, and J. Newman, J. Electrochem. Soc. 140 , 1526 (1993). [70] V. Sulzer, S. G. Marquis, R. Timms, M. Robinson, and S. J. Chapman, J. Open Res. Softw. 
+
+9, 14 (2021). 16
