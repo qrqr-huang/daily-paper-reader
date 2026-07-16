@@ -1,0 +1,57 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-16T21:31:54.654996+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.13387v1",
+      "source": "arxiv",
+      "title": "Change-Aware Self-Adaptive AI-Aided Kalman Filters With Neural Change Point Detection",
+      "abstract": "Reliable state estimation in dynamical systems is often challenged by model mismatches, unknown noise statistics, and temporal variations. While AI-aided Kalman filters such as KalmanNet leverage deep learning to enhance classical estimation, they remain vulnerable to distribution shifts and lack mechanisms for autonomous adaptation. This work introduces Change-Aware Self-Adaptive KalmanNet (CASA-KalmanNet), an online adaptation framework that integrates a dedicated neural module, termed CPDNet, to monitor the interpretable internal features of KalmanNet and provide soft indicators of reliability degradation. These indicators dynamically regulate an online learning process, enabling data-efficient and timely adaptation to both abrupt and gradual changes in the system without requiring additional state labels from the changed regime. Numerical experiments on linear and nonlinear state-space models show that CASA-KalmanNet consistently outperforms existing learning-based filters under model mismatch, while approaching the accuracy of optimal classical methods with full domain knowledge.",
+      "authors": [
+        "Wenyi Zhang",
+        "Xiaoyong Ni",
+        "Nir Shlezinger",
+        "Zengfu Wang"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-07-15T02:28:55+00:00",
+      "link": "https://arxiv.org/pdf/2607.13387v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "change-aware self-adaptive Kalman filter for state estimation",
+      "llm_evidence_cn": "变化感知的自适应卡尔曼滤波器用于状态估计",
+      "llm_evidence": "变化感知的自适应卡尔曼滤波器用于状态估计",
+      "canonical_evidence": "变化感知的自适应卡尔曼滤波器用于状态估计",
+      "llm_tldr_en": "Proposes an adaptive Kalman filter with neural change point detection to handle distribution shifts in dynamic systems, method potentially applicable to SOC estimation.",
+      "llm_tldr_cn": "本文针对动态系统状态估计中模型失配和分布变化问题，提出集成神经变化点检测模块的自适应卡尔曼网络(CASA-KalmanNet)。该方法通过监测内部特征并动态调节在线学习，实现对突变和渐变的实时适应。在仿真中验证了其提高估计可靠性的能力，为自适应卡尔曼滤波在SOC估计等领域的应用提供新思路。",
+      "llm_tldr": "本文针对动态系统状态估计中模型失配和分布变化问题，提出集成神经变化点检测模块的自适应卡尔曼网络(CASA-KalmanNet)。该方法通过监测内部特征并动态调节在线学习，实现对突变和渐变的实时适应。在仿真中验证了其提高估计可靠性的能力，为自适应卡尔曼滤波在SOC估计等领域的应用提供新思路。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

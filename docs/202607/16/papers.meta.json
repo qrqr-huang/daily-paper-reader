@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-16",
+  "date": "2026-07-16",
+  "generated_at": "2026-07-16T21:33:39",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/16/2607.13387v1-change-aware-self-adaptive-ai-aided-kalman-filters-with-neural-change-point-detection",
+      "section": "quick",
+      "title_en": "Change-Aware Self-Adaptive AI-Aided Kalman Filters With Neural Change Point Detection",
+      "authors": "Wenyi Zhang, Xiaoyong Ni, Nir Shlezinger, Zengfu Wang",
+      "date": "2026-07-15",
+      "pdf": "https://arxiv.org/pdf/2607.13387v1",
+      "score": "7.0",
+      "evidence": "变化感知的自适应卡尔曼滤波器用于状态估计",
+      "tldr": "动态系统状态估计中，模型失配、未知噪声和时变因素常导致传统AI增强卡尔曼滤波（如KalmanNet）性能退化，且缺乏在线自适应机制。CASA-KalmanNet通过CPDNet监测KalmanNet内部特征，输出可靠性退化软指标，以调节在线学习过程，实现数据高效的自适应。实验结果显示，在模型失配场景下，该方法明显优于现有学习型滤波器，逼近具备完整先验知识的最优卡尔曼滤波。这项工作为无需额外状态标签的自主自适应状态估计提供了有效路径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Reliable state estimation in dynamical systems is often challenged by model mismatches, unknown noise statistics, and temporal variations. While AI-aided Kalman filters such as KalmanNet leverage deep learning to enhance classical estimation, they remain vulnerable to distribution shifts and lack mechanisms for autonomous adaptation. This work introduces Change-Aware Self-Adaptive KalmanNet (CASA-KalmanNet), an online adaptation framework that integrates a dedicated neural module, termed CPDNet, to monitor the interpretable internal features of KalmanNet and provide soft indicators of reliability degradation. These indicators dynamically regulate an online learning process, enabling data-efficient and timely adaptation to both abrupt and gradual changes in the system without requiring additional state labels from the changed regime. Numerical experiments on linear and nonlinear state-space models show that CASA-KalmanNet consistently outperforms existing learning-based filters under model mismatch, while approaching the accuracy of optimal classical methods with full domain knowledge.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
