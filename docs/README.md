@@ -6,26 +6,32 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-16
-- 运行时间：2026-07-16 21:33:29 UTC
+- 最新运行日期：2026-07-17
+- 运行时间：2026-07-17 21:38:07 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
-- 速读区：1
+- 本次总论文数：3
+- 精读区：3
+- 速读区：0
 
 ### 今日简报（AI）
-今日速读了一篇将神经变点检测与卡尔曼滤波融合的自适应系统研究。  
-亮点在于让滤波器能自主感知状态突变，从而实时切换 AI 模型，提升动态环境下的信号跟踪稳定性。  
-建议普通读者从“AI 如何捕捉突变”这个核心问题切入，理解检测机制比模型本身更有启发。
-- 详情：[/202607/16/README](/202607/16/README)
+今日精读两篇电池寿命预测新作，聚焦可信度与不确定性量化。  
+最值得看的是TIDE用上下文学习+符号蒸馏实现可解释退化估计，BattVAE-GP提供长周期预测的生成式不确定性建模。  
+普通读者可重点关注物理引导的生成模型如何提升长期健康预测可靠性。
+- 详情：[/202607/17/README](/202607/17/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [TIDE: Trustworthy and Interpretable Battery Degradation Estimation with Contextual Learning and Symbolic Distillation](/202607/17/2607.14640v1-tide-trustworthy-and-interpretable-battery-degradation-estimation-with-contextual-learning-and-symbolic-distillation)  
+   标签：评分：9.0/10、query:soc-soh
+   evidence：电池衰减估计
+2. [BattVAE-GP: Generative Modeling of Long-Horizon Battery Degradation with Uncertainty Quantification](/202607/17/2607.11943v1-battvae-gp-generative-modeling-of-long-horizon-battery-degradation-with-uncertainty-quantification)  
+   标签：评分：8.0/10、query:soc-soh
+   evidence：锂离子电池退化轨迹替代建模直接对应健康状态表征
+3. [Predicting BESS Degradation with Uncertainty Quantification: A Probabilistic Framework for Battery Energy Storage Systems](/202607/17/2607.13709v1-predicting-bess-degradation-with-uncertainty-quantification-a-probabilistic-framework-for-battery-energy-storage-systems)  
+   标签：评分：8.0/10、query:soc-soh
+   evidence：电池储能系统的概率性健康状态预测框架
 
 ### 速读区论文标签
-1. [Change-Aware Self-Adaptive AI-Aided Kalman Filters With Neural Change Point Detection](/202607/16/2607.13387v1-change-aware-self-adaptive-ai-aided-kalman-filters-with-neural-change-point-detection)  
-   标签：评分：7.0/10、query:lfp-soc
-   evidence：变化感知的自适应卡尔曼滤波器用于状态估计
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">

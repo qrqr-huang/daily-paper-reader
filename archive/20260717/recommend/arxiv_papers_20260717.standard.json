@@ -1,0 +1,138 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-17T21:33:54.856878+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.14640v1",
+      "source": "arxiv",
+      "title": "TIDE: Trustworthy and Interpretable Battery Degradation Estimation with Contextual Learning and Symbolic Distillation",
+      "abstract": "Battery health estimation is fundamental for battery management in battery-powered systems, where inaccurate health states may affect control, maintenance, and service life. It becomes even more critical in intelligent connected systems, where estimation errors can propagate across interconnected devices and downstream decisions. In this paper, we propose TIDE, a trustworthy and interpretable battery degradation estimator for reliable battery health estimation. TIDE jointly considers accuracy, trustworthiness, and interpretability, which are all essential for practical deployment and downstream decision making. To realize these objectives, TIDE combines battery-domain knowledge with operational measurements in a three-component backbone. A knowledge-guided degradation prior promotes trustworthy estimation, a monotone residual component provides interpretable aging-consistent refinement, and a contextual learning component captures battery-specific operational effects for improved accuracy. The trained backbone is then distilled into a compact symbolic surrogate that provides a concise model-level interpretation of its learned estimation logic. Experiments show that TIDE achieves strong estimation accuracy, improving overall estimation fidelity by an average of 19.7% over representative baselines. Its knowledge-guided prior and monotone residual modelling substantially reduce aging-consistency violations, supporting trustworthy estimation. Meanwhile, the backbone enables component-level interpretation, while symbolic distillation provides a compact model-level representation of the learned estimation logic. These results support the practical use of TIDE for battery health monitoring and decision support in intelligent connected systems.",
+      "authors": [
+        "Wen Yang Tan",
+        "Jiawei Li",
+        "Fang Liu",
+        "Wei Zhang",
+        "Sumei Sun",
+        "Peng Cheng Wang",
+        "Elisa Y. M. Ang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-16T07:08:23+00:00",
+      "link": "https://arxiv.org/pdf/2607.14640v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "battery degradation estimation",
+      "llm_evidence_cn": "电池衰减估计",
+      "llm_evidence": "电池衰减估计",
+      "canonical_evidence": "电池衰减估计",
+      "llm_tldr_en": "Proposes TIDE, a trustworthy and interpretable battery degradation estimator combining domain knowledge with operational measurements for reliable battery health estimation.",
+      "llm_tldr_cn": "本文针对电池健康状态估计中精度、可信度和可解释性不足的问题，提出TIDE方法，融合电池领域知识与运行测量数据进行可信可解释的电池衰减估计。通过情境学习和符号蒸馏，在保证估计精度的同时增强了透明度和可信赖性，为电池管理系统提供了更可靠的健康监测手段。",
+      "llm_tldr": "本文针对电池健康状态估计中精度、可信度和可解释性不足的问题，提出TIDE方法，融合电池领域知识与运行测量数据进行可信可解释的电池衰减估计。通过情境学习和符号蒸馏，在保证估计精度的同时增强了透明度和可信赖性，为电池管理系统提供了更可靠的健康监测手段。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.11943v1",
+      "source": "arxiv",
+      "title": "BattVAE-GP: Generative Modeling of Long-Horizon Battery Degradation with Uncertainty Quantification",
+      "abstract": "Long-horizon physics-based simulations of battery degradation provide mechanistic insight but remain computationally expensive, limiting their use for dense exploration of operating conditions over extended cycle life. Here, we propose a hybrid physics-probabilistic learning framework for surrogate modeling of lithium-ion battery degradation trajectories at unseen charging rates. Cycle-resolved degradation data generated with a DFN/P2D electrochemical model in PyBaMM are first transformed into capacity-aligned voltage and derivative features and encoded using a Variational Autoencoder (VAE). The resulting two-dimensional latent space organizes degradation trajectories according to both cycle progression and charging protocol. A sparse multitask Gaussian process (GP) is then trained in this latent space using cycle number and C-rate as input variables, providing continuous interpolation of latent degradation dynamics together with posterior uncertainty estimates. Under protocol-level holdout evaluation, the latent-space GP accurately recovers unseen C-rate trajectories and exhibits uncertainty behavior consistent with the support of the training data. When queried at unseen interior C-rates, the model generates latent trajectories that remain coherently positioned between neighboring simulated protocols. Decoding the GP-predicted latent states through the frozen VAE decoder yields smooth voltage-capacity evolution, while Monte Carlo propagation of the GP latent posterior through an auxiliary latent to State of Health (SOH) predictor provides uncertainty-aware SOH estimates. The proposed BattVAE-GP framework therefore offers a computationally efficient and uncertainty-aware surrogate for long-horizon degradation modeling, providing a structured basis for extending battery health prediction toward richer operating conditions and future simulation-experiment fusion.",
+      "authors": [
+        "Raghvender Raghvender",
+        "Mahdi Abid",
+        "Ferran Brosa Planella",
+        "Charles Delacourt",
+        "Arnaud Demortière"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-11T09:48:36+00:00",
+      "link": "https://arxiv.org/pdf/2607.11943v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Surrogate modeling of lithium-ion battery degradation trajectories maps directly to state of health characterization.",
+      "llm_evidence_cn": "锂离子电池退化轨迹替代建模直接对应健康状态表征",
+      "llm_evidence": "锂离子电池退化轨迹替代建模直接对应健康状态表征",
+      "canonical_evidence": "锂离子电池退化轨迹替代建模直接对应健康状态表征",
+      "llm_tldr_en": "This paper proposes BattVAE-GP, a hybrid framework using a VAE to encode battery degradation features and Gaussian process regression for long-horizon degradation prediction with uncertainty estimates under unseen charging rates.",
+      "llm_tldr_cn": "针对长周期电池退化模拟计算成本高的问题，本文提出BattVAE-GP框架，结合物理仿真与变分自编码器提取退化特征，利用高斯过程回归实现不同充电倍率下退化轨迹预测并量化不确定性，为电池健康状态高效建模提供新途径。",
+      "llm_tldr": "针对长周期电池退化模拟计算成本高的问题，本文提出BattVAE-GP框架，结合物理仿真与变分自编码器提取退化特征，利用高斯过程回归实现不同充电倍率下退化轨迹预测并量化不确定性，为电池健康状态高效建模提供新途径。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.13709v1",
+      "source": "arxiv",
+      "title": "Predicting BESS Degradation with Uncertainty Quantification: A Probabilistic Framework for Battery Energy Storage Systems",
+      "abstract": "Accurate and uncertainty-aware prediction of battery degradation is essential for the reliable operation and lifecycle management of energy storage systems, yet traditional deterministic models fail to capture the inherent uncertainty in degradation processes. This study introduces a framework for probabilistic battery state-of-health prediction. The framework leverages deep learning models to generate predictive distributions for capacity loss, conditioned on stress factors. Uncertainty is propagated through stochastic degradation trajectories, enabling robust predictions even under dynamic operating conditions. A key advancement is the framework's scalability to full-system data: by integrating cell-level predictions with system topology and real-world operational variability, it provides probabilistic estimates for entire battery energy storage systems. The approach is tested using multi-year field data from residential storage systems, demonstrating its ability to mimic system-level degradation behavior. The framework predicts SOH degradation with 95\\% prediction intervals that align well with remaining capacity measurements performed on the field system. This work bridges the gap between laboratory test derived battery cell aging models and full-system operational data evaluation for degradation estimation, offering a practical tool for data-driven asset management in modern energy systems.",
+      "authors": [
+        "Melina Graner",
+        "Holger Hesse",
+        "Andreas Jossen"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-07-15T11:15:30+00:00",
+      "link": "https://arxiv.org/pdf/2607.13709v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Probabilistic battery state-of-health prediction framework for energy storage systems",
+      "llm_evidence_cn": "电池储能系统的概率性健康状态预测框架",
+      "llm_evidence": "电池储能系统的概率性健康状态预测框架",
+      "canonical_evidence": "电池储能系统的概率性健康状态预测框架",
+      "llm_tldr_en": "This study introduces a probabilistic deep learning framework for battery state-of-health prediction, generating predictive distributions for capacity loss under dynamic operating conditions, enabling robust lifecycle management.",
+      "llm_tldr_cn": "传统电池健康状态预测模型多采用确定性方法，难以反映退化过程中的不确定性。本研究提出一种概率性深度学习框架，以应力因素为条件，利用深度学习生成容量衰减的预测分布，并通过随机退化轨迹传播不确定性，实现动态工况下的鲁棒预测。该框架还能扩展至电池储能系统全系统数据，集成单体与系统级信息，为电池可靠运行和全生命周期管理提供支持。",
+      "llm_tldr": "传统电池健康状态预测模型多采用确定性方法，难以反映退化过程中的不确定性。本研究提出一种概率性深度学习框架，以应力因素为条件，利用深度学习生成容量衰减的预测分布，并通过随机退化轨迹传播不确定性，实现动态工况下的鲁棒预测。该框架还能扩展至电池储能系统全系统数据，集成单体与系统级信息，为电池可靠运行和全生命周期管理提供支持。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
