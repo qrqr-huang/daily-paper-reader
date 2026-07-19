@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-19",
+  "date": "2026-07-19",
+  "generated_at": "2026-07-19T21:28:09",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/19/2607.10597v1-underwater-dead-reckoning-with-deployable-situation-triggered-covariance-scheduling",
+      "section": "quick",
+      "title_en": "Underwater Dead Reckoning with Deployable Situation-Triggered Covariance Scheduling",
+      "authors": "Akshay Naik, Ramavarapu S. Sreenivas, Dustin Nottage, Ahmet Soylemezoglu",
+      "date": "2026-07-12",
+      "pdf": "https://arxiv.org/pdf/2607.10597v1",
+      "score": "6.0",
+      "evidence": "采用情况触发协方差调度的自适应卡尔曼滤波器",
+      "tldr": "水下机器人航位推算中，固定滤波参数难以适应转向、机动过渡或传感器可靠性变化。本文针对BlueROV2提出情境触发协方差调度扩展卡尔曼滤波器，通过概率触发器在线识别运动情境，并仅切换预校准的过程与测量噪声矩阵，不重置状态或模型。离线利用稀疏AprilTag监督校准触发器与噪声剖面，并通过验证集确定调度策略。在四个留出水池测试中，方法使平移RMSE从0.488米降至0.471米，所有测试均优于全局噪声基线；10秒段配对bootstrap差异为-0.017米（95% CI [-0.024,-0.008]米），方向误差不变。证明该方法可为无视觉航位推算提供一致且轻量的改进。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Underwater dead reckoning estimates vehicle position when vision is unavailable and external positioning cannot be assumed. A single set of filter parameters can work well in many situations, but fixed tuning may be poorly matched during turns, motion transitions, or periods when sensor measurements are less reliable. This paper presents the Situation-Triggered Calibrated Adaptive Robust Extended Kalman Filter for a BlueROV2. An onboard probabilistic trigger identifies the current motion situation while one error-state filter runs continuously. When the trigger is confident, the filter changes only to the corresponding pre-calibrated process- and measurement-noise matrices; the state estimate, covariance history, dynamics, and measurement models are not reset or replaced. The trigger, noise profiles, and a one-time Doppler velocity log yaw-alignment correction are calibrated offline using sparse AprilTag-supervised pool runs. A separate validation set selects the scheduling policy, which is then fixed before held-out testing. Across four held-out pool runs, the method reduces label-weighted mean per-run translation root-mean-square error from 0.488 m to 0.471 m relative to the same filter backbone with one global noise profile, and every held-out run favors the scheduled method. A paired bootstrap over 10-second segments gives a candidate-minus-baseline difference of -0.017 m with a 95% confidence interval of [-0.024, -0.008] m, while orientation error remains essentially unchanged. These results indicate that situation-aware covariance scheduling provides a modest but consistent vision-free dead-reckoning improvement without switching estimators or resetting the filter.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

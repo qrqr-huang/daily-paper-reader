@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-19T21:26:42.863529+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.10597v1",
+      "source": "arxiv",
+      "title": "Underwater Dead Reckoning with Deployable Situation-Triggered Covariance Scheduling",
+      "abstract": "Underwater dead reckoning estimates vehicle position when vision is unavailable and external positioning cannot be assumed. A single set of filter parameters can work well in many situations, but fixed tuning may be poorly matched during turns, motion transitions, or periods when sensor measurements are less reliable. This paper presents the Situation-Triggered Calibrated Adaptive Robust Extended Kalman Filter for a BlueROV2. An onboard probabilistic trigger identifies the current motion situation while one error-state filter runs continuously. When the trigger is confident, the filter changes only to the corresponding pre-calibrated process- and measurement-noise matrices; the state estimate, covariance history, dynamics, and measurement models are not reset or replaced. The trigger, noise profiles, and a one-time Doppler velocity log yaw-alignment correction are calibrated offline using sparse AprilTag-supervised pool runs. A separate validation set selects the scheduling policy, which is then fixed before held-out testing. Across four held-out pool runs, the method reduces label-weighted mean per-run translation root-mean-square error from 0.488 m to 0.471 m relative to the same filter backbone with one global noise profile, and every held-out run favors the scheduled method. A paired bootstrap over 10-second segments gives a candidate-minus-baseline difference of -0.017 m with a 95% confidence interval of [-0.024, -0.008] m, while orientation error remains essentially unchanged. These results indicate that situation-aware covariance scheduling provides a modest but consistent vision-free dead-reckoning improvement without switching estimators or resetting the filter.",
+      "authors": [
+        "Akshay Naik",
+        "Ramavarapu S. Sreenivas",
+        "Dustin Nottage",
+        "Ahmet Soylemezoglu"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO",
+        "eess.SY"
+      ],
+      "published": "2026-07-12T06:27:57+00:00",
+      "link": "https://arxiv.org/pdf/2607.10597v1",
+      "tags": [
+        "keyword:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "adaptive Kalman filter with situation-triggered covariance scheduling",
+      "llm_evidence_cn": "采用情况触发协方差调度的自适应卡尔曼滤波器",
+      "llm_evidence": "采用情况触发协方差调度的自适应卡尔曼滤波器",
+      "canonical_evidence": "采用情况触发协方差调度的自适应卡尔曼滤波器",
+      "llm_tldr_en": "Presents an adaptive Kalman filter with situation-triggered covariance scheduling for underwater dead reckoning; the adaptive mechanism could be transferred to battery SOC estimation under varying conditions.",
+      "llm_tldr_cn": "针对水下航位推算中固定滤波器参数在转弯或传感器不可靠时性能下降的问题，提出一种情况触发校准自适应鲁棒扩展卡尔曼滤波器。通过板载概率触发器识别当前运动情况，并切换到预校准的噪声矩阵，从而提升状态估计精度。该方法虽用于水下导航，但其自适应协方差调度机制可迁移至电池荷电状态估计，尤其在工况变化如高倍率放电场景中具有潜在应用价值。",
+      "llm_tldr": "针对水下航位推算中固定滤波器参数在转弯或传感器不可靠时性能下降的问题，提出一种情况触发校准自适应鲁棒扩展卡尔曼滤波器。通过板载概率触发器识别当前运动情况，并切换到预校准的噪声矩阵，从而提升状态估计精度。该方法虽用于水下导航，但其自适应协方差调度机制可迁移至电池荷电状态估计，尤其在工况变化如高倍率放电场景中具有潜在应用价值。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
