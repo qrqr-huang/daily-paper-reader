@@ -6,26 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-19
-- 运行时间：2026-07-19 21:28:01 UTC
+- 最新运行日期：2026-07-20
+- 运行时间：2026-07-20 21:43:43 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：0
 - 精读区：0
-- 速读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-今日速读了一种水下航行器定位新技术，触发式协方差调度可提升航位推算的实用性。  
-该方法能让机器人在复杂水域自动切换导航策略，适合关注无人潜航器的读者一探究竟。  
-建议延伸阅读水下导航与自适应滤波的交叉研究，留意该思路在低成本传感器上的落地可能。
-- 详情：[/202607/19/README](/202607/19/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202607/20/README](/202607/20/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Underwater Dead Reckoning with Deployable Situation-Triggered Covariance Scheduling](/202607/19/2607.10597v1-underwater-dead-reckoning-with-deployable-situation-triggered-covariance-scheduling)  
-   标签：评分：6.0/10、query:lfp-soc
-   evidence：采用情况触发协方差调度的自适应卡尔曼滤波器
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
