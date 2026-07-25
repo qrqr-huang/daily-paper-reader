@@ -1,0 +1,1512 @@
+Title: 2607.16864v1.pdf
+
+URL Source: https://arxiv.org/pdf/2607.16864v1
+
+Published Time: Tue, 21 Jul 2026 00:41:17 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+Bridging battery design and health assessment through virtual sensing and physics -informed 
+
+learning 
+
+Wendi Guo 1*, Søren Byg Vilsen 2, Daniel Ioan Stroe 3, Yaqi Li 3, Yicun Huang 4, Ashima Verma 5,
+
+Daniel Brandell 1*
+
+*1Department of Chemistry, Uppsala University, Sweden  
+
+> 2
+
+Department of Materials and Production, Aalborg University, Denmark  
+
+> 3
+
+Department of Energy, Aalborg University, Denmark  
+
+> 4
+
+Department of Information Technology, Uppsala University, Sweden  
+
+> 5
+
+Alstom Rail Sweden AB , Sweden 
+
+*e -mail: wendi.guo@kemi.uu.se , daniel.brandell@kemi.uu.se 
+
+Abstract 
+
+Supercharging of lithium -ion batteries (LiBs) requires robus t health monitoring to ensure durability, 
+
+safety and user confidence, particularly for emerging vehicle -to -grid applications with bidirectional 
+
+energy flows. Yet battery management remains largely disconnected from the material and structural 
+
+origins of ag ing, limiting both interpretable health assessment and informed battery design . Here w e
+
+propose a physics -informed learning framework with virtual sensing that infer s hard -to -measure 
+
+design parameters , including solid -state diffusion coefficient , electrode thickness , ion concentration, 
+
+and particle size, directly from standard battery management system ( BMS ) measurements. Across 
+
+diverse fast -charging strategies and driving profiles , embedding a digital -twin -derived particle -
+
+cracking mechanism as a soft constraint reduc es trajectory and lifetime prediction errors by 6–8 times 
+
+relative to state -of -the -art machine learning baselines using only 2% early -life observations . We 
+
+further show that accura te degradation extrapolation does not require fully resolved governing 
+
+equations ; validated partial mechanisms, jointly refined with limited data, provide sufficient guidance .
+
+Virtual sensing transforms standard charging signals into latent design variable s without additional 
+
+sensors , bridging observable battery behavior and underlying aging processes while reducing capacity 
+
+loss error by up to 39% , end -of -life ( EOL ) error by 17%, and prediction variability by up to 54%, 
+
+enabling real -time exploration of new battery configurations . More broadly , the proposed framework 
+
+establishes a practical feedback loop between deployment and development, demonstrating how real -
+
+world operation can con tinuously inform upstream design decisions across complex multiphysics 
+
+systems. Introduction 
+
+Fast charging is becom ing essential for modern electric -vehicle s (EV s) and emerging vehicle -to -grid 
+
+(V2G) services 1, improving user experience while motivating charging strategies and battery designs 
+
+capable of sustaining long -term operation. However, h igh charging rates accelerate degradation ,
+
+creating an urgent need for accurate lifetime prediction 2, early diagnosis 3, and interpretable hea lth 
+
+assessment . Without insights into the underlying aging mechanisms , battery management systems 
+
+(BMS s) lose interpretability for reliable decision -making 4, while battery development remains 
+
+disconnected from application requirements before large -scale deployment. Yet owing to coupled 
+
+multiscale physical and chemical processes, establishing a direct link between chemistry and 
+
+material -design parameters to real -world performance remains a major challenge 5.
+
+Numerical simulation 6 serve s as a primary rou te for connecting intrinsic design factors (such as 
+
+chemistry, material properties, and geometry) with practical usage conditions (such as electric loading, 
+
+SOC range, and temperature). In particular, multiphysics modeling enables quantitative aging 
+
+analysis and design -performance evaluation, forming the foundation of battery digital twins 7. One 
+
+method is electrochemical -mechanical coupling, where lithiation -induced stress drives particle 
+
+cracking 8 and continuo us SEI growth on newly exposed graphite surfaces. These processes consume 
+
+cyclable lithium while imprinting aging signatures onto voltage 9, impedance 10 , power 11 , and 
+
+capacity 11,12 . Another method is electrochemical –thermal coupling, where nonunifor m temperature 
+
+fields regulate local reaction kinetics 13 , wh ile spatially heterogeneous current densities drive heat 
+
+generation and thermal instability 14 . Thermal measurements there by reveal how charging current 15 
+
+interact with the chemical processes for the specific electrode architecture to influence safety and 
+
+lifetime 16 . A more comprehensive method couples electrochemical, mechanical and thermal effects 
+
+through weak 17 or strong 12 interactions to jointly capture charging behavior, aging and thermal 
+
+response across scales. These high -fidelity models establish a physics -based connection between 
+
+battery design and field performance, supporting both operational improvement and upstream design 
+
+optimization 18 . However, their high computational cost and reliance on solving nonlinear partial 
+
+differential equations (PDEs) prevent real -time prediction, adaptive control and inverse inference of 
+
+material properties, while generally remaining incompatible with the hi gh -dimensional streaming 
+
+data generated by modern BMSs. 
+
+These limitations have driven an increasing interest in machine learning ( ML ). ML naturally provides 
+
+tools for extracting informative features from high -dimensional sensing data 19 and building predi ctive 
+
+models for health and safety management 20 . With continuous monitoring of current 3,, voltage 3,9 ,temperature 21 , and impedance 22,23 together with electrochemical diagnostic indicators 24 such as 
+
+incremental capacity (IC) 25 and differential voltage (DV) 26 , large volumes of multi -fidelity data are 
+
+now available for battery diagnosis and prognostics. However, pure ML models lack mechanistic 
+
+observability and therefore cannot infer the underlying material and structural properties that govern 
+
+aging behavior, such as ionic diffusivity 27 , electrode geometry 28 and particle size 29 . These latent 
+
+design factors 30 remain difficult to identify from standard BMS measurements alone. There is a clear 
+
+gap in connecting intrinsic battery design with observable behavior. Bridging this gap requires 
+
+combining the feature extraction capability of ML with the physical interpretability of multiphysics 
+
+models, without requiring additional sensors in manufactur ing and deployment. 
+
+In this context, p hysics -informed learning 31 has emerged as a promising strategy to achieve this 
+
+integration by embedding domain knowledge into ML through governing physical rules 32 . Two major 
+
+routes have developed 32,33 : data -assisted physical models and physics -guided data -driven models. 
+
+Most efforts focus on physically meaningful observables derived from experiments 34 or simulations 35 ,
+
+such as half -cell open -circuit -voltage (O CV) curves 36,37 , lithium plating potentials 35 , and shifts in IC 
+
+peak positions or areas 24,38 . These approaches have improved prediction accuracy for battery 
+
+management 39 . In contrast, virtual sensing, defined here as converting standard BMS signals i nto 
+
+latent physical and design -state estimations without additional sensors, remains largely unexplored 
+
+for linking observable battery behavior with underlying aging mechanisms and cell design . Physics -
+
+informed neural networks (PINNs) represent one of the prominent frameworks within this paradigm 
+
+> 40
+
+. Existing studies have demonstrated improved health and lifetime prediction by incorporating 
+
+degradation -related equations into neural models 41,42 . However, current PINN implementations rely 
+
+primarily on empirical constraints, whereas explicitly validated mechanisms are rarely embedded into 
+
+the learning process 9,41 . More importantly, PINNs are often treated as predictive tools rather than a 
+
+means to understand ho w constitutive laws shape neural learning and inject physical intuition into 
+
+optimization. Understanding this process is important for AI -driven scientific discovery 43 , where 
+
+generating scientific insight may be as important —or more impor tant —as improving prediction 
+
+accuracy itself. Further exploring the potential of PINNs for interpretable prediction, adaptive control, 
+
+and deployment -informed design represents a promising direction for integrating battery 
+
+development with field operation in next -generation energy -storage systems. 
+
+To address this gap and bridg e battery design with real -world application requirements, we propose 
+
+a physics -informed learning framework with a virtual sensing strategy for both rapid prototype 
+
+screening and onboa rd health assessment . Th is framework infers latent design parameters , including solid -state diffusion and electrode architecture, directly from existing EV sensing signals. Particle -
+
+cracking dynamics derived from a digital twin (DT) model 44 are incorporated through soft physical 
+
+constraints, enabling accurate degradation extrapolation under limited data availability. The 
+
+framework is developed using two fast -charging datasets based on graphite/LiNi 0.5 Mn 0.3 Co 0.2 O2
+
+(NMC532) LiB cells, covering charging rates from 1C to 2C, four multistep fast -charging protocols, 
+
+dynamic discharge profiles spanning 70 –100% depth of discharge (DOD), and four ambient 
+
+temperatures (0, 15, 25 and 35°C) representative of EV operating conditions in Nordic climate s45 .
+
+The proposed framework achieves trajectory and lifetime prediction errors 6 –8 times lower than state -
+
+of -the -art ML baselines across previously unseen operating profiles . Notably, stable extrapolation is 
+
+achieved using only 2% observations, corresponding to fewer than 19 equivalent full cycles ( EFCs )
+
+for the longest -lifetime cells, below both the wide ly adopted 100 -cycle benchmark 46 and recent 50 -
+
+cycle early -life results 47 . Our findings further reveal that accurate degradation extrapolation does not 
+
+re quire complete mechanistic knowledge. Instead, validated partial physical mechanisms, jointly 
+
+refined with data, are sufficient to recover aging behavior. I ncorporating virtual sensing of the 
+
+negative -electrode diffusion coefficient, thickness , and particl e size reduces capacity loss error by up 
+
+to 39% , EOL error by 17%, and prediction variability by up to 54%. Once trained, the framework 
+
+replaces repeated multiphysics simulations with millisecond -level physics -informed computation 
+
+(<0. 13s versus 210,996 s for a single COMSOL aging simulation) , enabling rapid exploration of 
+
+battery design and operating spaces. The inferred design parameters help open the “black box” linking 
+
+observable si gnals to hidden aging mechanisms, providing interpretable and actionable guidance for 
+
+battery design. 
+
+Results 
+
+Virtual sensing of latent design states 
+
+Our aim is to move beyond purely statistical ML battery prognostics by linking real -world operating 
+
+profil es with latent design states. This connection enables both mechanistic interpretation of 
+
+degradation behavior and design -oriented feedback for battery development. To achieve this, we 
+
+identify health indicators that capture diverse aging behaviors ( Table S 1). Building on previous 
+
+finding s4, four key design parameters ( Dneg , Lneg , Rneg , and Cs,pos ) are virtually sensed through a 
+
+validated DT model (Figure 1) . In this work , virtual sensing refers to estimating physically 
+
+interpretable P2D design parameters from partial charging segments using standard BMS signals and 
+
+DT -generated training data . These parameters correspond to material and geometric properties of the 
+
+cell rather than data -driven latent features , with their physical interpretation an d measurement methods summarized in Supplementary Table S3. Synthetic datasets are generated by perturbing 
+
+these parameter s within a 1% relative standard deviation to emulate high -precision manufacturing 
+
+variability , revealing latent electrochemical signat ures associated with electrode geometry and ionic 
+
+diffusion coefficient that are difficult to access experimentally . As illustrated in Figure 1, voltage, 
+
+capacity, capacity variation and time are extracted from short charging segments (highlighted by the 
+
+red rectangle) . By learning the electrochemical -response manifold induced by varying design states, 
+
+the framework enables real -time inverse infere nce of transport and structural parameters directly from 
+
+random charging segments. In this way, virtual sensing shifts battery diagnostics from monitoring 
+
+external responses to tracking the hidden upstream design information governing degradation 
+
+evolution and failure susceptibility 14 .
+
+Figure 1. Virtual sensing from partial charging segment. (a) The DT model is used to vary four key 
+
+design parameters and generate diverse charge/discharge profiles. (b) Mapping between partial 
+
+charging responses and latent design parameters, illustrated using the inferred negative electrode 
+
+thickness ( Lneg ). Features are extracted from voltage, capacity, capacity variation and charging -time 
+
+descriptors. (c) The middle panel shows the corresponding feature -importance r anking for Lneg 
+
+inference , where f( 
+
+⋅) maps charging -segment features to latent design parameters that encode aging 
+
+information. (d) Real -time inference of design parameters from dynamic operating profiles . The 
+
+bottom panel illustrates the relationship betw een Lneg and SOH. 
+
+This study utilizes fast -charging datasets based on 18650 cylindrical graphite/NMC532 cells with a 
+
+nominal capacity of 2 Ah. The datasets comprise a publicly available fast -charging dataset 4 together 
+
+with an additional dataset, including multistep charging protocols designed to emulate dynamic EV 
+
+duty cycles (Supplementary Note 1) . Experimental conditions are summarized in Table S2 and Figure S1, with further details provided in the respective reference papers 44,48,49 . Except for two cells cycled 
+
+at 1.3C @15 °C, each cell was operated under a unique combination of charging/discharging protocol 
+
+and thermal condition, resulting in highly heterogeneous degradation trajectories. To the best of our 
+
+knowledge, this is the firs t EV -oriented battery -aging dataset exploring multistep fast charging, 
+
+dynamic discharge operation and temperature variability within a unified cycling framework 
+
+representative of driving conditions in Nordic climate s. During cycling, current (I), voltage (V), 
+
+capacity (Q), and cycle index are continuously recorded at fixed sampling intervals across both 
+
+constant -current and multistep charging stages. 
+
+To account for protocol -dependent voltage windows , equivalent full cyc les (EFCs) are defined by 
+
+normalizing cumulative discharged capacity to the nominal cell capacity, providing a more realistic 
+
+representation of EV usage than raw cycle counts alone 50 . Sixteen health indicators are extracted from 
+
+randomly sampled charging segments to characterize temporal and internal electrochemical behavior 
+
+through non -invasive IC/DV responses (Table S1). Their mechanistic interpretation is detailed in 
+
+Ref. 4. To further capture latent design states, virtual -sensing variables are inferr ed from partial 
+
+charging segments. Figure 2 summarizes the evolution of both measured health indicators and 
+
+inferred design states under heterogeneous operating conditions. Figure 2. Evolution of health indicators and inferred design variables from parti al charging segments. 
+
+Sixteen engineered features together with three inferred design parameters are mapped against 
+
+capacity loss ( Qloss ). In e ach subplot , the features have been normalized by its magnitude under the 
+
+restricted charging window ( Vl=3.65V and Vu=4.10V). Lastly, the color gradients denote the different 
+
+cells from two fast charging datasets. 
+
+Physics -informed learning framework 
+
+Traditional ML methods learn correlations between observabl e signatures and degradation 
+
+trajectories rather than the physics governing battery aging, fundamentally limiting generalization 
+
+under unseen conditions and limited early -life observations. This challenge arises from two factor s: 
+
+(i)  heterogeneous operating conditions activate different coupled aging mechanisms , making 
+
+transferable representations inherently difficult to learn ; and (ii)  early -stage measurements contain 
+
+only weak and partially developed failure precursors , providing ins ufficient information for reliable 
+
+long -term extrapolation without physical constraints. We propose a physics -informed learning 
+
+framework in which particle -cracking dynamics are incorporated into the loss function via soft penalty constraint s. To the best of our knowledge, this is the first framework to integrate explicit 
+
+electrochemical equations derived from validated DT knowledge into neural -network training. The 
+
+inclusion of p article cracking is motivated because Ni -rich NMC cathodes undergo severe chemo -
+
+mechanical instability during high -voltage cycling. Increasing Ni content enhances energy density 
+
+but also induces large anisotropic lattice contraction at high delithiation states 51 , accelerating crack 
+
+propagation and interfacial degradation. Importantly, particle cracking involves both gradual and 
+
+accelerated aging regimes 44 , providing a compact mechanistic representation of heterogeneous 
+
+degradation behavior . To bridge incomplete constitutive physics and evolving cell -level aging 
+
+characteristics, we further introduce a two -stage adaptive physics -informed training strategy. 
+
+As illustrated in Figure 3, the proposed framework is explicitly designed for strict extrapolation rather 
+
+tha n interpolation within randomly shuffled trajectories. Unlike existing PINN studies 41 , which often 
+
+relax temporal causality during train –test split , the present framework preserves chronological aging 
+
+evolution throughout optimization and extrapolation processes . Source cells are sequentially split into 
+
+training and validation subsets to establish a global physics -constrained solution manifold , whereas 
+
+target cells are restricted to the first 2–20% of the full trajectory for adaptation and early stopping 
+
+(see Supplementary Note 2 for details of data splitting strategy ). All subsequent states remain 
+
+completely hidden during training and are used exclusively for future -state prediction, making the 
+
+task substantially more challenging and physically meaningful than standard interpolation -based 
+
+benchmarks. 
+
+In Phase I , s ource cells with sufficiently matured aging states (typically  ≥50% observable capacity 
+
+loss) initialize the global constitutive structure. During this stage, the physical parameters 𝜃 remain 
+
+fixed while the PDE residual is enforced over dense collocation points spanning the full EFC domain. 
+
+Initial -condition anchoring and monotonicity regularization further constrain physically admissible 
+
+trajectory formation. Consequently, the network learns globally consistent degradation behavior 
+
+governed by the embedde d particle -cracking law rather than isolated feature –label correlations. 
+
+Phase II performs adaptive transfer using only the first 2–20% of the target degradation trajectory .
+
+Starting from the pretrained physics -constrained manifold, the framework exposes only limited early -
+
+stage measurements to the network, while all future states remain fully unobserved. The physical 
+
+parameters are unfrozen and co -optimized with the neural -network weights using decoupled learning 
+
+rates, enabling continuous recalibration t o unseen thermal, charging and driving conditions . A 
+
+differentiable positivity reparameterization guarantees physically admissible parameter updates, whereas a physics -integrity sentinel iteratively rejects solutions exhibiting trajectory reversal, 
+
+numeric al instability or implausible future -state inference (see Methods for detail s).
+
+The framework is motivated by two practical scenarios: early -stage battery prototype screening, 
+
+where only limited initial cycling data are available to assess long -term design viability, and onboard 
+
+battery -management systems (BMSs), where future degradation must be inferred online from sparse 
+
+historical observations. In both cases, the objective is not interpolation within densely sampled 
+
+degradation trajectories, but physically consistent prediction of future aging evolution and EOL 
+
+directly from short charging segments under EV dynamic profiles .
+
+Figure 3. A p hysics -informed learning pipeline for battery health and lifetime prediction us ing only 
+
+2% observations. (a) In -silico PINN training with the particle -cracking law embedded into the 
+
+optimization objective as a soft constitutive constraint. The n eural -network weights and physical 
+
+parameters 𝜽 are jointly optimized to satisfy both dat a and physical constraints and reproduce 
+
+degradation trajectories. (b) Deployment with only the first 2% of observation s for full -trajectory and 
+
+end -of -life extrapolation. The framework enables rapid prototype screening and interpretable onboard 
+
+health assessment for real -world battery -management systems. 
+
+Co -evolution of neural and constitutive dynamics 
+
+Using a representative u nseen multistep fast -charging cell under driving and partial V2G operation, 
+
+we monitor the evolution of the physical loss terms during PINN optimization to reveal the underlying 
+
+learning behavior (Fig ure 4a). The governing -equation residual decreases from ~1.4×10 −4 to 
+
+~1.0×10 −4 over 80 epochs, while the derivative -consistency term remains near ~3×10 −3, showing that 
+
+optimization gradually transitions from local fitting toward physics -governed degradation dynamics (Figure 4 (a-1)). The weighted physics penalty simultaneously decreases from 4.7×10 −2 to 2.9×10 −2,
+
+demonstrating progressively stronger agreement between the neural solution and the embedded 
+
+particle -cracking constraint (Figure 4 (a-2)). Throughout optimization, the monotonic ity penalty 
+
+remains zero, indicating that capacity loss is intrinsically preserved without explicit trajectory 
+
+correction. Meanwhile , the zero -anchor constraint stabilizes the initial degradation regime within the 
+
+~10 -10 –10 -5 range, suppressing nonphysical capacity recovery during extrapolation (Figure 4 (a-3)). 
+
+Figure 4b further visualizes parameters adapti on during transfer refinement. The degradation -
+
+sensitive parameters Au and Zu increase monotonically from approximately 0 to 1.7%, whereas Bu
+
+decreases to −1.3%, revealing progressive rebalancing of the embedded aging kinetics under limited 
+
+early -cycle supervision. Physically, Au is associated with material -dependent crack -growth scaling 44 ,
+
+whereas Zu governs diffusion -induced tangential stre ss and crack -depth propagation, indicating 
+
+adaptive modulation of stress -coupled fracture behavior. By contrast, Φ, associated with SEI density, 
+
+molar mass and layer thickness, remains nearly invariant, suggesting that the pretrained PINN 
+
+captures the dom inant Solid Electrode Interphase ( SEI )-growth regime without requiring substantial 
+
+parameter recalibration (see Methods for details ). 
+
+We further open the ”black box” of PINN optimization by visualizing the physics -constrained loss 
+
+landscape, revealing how embedded constitutive laws inject physical intuition into neural learning 
+
+(see Supplementary Note 3) . Underweight perturbations, the proposed PINN forms a sharp ly confined 
+
+loss basin with a well -defined minimum below log 10 (MSE) ≈-3.6, whereas the FNN, CNN, and 
+
+LSTM baselines exhibit substantially flatter landscapes centered around higher errors of  ≈−2.7,  ≈
+
+−1.9, and  ≈−2.5, respectively (Figure 4c) . The pronounced directional curvature and narrow valley 
+
+geometry of the PINN indicate stronger optimization confinement and improved parameter 
+
+identifiability during future -state inference . By contrast, the shallow and weakly structured surfaces 
+
+of the ML basel ines suggest higher solution degeneracy and greater sensitivity to parameter 
+
+perturbations. These observations provide a mechanistic explanation for the superior stability of the 
+
+proposed PINN when inferring unseen states. Optimization landscapes for the remaining held -out test 
+
+cells are provided in Figure S 3-S11 . Finally, we examined whether the learned neural responses 
+
+preserve the embedded aging physics throughout optimization for the representative unseen cell 
+
+(Figure 4d). The predicted Qloss closely follows the particle -cracking trajectory across the normalized 
+
+EFC domain (Figure 4(d -1)), with the neural and physics -constrained solutions remaining nearly 
+
+indistinguishable up to EFC/ Mphys ≈0.45, where Mphys =1200 normalizes EFC into the [0,1] int erval for 
+
+all cells ( see Supplementary Note 4). The learned gradients ∂y/∂EFC norm simultaneously reproduce the local crack -growth kinetics, capturing the progressive SEI coverage of freshly exposed electrode 
+
+surfaces and the associated incremental capacity loss 10 (Figure 4(d -2)). Agreement in both state and 
+
+derivative space demonstrates that the proposed PINN internalizes the underlying constitutive 
+
+behavior governing their evolution. 
+
+These results show that effective physics -informed learning does not require a fully resolved 
+
+ele ctrochemical model or perfectly known governing equations. Instead, incorporating a subset of 
+
+validated physical relationships and refining them together with data provides sufficient constraints 
+
+for accurate degradation prediction, even under unseen opera ting conditions and heterogeneous aging 
+
+behaviors. 
+
+Fig ure 4. Neural –constitutive co -evolution during PINN optimization. (a) Evolution of physics -
+
+constrained losses for a representative unseen fast -charging cell under dynamic driving and partial 
+
+V2G opera tion, including governing -equation fidelity, derivative consistency, weighted physics 
+
+penalties, monotonicity regularization , and zero -anchor constraints. (b) Adaptive refinement of the latent physical coefficients during transfer optimization under sparse observations. (c) Physics -
+
+constrained loss landscapes under weight perturbations. The proposed PINN forms a sharply confined 
+
+loss basin with strong directional curvature, whereas the FNN (c -2), CNN (c -3) , and LSTM (c -4) 
+
+baselines exhibit substantially fla tter optimization geometries. (d) Mechanistic consistency between 
+
+neural responses and embedded aging physics. 
+
+Sparse data and stable extrapolation 
+
+Physics -informed learning gains robustness not by memorizing aging trajectories, but by constraining 
+
+neural optimization to physically admissible solutions . This reduc ed solution space enables stable 
+
+inference under highly limited observations. To evaluate this low -data inference capability, we 
+
+conduct systematic experiments across varying training and transfer conditions. 
+
+We progressively increase the source -training ratio from 50% to 80% while keeping all target cells 
+
+fully unseen . During adaptation , only the first 20% of each target trajectory is exposed for parameter 
+
+refinement , with validation loss serving as the early stopping criterion (see Supplementary Note 7).
+
+Figure 5a demonstrates the strong data efficiency of the proposed PINN. With only 50% source -
+
+history availability, the PINN achieves a trajectory MAE of 6%, whereas the FNN, CNN and LSTM 
+
+baselines remain near 10.5%, 9.2% and 11.0%, respectively . This correspond s to relative error 
+
+reductions of 35 –50%. Increasing the source -history ratio to 80% further reduces the MAE to below 
+
+5%, while the ML baselines remain above 8.7%, 7.8% and 9.2%, resp ectively. In addition to lower 
+
+median errors, the PINN also consistently exhibits narrower error distributions across all training 
+
+conditions. Figure S 12 further shows that the PINN preserves stable capacity loss extrapolation, 
+
+suggesting strong potential for data -constrained onboard adaptation and real -world parameter 
+
+calibration. The advantage becomes more pronounced for EOL inference (Figure 5 (a-2)). Across all 
+
+training conditions, the proposed PINN maintains stable relative lifetime errors of 20 –25%, with only 
+
+weak dependence on the amount of available data . By contrast , the FNN, CNN, and LSTM baselines 
+
+exhibit large errors of 130 –145%, 110 –140%, and 125 –145%, respectively, together with markedly 
+
+wider prediction distributions . Increasing the source -training ratio f rom 50% to 80% further reduces 
+
+the PINN EOL error from 24% to 20%, whereas all purely ML baselines remain above 110 –160% 
+
+across every training scale . Overall, the proposed PINN reduces trajectory and EOL errors by 40 –
+
+50% and 5 –7 time s, respectively, despite using only 44% of the cells and 50% of the observable 
+
+trajectory .
+
+Nest, w e set the source -training ratio to 80% and expose only minimal target -domain measurements 
+
+to probe how far the PINN can project future degradation . The most c hallenging setting uses only the first 2% of the degradation trajectory, correspond ing to just 19 EFCs for the longest -lifetime cell, 
+
+where measurable aging signatures are still barely distinguishable (Figure S 1). Despite this limitation, 
+
+the proposed PINN achieves a trajectory MAE of 5%, whereas the FNN, CNN and LSTM baselines 
+
+remain near 9.5%, 8.8% and 10.2%, respectively (Figure 5(b -1)). Increasing the visible trajectory 
+
+ratio from 2% to 20% lowers the baseline s errors to 8.2%, 7.0% and 8.3% , respectively. By contrast, 
+
+the PINN remains confined within the 4 –6% range across all adaptation conditions, showing that 
+
+embedded physical laws sharply restrict the space of admissible degradation pathways, such that even 
+
+sparse early -life observations are sufficient to determine future evolution. The difference becomes 
+
+particularly evident under sparse adaptation conditions (Figure 5(b -2)). In all settings , our PINN 
+
+achieves distinct EOL error reductions as compared to the other models. For instance, the ML 
+
+baselines collapse when applied to unseen aging patterns with only the first 2% target observations 
+
+(Figure S 15). In contrast, the proposed PINN remains within 15 –22%, corresponding to 6 –8 times 
+
+lower prediction errors. This improvement arises from the embedded constitutive constraints, which 
+
+enable physics -guided transfer even under incomplete mechanistic knowledge and sparse 
+
+observations. 
+
+Finally, we compare the predicted aging trajectories under the most challenging 2% adaptation across 
+
+10 random initialization seeds ( see Supplementary Note 4). The proposed PINN accurately 
+
+reconstructs the degradation manifold up to ~40% capacity loss, with errors tightly concentrated 
+
+within ±5% around zero and minimal seed -to -seed vari ability. Although the CNN achieves the best 
+
+baseline performance (Figure 5c -2), its trajectories progressively saturate beyond ∼10% capacity loss 
+
+and fail to capture the accelerated aging regime. The corresponding error distribution becomes 
+
+strongly skewed and expands beyond ±15%, together with substantially larger stochastic variability 
+
+across random initializations. This discrepancy directly explains the large lifetime -prediction gap 
+
+between the proposed PINN and ML baselines. Additional re sults under different observation ratios 
+
+are provided in Figure S 13. Furthermore, w e find that combining 80% source -cell training with only 
+
+2% target -cell observations provide s an effective balance between inference efficiency and robust 
+
+prediction. Figu re 5. Physics -guided degradation and EOL extrapolation from limited early -life observations. (a) 
+
+Effect of training -data availability on trajectory reconstruction (a -1) and EOL prediction (a -2) across 
+
+unseen cells , with models trained using 50 –80% of the available source -cell data. (b) Effect of sparse 
+
+target observations during adaption . Only 2 –20% of the initial target trajectory was provided during 
+
+refinement . (c) Future degradation reconstruction under the extreme 2% o bservation condition across 
+
+10 random initialization seeds for the proposed PINN (c -1) and the best -performing CNN baseline 
+
+(c -2). 
+
+Impact of virtual sensing on PINN robustness 
+
+To improve degradation prediction under realistic operating conditions, four key design parameters 4
+
+are introduced into the PINN through virtual sensing. This strategy enables the model to access hidden 
+
+design information from standard EV sensing signals, providing an additional physica l layer beyond 
+
+observable charging behavior (Figure 6). 
+
+Figure 6 (a-1) shows the average SHAP attribution across all unseen cells over 10 random 
+
+initialization seeds. Besides the dominant contribution of EFC (0.08 –0.10), the inferred diffusion 
+
+coefficient consistently exhibits SHAP values of 0.01 –0.02, comparable to major voltage, 
+
+differential -capacity and charging -time descriptors . Under multistep fast -charging operat ion (Figure 
+
+6(a -2)) , the diffusion coefficient becomes even more influential, with lower diffusion -related SHAP 
+
+values consistently associated with reduced capacity loss , highlighting diffusion -limited transport as a key driver of aging 52 . Incorporating the virtually sensed diffusion coefficient substantially reshapes 
+
+the extrapolation landscape , forming a smoother and more symmetric optimization basin (Figure 6 (b)
+
+and Supplementary Note 5 for details ). Without th is transport property, the loss surface remains 
+
+sharply folded and highly asymmetric (Figure 6(b -1)). The diffusion -constrained PINN develops a 
+
+well -confined minimum below log 10 (MSE) ≈-6.0 together with substantially reduced directional 
+
+sensitivity under weight perturbations (Figure 6(b -2)) . The resulting loss landscape geometry strongly 
+
+suppresses unstable local minima during extrapolation. 
+
+Figure 6c reveals hete rogeneity in the inferred diffusion trajectories, with normalized diffusion 
+
+coefficients spanning 0.1 –1.1 over the lifetime range. The contribution of the diffusion coefficient to 
+
+degradation prediction varies substantially across cells, with some exhibiting rapid e arly -to -midlife 
+
+increases followed by pronounced late -stage decline, whereas others remain comparatively stable 
+
+under different charging strategies and operating conditions. Incorporating the adaptive diffusion 
+
+parameter further improves lifetime extrapola tion under the extreme 2% condition (Figure 6d). The 
+
+average cycle -life prediction R 2 increases from 0.63 ± 0.17 to 0.75 ± 0.11, while the MAE decreases 
+
+from 71.27±16.07 EFCs to 60.55±9.73 EFCs. The predicted lifetimes align more closely with the 
+
+parity li ne, particularly beyond 600 EFCs. Correspondingly, the error distribution becomes 
+
+substantially narrower and more centered around zero, with markedly fewer outliers exceeding ±200 
+
+EFCs (Figure 6(d -3)). Mechanistically, such chemical diffusion heterogeneity 53 likely arises from 
+
+spatially nonuniform Li ion flux under dynamic EV operation, where local variations in temperature 13 ,
+
+pressure 12 , and electrochemical driving force promote irregular interfacial degradation 54 and 
+
+accelerated capacity loss. 
+
+To further assess t he influence of the remaining high -impact design parameters , we sequentially 
+
+incorporate the virtual -sensing parameters following the order : Lneg , Rneg , Cpos . Incorporating virtual 
+
+sensing consistently improves both capacity loss and lifetime prediction accuracy, with the largest 
+
+performance gain observed after introducing Rneg (Table 1) . SHAP analysis further shows that larger 
+
+negative -electrode particle radius is consistently associated with positive contributions to capacity 
+
+loss (Figure S 23 ), indicating that longer diffusion pathways intensify transport limitation and stress 
+
+accumulation during fast charging. The inferred Lneg similarly exhibits a positive correlation with 
+
+degradation, suggesting amplified transport heterogeneity within thic ker electrodes (Figure S 20 ). By 
+
+contrast, Cpos produces weaker but still measurable SHAP contributions (Figure S2 6), implying 
+
+additional coupling between local lithium concentration gradients and electrolyte accessibility 52 .Compared with the baseline PINN, incorporating latent design parameters reduces the capacity loss 
+
+MAE by up to 39% ( Rneg ) and the EOL error by 17%, while increasing training time by less than 0.5 s. 
+
+Prediction variability is also consistently decrease d, wi th the standard deviation reduced by 28% 
+
+(Cpos ) to 54% ( Lneg ), demonstrating that virtual sensing improves predictive robustness with marginal 
+
+computational overhead . Although DT data generation ( ≈4h for 1200 samples) and PINN training ( ≈
+
+4s) are one -time c osts, even the slowest virtual -sensing configuration completes degradation and 
+
+lifetime prediction in <0. 13s versus  ≈210,996s for a single COMSOL aging simulation ( Figure S 32), 
+
+representing an acceleration of nearly six orders of magnitude. This efficiency enables rapid screening 
+
+of new cell designs and material parameters across diverse operating profiles without repeated 
+
+multiphysics simulations. 
+
+Figure 6. Impact of Li ion diffusion coefficient on degradation and EOL extrapolation. (a) SHAP 
+
+analysis of the inferred diffusion coefficient across unseen cells. (a -1) Cross -cell SHAP attribution .
+
+(a-2) SHAP summary distribution under multistep fast -charging operation. (b) Extrap olation loss 
+
+landscapes under weight perturbations. (b -1) PINN without diffusion embedding. (b -2) Diffusion -
+
+constrained PINN. (c) Evolution of the normalized diffusion coefficient, revealing heterogeneous transport trajectories during aging. (d) EOL extrapolation performance with and without diffusion 
+
+embedding. (d -1) Diffusion -constrained PINN. (d -2) Baseline PINN. (d-3) Distribution of EOL 
+
+prediction errors. 
+
+Table 1 Test mean absolute errors (MAE) and computational cost for the PINN and baselines. 
+
+Models  #Features  Design 
+
+parameters 
+
+Capacity Loss [%]  End -of -life  [EFCs]  Train 
+
+Time 
+
+[s] 
+
+Inference 
+
+Time 
+
+[s] 
+
+MAE  STD  R2 MAE  STD  R2
+
+PINN only  16 m No  1.87  0.14  0.68  74.14  15.20  0.6 0 3.80  0. 11 
+
+PINN+D neg  15 m+1 d Yes  1.26  0.20  0.85  61.41  7.89  0.75  4. 21  0. 13 
+
+PINN+L neg  15 m+1 d Yes  1.22  0.2 0 0.87  59. 39  9.88  0.7 8 3.89  0.11 
+
+PINN+R neg  15 m+1 d Yes  1. 24  0.18  0.89  59.15  12.38  0.7 7 4. 32  0.12 
+
+PINN+C pos  15 m+1 d Yes  1.25  0.21  0.86  61.28  12.26  0.76  4.14  0.12  
+
+> m
+
+manually engineered features  
+
+> d
+
+virtual sensing parameters 
+
+Aging inference under V2G charging constraints 
+
+V2G operation restricts battery monitoring to short charging segments 55 , creating a challenging 
+
+scenario for aging prediction . To assess the proposed framework under these constraints, we compare 
+
+PINN with and without virtual sensing against purely data -driven baselines across narrow charging 
+
+windows and diverse fast -charging strategies. The most demanding case uses only 2% early -life 
+
+observations from unseen cells, corresponding to 2 –19 EFC checkpoints across different EV duty 
+
+cycles. 
+
+Figure 6a compares capacity loss prediction under the narrow charging window (3.80− 4.10 V). 
+
+Virtual sensing produces tighter alignment with the parity line and suppresses large deviations during 
+
+late -stage aging . The corresponding error distributi on contracts from approximately ±13% to ±12% 
+
+with markedly higher density near zero, indicating improved stability under constrained sensing 
+
+conditions. To further assess the influence of underlying design states on health prediction, SHAP 
+
+analysis is perf ormed on the narrowest charging window (3.80−3.85 V) for one multistep fast -
+
+charging profile (Figure 6b) . This window corresponds to the typical ~50% SOC regime used during 
+
+bidirectional V2G operation. Incorporating virtual sensing introduces clear chemical attribution 
+
+otherwise absent in the baseline PINN. Specifically, t he inferred diffusion coefficient ( Dneg ) exhibits SHAP contributions of ~0.01 –0.02, indicating that the Li + transport dynamics remain strongly 
+
+relevant to capacity loss even under highly restricted chargin g observations (Figure S 30 ).
+
+Figure 6c compares three purely ML baselines together with the proposed PINN with and without 
+
+virtual sensing under the extreme 2% condition. All results reflect the average performance across all 
+
+unseen cells within the narrowest charging window (3.80−3.85 V). The proposed PINN with virtual 
+
+sensing achieves the lowest MAE/RMSE (2. 20 %/2.84%), outperforming the baseline PINN 
+
+(3.07 %/3. 95 %) and reducing the error nearly twofold relative to the best -per forming ML model . This 
+
+improvement arises because the key physical properties , particularly the diffusion coefficient within 
+
+active particles , inherently regulate charging kinetics and overpotential accumulation 52 . Figures 6d 
+
+compare s trajectory prediction robustness across different partial charging windows. Without virtual 
+
+sensing, the PINN remains highly sensitive to voltage -window selection, with several restricted 
+
+ranges exceeding 5.5% MAE. Incorporating virtual sensing produces substantially more unifo rm 
+
+accuracy, keeping most charging windows below 3% MAE, including the highly constrained [3.80 V, 
+
+3.85 V] range. Consequently, the fraction of voltage windows achieving MAE below 3% increases 
+
+from 81.0% to 85.7%. Figure 6e further evaluates EOL extrapolat ion across the same voltage -window 
+
+space. Without virtual sensing, multiple restricted windows exceed 180 –200 EFC error. In contrast, 
+
+virtual sensing constrains most lifetime errors within 80 –140 EFCs despite the narrow sensing range, 
+
+increasing the fraction of windows below 100 EFCs from 38.1% to 45.2%. These results highlight 
+
+the importance of virtual sensing for practical V 2G deployment, where battery health and plug -in 
+
+eligibility must often be inferred from short and incomplete charging segments rather than full cycling 
+
+trajectories 55 .Figure 7. Virtual sensing enables robust health assessment under V2G -restricted c harging windows. 
+
+(a) Capacity loss prediction under narrow high -voltage charging windows. (b) SHAP attribution for 
+
+one multistep fast -charging profile within the narrowest voltage window [3.80V, 3.85V] ,
+
+corresponding to the typical ∼50% SOC in practical V2G operation. (c) Comparison of purely ML 
+
+baselines and the proposed PINN with and without virtual sensing under the [3.80V, 3.85V] charging 
+
+window. (d, e ) Performance of the proposed PINN across restri cted charging windows using partial 
+
+charging segments for (d) capacity loss and (e) EOL prediction. Bubble size and color denote the 
+
+corresponding prediction error, where smaller and darker bubbles indicate improved performance. 
+
+Discussion 
+
+In this work, we propose a physics -informed learning framework with an integrated virtual -sensing 
+
+strategy that infers key battery design parameters from short charging segments without additional 
+
+sensors , includ ing solid -state diffusion coefficient, negative electrode thickness, particle radius , and 
+
+lithium -ion concentration. Digital -twin -derived aging knowledge is incorporated as soft constraints, 
+
+with particle cracking representing a characteristic mechanism for Ni -rich NMC batteries under fast 
+
+charging, whi le the remaining coupled processes are adaptively learned from data. As a result, 
+
+accurate degradation trajectories and lifetime are recovered across a wide range of charging strategies 
+
+and driving conditions using only 2% early -life observations. Compared with conventional ML 
+
+approaches, the proposed framework provides two key advances. First, it opens the “black box” of 
+
+physics -informed learning by visualizing constraint -guided loss landscapes, revealing how embedded 
+
+mechanistic knowledge guides neural op timization. Second, virtual sensing extracts hidden design 
+
+variables from existing charging signals , reducing trajectory prediction error by 40 –50% and EOL 
+
+prediction error by 5–7 fold . Under highly constrained charging windows, it further increases the 
+
+fraction of windows with trajectory MAE below 3% from 81.0% to 85.7% and lifetime MAE below 
+
+100 EFC from 38.1% to 45.2%. More fundamentally, our findings show that effective physics -
+
+informed learning does not require fully resolved governing equations. Partially specified 
+
+mechanisms, when jointly refined with data, provide sufficient constraints for reliable long -term 
+
+extrapolation. Once trained, the framework replaces repeated multiphysics simulations with real -time 
+
+computation, enabling rap id exploration of battery configurations tailored to usage requirements .
+
+We believe th is framework establishes a practical bridge between battery development and field 
+
+deployment . By continuously translating charging behavior into interpretable design vari ables , it 
+
+provides a transparent link between battery operation and health assessment, supporting advanced 
+
+BMS strategies for emerging electrification scenarios, including V2G. Extending this framework to next -generation batteries and self -driving laborato ries could enable application -driven discovery, 
+
+transforming deployment from the endpoint of validation into a continuous driver of engineering 
+
+development across energy -storage technologies and other complex multiphysics systems. 
+
+Methods 
+
+Particle cracking mechanisms fundamentals 
+
+The physical constraint s, along with the first and second derivatives, are derived as follows: 
+
+𝑄 𝑙𝑜𝑠𝑠 = 𝐴 × 𝜓 
+
+𝑍 × [(1 + 𝑍 × 𝐸𝐹 𝐶 𝑛𝑜𝑟𝑚 × 𝑀 )1 
+
+> 𝐵
+
+− (1 + 𝑍 )1
+
+> 𝐵
+
+] (1) 
+
+𝜕 𝑄 𝑙𝑜𝑠𝑠 
+
+𝜕𝐸𝐹 𝐶 𝑛𝑜𝑟𝑚 
+
+= (𝐴 × 𝜓 × 𝑀 
+
+𝐵 ) × (1 + 𝑍 × 𝐸𝐹 𝐶 𝑛𝑜𝑟𝑚 × 𝑀 )1 
+
+> 𝐵 −1
+
+(2) 
+
+where 
+
+𝜓 = 16 𝜋 𝑟 𝑛 2𝜌 𝑐𝑟 𝑙 𝑐𝑟 ,0𝑘 ((𝜎 𝑡 ,𝑚𝑎𝑥 𝑏 √𝜋 𝑎 0)𝑛 
+
+> 𝑆𝐸𝐼
+> 𝑖𝑛𝑜𝑟𝑔𝑎𝑛𝑖𝑐
+> 0
+> 𝑖𝑛𝑜𝑟𝑔𝑎𝑛𝑖𝑐
+
+)
+
+𝛿 𝑒 𝑀 𝑆𝐸𝐼  
+
+> 𝑖𝑛𝑜𝑟𝑔𝑎𝑛𝑖𝑐
+
+(3) 
+
+𝛧 = 2 − 𝑛 
+
+2 𝑘 ((𝜎 𝑡 ,𝑚𝑎𝑥 𝑏 √𝜋 )𝑛 𝑎 0
+
+> 2
+> 2−𝑛
+
+) (4) 
+
+where A, B, 𝛹 , 𝑍 are parameters affected by anode particle radius, diffusion -induced tangential stress, 
+
+and material -related constants. The value of M represents the maximum EFC in the training dataset 
+
+and is used to normalize the EFC feature. Furthermore, in Eq uation s. ( 3) and (4), the variable rn
+
+denotes the radius of the anode particle, and ρcr represents the number of cracks per unit area on the 
+
+graphite particle. The initial crack width is indicated by lcr,0 , and the initial crack depth by a0. Over 
+
+time, as aging progresses -represented by N-the initial crack depth a increases according to mate rial -
+
+specific constants k, b, and n. The maximum diffusion -induced tangential stress on the surface of the 
+
+anode particle, caused by diffusion, is denoted by σt,max . The initial thickness of the inner inorganic 
+
+SEI layer is l0inorganic , with its density an d molecular weight given by 𝜌 𝑆𝐸𝐼  
+
+> 𝑖𝑛𝑜𝑟𝑔𝑎𝑛𝑖𝑐
+
+and 𝑀 𝑆𝐸𝐼  
+
+> 𝑖𝑛𝑜𝑟𝑔𝑎𝑛𝑖𝑐
+
+,
+
+respectively. Additionally, the δe refers to the proportion of capacity loss attributed to the inner SEI 
+
+layer relative to the total capacity loss for the exposed surfac e. 
+
+Physics -informed learning with mechanistic constraints 
+
+Physics -informed neural network (PINN) integrates observational data with governing PDE 
+
+constraints through  automatic differentiation. Here, particle -cracking  is embedded into the loss 
+
+function as a constitutive aging constraint. The overall PINN loss combines (i) supervised 
+
+measurement fitting, (ii) PDE residual minimization enforced through collocation points, and (iii) physics -consistency constraints, including initial condition ancho ring and monotonic degradation 
+
+regularization. Mathematically, the loss function 𝐿 can be represented as 
+
+𝐿 (𝑄 ̂ (𝜃 )) = 𝜆 𝑑 𝐿 𝑑 + 𝜆 𝑃𝐷𝐸 𝐿 𝑃𝐷𝐸 + 𝜆 𝑎𝑙𝑙𝑜𝑐 𝐿 𝑎𝑙𝑙𝑜𝑐 + 𝜆 𝑖𝑐 𝐿 𝑖𝑐 + 𝜆 𝑚𝑜𝑛𝑜 𝐿 𝑚𝑜𝑛𝑜 , (5) 
+
+where 
+
+𝐿 𝑑 = 1
+
+> 𝑁 𝑖
+
+∑ ‖𝑁𝑁 (𝑥 𝑖 , 𝐸𝐹𝐶 ) − 𝑄 𝑖 ‖𝑁 𝑖  
+
+> 𝑖 =1
+
+, (6) 
+
+𝐿 𝑃𝐷𝐸  = 1
+
+> 𝑁 𝑓
+
+∑ ‖𝜕 𝑁𝑁 (𝑥 𝑗 ,𝑡 𝐸𝐹𝐶 ,𝑗 )
+
+> 𝜕 𝑡 𝐸𝐹𝐶 ,𝑗
+
+− 𝑎  ∙
+
+> 𝜕 𝐹 𝑝 ℎ𝑦 (𝑥 𝑗 ,𝑡 𝐸𝐹𝐶 ,𝑗 ;𝜃 )
+> 𝜕 𝑡 𝐸𝐹𝐶 ,𝑗
+
+)‖ 
+
+> 2
+> 𝑁 𝑓
+> 𝑗 =1
+
+, (7) 
+
+𝐿 𝑐𝑜𝑙𝑙𝑜𝑐 = 1
+
+𝑁 𝑓 
+
+∑‖𝑁𝑁 (𝑥 𝑗 , 𝑡 𝐸𝐹𝐶 ) − (𝑎 ∙ 𝐹 𝑝 ℎ𝑦 (𝑥 𝑗 , 𝑡 𝑗 ; 𝜃 ) + 𝑏 )‖2
+
+> 𝑁 𝑓
+> 𝑗 =1
+
+, (8) 
+
+𝐿 𝑖𝑐  = ∫ ‖𝑄 ̂ (𝜃 )(𝑥 , 0) − 𝑄 𝑖𝑐 (𝑥 )‖2𝑑𝑥 𝛤  , (9) 
+
+𝐿 𝑚𝑜𝑛𝑜  = ∑ 𝑅𝑒 𝐿 𝑈 (𝑄 ̂ (𝜃 ) 
+
+> 𝑖
+
+− 𝑄 ̂ (𝜃 )
+
+> 𝑖 +1
+
+)𝑁  
+
+> 𝑖 =1
+
+, (10) 
+
+wh ere 𝑄 ̂ (𝜃 ) denotes the predicted capacity loss function, x represents features coordinates, EFC 
+
+represents cycle time coordinates. 𝛺 represents the feature input domain, 𝛤 represents a time domain. 
+
+NN denotes the neural network operators. Qic is initial conditions. and 𝜆 ∗ denotes the weighting 
+
+coefficients used to balance competing loss terms and stabilize PINN training. 
+
+In Equation ( 8), the loss function includes terms t hat ensure the neural network satisfies the initial 
+
+conditions of the battery aging being modeled. The network’s output at every collocation point must 
+
+satisfy the physics (through the PDE residual) and conform to the known physical constraints 
+
+(through in itial conditions and monotonicity penalty). The monotonicity penalty Lmono is introduced 
+
+to enforce the physically expected degradation trend that capacity loss should not decrease with 
+
+cycling, except for occasional capacity regeneration . Since there are still some unknown mechanisms 
+
+trigger ing the aging behavior, especially when in extremely different conditions and wide operational 
+
+range (0.6C -2C or MCC , 0degC -35degC, 70%DOD -100%DOD). Some cells show a linear or 
+
+gradually decelerating decline in capacity fade , while other cells exhibit a transition from linear to 
+
+accelerated degradation. 
+
+Adaptive physics -informed transfer scheduler 
+
+Traditional PINNs perform well for smooth and monotonic aging dynamics 45 , but often struggle to 
+
+capture highly coupled and non -smooth behavior using point -wise PDE residual minimization, which 
+
+tends to produce over -regularized solution manifolds and steep optimization gradients. One limitation 
+
+is that static physical constrain ts tend to bias the model toward smooth , long -lifetime trajectories, thereby missing abrupt aging transitions . An example can be seen in Figure S2 by the rapid 
+
+degradation onset emerging near the 150th cycle at 0 °C when only sparse early -life data are ava ilable. 
+
+These limitations motivate adaptive mechanistic refinement, where physical constraints evolve 
+
+together with incoming operational signals rather than remaining globally fixed. 
+
+To reconcile incomplete constitutive physics with heterogeneous operating behavior, we introduce 
+
+an adaptive physics -informed training scheduler tightly coupled with chronological transfer learning 
+
+(see Supplementary Note 3 for details ). The proposed scheduler continuously updates the constitutive 
+
+parameters 𝜃 = {𝐴 , 𝐵 , 𝜙 , 𝑍 } toge ther with the neural -network weights during target -cell adaptation. 
+
+The optimization objective is formulated as: 
+
+𝑊 ∗, 𝜃 ∗ = 𝑎𝑟𝑔𝑚𝑖𝑛 (𝐿 (𝑄 ̂𝑙𝑜𝑠𝑠 
+
+> (𝜃 )
+
+))
+
+where 𝐿 (𝑄 ̂𝑙𝑜𝑠𝑠  
+
+> (𝜃 )
+
+) combines measurement fitting, PDE residuals at collocation points, initial -
+
+condition anchoring and monotonicity regularization. 
+
+During adaptation, the scheduler operates across restricted V2G -relevant charging windows with 
+
+lower bounds ranging from 3.50 –3.80 V and upper bounds from 3.85 –4.10 V (Section 2.4). Window -
+
+specific virtual -sensing descriptors extracted from partial chargin g segments are dynamically injected 
+
+into the transfer process, enabling adaptive refinement under constrained sensing conditions. To 
+
+preserve physically admissible parameter evolution, the constitutive variables are optimized through 
+
+differentiable positiv ity reparameterization: 
+
+𝜃 𝑖  = 𝑠𝑜𝑓𝑡 𝑝𝑙𝑢𝑠 (𝑢 𝑖 ) + 𝜀 
+
+where ui denotes the unconstrained latent variable and ε= 10 -12 prevents numerical singularities. The 
+
+scheduler shifts battery prognosis from fitting observed degradation to constraining physically 
+
+plaus ible future evolution under incomplete observations. 
+
+Physics -informed latent design space 
+
+Virtual sensing is performed within a physics -informed latent design space comprising four design 
+
+parameters (Lneg , Cs,max , rneg , and Dneg ). These parameters capture geometric and material 
+
+characteristics governing battery electrochemical behavior and have been identified as the most 
+
+informative representation for lifetime prediction, with additional design parameters provid ing 
+
+diminishing predictive gains 4. The latent design space is parameterized by a multiphysics DT 
+
+calibrated through electrochemical characterization, including voltage/current profiles, EIS, IC and 
+
+DV analysis, together with aging mode identification based on loss of lithium inve ntory and loss of 
+
+active material 44 . Consequently, each point in the latent space represents a physically consistent 
+
+battery design and generates a corresponding charging response through the DT. Virtual sensing projects partial charging signatures onto this latent design space using a random forest regressor 
+
+trained on DT -generated synthetic data , enabling inference of four design parameters for downstream 
+
+health assessment. The sensitivity ranking and uncertainty quantification of the se lected design 
+
+parameters are provided in Table S3 and Figure S3 1.
+
+Data and code availability 
+
+Data and code used in this work will be available after publication. 
+
+Ackn owledgements 
+
+The authors acknowledge “Best4Grid – Vehicle Battery Storage for Green Transport and Grid 
+
+Stability in the Nordics”, part of the Nordic Grand Solutions Programme funded by Nordic Energy 
+
+Research, the Swedish Electromobility Center and the Swed ish Energy Agency through the project 
+
+“EV Drivers in the Driver’s Seat.” We also acknowledge support from the STandUP for Energy and 
+
+Compel initiatives. 
+
+Reference 
+
+1. Yang, J., Gu, F. & Guo, J. Environmental feasibility of secondary use of electric vehicle 
+
+lithium -ion batteries in communication base stations. Resour. Conserv. Recycl. 156 , (2020). 
+
+2. Jiang, B. et al. Bayesian learning for rapid prediction of lithium -ion battery -cycling 
+
+protocols. Joule 5, 3187 –3203 (2021). 
+
+3. Ma, G. et al. Real -time personalized health status prediction of lithium -ion batteries using 
+
+deep transfer learning. Energy Environ. Sci. 15 , 40 83 –4094 (2022). 
+
+4. Guo, W. et al. Uncovering the impact of battery design parameters on health and lifetime 
+
+using short charging segments. Energy Environ. Sci. 18 , 8462 –8474 (2025). 
+
+5. Li, W. et al. Peering into Batteries: Electrochemical Insight Through I n Situ and Operando 
+
+Methods over Multiple Length Scales. Joule vol. 5 77 –88 Preprint at 
+
+https://doi.org/10.1016/j.joule.2020.11.003 (2021). 
+
+6. Taghavian, H., Vanoppen, V., Berg, E., Broqvist, P. & Sjölund, J. Navigating chemical 
+
+design spaces for metal -ion batteries via machine -learning -guided phase -field simulations. 
+
+NPJ Comput. Mater. 11 , 243 (2025). 
+
+7. Dubarry, M., Howey, D. & Wu, B. Enabling battery digital twins at the industrial scale. Joule 
+
+7, 1134 –1144 (2023). 
+
+8. Chen, Y. et al. Mechanical -electroch emical modeling of silicon -graphite composite anode for 
+
+lithium -ion batteries. J. Power Sources 527 , 231178 (2022). 9. Li, W. et al. Physics -informed neural networks for electrode -level state estimation in lithium -
+
+ion batteries. J. Power Sources 506 , (2021 ). 
+
+10. Guo, W., Li, Y., Sun, Z., Vilsen, S. B. & Stroe, D. I. A digital twin to quantitatively 
+
+understand aging mechanisms coupled effects of NMC battery using dynamic aging profiles. 
+
+Energy Storage Mater. 63 , (2023). 
+
+11. Edge, J. S. et al.  Lithium ion battery degradation: what you need to know. Physical 
+
+Chemistry Chemical Physics 23 , 8200 –8221 (2021). 
+
+12. Yuan, C., Hahn, Y., Lu, W., Oancea, V. & Xu, J. Quantification of electrochemical -
+
+mechanical coupling in lithium -ion batteries. Cell Rep. Phys. Sci. 3, 101158 (2022). 
+
+13. Verma, A. et al. Ageing mitigation of 21700 Li -ion cylindrical batteries for heavy duty BEVs 
+
+through forced air and immersion cooling strategies in Nordic climate zones. J. Power 
+
+Sources 661 , 238643 (2026). 
+
+14. Yang, Y., Raymand, D., Guo, W. & Brandell, D. Modeling the interplay between aging and 
+
+thermal runaway propagation in large -format lithium -ion batteries. Journal of Power Sources 
+
+Advances 38 , 100203 (2026). 
+
+15. Li, J. et al. An electrochemical -thermal model based on dynamic resp onses for lithium iron 
+
+phosphate battery. J. Power Sources 255 , 130 –143 (2014). 
+
+16. Ping, P., Wang, Q., Chung, Y. & Wen, J. Modelling electro -thermal response of lithium -ion 
+
+batteries from normal to abuse conditions. Appl. Energy 205 , 1327 –1344 (2017). 
+
+17. chun Yang, S. et al. A coupled electrochemical -thermal -mechanical degradation model ling 
+
+approach for lifetime assessment of lithium -ion batteries. Electrochim. Acta 326 , (2019). 
+
+18. Gao, X., Lu, W. & Xu, J. Modeling framework for multiphysics -multiscale behavior of Si –C
+
+composite anode. J. Power Sources 449 , 227501 (2020). 
+
+19. Che, Y. et al. Data efficient health prognostic for batteries based on sequential information -
+
+driven probabilistic neural network. Appl. Energy 323 , (2022). 
+
+20. Che, Y., Huang, J., Hu, X. & Braatz, R. D. Sensing meets physics -aware artificial 
+
+intelligence for empowe ring smart batteries. Nature Sensors 1, 197 –200 (2026). 
+
+21. Tao, S. et al. Battery Cross -Operation -Condition Lifetime Prediction via Interpretable 
+
+Feature Engineering Assisted Adaptive Machine Learning. ACS Energy Lett. 8, 3269 –3279 
+
+(2023). 
+
+22. Zhang, Y. et al. Identifying degradation patterns of lithium ion batteries from impedance 
+
+spectroscopy using machine learning. Nat. Commun. 11 , (2020). 
+
+23. Jones, P. K., Stimming, U. & Lee, A. A. Impedance -based forecasting of lithium -ion battery 
+
+performance amid uneven usage. Nat. Commun. 13 , (2022). 
+
+24. Dubarry, M., Truchot, C. & Liaw, B. Y. Synthesize battery degradation modes via a 
+
+diagnostic and prognost ic model. J. Power Sources 219 , 204 –216 (2012). 25. Bloom, I. et al. Differential voltage analyses of high -power, lithium -ion cells 1. Technique 
+
+and application. J. Power Sources 139 , 295 –303 (2005). 
+
+26. Weng, A., Siegel, J. B. & Stefanopoulou, A. Differen tial voltage analysis for battery 
+
+manufacturing process control. Front. Energy Res. 11 , (2023). 
+
+27. Bai, P., Li, J., Brushett, F. R. & Bazant, M. Z. Transition of lithium growth mechanisms in 
+
+liquid electrolytes. Energy Environ. Sci. 9, 3221 –3229 (2016). 
+
+28. Chen, B. et al. Article Battery aging mode identification across NMC compositions and 
+
+designs using machine learning Battery aging mode identification across NMC compositions 
+
+and designs using machine learning. 1 –18. 
+
+29. Zhang, J., Qiao, J., Sun, K. & W ang, Z. Balancing particle properties for practical lithium -ion 
+
+batteries. Particuology vol. 61 18 –29 Preprint at https://doi.org/10.1016/j.partic.2021.05.006 
+
+(2022). 
+
+30. Chinnam, P. R. et al. Fast -Charging Aging Considerations: Incorporation and Alignment of 
+
+Cell Design and Material Degradation Pathways. ACS Appl. Energy Mater. 4, 9133 –9143 
+
+(2021). 
+
+31. Borah, M., Wang, Q., Moura, S., Sauer, D. U. & Li, W. Synergizing physics and machine 
+
+learning for advanced battery management. Communications Engineering 3, (2024). 
+
+32. Guo, W., Sun, Z., Vilsen, S. B., Meng, J. & Stroe, D. I. Review of “grey box” lifetime 
+
+modeling for lithium -ion battery: Combining physics and data -driven methods. J. Energy 
+
+Storage 56 , 105992 (2022). 
+
+33. Huang, Y., Zou, C., Li, Y. & Wik, T. MINN: Learning the Dynamics of Differential -
+
+algebraic Equations and Application to Battery Modeling. IEEE Trans. Pattern Anal. Mach. 
+
+Intell. 1–14 (2024) doi:10.1109/tpami.2024.3456475. 
+
+34. Steininger, V., Rumpf, K., Hüsson, P., Li, W. & Sauer, D. U. Autom ated feature extraction to 
+
+integrate field and laboratory data for aging diagnosis of automotive lithium -ion batteries. 
+
+Cell Rep. Phys. Sci. https://doi.org/10.1016/j.xcrp.2023.101596 (2023) 
+
+doi:10.1016/j.xcrp.2023.101596. 
+
+35. Kim, S. et al. Accelerated battery life predictions through synergistic combination of 
+
+physics -based models and machine learning. Cell Rep. Phys. Sci. 3, (2022). 
+
+36. Ruan, H., Chen, J., Ai, W. & Wu, B. Generalised diagnostic framework for rapid battery 
+
+degradation quant ification with deep learning. Energy and AI 9, (2022). 
+
+37. Zhang, Y., Wik, T., Bergström, J. & Zou, C. Machine learning -based lifelong estimation of 
+
+lithium plating potential: A path to health -aware fastest battery charging. Energy Storage 
+
+Mater. 74 , (2025 ). 
+
+38. Kim, S., Yi, Z., Chen, B. R., Tanim, T. R. & Dufek, E. J. Rapid failure mode classification 
+
+and quantification in batteries: A deep learning modeling framework. Energy Storage Mater. 
+
+45 , 1002 –1011 (2022). 39. Che, Y. et al. Diagnostic -free onboard b attery health assessment. Joule 9, (2025). 
+
+40. Karniadakis, G. E. et al. Physics -informed machine learning. Nature Reviews Physics 3, 422 –
+
+440 (2021). 
+
+41. Wang, F., Zhai, Z., Zhao, Z., Di, Y. & Chen, X. Physics -informed neural network for 
+
+lithium -ion batter y degradation stable modeling and prognosis. Nat. Commun. 15 , (2024). 
+
+42. Tao, S. et al. Non -destructive degradation pattern decoupling for early battery trajectory 
+
+prediction via physics -informed learning.  Energy Environ. Sci. 
+
+https://doi.org/10.1039/d4ee03839h (2025) doi:10.1039/d4ee03839h. 
+
+43. Wang, H. et al.  Scientific discovery in the ag e of artificial intelligence.  Nature vol. 620 47 –
+
+60 Preprint at https://doi.org/10.1038/s41586 -023 -06221 -2 (2023). 
+
+44. Guo, W. et al.  Digital Twin -Assisted Degradation Diagnosis and Quantification of NMC 
+
+Battery Aging Effects During Fast Charging. Adv. Ene rgy Mater. 14 , 2401644 (2024). 
+
+45. Guo, W. Physics Informed Machine Learning for Predicting the Degradation Behavior of 
+
+Lithium -ion Batteries. https://doi.org/10.54337/aau755548824 (2024) 
+
+doi:10.54337/aau755548824. 
+
+46. Severson, K. A. et al.  Data -driven pr ediction of battery cycle life before capacity 
+
+degradation. Nat. Energy 4, 383 –391 (2019). 
+
+47. Zhang, J. et al. Discovery Learning predicts battery cycle life from minimal experiments. 
+
+Nature 650 , 110 –115 (2026). 
+
+48. Li, Y., Guo, J., Pedersen, K., Gurevich , L. & Stroe, D. -I. Investigation of Multi -Step Fast 
+
+Charging Protocol and Aging Mechanism for Commercial NMC/Graphite Lithium -ion 
+
+Batteries. Journal of Energy Chemistry https://doi.org/10.1016/j.jechem.2023.01.016 (2023) 
+
+doi:10.1016/j.jechem.2023.01.016. 
+
+49. Li, Y. et al. Evolution of aging mechanisms and performance degradation of lithium -ion 
+
+battery from moderate to severe capacity loss scenarios. Chemical Engineering Journal 498 ,
+
+155588 (2024). 
+
+50. Vlijmen, B. van et al. Aging matrix visualizes complexi ty of battery aging across hundreds 
+
+of cycling protocols.  Energy Environ. Sci. https://doi.org/10.1039/D4EE05609D (2025) 
+
+doi:10.1039/D4EE05609D. 
+
+51. Qu, J. et al.  Insights into Fast -Charge -Induced Cracking and Bulk Structural Deterioration of 
+
+Ni -Rich Layer ed Cathodes for Lithium -Ion Batteries. ACS Nano 19 , 33202 –33211 (2025). 
+
+52. Weiss, M. et al. Fast Charging of Lithium -Ion Batteries: A Review of Materials Aspects. 
+
+Advanced Energy Materials vol. 11 Preprint at https://doi.org/10.1002/aenm.202101126 
+
+(2021). 
+
+53. Chien, Y. C. et al.  Rapid determination of solid -state diffusion coefficients in Li -based 
+
+batteries via intermittent current interruption method. Nat. Commun. 14 , (2023). 54. Kim, M., Kim, I., Kim, J. & Choi, J. W. Lifetime Prediction of Lithium Ion Batteries by 
+
+Using the Heterogeneity of Graphite Anodes. ACS Energy Lett. 8, 2946 –2953 (2023). 
+
+55. Gong, J. et al. Quantifying the impact of V2X operation on electric vehicle batter y
+
+degradation: An experimental evaluation. eTransportation 20 , (2024).

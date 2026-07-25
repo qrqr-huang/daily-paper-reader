@@ -1,0 +1,221 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-25T21:35:23.212998+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2607.16864v1",
+      "source": "arxiv",
+      "title": "Bridging battery design and health assessment through virtual sensing and physics-informed learning",
+      "abstract": "Supercharging of lithium-ion batteries (LiBs) requires robust health monitoring to ensure durability, safety, and user confidence, particularly for emerging vehicle-to-grid applications with bidirectional energy flows. Yet battery management remains largely disconnected from the material and structural origins of aging, limiting both interpretable health assessment and informed battery design. Here we propose a physics-informed learning framework with virtual sensing that infers hard-to-measure design parameters, including solid-state diffusion coefficient, electrode thickness, ion concentration, and particle size, directly from standard battery management system (BMS) measurements. Across diverse fast-charging strategies and driving profiles, embedding a digital-twin-derived particle-cracking mechanism as a soft constraint reduces trajectory and lifetime prediction errors by 6-8 times relative to state-of-the-art machine learning baselines using only 2% early-life observations. We further show that accurate degradation extrapolation does not require fully resolved governing equations; validated partial mechanisms, jointly refined with limited data, provide sufficient guidance. Virtual sensing transforms standard charging signals into latent design variables without additional sensors, bridging observable battery behavior and underlying aging processes while reducing capacity loss error by up to 39%, end-of-life (EOL) error by 17%, and prediction variability by up to 54%, enabling real-time exploration of new battery configurations. More broadly, the proposed framework establishes a practical feedback loop between deployment and development, demonstrating how real-world operation can continuously inform upstream design decisions across complex multiphysics systems.",
+      "authors": [
+        "Wendi Guo",
+        "Søren Byg Vilsen",
+        "Daniel Ioan Stroe",
+        "Yaqi Li",
+        "Yicun Huang",
+        "Ashima Verma",
+        "Daniel Brandell"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-07-18T15:59:29+00:00",
+      "link": "https://arxiv.org/pdf/2607.16864v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "physics-informed learning for battery health assessment using BMS data",
+      "llm_evidence_cn": "基于物理信息学习与BMS数据的电池健康评估",
+      "llm_evidence": "基于物理信息学习与BMS数据的电池健康评估",
+      "canonical_evidence": "基于物理信息学习与BMS数据的电池健康评估",
+      "llm_tldr_en": "Proposes a physics-informed learning framework with virtual sensing to infer design parameters from BMS data for interpretable battery health assessment, bridging battery design and aging analysis. Validated across fast-charging conditions, it enhances durability and safety.",
+      "llm_tldr_cn": "针对超快充锂离子电池健康管理需求，现有方法难以解释材料结构层面的老化根源。本文提出一种融合物理模型与数据驱动的虚拟传感学习框架，直接利用BMS电压、电流等测量信号，推断固态扩散系数、电极厚度等关键设计参数，实现可解释的电池健康评估。实验表明该框架在多种快充条件下有效，有助于电池设计与健康管理的桥梁构建，提升耐久性与安全性。",
+      "llm_tldr": "针对超快充锂离子电池健康管理需求，现有方法难以解释材料结构层面的老化根源。本文提出一种融合物理模型与数据驱动的虚拟传感学习框架，直接利用BMS电压、电流等测量信号，推断固态扩散系数、电极厚度等关键设计参数，实现可解释的电池健康评估。实验表明该框架在多种快充条件下有效，有助于电池设计与健康管理的桥梁构建，提升耐久性与安全性。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.18329v1",
+      "source": "arxiv",
+      "title": "Dynamic Loss Balancing for Joint SOH and RUL Prediction of Lithium-Ion Batteries via a Rotary SOH-Injected Prior Battery Transformer",
+      "abstract": "The deployment of reliable lithium-ion battery management systems is crucial for accelerating electrification, yet the joint prognosis of State of Health (SOH) and Remaining Useful Life (RUL) remains severely hindered by task heteroscedasticity. Conventional multi-task learning frameworks fail to balance the bounded, low-variance noise of SOH estimation with the unbounded, nonlinearly expanding uncertainty of long-term RUL predictions. Here, we present the Rotary SOH-Injected Prior Battery Transformer (RoSIP-Batt), a unified co-estimation framework that resolves these optimization conflicts. By formulating joint prediction as a Bayesian multi-task objective, RoSIP-Batt introduces a homoscedastic uncertainty weighting mechanism to dynamically scale task-specific gradients based on learned residual noise levels. The architecture leverages decoupled dual classification tokens and a per-dimension gated fusion mechanism, secured by a gradient-detachment operator to prevent high-variance RUL updates from corrupting the stable SOH representation space. To capture electrochemical degradation patterns without relying on absolute cycle steps, Rotary Position Embedding (RoPE) is incorporated into a shared Transformer backbone to model translation-invariant relative temporal profiles. Crucially, the intermediate SOH estimate is directly injected into the RUL regression head as a physical degradation prior. Evaluations across the NASA, MIT-Stanford, and HUST datasets show that RoSIP-Batt significantly outperforms state-of-the-art baselines, reducing SOH estimation error to 1.994% MAE on NASA and restricting RUL prediction error to 62.85 cycles on Stanford. These findings establish RoSIP-Batt as a highly generalizable, computationally efficient solution suitable for real-time embedded BMS deployment.",
+      "authors": [
+        "Shuhao Chen",
+        "Tianyu Shi",
+        "Yiwen Huang",
+        "Chengyi Tu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-19T08:11:40+00:00",
+      "link": "https://arxiv.org/pdf/2607.18329v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "joint SOH and RUL prediction directly addresses state of health characterization and estimation",
+      "llm_evidence_cn": "联合SOH与RUL预测直接对应健康状态表征与估计",
+      "llm_evidence": "联合SOH与RUL预测直接对应健康状态表征与估计",
+      "canonical_evidence": "联合SOH与RUL预测直接对应健康状态表征与估计",
+      "llm_tldr_en": "This paper proposes RoSIP-Batt, a Transformer-based framework that jointly predicts SOH and RUL by injecting SOH priors via rotary position encoding and balancing task losses with homoscedastic uncertainty, achieving superior accuracy on multiple battery degradation datasets.",
+      "llm_tldr_cn": "锂离子电池管理中SOH与RUL联合预测至关重要，但SOH噪声有界低方差与RUL不确定性非线性扩展构成任务异方差性，传统固定权重方法难以平衡。本文提出RoSIP-Batt，通过旋转位置编码注入SOH退化先验，增强Transformer对时序依赖的捕捉，并引入同方差不确定性为多任务目标自动分配动态损失权重。在多个电池退化数据集上的实验显示，该方法显著优于现有基线，提高了SOH与RUL联合预测的准确性与鲁棒性，尤其在长期预测中有效抑制了不确定性发散。该工作证明了同方差不确定性在多任务电池状态预测中的有效性，推动了数据驱动方法在实际BMS中的应用。",
+      "llm_tldr": "锂离子电池管理中SOH与RUL联合预测至关重要，但SOH噪声有界低方差与RUL不确定性非线性扩展构成任务异方差性，传统固定权重方法难以平衡。本文提出RoSIP-Batt，通过旋转位置编码注入SOH退化先验，增强Transformer对时序依赖的捕捉，并引入同方差不确定性为多任务目标自动分配动态损失权重。在多个电池退化数据集上的实验显示，该方法显著优于现有基线，提高了SOH与RUL联合预测的准确性与鲁棒性，尤其在长期预测中有效抑制了不确定性发散。该工作证明了同方差不确定性在多任务电池状态预测中的有效性，推动了数据驱动方法在实际BMS中的应用。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.18330v1",
+      "source": "arxiv",
+      "title": "Physics-Guided Masked Multi-Task Network for Edge-Friendly Battery Health Diagnostics from Sto-chastically Fragmented Charging Profiles",
+      "abstract": "The deployment of reliable lithium-ion battery management systems is crucial for accelerating electrification, yet the joint prognosis of State of Health (SOH) and Remaining Useful Life (RUL) remains severely hindered by task heteroscedasticity. Conventional multi-task learning frameworks fail to balance the bounded, low-variance noise of SOH estimation with the unbounded, nonlinearly expanding uncertainty of long-term RUL predictions. Here, we present the Rotary SOH-Injected Prior Battery Transformer (RoSIP-Batt), a unified co-estimation framework that resolves these optimization conflicts. By formulating joint prediction as a Bayesian multi-task objective, RoSIP-Batt introduces a homoscedastic uncertainty weighting mechanism to dynamically scale task-specific gradients based on learned residual noise levels. The architecture leverages decoupled dual classification tokens and a per-dimension gated fusion mechanism, secured by a gradient-detachment operator to prevent high-variance RUL updates from corrupting the stable SOH representation space. To capture electrochemical degradation patterns without relying on absolute cycle steps, Rotary Position Embedding (RoPE) is incorporated into a shared Transformer backbone to model translation-invariant relative temporal profiles. Crucially, the intermediate SOH estimate is directly injected into the RUL regression head as a physical degradation prior. Evaluations across the NASA, MIT-Stanford, and HUST datasets show that RoSIP-Batt significantly outperforms state-of-the-art baselines, reducing SOH estimation error to 1.994% MAE on NASA and restricting RUL prediction error to 62.85 cycles on Stanford. These findings establish RoSIP-Batt as a highly generalizable, computationally efficient solution suitable for real-time embedded BMS deployment.",
+      "authors": [
+        "Shuhao Chen",
+        "Tianyu Shi",
+        "Chengyi Tu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-19T08:20:12+00:00",
+      "link": "https://arxiv.org/pdf/2607.18330v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "joint prognosis of State of Health (SOH) and Remaining Useful Life (RUL)",
+      "llm_evidence_cn": "联合预测健康状态(SOH)和剩余使用寿命(RUL)",
+      "llm_evidence": "联合预测健康状态(SOH)和剩余使用寿命(RUL)",
+      "canonical_evidence": "联合预测健康状态(SOH)和剩余使用寿命(RUL)",
+      "llm_tldr_en": "Proposes RoSIP-Batt, a transformer model for joint SOH and RUL estimation, using Bayesian multi-task learning to handle heteroscedasticity, from fragmented charging profiles.",
+      "llm_tldr_cn": "针对锂离子电池健康状态(SOH)和剩余使用寿命(RUL)联合估计中任务异方差这一关键挑战，本文提出物理引导的掩码多任务变换器网络RoSIP-Batt。该框架通过贝叶斯多任务学习目标，将SOH估计的低方差噪声与RUL预测的扩展不确定性有机平衡，仅依赖随机碎片化充电曲线即可实现协同诊断。实验结果表明，方法在边缘计算环境下提供可靠且高效的电池健康预测，为智能电池管理系统部署奠定了基础。",
+      "llm_tldr": "针对锂离子电池健康状态(SOH)和剩余使用寿命(RUL)联合估计中任务异方差这一关键挑战，本文提出物理引导的掩码多任务变换器网络RoSIP-Batt。该框架通过贝叶斯多任务学习目标，将SOH估计的低方差噪声与RUL预测的扩展不确定性有机平衡，仅依赖随机碎片化充电曲线即可实现协同诊断。实验结果表明，方法在边缘计算环境下提供可靠且高效的电池健康预测，为智能电池管理系统部署奠定了基础。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.20577v1",
+      "source": "arxiv",
+      "title": "AI-Driven Surrogate Models for Predicting Electrode-Scale Discharge Behavior in Lithium-Ion Batteries",
+      "abstract": "Physics-based simulations are essential for understanding the electrode-scale discharge behavior of lithium-ion batteries (LIBs) but suffer from prohibitive computational costs. To address this, we introduce a novel deep learning surrogate pipeline based on the Swin3D Transformer to predict spatiotemporal discharge dynamics directly from volumetric data. Our approach integrates two key innovations: Gaussian Positional Encoding (GPE), which enhances spatial feature representation by adapting to the complex geometry of electrode microstructures, and a specialized Temporal Encoding module to capture non-linear timeseries evolution. Experimental validation on an Electrochemical Simulation (ES) dataset demonstrates that our pipeline significantly outperforms state-of-the-art point cloud baselines in prediction accuracy. Furthermore, the proposed method reduces the computational overhead by orders of magnitude, providing a scalable and efficient framework for high-throughput battery design and optimization.",
+      "authors": [
+        "Mengda Xing",
+        "Jean-Marie Lagniez",
+        "Alejandro Franco"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-22T09:10:48+00:00",
+      "link": "https://arxiv.org/pdf/2607.20577v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "predicts electrode-scale discharge behavior in lithium-ion batteries using deep learning",
+      "llm_evidence_cn": "使用深度学习预测锂离子电池电极尺度放电行为",
+      "llm_evidence": "使用深度学习预测锂离子电池电极尺度放电行为",
+      "canonical_evidence": "使用深度学习预测锂离子电池电极尺度放电行为",
+      "llm_tldr_en": "This paper introduces a deep learning surrogate model using Swin3D Transformer to predict spatiotemporal discharge dynamics in lithium-ion battery electrodes, enabling faster simulation of discharge behavior.",
+      "llm_tldr_cn": "本文针对锂离子电池电极尺度放电行为物理模拟计算成本高的问题，提出一种基于Swin3D Transformer的深度学习代理模型，通过高斯位置编码和时序编码模块直接预测三维微结构上的时空放电动力学，实验表明该管道能准确高效地模拟放电过程，为电池设计优化提供快速工具。",
+      "llm_tldr": "本文针对锂离子电池电极尺度放电行为物理模拟计算成本高的问题，提出一种基于Swin3D Transformer的深度学习代理模型，通过高斯位置编码和时序编码模块直接预测三维微结构上的时空放电动力学，实验表明该管道能准确高效地模拟放电过程，为电池设计优化提供快速工具。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "high-rate discharge conditions for battery state of charge",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.17832v1",
+      "source": "arxiv",
+      "title": "Multisine electrochemical impedance spectroscopy for Li-ion battery characterisation",
+      "abstract": "Electrochemical impedance spectroscopy (EIS) is a valuable tool for non-invasive battery characterisation as it provides a compact data representation of physical processes over a wide range of time scales. Commonly, sinusoids at different frequencies are injected sequentially (single-sines). Alternatively, a multisine excitation (a sum of sines) is advantageous for reducing experiment time and allowing impedance to be measured during operational conditions (e.g.\\ charging, discharging, relaxation, and during temperature changes). In this work, we demonstrate high-fidelity multisine EIS measurements on Li-ion cells over a wide frequency range (20 mHz to 1 kHz) taken with a commercial potentiostat, and compare these to single-sine EIS, discussing the advantages of both techniques and how to verify the conditions of linearity and stationarity. We also measure broadband multisine impedance at different operating conditions (during charging/discharging, relaxation, and temperature changes), showing how this tool gives new insights into battery dynamics, material properties, charge transfer processes, and thermal performance.",
+      "authors": [
+        "Noël Hallemans",
+        "Heiko Seel-Mayer",
+        "Peter Keil",
+        "Stephen R. Duncan",
+        "David A. Howey"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-07-20T11:23:53+00:00",
+      "link": "https://arxiv.org/pdf/2607.17832v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multisine EIS enables fast characterization for equivalent circuit models",
+      "llm_evidence_cn": "多正弦EIS实现快速表征以用于等效电路模型",
+      "llm_evidence": "多正弦EIS实现快速表征以用于等效电路模型",
+      "canonical_evidence": "多正弦EIS实现快速表征以用于等效电路模型",
+      "llm_tldr_en": "Multisine electrochemical impedance spectroscopy reduces Li-ion battery characterization time and enables in-situ measurements, offering a valuable tool for parameterizing equivalent circuit models used in SOC estimation.",
+      "llm_tldr_cn": "多正弦电化学阻抗谱（EIS）显著缩短锂离子电池表征时间，并允许在充放电等运行条件下测量，为等效电路模型参数化提供高效工具，从而支持荷电状态（SOC）估计算法开发。该方法在宽频率范围内验证了高保真度测量，有望用于在线参数更新，提升BMS中SOC估计的精度。",
+      "llm_tldr": "多正弦电化学阻抗谱（EIS）显著缩短锂离子电池表征时间，并允许在充放电等运行条件下测量，为等效电路模型参数化提供高效工具，从而支持荷电状态（SOC）估计算法开发。该方法在宽频率范围内验证了高保真度测量，有望用于在线参数更新，提升BMS中SOC估计的精度。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
