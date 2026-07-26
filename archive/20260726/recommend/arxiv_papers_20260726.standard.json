@@ -1,0 +1,61 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-26T21:25:00.661719+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.19307v1",
+      "source": "arxiv",
+      "title": "Accelerating Electrochemical Impedance Spectroscopy Measurements by Reducing Reliance on Noisy Low-Frequency Data",
+      "abstract": "Electrochemical impedance spectroscopy (EIS) is a powerful tool for probing kinetic and transport processes in electrochemical systems, but its practical use is often limited by the long acquisition time and noise sensitivity of low-frequency measurements. Here, we present a statistical inference-assisted framework that reduces the reliance on low-frequency sampling by increasing the sampling density in cleaner high-frequency regions. Using AutoEIS and Bayesian inference, the augmented high-frequency data are fitted to selected equivalent circuit models (ECMs) to reconstruct the full impedance spectrum and quantify parameter uncertainty. To evaluate reconstruction performance, we introduce the critical frequency (fc), defined as the highest cutoff frequency at which the full EIS response can still be reliably recovered. The results show that additional high-frequency sampling can not only shift fc to higher values but also reduce the total measurement time. The specific improvement depends on the noise level of the EIS data, the number of added data points, and the ECM structure. Overall, this work provides a practical framework for designing fast and efficient EIS data acquisition and offers guidance for applying partial-frequency EIS reconstruction in real electrochemical characterization.",
+      "authors": [
+        "Qiuyu Shi",
+        "Naohiro Fujinuma",
+        "Yonatan Kurniawan",
+        "Runze Zhang",
+        "Ali Jaberi",
+        "Ashley Dale",
+        "Jason Hattrick-Simpers"
+      ],
+      "primary_category": "physics.data-an",
+      "categories": [
+        "physics.data-an",
+        "physics.chem-ph"
+      ],
+      "published": "2026-07-21T17:22:32+00:00",
+      "link": "https://arxiv.org/pdf/2607.19307v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Uses equivalent circuit models and Bayesian inference to accelerate EIS measurements, applicable to SOC-related battery characterization.",
+      "llm_evidence_cn": "采用等效电路模型和贝叶斯推断加速EIS测量，可用于SOC相关电池表征。",
+      "llm_evidence": "采用等效电路模型和贝叶斯推断加速EIS测量，可用于SOC相关电池表征。",
+      "canonical_evidence": "采用等效电路模型和贝叶斯推断加速EIS测量，可用于SOC相关电池表征。",
+      "llm_tldr_en": "Proposes a statistical inference framework to accelerate EIS by reducing low-frequency measurements, using AutoEIS and Bayesian inference with ECMs, aiding battery SOC estimation.",
+      "llm_tldr_cn": "为解决电化学阻抗谱（EIS）低频测量耗时长、噪声敏感的问题，提出统计推断辅助框架，通过增强高频采样密度并利用AutoEIS和贝叶斯推断拟合等效电路模型，重建全频谱并量化参数不确定性。在电池系统中验证了重构性能，为基于EIS的SOC估计提供了更快速的表征手段。",
+      "llm_tldr": "为解决电化学阻抗谱（EIS）低频测量耗时长、噪声敏感的问题，提出统计推断辅助框架，通过增强高频采样密度并利用AutoEIS和贝叶斯推断拟合等效电路模型，重建全频谱并量化参数不确定性。在电池系统中验证了重构性能，为基于EIS的SOC估计提供了更快速的表征手段。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
