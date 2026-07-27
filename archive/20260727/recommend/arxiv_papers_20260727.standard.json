@@ -1,0 +1,174 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-27T21:45:42.732537+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 3,
+    "quick_skim_target": 12,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2607.22421v1",
+      "source": "arxiv",
+      "title": "StateFormer: A Multivariate Transformer for Learning History-Dependent Battery State Dynamics and Long-Horizon Health Forecasting",
+      "abstract": "This paper introduces a novel multivariate Transformer \\emph{StateFormer} that forecasts degradation dynamics of large-scale battery systems. The model learns across time scales, from short-term thermal fluctuations to long-term aging trajectories, enabling accurate prediction of battery states including state of charge (SOC), state of health (SOH), or battery temperature. By capturing long-range dependencies and identifying the operating conditions that drive future degradation, the model simultaneously represents fast electrochemical and thermal processes and slow aging mechanisms within a unified framework. \\emph{StateFormer} achieves robust and accurate predictions of battery state estimation across both synthetic and real-world datasets. It maintains high predictive performance under additive current/voltage noise levels ranging from $1\\%$ to $10\\%$ and a wide range of ambient temperatures in a synthetic battery fleet accommodating different types of electrode chemistry and manufacturing, as well as five years of field data collected from residential utility battery systems. The resulting model bridges the laboratory-to-field gap and provides predictive intelligence for maintenance planning, operational optimization, and economic decision-making.",
+      "authors": [
+        "Zhe Bai",
+        "Stephen Harris"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-07-24T15:40:33+00:00",
+      "link": "https://arxiv.org/pdf/2607.22421v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Directly predicts SOC and SOH using a multivariate Transformer, joint battery state estimation",
+      "llm_evidence_cn": "使用多变量Transformer直接预测SOC和SOH，实现电池状态联合估计",
+      "llm_evidence": "使用多变量Transformer直接预测SOC和SOH，实现电池状态联合估计",
+      "canonical_evidence": "使用多变量Transformer直接预测SOC和SOH，实现电池状态联合估计",
+      "llm_tldr_en": "StateFormer forecasts battery degradation dynamics across time scales, accurately predicting SOC and SOH by capturing long-range dependencies within a unified framework.",
+      "llm_tldr_cn": "针对电池系统多时间尺度状态估计难题，提出多变量Transformer模型StateFormer，可同时捕捉快慢动态过程，在统一框架下准确预测SOC、SOH和温度，通过识别驱动运行条件实现了鲁棒的长程健康预测，为电池管理提供了先进的状态感知手段。",
+      "llm_tldr": "针对电池系统多时间尺度状态估计难题，提出多变量Transformer模型StateFormer，可同时捕捉快慢动态过程，在统一框架下准确预测SOC、SOH和温度，通过识别驱动运行条件实现了鲁棒的长程健康预测，为电池管理提供了先进的状态感知手段。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "joint estimation of state of charge and state of health",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.17065v1",
+      "source": "arxiv",
+      "title": "A recursive subspace based method for errors-in-variables model identification of time-varying systems",
+      "abstract": "The Subspace-based Model Identification algorithm using a modified Iterative Principal Component Analysis (SMI-IPCA) is a theoretically rigorous method for identifying a linear state-space model of a multi-input multi-output (MIMO) process, in an errors-in-variables (EIV) setting. The method can simultaneously estimate unknown heteroskedastic noise variances corrupting the input and output measurements, along with the state space model. This work proposes a recursive formulation of SMI-IPCA (RSMI-IPCA) enabling online identification and adaptive model updates as and when new data arrive. By maintaining a fixed length lag window rather than storing the complete historical data, RSMI-IPCA estimates measurement noise variances, process order, while simultaneously identifying the state-space matrices, making it suitable to monitor time-varying systems, whether the induced changes are slow or abrupt. The algorithm gradually adapts to slow sensor degradation (time-varying noise variances), changes in process operating conditions (time-varying model parameters), and structural modifications (varying model order). Simulation studies are presented to demonstrate the efficacy and practical applicability of the proposed algorithm.",
+      "authors": [
+        "Deepanjhan Das",
+        "Shankar Narasimhan"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-07-19T04:20:04+00:00",
+      "link": "https://arxiv.org/pdf/2607.17065v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Recursive subspace identification method for time-varying systems, applicable to online battery model parameter estimation",
+      "llm_evidence_cn": "递归子空间辨识方法，可用于在线电池模型参数估计",
+      "llm_evidence": "递归子空间辨识方法，可用于在线电池模型参数估计",
+      "canonical_evidence": "递归子空间辨识方法，可用于在线电池模型参数估计",
+      "llm_tldr_en": "Presents RSMI-IPCA, a recursive subspace algorithm for MIMO errors-in-variables identification, enabling online adaptive model updates, useful for battery system identification.",
+      "llm_tldr_cn": "针对时变多变量系统含噪测量下的模型辨识问题，提出递归子空间辨识算法RSMI-IPCA，通过固定滞后窗口在线更新模型并同时估计异方差噪声方差，为电池等系统的实时参数辨识提供了有效工具，可支持基于模型的状态估计。",
+      "llm_tldr": "针对时变多变量系统含噪测量下的模型辨识问题，提出递归子空间辨识算法RSMI-IPCA，通过固定滞后窗口在线更新模型并同时估计异方差噪声方差，为电池等系统的实时参数辨识提供了有效工具，可支持基于模型的状态估计。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.22268v1",
+      "source": "arxiv",
+      "title": "General Value Functions for Remaining Useful Life and Failure-Mode Prediction",
+      "abstract": "Remaining useful life (RUL) prediction and failure-mode classification are central tasks in predictive maintenance. Many data-driven pipelines use fixed-window supervised learning with complete terminal labels; such routes do not naturally encode the temporal recursion linking successive degradation-state predictions when observations are partial or unit identities are unavailable. We formulate prognostics as vector General Value Function (GVF) prediction on an absorbing degradation process, treating RUL and failure-mode probabilities as temporally consistent targets rather than independent window-level labels, and estimate them with a multi-step temporal-difference estimator, TD($n,λ$). Supporting theory identifies the Bellman fixed point of the vector GVFs, characterizes the linear projected-TD limit and its relation to complete-return Monte Carlo regression under realizability, and explains when bootstrapped TD targets are less variable than Monte Carlo returns. On an event-triggered multimode simulation and NASA C-MAPSS label-scarce stitch data, TD improves RUL and failure-mode prediction relative to a supervised same-backbone Monte Carlo control, especially under scarce complete labels. Practically, fragmented, identity-free degradation records can contribute local Bellman transitions instead of being discarded until complete run-to-failure labels are available.",
+      "authors": [
+        "Hao Yan",
+        "Ali Sarabi",
+        "Qing Zou",
+        "Boyang Xu"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.AP"
+      ],
+      "published": "2026-07-24T13:04:32+00:00",
+      "link": "https://arxiv.org/pdf/2607.22268v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "method for remaining useful life prediction applicable to battery state of health estimation",
+      "llm_evidence_cn": "可用于电池健康状态估计的剩余使用寿命预测方法",
+      "llm_evidence": "可用于电池健康状态估计的剩余使用寿命预测方法",
+      "canonical_evidence": "可用于电池健康状态估计的剩余使用寿命预测方法",
+      "llm_tldr_en": "Proposes a general value function method for RUL and failure-mode prediction with multi-step TD estimation to capture temporal recursion, enabling consistent predictions from partial observations and offering transferable techniques for battery SOH estimation.",
+      "llm_tldr_cn": "该论文针对预测性维护中剩余使用寿命和故障模式预测的问题，提出了一种基于通用价值函数的预测方法。传统方法使用固定窗口监督学习，未编码连续退化状态预测之间的时间递归关系。本文在多步时间差分估计框架下，将剩余使用寿命和故障模式概率视为时间一致的目标，实现了对吸收退化过程的持续预测。实验表明，该方法能在部分观测和无单元标识的情况下提供一致的预测，为电池健康状态估计提供了可迁移的方法学基础。",
+      "llm_tldr": "该论文针对预测性维护中剩余使用寿命和故障模式预测的问题，提出了一种基于通用价值函数的预测方法。传统方法使用固定窗口监督学习，未编码连续退化状态预测之间的时间递归关系。本文在多步时间差分估计框架下，将剩余使用寿命和故障模式概率视为时间一致的目标，实现了对吸收退化过程的持续预测。实验表明，该方法能在部分观测和无单元标识的情况下提供一致的预测，为电池健康状态估计提供了可迁移的方法学基础。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-1101-2023-01-17-524503-v6",
+      "source": "biorxiv",
+      "title": "Pathwise approximations to solving the filtering problem for the stochastic chemostat",
+      "abstract": "This paper concerns the inverse problem of characterising the state of a bioreactor from observations. In laboratory settings, the bioreactor is represented by a device called a chemostat. We consider a differential description of the evolution of the state of the chemostat under environmental fluctuations. We model the state evolution as a stochastic process driven by Brownian motion. Under this model, the state is described by its probability distribution in time, given the distribution of the initial state. The corresponding probability density function solves a deterministic partial differential equation (PDE), the Kolmogorov forward equation. This description is refined by incorporating observations. More formally, we seek the conditional distribution of the state given an observation process as the solution to a filtering problem, with the corresponding conditional probability density function solving a non-linear stochastic PDE, the Kushner-Stratonovich equation. In numerical studies of bioreactors, the well-posedness of these differential equations is frequently assumed rather than verified. Consequently, it remains unclear whether unique solutions exist and whether numerical approximations preserve key qualitative properties, such as positivity (e.g. non-negative chemical concentrations). This paper establishes the existence and uniqueness of solutions, ensuring well-posedness before presenting numerical approximations. Furthermore, we approximate the pathwise solution to the filtering problem by three approaches: a PDE-based approximation combining finite difference and splitting methods, a classical sequential Monte Carlo method, and a linearisation method. Our results show that the first two provide a richer probabilistic description of the state than the linearisation method, making them suitable for bioreactor control architectures.",
+      "authors": [
+        "Fontenele Magalhaes, J. A.",
+        "Emzir, M. F.",
+        "Corona, F."
+      ],
+      "primary_category": "bioengineering",
+      "categories": [
+        "bioengineering"
+      ],
+      "published": "2026-07-21T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2023.01.17.524503v6.full.pdf",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "filtering problem for state estimation from noisy observations",
+      "llm_evidence_cn": "从噪声观测中进行状态估计的滤波问题",
+      "llm_evidence": "从噪声观测中进行状态估计的滤波问题",
+      "canonical_evidence": "从噪声观测中进行状态估计的滤波问题",
+      "llm_tldr_en": "This paper addresses the inverse problem of state estimation in a bioreactor using pathwise approximations to the filtering problem. It models the state as a stochastic process and refines the estimate with observations, providing a general filtering framework applicable to dynamic systems like battery SOC estimation.",
+      "llm_tldr_cn": "该文针对随机恒化器在环境波动下的状态估计逆问题，提出基于路径近似的滤波方法以从观测中反推状态。将状态演化建模为布朗运动驱动的随机过程，并利用Kolmogorov前向方程与观测信息更新概率分布。数值结果表明该方法能有效追踪动态系统的演化，其滤波框架可迁移应用于电池等领域的动态状态估计问题，为非线性、高维、含噪系统的状态估计提供了一种基于路径空间的通用滤波框架，对包括电池SOC在内的动态系统状态感知具有方法论借鉴价值。",
+      "llm_tldr": "该文针对随机恒化器在环境波动下的状态估计逆问题，提出基于路径近似的滤波方法以从观测中反推状态。将状态演化建模为布朗运动驱动的随机过程，并利用Kolmogorov前向方程与观测信息更新概率分布。数值结果表明该方法能有效追踪动态系统的演化，其滤波框架可迁移应用于电池等领域的动态状态估计问题，为非线性、高维、含噪系统的状态估计提供了一种基于路径空间的通用滤波框架，对包括电池SOC在内的动态系统状态感知具有方法论借鉴价值。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

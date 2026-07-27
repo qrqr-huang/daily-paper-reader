@@ -1,0 +1,1587 @@
+Title: Pathwise approximations to solving the filtering problem for the stochastic chemostat
+
+URL Source: https://www.biorxiv.org/content/10.1101/2023.01.17.524503v6.full.pdf
+
+Number of Pages: 29
+
+Markdown Content:
+# Pathwise approximations to solving the filtering problem for the stochastic chemostat 
+
+Jos´ e Augusto Fontenele Magalh˜ aes a, Muhammad Fuady Emzir b, Francesco Corona a
+
+> aDepartment of Chemical and Metallurgical Engineering, Aalto University, Finland
+> bControl and Instrumentation Engineering Department, King Fahd University of Petroleum and Minerals, Saudi Arabia
+
+Abstract 
+
+This paper concerns the inverse problem of characterising the state of a bioreactor from obser-vations. In laboratory settings, the bioreactor is represented by a device called a chemostat. We consider a di ff erential description of the evolution of the state of the chemostat under environmen-tal fluctuations. We model the state evolution as a stochastic process driven by Brownian motion. Under this model, the state is described by its probability distribution in time, given the distri-bution of the initial state. The corresponding probability density function solves a deterministic partial di ff erential equation (PDE), the Kolmogorov forward equation. This description is refined by incorporating observations. More formally, we seek the conditional distribution of the state given an observation process as the solution to a filtering problem, with the corresponding condi-tional probability density function solving a non-linear stochastic PDE, the Kushner–Stratonovich equation. In numerical studies of bioreactors, the well-posedness of these di ff erential equations is frequently assumed rather than verified. Consequently, it remains unclear whether unique solutions exist and whether numerical approximations preserve key qualitative properties, such as positivity (e.g. non-negative chemical concentrations). This paper establishes the existence and uniqueness of solutions, ensuring well-posedness before presenting numerical approximations. Furthermore, we approximate the pathwise solution to the filtering problem by three approaches: a PDE-based approximation combining finite di ff erence and splitting methods, a classical sequential Monte Carlo method, and a linearisation method. Our results show that the first two provide a richer probabilistic description of the state than the linearisation method, making them suitable for bioreactor control architectures. 
+
+Keywords: state estimation, pathwise filtering, Kolmogorov forward equation, Kushner–Stratonovich equation, stochastic chemostat 
+
+2000 MSC: 60H15, 93E11, 65C05, 92D25, 37N25 
+
+1. Introduction 
+
+An inverse problem for a dynamic system refers to the construction of a set of equations given a di ff erential description of the evolution of the system and a collection of observations related to quantities of interest. In this paper, the quantity of interest is the state variable of such a system denoted as signal , with inferences about the signal being obtained from indirect and noisy observations. The study of this type of inverse problem has been the focus of considerable theoretical and numerical work under the name stochastic filtering . The aim is to obtain expectations with respect 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+to the probability distribution of the signal at the current time, this distribution being conditional on noisy observations accumulated up to that time. The theoretical features of this problem are well-known: such expectations require integration with respect to a stochastic process modelling the observations, and the probability density function of the conditional probability distribution of the signal solves a non-linear stochastic partial di ff erential equation, the Kushner–Stratonovich equation (KSE). A comprehensible account of this problem is available in [1, 2]. Filtering theorists are typically concerned with analysing the di ff erential equations governing the filtering problem. Among other topics, they study the existence, uniqueness, and growth behaviour of solutions to the stochastic di ff erential equations that describe the evolution of the underlying process and the observations. This is crucial for numerical approximations of the expectations of interest as most analyses of existing algorithms rely on such properties [1, 3]. Filtering practitioners have adopted the pathwise formulation of the filtering problem. This is because when observing most real-world signals, the single “path” for the observations never exactly aligns with the observation model: signals are sampled at a high frequency, with sampled points artificially connected, for instance, by straight-line segments. While this formulation enables various lines of research [ 4, 5 ], this work focuses on fixing the observation path to reduce the aforementioned KSE to a partial di ff erential equation (PDE) with a random coe ffi cient. The conditional probability density function in pathwise filtering can be derived in closed-form for certain problems, for instance, those with a linearly evolving observation process (the observation is a noisy, scaled version of the signal) [ 6, 7]. However, even in this scenario, the signal is only allowed to have a non-linear evolution under some restrictive conditions (see Bene ˇscondition [6]), rarely met in real-world systems. With limited closed-form solutions, much research has been directed towards constructing algorithms to approximate the solution in more general settings. The approximations can be obtained via, but not limited to, three approaches: the extended Kalman filter (EKF), particle filters (PFs), and methods for solving PDEs. The EKF is the classical approximation method. It linearises certain non-linearities in the model to ensure that the traditional Kalman–Bucy filter [ 7] can be applied. PFs, also known as sequential Monte Carlo methods, have been widely developed since their conception in the 1990s [ 8 , 9] and are among the most popular alternatives to the EKF. In PFs, particles (also called samples) first evolve according to a desirable transition kernel and then selectively interact in accordance with their likelihood with respect to the observation path. The EKF, PFs and their derivatives have practical applications across diverse domains, including target tracking in robotics [10], weather forecasting [11], and disease outbreak monitoring in epidemiology [12]. A less common approach consists of approximations via a splitting method: the PDE with a random coe ffi cient is decomposed into two parts: a deterministic and a normalisation one. The first part is independent of the observations and may therefore be solved o ffl ine. The second part consists of computing a correction and normalisation factor from the observation path, ensuring that the resulting density integrates to unity. Several frameworks have been proposed to perform this decomposition and e ffi ciently transfer the o ffl ine solution to the online stage, ranging from the early splitting methods of Le Gland [ 13, 14] to the real-time framework developed by Yau and Yau [ 15 , 16 , 17 ]. The o ffl ine PDE can be solved in low-dimensional state spaces using conventional numerical methods such as finite-di ff erence [ 18] or spectral discretisations [ 19]. More recently, several deep learning-based approaches have also been proposed to approximate the solution of the o ffl ine PDE, providing a mesh-free alternative to classical discretisation techniques [ 20 , 21 ]. Regardless of the numerical approximation employed for the o ffl ine problem, grid-based methods remain an e ff ective approach for low-dimensional filtering problems [ 22 , 23], as they provide an 2
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+explicit approximation of the filtering density over the entire state space, enabling visualisation and further analysis without restrictive assumptions on its form. This study considers the practical implementation of filtering with a focus on a classical splitting method. Our goal is to obtain the probabilities and expectations for a process performed in a bioreactor, in which one or more populations of microorganisms grow in a nutrient medium consisting of a cocktail of molecules. In particular, we consider a laboratory device representing this bioreactor: a chemostat. Prior to the genomic era, the chemostat was a major player in the use of continuous culture systems to characterise certain kinds of microbes [ 24 , 25]. Being a thoroughly tested continuous culture system, it has regained some interest in this post-genomic era. For instance, chemostat-grown cultures lead to reproducible and homogeneous results which are necessary to identify the roles played by genes in the biology of organisms [26]. We consider a chemostat under environmental fluctuations, specifically a chemostat subjected to Brownian motion processes with multiplicative noise, herein called the stochastic chemostat. We adopt the dynamic model proposed in [ 27 ], as its di ff erential equations have been shown, by means of martingale theory, to admit a unique solution within a suitably chosen space. In particular, [ 27 ] ensures that their model would allow for its realisations remaining within a biologically meaningful domain (e.g. positive chemical concentration values). Finally, to describe the relationship between states and observations, the dynamics are coupled with an observation model in which the observations are also subjected to Brownian motion. The existing state-of-the-art of filtering for the stochastic chemostat comprises an approxi-mation to the first two moments of the conditional probability distribution of the signal by EKF [28] and a more complex approximation by PFs [ 29 ]. However, to the best of our knowledge, no previous work has addressed the theoretical guarantees of existence, uniqueness, and growth behaviour of the solutions to our di ff erential equations of interest, nor has the pathwise solution to the filtering problem been numerically realised by grid-based schemes. The following are the contributions of this paper: 
+
+• First, Theorem 3.1 shows that the di ff erential equations for the stochastic chemostat have a unique solution within a suitably chosen space. We provide an alternative proof to the results in [ 27 ] via Lyapunov functions, aligning with existing stochastic population dynamics literature (e.g. [ 30 ] on the Lotka-Volterra model). Further, our proof introduces tools that will be useful later in the analysis, particularly in establishing the well-posedness of the PDEs. 
+
+• Secondly, Proposition 3.1 addresses the well-posedness of the Kolmogorov forward equation for the stochastic chemostat. We also discuss the implication of this result on the pathwise form of the Kushner–Stratonovich equation. Valid conclusions from numerical simulations of these PDEs require guarantees of existence and uniqueness of their solution. To the best of our knowledge, previous studies have assumed well-posedness without formal derivation. In contrast, our work explicitly investigates if these assumptions hold. 
+
+• Lastly, we demonstrate the pathwise approximations using the splitting method, comparing them against EKF and PF results. This allows us to move beyond merely visualising expectations. Instead, the shape of the probability density across the state space is available, providing a more comprehensive understanding of the system dynamics and the associated uncertainty. 3
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+This paper is structured as follows. Section 2 provides the theoretical foundations for under-standing the filtering problem. In particular, Section 2.1 introduces assumptions ensuring the existence, uniqueness, and growth properties of solutions to key di ff erential equations. Section 2.2 introduces the filtering problem and its pathwise formulation, covering both the theory and ap-proximation methods. Section 3 applies the concepts from Section 2 to the stochastic chemostat. In particular, Section 3.1 discusses the properties of solutions to the di ff erential equations de-scribing the evolution of the state of the stochastic chemostat. Finally, Section 3.2 presents the pathwise filtering problem for the stochastic chemostat, showing its numerical solution based on the aforementioned approximation methods. Section 4 concludes the paper. 
+
+2. Preliminaries: Stochastic filtering 
+
+Filtering refers to a methodology in which observations and a model of a dynamic system are combined to make inferences about its state. The state variable of this dynamic system is denoted as the signal. In stochastic filtering, the signal is modelled by a continuous-time stochastic process X = (Xt, t ≥ 0) , with t denoting time. While the signal cannot be directly observed, an indirect observation can be obtained. This observation is assumed to be described by a continuous-time stochastic process Y = (Yt, t ≥ 0) denoted as the observation process. Furthermore, Y is assumed to be a function of X corrupted by an observation noise, modelled by a stochastic process 
+
+BY = BYt , t ≥ 0. For inferences on X from Y, we let F Y = F Yt , t ≥ 0 be the filtration generated by Y, where the σ-field F Yt = σ (Ys, s ∈ [0 , t]) is all the information from observations up to time 
+
+t. The resulting filtering problem consists of determining the conditional distribution πt of Xt
+
+given F Yt . In a mean-square sense, the estimate E hXt | F Yt
+
+i of the value of the signal at time t,the conditional mean of Xt given F Yt , is optimal. Other inferences about X from Y are quantities of the form E hϕ (Xt) | F Yt
+
+i for some function ϕ over the state space of the signal. Notably, the conditional distribution of the signal is also modelled by a stochastic process π = (πt, t ≥ 0). This section provides a compact overview of this problem and the background needed for our application. Section 2.1 reviews a number of notions and results about stochastic di ff erential equations, such as existence, uniqueness, and Markovianity of solutions. Section 2.2 concerns the filtering problem. Since the evolution of the system is described in continuous-time, we present filtering equations using a body of techniques from stochastic calculus outlined in Section 2.1. In particular, Section 2.2.1 presents these equations when we assume that (1) the signal process X
+
+takes values in an NX -dimensional state space SX and that X is the solution to a stochastic di ff er-ential equation driven by an NBX -dimensional Brownian motion process BX = BXt , t ≥ 0, and (2) the observation process Y takes values in SY ⊆ RNY and that Y has an evolution which depends on both X and an NBY -dimensional Brownian motion process BY = BYt , t ≥ 0. Section 2.2.2 particularises the filtering equations for a case in which the pair ( X, Y) is Markovian. The main computational methods for solving these equations are also outlined. 
+
+2.1. Stochastic di ff erential equations (SDEs) 
+
+To set the notation, we consider an identity modelling the evolution of some deterministic process z = (zt, t ≥ 0), 
+
+dz t = ct (z, v, u, θ ) dt , (2.1) where zt ∈ Sz is the value at time t of the process of interest, dz t is called the di ff erential of the process z at time t, dt is an infinitesimal time increment, v = (vt(z), t ≥ 0) with vt ∈ Sv is an 4
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+auxiliary process possibly dependent on the entire process z, u =  ut
+
+ zs,s≤t
+
+ , t ≥ 0 with ut ∈ Su is a process which describes the evolution of state-feedback control actions and is possibly dependent on past values of z, and θ = (θt = const , t ≥ 0) with θt ∈ Sθ is a process which characterises the model parameters that are constant in time. The coe ffi cient ct is the functional which specifies the dynamics. At this point, it su ffi ces to assume that Sz, Sv, Su and Sθ are complete separable metric spaces. Without loss of generality, processes u and θ are omitted hereafter. Informally, note that popular forms of ordinary di ff erential equations (ODEs) can be recovered from identity (2.1) . For instance, if processes z and v are smooth enough, then ct is the derivative of z with respect to time evaluated at time t. Furthermore, if v is specified up to time t and takes the form v =  vt(zs,s≤t),then ct (z, v) = ct
+
+ z, vt
+
+ zs,s≤t
+
+ . For the particular case of first-order di ff erential equations 
+
+dz t = ct
+
+ zt, vt
+
+ zs,s≤t
+
+ dt , (2.2) knowing the past (vs, s ≤ t) of v and any value zs, s ≤ t, allows to determine the conditions under which a process z satisfying ODE (2.2) exists and is unique (Picard’s theorem in, for instance, [31]): typically, the initial (at s = 0) condition z0 is provided. Stochastic di ff erential equations can be understood as deterministic di ff erential equations into which a degree of randomness is introduced. When the process v is a stochastic process 
+
+V = (Vt, t ≥ 0) and /or the initial condition z0 is a random variable, the process z which satisfies identity (2.1) becomes a stochastic process Z = (Zt, t ≥ 0) . An additional source of randomness can be introduced by including another stochastic process B = (Bt, t ≥ 0) . This procedure results in the class of di ff erential equations known as stochastic di ff erential equations (SDEs), whose solutions involve ordinary and stochastic integrals. We consider stochastic integration with respect to B, particularly for the case in which B is a standard Brownian motion process. We provide a full characterisation of such a process in the Supplementary Material. Lastly, we let (Ω, F , P) be the appropriate probability space for all processes considered in this paper. To provide an instrumental account of the theory of SDEs, we start by letting (1) CZ =
+
+CZ ([0 , ∞), SZ ) be the space of continuous functions defined on the time index set [0 , ∞) and taking values in SZ ⊆ RNZ ; and (2) DV = DV ([0 , ∞), SV ) be the space of right-continuous functions also on [0 , ∞), with left-hand limits, and taking values in a complete separable metric space SV
+
+such that regular conditional probabilities exist. We use B (CZ ) and B (DV ) to denote the σ-fields of Borel sets of CZ and DV .We introduce into identity (2.1) a random initial condition z0 = z0 (ω)ω∈Ω, an SV -valued stochastic process V = (Vt, t ≥ 0) with sample paths V (ω) ∈ DV for P-almost every ω ∈ Ω,and a process written in terms of an NBZ -dimensional standard Brownian motion process BZ =BZt , t ≥ 0, where BZt = BZ,1 
+
+> t
+
+, . . . , BZ,NBZ
+
+> t
+
+. The resulting SDE which models the evolution of Z is 
+
+dZ t = ct (Z, V) dt + dt (Z, V) dB Zt , Z0 = z0, (2.3a) or, equivalently, in coordinate form, for each nZ = 1, . . . , NZ ,
+
+dZ nZ 
+
+> t
+
+= cnZ 
+
+> t
+
+(Z, V) dt +
+
+> NBZ
+
+X 
+
+> nBZ=1
+
+dnZ ,nBZ 
+
+> t
+
+(Z, V) dB ZnBZ 
+
+> t
+
+, ZnZ 
+
+> 0
+
+= znZ 
+
+> 0
+
+. (2.3b) In SDE (2.3) , the functionals ct : CZ × DV → RNZ and dt : CZ × DV → RNZ ×NBZ are 
+
+B (CZ ) × B (DV ) -measurable coe ffi cients; that is, we have that  cnZ
+
+> t
+
+−1  AZ,V
+
+ ∈ B (CZ ) × B (DV )and dnZ ,nBZ
+
+> t
+
+−1  AZ,V
+
+ ∈ B (CZ ) × B (DV ), for every AZ,V ∈ B (R). 5
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+In the following, we limit ourselves to the class of non-anticipative functionals ct and dt; that is, the values of ct and dt only depend on the paths V (ω) and Z (ω) up to time t (we provide a detailed mathematical definition in the Supplementary Material). 
+
+2.1.1. Existence and uniqueness of the solution 
+
+The notion of a solution to SDE (2.3) , as well as the conditions for its existence and uniqueness, can be stated whenever certain conditions on ct and dt are satisfied. These conditions are identified after noting that SDE (2.3) is a shorthand to the following stochastic integral equation: 
+
+Zt = z0 +
+
+Z t
+
+> 0
+
+cs(Z, V)ds +
+
+Z t
+
+> 0
+
+ds(Z, V)dB Zs , (2.4) where the first integral is a Riemann integral and the second one is an It ˆo integral. It ˆo integrals are defined for integrands which allow such integrals to be martingales. For details on the martingale theory for Itˆ o integrals, see [32]. Based on Eq. (2.4) , the notion of a solution of SDE (2.3) can be constructed after establishing the conditions needed on the collection of integrands ( ct(Z, V), t ≥ 0) and ( dt(Z, V), t ≥ 0) to allow the two integrals to be well-defined. To this end, we first endow our probability space with a notion of time: this is done by specifying which sub-σ-field of information in F can be gathered by time t. Secondly, we define an increasing family (Ft, t ≥ 0) of σ-fields of F with Fs ⊂ F t, for 
+
+s, t ∈ [0 , ∞), with s ≤ t, and such that F0 includes all P-null sets in F . Then, for the resulting filtered probability space ( Ω, F , (Ft, t ≥ 0) , P) over which BZ , V and z0 are defined, we have: 
+
+Definition 2.1 (Strong solution [33]). Let ct and dt be non-anticipative functionals. Let (Ω, F , (Ft, t ≥
+
+0) , P) be a filtered probability space for BZ , V , and z0. A stochastic process Z is said to be a strong solution of SDE (2.3) if the following holds: 
+
+1. Z is adapted to (Ft, t ≥ 0) ; that is, each Z t is measurable with respect to Ft;
+
+2. P-almost surely R t 
+
+> 0
+
+∥cs (Z, V) ∥ds < ∞ and R t 
+
+> 0
+
+∥ds (Z, V) ∥2ds < ∞, for all t ∈ [0 , ∞) and for an Euclidean norm of c s and a Hilbert-Schmidt norm of d s;
+
+3. P-almost surely Z solves Eq. (2.4) .
+
+The non-anticipativeness of ct and dt, together with (1), implies that ct (Z, V) and dt (Z, V) are measurable and adapted to Ft+ for all t ≥ 0, with Ft+ = ∩s>tFs (see, [ 32, Section 4.2]). Imposing (2) on the measurable Ft+ -adapted process ( dt (Z, V) , t ≥ 0) is su ffi cient to render the Itˆ o integral in Eq. (2.4) a well-defined quantity. Because of (1), notably, a strong solution Z must be adapted to ( Ft, t ≥ 0): for instance, if Ft is the σ-field generated by BZ , V and z0, then the values of Zt
+
+are determined by z0 and by the values of BZ and V up to t. Adaptedness to (Ft, t ≥ 0) can be too strict, and weak solutions Ω, F , (Ft, t ≥ 0) , P, BZ , V, z0, Z which satisfy SDE (2.3) can be considered in place of only seeking the process Z.Uniqueness of solutions to an SDE can arise in di ff erent forms. One such form is pathwise uniqueness, which in the context of strong solutions is defined as: 
+
+Definition 2.2 (Pathwise unique strong solutions [33, Section 5.1]). Pathwise uniqueness of strong solutions to SDE (2.3) holds if for any two strong solutions Z = (Zt, t ≥ 0) and Z′ =  Z′ 
+
+> t
+
+, t ≥ 0 in the sense of Definition 2.1, we have that 
+
+P  ω ∈ Ω : Zt (ω) = Z′ 
+
+> t
+
+(ω) for all t ∈ [0 , ∞) = 1. (2.5) For completeness, establishing the existence and pathwise uniqueness of strong solutions to SDE (2.3) requires certain conditions on ct, dt, and V. We state these conditions in Appendix A for ease of reference, since they will be relaxed later in the paper. 6
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+2.1.2. Exit times 
+
+In certain applications, it may be of interest to determine if, for P-almost every ω ∈ Ω, the first time te when a sample path Z (ω) exits a certain open set S ⊂ SZ is finite, or, equivalently, if 
+
+P-almost surely te = ∞. With respect to our application (Section 3), this information is relevant for establishing whether the solution to an SDE only has positive sample paths; that is, S ⊆ RNZ 
+
+> +
+
+.The Khasminskii test [ 34 ] can be used to answer exit-time questions. The test is based on defining (1) an increasing sequence of open sets {S r}, r integer, whose closures are contained in 
+
+S and such that their union equals S ; and (2) an associated sequence of stopping times {tr} with 
+
+tr := inf {t ∈ [0 , te) : Zt < S r}, where inf ∅ = ∞. By letting t∞ := lim r→∞ tr, it can be shown that 
+
+P-almost surely t∞ ≤ te, whereas to verify if Zt ∈ S always, it su ffi ces to show that no exit occurs at finite times ( t∞ = ∞). 
+
+2.1.3. Markovianity of the solution 
+
+In this section, the discussion is restricted to Markov processes, whose past and future are statistically independent given the present. If a solution to SDE (2.3) is Markovian, we can describe it in terms of certain transition probabilities. To formally define these notions, we consider the expectation of a stochastic process, conditional on the past information encoded in an appropriate collection of σ-fields. Then we have the following definition: 
+
+Definition 2.3 (Markov process). Let Z = (Zt, t ≥ 0) be a measurable process defined on the filtered probability space (Ω, F , (Ft, t ≥ 0) , P). Z is a Markov process relative to (Ft, t ≥ 0) if for all s ≤ t and all bounded measurable functions ϕ, we have E ϕ (Zt) | F s
+
+ = E ϕ (Zt) | Zs
+
+.Equivalently, we can say that P (Zt ∈ AZ | F s) = P (Zt ∈ AZ | Zs), for any A Z ∈ B (SZ ).
+
+In Definition 2.3, by letting s = 0, the focus is on expectations that are conditional on the 
+
+F0-measurable NZ -dimensional random variable Z0, with an interest in the evolution in time of E ϕ (Zt) | F 0
+
+. Without loss of generality, we discuss this evolution for a specific case of SDE (2.3) with no auxiliary process V:
+
+dZ t = ct (Zt) dt + dt (Zt) dB Zt , Z0 = z0, (2.6) whose solution Z = (Zt, t ≥ 0) for a deterministic initial condition (the singleton z0 ∈ SZ ) exists, and is unique and Markov relative to ( Ft, t ≥ 0) [35, Theorem 17.2.3]. In the following, we make use of the infinitesimal generator A = (At, t ≥ 0) of the solution Z,that is, the time-dependent second-order di ff erential given by 
+
+Atϕ (z) =
+
+> NZ
+
+X 
+
+> nZ=1
+
+cnZ 
+
+> t
+
+(z) ∂∂znZ
+
+ϕ (z) + 12
+
+> NZ
+
+X 
+
+> nZ=1
+> NZ
+
+X 
+
+> n′
+> Z=1
+
+DnZ ,n′ 
+
+> Z
+> t
+
+(z) ∂2
+
+∂znZ ∂zn′
+
+> Z
+
+ϕ (z), (2.7) with entries DnZ ,n′ 
+
+> Z
+> t
+
+(z) = PNBZ  
+
+> nBZ=1
+
+dnZ ,nBZ 
+
+> t
+
+(z) dn′  
+
+> Z,nBZ
+> t
+
+(z) of the di ff usion tensor, and where ϕ is a suitably regular function of the state. Furthermore, we construct an equivalent description of Z in terms of a Markov transition function P (·, ·; ·, ·) of s, zs, t and AZ , defined for 0 ≤ s < t, zs ∈ SZ , AZ ∈ B (SZ ) . For fixed s, t,and AZ , we have that P (s, ·; t, AZ ) is a measurable function of zs. For fixed s, t, and zs, we have that P (s, zs; t, ·) is a probability measure in AZ ; that is, P (s, zs; t, AZ ) = P (Zt ∈ AZ | Zs = zs), the probability of Z being in AZ at time t, conditional on starting from zs at time s [36 , Section 6]. 7
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+Consequently, using again Definition 2.3, for all bounded measurable functions ϕ on SZ , we have 
+
+E ϕ (Zt) | F 0
+
+ = E ϕ (Zt) | Z0
+
+
+
+= R
+
+> SZ
+
+ϕ (z) P (0 , z0; t, dz ). (2.8) Let p (t, ·) denote the probability density of P (0 , z0; t, ·) with respect to the Lebesgue measure. Applying It ˆo’s formula and di ff erentiating Eq. (2.8) with respect to time yield an equation for the evolution of E ϕ (Zt) | F 0
+
+:
+
+ddt E ϕ (Zt) | F 0
+
+ = E Atϕ (Zt) | F 0
+
+ (2.9) where At is the operator presented in Eq. (2.7) . Notably, this evolution is deterministic and additional characterisations [37, Section 4] lead to the Kolmogorov forward equation. 
+
+2.1.4. The Kolmogorov forward equation (KFE) 
+
+In this section, we express expectations of functions of the solution to an SDE in terms of partial di ff erential equations (PDEs). In particular, we present the forward Kolmogorov equation which describes the evolution of the probability density of a process Z solving SDE (2.6) by assuming this solution to be a Markov process relative to ( Ft, t ≥ 0). Eq. (2.9) can be further developed as 
+
+E Atϕ (Zt) | F 0
+
+ =
+
+Z
+
+> SZ
+
+ϕ (z) ∂∂t p (t, z) dz 
+
+=
+
+Z
+
+> SZ
+
+ϕ (z) A∗ 
+
+> t
+
+p (t, z) dz ,
+
+(2.10) (see, e.g., [ 35 , Section 17]). Then we have the Kolmogorov forward, or Fokker–Planck, equation 
+
+∂∂t p (t, z) = A∗ 
+
+> t
+
+p (t, z) , (2.11) with initial condition p (0 , z) = p0 (z), and where A∗ 
+
+> t
+
+is the adjoint of At and is given by 
+
+A∗ 
+
+> t
+
+p (t, z) =
+
+> NZ
+
+X 
+
+> nZ=1
+
+∂∂znZ
+
+[cnZ 
+
+> t
+
+(z) p (t, z)] + 12
+
+> NZ
+
+X 
+
+> nZ=1
+> NZ
+
+X 
+
+> n′
+> Z=1
+
+∂2
+
+∂znZ ∂zn′
+
+> Z
+
+[DnZ ,n′ 
+
+> Z
+> t
+
+(z) p (t, z)] , (2.12) provided p, ct and Dt are su ffi ciently smooth. 
+
+KFE: Solutions 
+
+The density p associated with a Markov process Z which solves SDE (2.6) is a fundamental solution to PDE (2.11) . That is, with an arbitrary but fixed T > 0, for every s ∈ [0 , t), t ∈ (0 , T ], 
+
+zs ∈ SZ , z ∈ SZ , and measurable non-negative functions ps on SZ , we have: 1. p (t, z) = R
+
+> SZ
+
+ps (z) P (s, dz s; t, z); 2. lim t→s+ p (t, z) = ps (z); 3. p is continuously di ff erentiable, once in t and twice in z;4. p satisfies PDE (2.11). 8
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+Existence and pathwise uniqueness of a strong solution Z of SDE (2.6) , along with (A.2) , ensure that the fundamental solution p, if it exists, is unique [ 38, Section 5.7]. We refer the reader to [ 39 ,Section 6.4] for various regularity and ellipticity conditions on ct and Dt su ffi cient to guarantee the existence of a fundamental solution. The density p may also correspond to a classical solution . That is, p satisfies (2) -(4) above and there exist positive constants α, β such that for every z ∈ SZ
+
+max   
+
+> t∈[0 ,T]
+
+p (t, z) ≤ α exp β∥z∥2 . (2.13) A su ffi cient condition is that coe ffi cients cnZ 
+
+> t
+
+and DnZ ,n′ 
+
+> Z
+> t
+
+are bounded and H ¨older-continuous on 
+
+SZ , and the di ff usion tensor Dt is uniformly elliptic; that is, for every pair z, z′ ∈ SZ , there exists a constant α > 0 such that PNZ 
+
+> nZ=1
+
+PNZ  
+
+> n′
+> Z=1
+
+DnZ ,n′ 
+
+> Z
+> t
+
+(z) z′ 
+
+> nZ
+
+z′
+
+> n′
+> Z
+
+≥ α∥z′∥. (2.14) In cases for which only Eq. (2.14) is satisfied, alternative su ffi cient conditions can ensure the existence of a unique solution with polynomial growth instead. That is, p satisfies PDE (2.11) and there exist positive constants α, β such that for every z ∈ SZ
+
+max   
+
+> t∈[0 ,T]
+
+p (t, z) ≤ α 1 + ∥z∥β . (2.15) The conditions are that (1) the di ff usion tensor Dt is uniformly elliptic, (2) the coe ffi cients cnZ 
+
+> t
+
+and 
+
+DnZ ,n′ 
+
+> Z
+> t
+
+satisfy Eq. (A.2) for compact subsets of SZ , and (3) the functions ( ∂/∂ znZ )cnZ 
+
+> t
+
+, ( ∂/∂ znZ )DnZ ,n′
+
+> Z
+> t
+
+and ( ∂2/∂ znZ ∂zn′ 
+
+> Z
+
+)DnZ ,n′ 
+
+> Z
+> t
+
+are bounded in SZ and H¨ older-continuous on compact subsets of SZ [39, p. 147]. 
+
+KFE: Boundary conditions 
+
+The derivation to show that the adjoint operator A∗ 
+
+> t
+
+in Eq. (2.10) has coe ffi cients associated with those in SDE (2.6) requires It ˆo’s formula on a continuous test function ϕ on SZ with compact support [ 40 ]. This ensures that the boundary terms in subsequent integration by parts vanish. The boundary terms also vanish when selecting appropriate conditions at the boundary ∂S of a set 
+
+S ⊆ SZ inside which z is constrained. Boundary conditions (BCs) take on a variety of forms, but note that Eq. (2.11) can always be re-written as 
+
+∂∂t p (t, z) = −
+
+> NZ
+
+X 
+
+> nZ=1
+
+∂∂znZ
+
+JnZ (t, z), (2.16) where J = J1, . . . , JnZ , . . . , JNZ
+
+ is the probability current with components 
+
+JnZ (t, z) = cnZ 
+
+> t
+
+(z) p (t, z) − 12
+
+> NZ
+
+X 
+
+> n′
+> Z=1
+
+∂∂zn′
+
+> Z
+
+
+
+DnZ ,n′ 
+
+> Z
+> t
+
+(z) p (t, z)
+
+
+
+. (2.17) Once J has been defined, di ff erent BCs can be separately considered. With respect to our application (Section 3), the BCs of interest are 1. Reflecting boundary: J (t, z) · n = 0 for all t ∈ [0 , ∞), z ∈ ∂S , and n normal to ∂S ; that is, the net of probability current across ∂S is zero; 2. Natural boundary: assume the existence of a z ∈ ∂S for which ct(z) = 0 and dt(z) = 0. If process Z were to reach z, it would remain there. This scenario is called a natural boundary whenever process Z never reaches z.9
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+2.2. Stochastic filtering theory 
+
+Thus far, we have only considered the prior evolution of the state process, formally embedded by A∗ 
+
+> t
+
+in the KFE. We now incorporate observations and formulate the stochastic filtering problem. This section begins with the introduction of the following processes on Ω: X = (Xt, t ≥ 0) , called the state process, and Y = (Yt, t ≥ 0) , the observation process. Similarly to Section 2.1, we let 
+
+CY = CY ([0 , ∞), SY ) denote the space of continuous functions on [0 , ∞) taking values in SY ,
+
+SY ⊆ RNY , and DX = DX ([0 , ∞), SX ) denote the space of SX -valued right-continuous functions on [0 , ∞) with left-hand limits, SX being a complete separable metric space. For convenience, we let Ω = DX × CY . Then any ω ∈ Ω can be represented as a pair of sample paths ω = (ωX , ω Y ),where ωX ∈ DX and ωY ∈ CY . Lastly, we introduce the noise processes BX = BXt , t ≥ 0 and 
+
+BY = BYt , t ≥ 0. We have not taken into account the existence of BX and BY when constructing 
+
+Ω, but as discussed in [ 41 ], one can extend Ω to include all ω associated with the remaining random variables and stochastic processes. The state process describes the dynamics of a system of interest. It is modelled as a special case of SDE (2.3): 
+
+dX t = ft
+
+ Xs,s≤t, Ys,s≤t
+
+ dt + gt
+
+ Xs,s≤t, Ys,s≤t
+
+ dB Xt , X0 = x0, (2.18) where X has sample paths X (ω) = ωX , Y is a stochastic process soon to be introduced, with 
+
+Y (ω) = ωY , process BX = BX,1, . . . , BX,NBX
+
+ is an NBX -dimensional standard Brownian motion, coe ffi cients ct and dt have been respectively renamed ft and gt, with ft : DX × CY → RNX ,
+
+gt : DX × CY → RNX ×NBX , and X0 is given. Generally, the state process cannot be directly observed (for instance, only certain components of a vector-valued process are observed). Moreover, observations are prone to error. These two aspects are represented in the following observation model: 
+
+dY t = ht
+
+ Ys,s≤t, Xs,s≤t
+
+ dt + kt
+
+ Ys,s≤t, Xs,s≤t
+
+ dB Yt , Y0 = 0, (2.19) where coe ffi cients ct and dt have been respectively renamed ht and kt, with ht : CY × DX → RNY
+
+being the observation function and kt : CY × DX → RNY ×NBY denoting the noise intensity; and the NBY -dimensional standard Brownian motion process BY = BY,1, . . . , BY,NBY
+
+ is independent of BX . We let NBY = NY . Notably, SDE (2.19) describes the evolution of an integral form of the observations: Y is the integral process of the actually observed process nytnt 
+
+oNt 
+
+> nt=1
+
+, where 0 < t1 < · · · < tNt < ∞ is a uniform partition of a subset of (0 , ∞). Therefore, Y0 being zero does not imply zero-valued observations at t = 0, but rather a lack of initial information. 
+
+2.2.1. Stochastic equation for the filter 
+
+In filtering, we define a stochastic process π = (πt, t ≥ 0) for the conditional distribution of Xt
+
+given the observation σ-field F Yt = σ (Ys, s ≤ t): 
+
+πt(AX ) := P Xt ∈ AX | F Yt
+
+ (2.20) 
+
+πt(ϕ) := EP
+
+hϕ(Xt) | F Yt
+
+i , (2.21) where AX is an arbitrary set in B (SX ), ϕ is a measurable scalar function, and we explicitly show the measure with respect to which expectations are taken. πt in Eq. (2.20) takes values from 10 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+B (SX ) into [0 , 1]. πt in Eq. (2.21) gets information about the state through ϕ, assuming that the expectation with respect to P exists. The expectation process π (ϕ) = (πt (ϕ) , t ≥ 0), hereafter called filter, satisfies 
+
+πt (ϕ) = EP
+
+ϕ (X0) + A∗ 
+
+> t
+
+(ϕ) +
+
+Z t
+
+> 0
+
+Φ⊤ 
+
+> s
+
+dΛs, (2.22) where A∗ 
+
+> t
+
+(ϕ) is a measurable process adapted to (Ft, t ≥ 0) , Φs is a measurable process adapted to (Fs, s ≤ t) , the integration is with respect to (Λs, s ≤ t) , known as the innovation process, and Φ⊤
+
+> s
+
+denotes transpose of Φs. The required conditions for solvability of Eq. (2.22) for every measurable scalar ϕ are stated in [ 33, Theorem 8.4.1]. Since these conditions rely on additional technical definitions and cannot be easily expressed using the existing notation, they are not explicitly stated here. The remaining problem is to discover the particular form that A∗ 
+
+> t
+
+(ϕ), Φs and Λs take in Eq. (2.22) for specific choices of SDEs (2.18) and (2.19). 
+
+2.2.2. The Kushner–Stratonovich equation (KSE) 
+
+We proceed by assuming the existence of a density pt = p (t, ·) of πt with respect to the Lebesgue measure, for which πt (ϕ) as defined in Eq. (2.21) is obtained via R
+
+> SX
+
+ϕ (x) pt (x) dx . A detailed derivation of the evolution equation for this conditional density is available in [ 1 , 41 ]. Since the derivation uses arguments which are standard in the theory of Markov processes, we shall state only the outline. Two common approaches for deducing this evolution equation are the change of measure and innovation process methods. We present the former method in the Supplementary Material following similar steps as in [ 42 ]. For the latter, the interested reader can refer to [33]. Let us assume that the pair ( X, Y) solves a special case of SDEs (2.18) and (2.19): 
+
+dX t = f (Xt) dt + g (Xt) dB Xt , X0 = x0 (2.23) 
+
+dY t = h (Xt) dt + KdB Yt , Y0 = 0, (2.24) that is, the case in which ft = f , gt = g and ht = h are autonomous functions of the state Xt.Since the coe ffi cients are autonomous, the infinitesimal operator and its adjoint become time-independent, denoted as A and A∗, respectively. The observation process is driven by additive noise, i.e. kt(Xs,s≤t, Ys,s≤t) = K, where K is a matrix of size NY × NY . Notably, the filtering problem whose observation model is driven by multiplicative noise can be converted into a problem whose observation model is driven by additive noise, via a suitably chosen stochastic flow mapping [ 43 ]. We define the process L = (Lt, 0 ≤ t < ∞) by 
+
+Lt = exp 
+
+Z t
+
+> 0
+
+K−1h (Xs)⊤
+
+K−1dY s − 12
+
+Z t
+
+> 0
+
+K−1h (Xs) 2 ds 
+
+!
+
+. (2.25) Under certain technical conditions (see Appendix B), Eq. (2.25) , along with It ˆo’s formula, leads to the following proposition: 
+
+Proposition 2.1 (Kushner [44], Stratonovich [45]). Let ϕ have continuous partial derivatives of every order up to 2, all of which are bounded. Then we can write 
+
+πt(ϕ) = π0(ϕ) +
+
+Z t
+
+> 0
+
+πs(A∗ϕ)ds +
+
+Z t
+
+> 0
+
+πs(ϕeh) − πs(ϕ)πs(eh)⊤ deYs − πs(eh) ds , (2.26) 11 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+where π0 (ϕ) = EP
+
+ϕ (X0). Hereafter, eY = (eYt, t ≥ 0) is the rescaled observation process (i.e. 
+
+eYt = K−1Yt, t ≥ 0), and eh is the rescaled observation function (i.e. eh (x) = K−1h (x)) .Furthermore, an application of integration by parts to Eq. (2.26) results in the so-called Kushner–Stratonovich equation (KSE) d p t (x) = A∗ pt (x) dt + pt (x) eh (x) − πt(eh)⊤ deYt − πt(eh) dt  . (2.27) Proposition 2.1 concerns the evolutions of π and p in the special case of Eq. (2.22) for which 
+
+A∗ 
+
+> t
+
+(ϕ) = R t 
+
+> 0
+
+πs(A∗ϕ)ds , Φs = πs(ϕeh) − πs(ϕ)πs(eh), and dΛs = deYs − πs(eh)ds . We refer the reader to [ 33 ] for the detailed derivations of Eq. (2.26) and PDE (2.27) . For completeness, we outline the derivation using Lt from Eq. (2.25) in the Supplementary Material. 
+
+KSE: Pathwise filtering and solutions 
+
+So far, πt(ϕ) has been defined on an unspecified set in B (CY ) of measure one. We have not yet shown πt(ϕ) in the case of a given rescaled observation path eY (ω) . To this end, we present the notion of pathwise filtering from [4, 46]. 
+
+Lt in Eq. (2.25) is written in terms of a stochastic integral with the process eY as the integrator. However, since the integrand is independent of the observations, we reverse the role of processes 
+
+X and eY: up to some finite time t, Lt is obtained by an integral whose integrator is (Xs (ω) , s ≤ t).By integration by parts, 
+
+Z t
+
+> 0
+
+eh⊤ (Xs) deYs = eh⊤ (Xt) eYt −
+
+Z t
+
+> 0
+
+eY⊤ 
+
+> s
+
+deh (Xs) almost surely . (2.28) The pathwise counterpart to Eq. (2.25) is then ˆLt = exp 
+
+"eh⊤ (Xt) eYt −
+
+Z t
+
+> 0
+
+eY⊤ 
+
+> s
+
+deh (Xs) − 12
+
+Z t
+
+> 0
+
+∥eh (Xs) ∥2ds 
+
+#
+
+, (2.29) where ˆ Lt corresponds to Lt when computed with respect to a given observation path. The KSE in Proposition 2.1 is based on the Radon–Nikodym derivative Lt from Eq. (2.25) .Similarly, a pathwise KSE can be derived based on ˆLt from Eq. (2.29) . This reduces the stochastic PDE (2.27) to a PDE with a random coe ffi cient: 
+
+d p t (x) = A∗ pt (x) dt + pt (x) ˆ et(eYt), (2.30) where ˆet : SY → R is related to ˆLt (see [ 5, 41 ]). Once eY (ω) has been fixed, a solution to PDE (2.30) can be characterised as in Section 2.1.4, under additional regularity conditions on h,such as continuity and boundedness. Hereafter, p = (pt, t ≥ 0) refers to this pathwise solution. 
+
+KSE: Pathwise Approximations to Solutions 
+
+This section contains an overview of two classes of methods to approximate p. We briefly describe each class and state related results. Let the uniform partition of the interval [0 , ∞) have time step ∆t = tnt − tnt −1. Given a set of rescaled observations {eytnt }Nt 
+
+> nt=1
+
+, the density ptnt is approximated by p∆tnt by first defining 
+
+eYtnt := eYtnt−1 + eytnt ∆t. This corresponds to a continuous-discrete filtering problem, in which the observation process eY from the continuous formulation is interpolated by straight-line segments between discrete observation times. Secondly, p∆tnt −1 is propagated to p∆tnt according to one of the following methods: 12 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+• Particle filtering 
+
+• Finite-di ff erence + splitting-up approximation 
+
+Particle filtering: The density p∆tnt is constructed by density estimation techniques [ 47 ], such as histograms or kernel estimation, over a finite number of samples updated sequentially up to time 
+
+tnt . The following exposition is adapted from [1]: Let {X(nP)}NP 
+
+> nP=1
+
+be a collection of NP mutually independent stochastic processes, each solving SDE (2.23) and independent of eY. Then the pairs {(X(nP), eY)}NP 
+
+> nP=1
+
+are identically distributed. Additionally, each pair is associated with a suitably chosen weight w(nP) 
+
+> t
+
+, nP = 1, . . . , NP,0 ≤ t < ∞, such that the triples {(X(nP), w(nP), eY)}NP 
+
+> nP=1
+
+are identically distributed and have the same distribution as the triple ( X, L, eY) under a suitable probability measaure. We refer the reader to the Supplementary Material for the full characterisation of w(nP).Lastly, the NP triples are used to construct the measure-valued process πNP = (πNP 
+
+> t
+
+, t ≥ 0) defined as πNP 
+
+> t
+
+:= PNP 
+
+> nP=1
+
+¯w(nP) 
+
+> t
+
+δX(nP)
+
+> t
+
+, where ¯w(nP) 
+
+> t
+
+is given by ¯w(nP) 
+
+> t
+
+= P NP 
+
+> nP′=1
+
+w(nP)′
+
+> t
+
+−1
+
+w(nP) 
+
+> t
+
+,
+
+nP = 1, . . . , NP, 0 ≤ t < ∞, and δ is the Dirac delta generalised function; that is, πNP 
+
+> t
+
+is the empirical normalised measure of NP particles with positions {X(nP) 
+
+> t
+
+}NP
+
+> nP=1
+
+. Results on the conver-gence to πt are detailed in, for instance, [1]. 
+
+Finite-di ff erence + splitting-up approximation: stochastic PDEs are solved using tools inherited from solving classical PDEs. The following exposition follows the description given in [48]: The transition from p∆tnt −1 to p∆tnt follows a splitting-up approximation [ 13, 14 ], whose first step, called the prediction step, consists in solving the KFE (2.11) for a single time step ∆t. In other words, we solve ∂∂t pt (x) = A∗ pt (x) , t ∈ [tnt −1, tnt ], ptnt −1 = p∆tnt −1. (2.31) We then define ¯ p∆tnt as the solution evaluated at t = tnt , i.e. ¯ p∆tnt := ptnt .The second step, called the correction step, uses Eq. (2.29) and the new rescaled observation 
+
+eytnt to update ¯p∆tnt . We obtain p∆tnt (x) via p∆tnt (x) : = ξnt ζ∆tnt (x) ¯ p∆tnt , where ξnt is a normalising constant chosen such that R
+
+> SX
+
+p∆tnt (x) dx = 1, and 
+
+ζ∆tnt (x) : = exp − 12 ∆t∥eynt − eh (x) ∥2
+
+!
+
+. (2.32) Results concerning the convergence to p = (pt, t ≥ 0) are detailed in, for instance, [49]. 
+
+3. The chemostat 
+
+Let us consider a bioreactor in which one or more populations of microorganisms grow in a nutrient medium consisting of a cocktail of molecules. The chemostat (Figure 1) is a laboratory device used to represent such a bioreactor [ 50 ]. It is widely used in experimental design due to its ability to provide controlled conditions and reproducible results [26]. In this work, biomass refers to a single population of growing microorganisms and substrate to the cocktail of molecules. The production of biomass may also generate the byproducts methane 13 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint Air opening / Various equipment for monitoring Outgoing flow (products) Incoming flow (feed) Incoming flow of sterile air Nutrient medium Figure 1: Schematic representation of a chemostat.
+
+and carbon dioxide, collectively referred to as biogas. Under this scenario, the following reaction takes place to produce one unit of biomass and γ units of biogas from κ units of substrate: 
+
+κ substrate −→ biomass + γbiogas . (3.1) We begin with a di ff erential description of the substrate and biomass concentrations in a chemostat, based on reaction (3.1). Let b = (bt, t ≥ 0) and s = (st, t ≥ 0) denote, respectively, the time evolution of the concen-trations of biomass and substrate (hereafter, s refers to a concentration process, rather than a time variable as in Section 2). Let x = (xt, t ≥ 0) = (b, s) denote the state process. Then the di ff erential equation for the dynamics of the chemostat is 
+
+d bt
+
+st
+
+!|{z} 
+
+> xt
+
+= (μ(·) − D) bt + Db in t
+
+D sin t − st
+
+ − κμ (·)bt
+
+!| {z }  
+
+> f(xt)
+
+dt , (3.2) with initial concentrations x0 = (b0, s0) . bin = bin t , t ≥ 0 and sin = sin t , t ≥ 0 are incoming concentrations, D is the dilution rate (that is, the volumetric flow rate divided by the bioreactor volume), and μ is the growth rate, a function modelling the growth of a population and ensuring a zero reaction rate in the absence of substrate. The derivation of ODE (3.2) is provided in the Supplementary Material. The operation of the chemostat can be summarised as follows: the inputs comprise the dilution rate D together with the incoming concentrations bin and sin . Among these inputs, D is typically the manipulated variable. Under the perfect-mixing assumption, the outgoing flow in Figure 1 carries the same biomass and substrate concentrations, b and s, as those within the bioreactor. The online characterisation of b via direct observations is generally unavailable or expensive, whereas that of s is generally more accessible, although observations are typically available only intermittently (e.g. every few minutes). On the other hand, the biogas flow rate is routinely measured, and can therefore provide information for process supervision and feedback control [ 51 , 52 ]. Combined with biogas flow-rate observations, reconstructed values of s may be used in feedback laws for selecting the dilution rate that stabilises the chemostat around a desired operating point [ 53]. Furthermore, reconstructed values of b can be exploited in control strategies aimed at maximising biogas production [ 54 ] or for the early detection of abnormal operating conditions. 14 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+For instance, a persistent decrease in the estimated biomass concentration may indicate the onset of biomass washout, prompting an adjustment of the dilution rate. Conversely, persistently high estimates of biomass concentration may indicate excessive biomass accumulation, triggering control actions to maintain stable bioreactor operation. This work assumes no incoming flow of biomass; thus bin t = 0, t ≥ 0. Moreover, we proceed with a simplified version of ODE (3.2) called the minimal model [ 25 ], in which (i) μ is a function of the substrate, with μ(s) > 0 for s > 0 and μ(0) = 0, and (ii) the yield parameter κ is constant. These model assumptions are to be interpreted in the following way: (i) the velocity—or kinetics—of the reaction in Eq. (3.1) does not change as the biomass concentration changes and (ii) temperature and pressure are kept constant, thus κ is also constant. Under these model assumptions, we now introduce two cases for which di ff erent types of organisms are being cultivated: 
+
+• Case 1 - Monotonic growth μ (Monod kinetics) 
+
+• Case 2 - Non-monotonic growth μ (Haldane kinetics) 
+
+Case 1: the Monod growth law [ 55 ] assumes that the growth rate is zero when there is no substrate, and tends to an upper limit when the substrate is in excess: 
+
+μ(s) = μmax sKs + s , (3.3) where μmax is the maximum growth rate and Ks is the half-saturation constant. 
+
+Case 2: some experiments indicate that excessive substrate may inhibit the growth of a population [56]. This scenario is represented by the following growth function: 
+
+μ(s) = μ0 sKs + s + Ki s2 . (3.4) Here, μ depends on the growth μ0, half-saturation Ks and inhibitor parameter Ki.Figure 2 illustrates the phase portraits corresponding to these two cases and some highlighted phase paths for ODE (3.2) under the parameters from Table 1. The coloured points in Figure 2 are equilibrium pairs ( be, se) for which the right-hand side of ODE (3.2) is zero. Case 1 has the equilibrium point E(1) 1 = (9 .966 , 0.345), known to be locally exponentially stable [ 25 ]. Case 2 has a trivial equilibrium point E(1) 2 = (0 , sin  
+
+> 0
+
+). Additionally, it has interior equilibria E(2) 2 = (0 .859 , 1.141) and E(3) 2 = (1 .912 , 0.088). It can be shown that one interior equilibrium is a stable node and the other a saddle point [25].                
+
+> Table 1: Model parameters for ODE (3.2). Specific growth κDsin t=sin
+> 0
+> (h −1)(mgL −1)Case 1 0.3s
+> 10 +s10 0.01 100 Case 2 5s
+> 0.5+s+5s210.7 2
+
+Having introduced the chemostat model, we are ready to apply the concepts from Section 2 to this system. Let us assume that the concentration of an element changes within a time period by a random amount, and that this random amount is a function of the current concentration itself. This 15 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint Figure 2: Phase portrait for ODE (3.2) with growth functions (a) (3.3) and (b) (3.4).
+
+model assumption has been discussed in [ 27 ], for which the equation governing the dynamics, in the form of SDE (2.23), is 
+
+d bt
+
+st
+
+!|{z} 
+
+> Xt
+
+= (μ (st) − D) bt
+
+D sin  
+
+> 0
+
+− st
+
+ − κμ (st) bt
+
+!| {z }  
+
+> f(Xt)
+
+dt + εbbt 00 εs st
+
+!| {z } 
+
+> g(Xt)
+
+d Bbt
+
+Bst
+
+!|{z} 
+
+> BXt
+
+, (3.5) where sin t = sin  
+
+> 0
+
+was held constant, and X0 = (b0, s0). Figure 3 presents numerical solutions of SDE (3.5) for Cases 1 and 2. The noise intensities (εb, ε s) are (0 .05 , 0.05) for Case 1 and (0 .075 , 0.075) for Case 2. Figure 3(a) suggests that the processes X move around the trajectories of the deterministic chemostat model, with small fluctuations. Here, D < μ (sin  
+
+> 0
+
+). Under the deterministic model, this condition implies that the microbial population forming the biomass survives regardless of the initial concentrations of substrate and biomass [ 25 ]. In Figure 3(b), the processes X also move around the trajectories of the deterministic chemostat model, but in order to avoid “near” extinction of the population around E(1) 2 = (0 , sin  
+
+> 0
+
+), we would have to appropriately choose X0.Our main contributions are presented in the following two sections. Section 3.1 establishes some theoretical guarantees for the stochastic chemostat. In particular, we prove in Section 3.1.1 the existence, uniqueness and non-explosion of the solution X, as introduced in Sections 2.1.1 and 2.1.2. Section 3.1.2 revists the Markovianity of the solution and the KFE from Sections 2.1.3 and 2.1.4. Section 3.2 particularises the filtering equations to the case in which the pair ( X, Y)is Markovian, with Y corresponding to possible observation processes for a chemostat. Finally, we present numerical approximations of the solution to the KSE of Section 2.2.2 based on the computational methods previously outlined. 16        
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint Figure 3: Solutions of SDE (3.5) with growth functions (a) (3.3) and (b) (3.4) . The dashed lines show the solutions of ODE (3.2) , as in Figure 2. A target realisation refers to a trajectory to be estimated from observations later in this section.
+
+3.1. Theoretical guarantees 3.1.1. Existence, uniqueness and non-explosion of the solution 
+
+While numerical simulations are valuable for exploring the behaviour of the chemostat, proofs of existence and uniqueness of solutions of SDE (3.5) are required to ensure the validity of any conclusions drawn from Figure 3. Moreover, as described in Section 2.1.2, we question whether a sample path of X almost surely exits an open set S in finite time. By letting S := (R2)∗
+
+> +
+
+, i.e. 
+
+S = {(b, s) ∈ R2|b > 0, s > 0}, we investigate whether X explodes or reaches zero /negative values in finite time. This checks for unrealistic scenarios in a chemostat, such as negative concentrations. Since Condition A does not hold for SDE (3.5) , Theorem A has to be modified to prove the existence and uniqueness of solutions. By following [ 30], we present the necessary modifications and show that a unique solution X only exits S at infinite time. 
+
+Theorem 3.1. For any initial condition X0 ∈ S , there exists a unique strong solution X of SDE (3.5) with growth functions (3.3) or (3.4) . Futhermore, X only has positive sample paths. 
+
+Proof 3.1. We begin by showing that the coe ffi cients f and g of SDE (3.5) satisfy the local Lips-chitz continuous conditions. The di ff usion coe ffi cient g is a ffi ne and therefore globally Lipschitz. Furthermore, both the Monod and Haldane growth functions are continuously di ff erentiable on 
+
+(0 , ∞). Consequently, the drift coe ffi cient f , being composed of sums and products of continuously di ff erentiable functions, is continuously di ff erentiable and is therefore locally Lipschitz on S (by the mean value theorem). By the standard local existence and uniqueness theorem for SDEs with locally Lipschitz coe ffi cients (see, e.g., [ 34 , 57]), there exists a unique solution X = (Xt, t ≥ 0) of SDE (3.5) on the stochastic interval [0 , te), where X 0 ∈ S and te := inf {t ≥ 0 : Xt < S } , (3.6) 
+
+again with the convention that inf ∅ = ∞.
+
+17 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+To prove that the solution is global, it su ffi ces to show that te = ∞ almost surely. Let r0 be a su ffi ciently large integer such that 1 
+
+> r0
+
+< XnX 
+
+> 0
+
+< r0, nX ∈ { 1, 2}. For each integer r ≥ r0, we define an increasing sequence of open sets {S r}r≥r0 , where S r := (1 /r, r) × (1 /r, r), so that S r ⊂ S r+1 and 
+
+S∞ 
+
+> r=r0
+
+S r = S . We further define the stopping times tr := inf {t ∈ [0 , te) : Xt < S r}. (3.7) 
+
+Since {S r}r≥r0 is an increasing sequence, {tr}r≥r0 is non-decreasing. Hence, t∞ := lim  
+
+> r→∞
+
+tr (3.8) 
+
+is well-defined and satisfies t ∞ ≤ te almost surely. We proceed by contradiction. Suppose that 
+
+P(te < ∞) > 0. (3.9) 
+
+Since tr ↑ t∞, it follows that P(t∞ < ∞) > 0. Therefore, there exist positive constants T , β, and an integer r 0 such that 
+
+P(tr ≤ T ) ≥ β, for all r ≥ r0. (3.10) 
+
+We will show that this assumption leads to contradiction. To this end, we construct a Lyapunov function that diverges whenever either state variable approaches the boundary of S . Let us define l (x) : = κ (b − 1 − ln b) + s − ι
+
+
+
+1 + ln s
+
+ι
+
+
+
+, x = (b, s), ι > 0. (3.11) 
+
+The non-negativity of l follows from the inequality α ≥ 1 + ln (α) for all α > 0. It is su ffi cient to consider the Haldane growth function, since the Monod growth function is recovered by setting Ki = 0. Let X 0 = x0, with l (x0) < ∞. Applying Itˆ o’s formula to the process l (X) yields dl (Xt) = Al (Xt) dt + (∇l (Xt)) ⊤ g (Xt) dB t, (3.12) 
+
+where A denotes the infinitesimal generator presented in Eq. (2.7) and associated with SDE (3.5) .Therefore, for the first term on the RHS, 
+
+Al (Xt) =  
+
+> κbt−κ
+> bt
+> st−ι
+> st
+
+!⊤
+
+(μ (st) − D)bt
+
+D(sin  
+
+> 0
+
+− st) − κμ (st) bt
+
+!
+
++ 12 tr 
+
+ ε2
+
+> b
+
+b2 
+
+> t
+
+00 ε2 
+
+> s
+
+s2
+
+> t
+
+!  
+
+> κ
+> b2
+> t
+
+00 ι
+
+> s2
+> t
+
+
+
+= (κbt − κ) μ0 st
+
+Ks + st + Is s2
+
+> t
+
+− D
+
+!
+
++ st − ι
+
+st
+
+Ds in  
+
+> 0
+
+− Ds t − κ μ0 stbt
+
+Ks + st + Is s2
+
+> t
+
+!
+
++ 12 (κε 2 
+
+> b
+
++ ιw2 
+
+> s
+
+)
+
+≤ −κDb t + κD + Ds in  
+
+> 0
+
++ ιD + ικ μ0
+
+Ks
+
+bt + 12 (κε 2 
+
+> b
+
++ ιw2 
+
+> s
+
+). (3.13) 
+
+If we let ι := Ks D 
+
+> μ0
+
+, the terms depending on bt cancel. Consequently, there exists a constant 
+
+α > 0 such that Atl(Xt) ≤ α, and therefore dl (Xt) ≤ α dt + εb(bt − κ)dB bt + εs(st − ι)dB st . (3.14) 
+
+Let t r ∧ t = min {tr, t}. Integrating inequality (3.14) over the interval [0 , tr ∧ T ] gives l(Xtr ∧T ) − l(x0) ≤ α(tr ∧ T ) +
+
+Z tr ∧T
+
+> 0
+
+εb(bt − κ) dB bt +
+
+Z tr ∧T
+
+> 0
+
+εs(st − ι) dB st . (3.15) 18 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+Taking expectations and using that both stochastic integrals are martingales with zero expec-tation yields 
+
+EX
+
+l(Xtr ∧T ) ≤ l(x0) + α EX [tr ∧ T ] ≤ l(x0) + αT. (3.16) 
+
+Also, for every tr ≤ T , there exists some nX ∈ { 1, 2} such that either XnX 
+
+> tr
+
+= r or XnX 
+
+> tr
+
+= 1/r .Hence, l (Xtr ) ≥ Q(r), where Q (r) : =
+
+
+
+(κ(r − 1 − ln r)) ∧
+
+
+
+r − ι
+
+
+
+1 + ln r
+
+ι
+
+ 
+
+∧
+
+"
+
+κ 1
+
+r − 1 + ln r
+
+!! 
+
+∧ 1
+
+r − ι 1 + ln 1
+
+ιr
+
+!!# 
+
+.
+
+(3.17) 
+
+Therefore, 
+
+EX
+
+l(Xtr ∧T ) ≥ EX
+
+h1 tr ≤ Tβ
+
+ l  Xtr
+
+i 
+
+≥ P (tr ≤ T ) Q (r)
+
+≥ βQ (r) , (3.18) 
+
+Combining (3.16) and (3.18) yields l(x0) + αT ≥ βQ(r). (3.19) 
+
+Since Q(r) → ∞ as r → ∞ , we obtain l(x0) + αT = ∞, which contradicts the finiteness of both l(x0) and T . Therefore, P(te < ∞) = 0, so that te = ∞ almost surely. Hence the local solution extends to a global solution whose sample paths remain in S . 
+
+Remark 3.1. [58 ] proposes alternative driving processes to randomise the deterministic dy-namics of the chemostat: for instance, a Brownian motion term εb
+
+√btdB bt instead of εbbtdB bt ,and εs
+
+√stdB st instead of εs stdB st . As detailed in their paper, this induces minimal change in the case of large population sizes. However, these driving processes di ff er drastically in the washout regime, i.e. near the boundary bt = 0, as the two di ff usion processes exhibit di ff erent behaviour. Theorem 3.1 assures that X remains within S , thus the washout regime is unattainable in SDE (3.5) . If X is driven by εA
+
+√atdB at , a ∈ { b, s}, then not only is bt = 0 attainable, but so is st = 0, for certain regions of the parameter space. Care needs to be taken to avoid the unrealistic scenario of a vanishing substrate concentration, despite the continuous substrate inflow s in .3.1.2. Markovianity and the KFE 
+
+Due to the Markovianity of the unique strong solution X of SDE (3.5) , the evolution of X
+
+can be studied through its associated KFE, as in [ 23 ]. By solving the KFE for a given initial distribution, we examine the probability that the state of the chemostat lies within regions of interest, e.g. around E(1) 2 or E(3) 2 .Notably, the results from Theorem 3.1 alone are insu ffi cient to ensure that the fundamental and classical solutions to the KFE discussed in Section 2.1.4 exist and are unique. For instance, the coe ffi cients of SDE (3.5) do not satisfy Condition (A.2) , and hence the su ffi cient condition for the uniqueness of a fundamental solution according to [ 38, Section 5.7] is not satisfied. Moreover, the di ff usion tensor associated with SDE (3.5) 
+
+> NBX
+
+X 
+
+> nBX=1
+
+gnX ,nBX (x) gn′  
+
+> X,nBX
+
+(x) = ε2
+
+> b
+
+b2 
+
+> t
+
+00 ε2 
+
+> s
+
+s2
+
+> t
+
+!
+
+, (3.20) 19 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+herein denoted by G, does not satisfy the uniform ellipticity condition (2.14) . Consequently, we are unable to show the existence of a unique solution p satisfying the associated KFE with exponential (2.13) or polynomial (2.15) growth. However, the existence of a unique solution p can be established under broader assumptions on f and G, along with certain properties of a Lyapunov function l. We present these assumptions and verify their validity for the stochastic chemostat. With the uniqueness of the solution to the KFE ensured, we present its numerical solution. First, let us consider a local boundedness condition on coe ffi cient ft:
+
+Condition A. For all positive integer r, f ∈ L ∞ (S r). That is, f is an essentially bounded measurable function on the open set S r.Secondly, let us consider a relaxed version of inequality (A.1) for coe ffi cient G:
+
+Condition B. For all positive integer r, there exists a constant γr > 0 such that 
+
+|GnX ,n′ 
+
+> X
+
+(x) − GnX ,n′
+
+> X
+
+ x′ | ≤ γr∥x − x′∥ for all x, x′ ∈ S r. (3.21) Lastly, let us consider a relaxed version of inequality (2.14), again for G:
+
+Condition C. For every S r ⊂ S , there exist positive constants αr and βr such that 
+
+αr∥x′∥ ≤ 
+
+> NX
+
+X 
+
+> nX=1
+> NX
+
+X 
+
+> n′
+> X=1
+
+GnX ,n′ 
+
+> X
+
+(x) x′ 
+
+> nX
+
+x′
+
+> n′
+> X
+
+≤ βr∥x′∥ for all x ∈ S , x′ ∈ SX . (3.22) These conditions yield the following result for existence and uniqueness: 
+
+Proposition 3.1. There exists exactly one probability measure whose density with respect to the Lebesgue measure satisfies the KFE associated with SDE (3.5) .
+
+Proof 3.2. Let us note that the coe ffi cients of SDE (3.5) satisfy conditions A, B, and C (by letting 
+
+αr = r−2 ε2 
+
+> b
+
++ ε2
+
+> s
+
+, βr = r2 ε2 
+
+> b
+
++ ε2
+
+> s
+
+, and γr = 2r max nε2
+
+> b
+
+, ε 2
+
+> s
+
+o). According to [ 59, Theorem 3.6], such conditions are su ffi cient to ensure the existence of a unique solution, given that there exists a Lyapunov function l such that 
+
+lim  
+
+> r→∞
+
+inf    
+
+> Sr\Sr−1
+
+l (x) = ∞, (3.23) 
+
+and for all t ∈ [0 , ∞), x ∈ S , and some α > 0, the following inequality holds: 
+
+Al (x) ≤ α + αl (x) . (3.24) 
+
+If we define l x := (b + s + 1 
+
+> b
+
++ 1 
+
+> s
+
+), then inf S r \S r−1 l x = 2 + r − 1 + 1 
+
+> r−1
+
+and Al (x) ≤ α + αl (x),where α = max μmax , D, ε 2
+
+> b
+
+, ε 2 
+
+> s
+
+and μmax is an upper bound for the growth function μ. Hence, Eq. (3.23) and inequality (3.24) hold, and the proof is complete. 
+
+To conclude this section, we present numerical solutions of the KFE for Cases 1 and 2 in Figure 4. These simulations complement the theoretical results established above by illustrating the evolution of the state density. They are obtained using tools similar to those in [ 23]: an upwind di ff erencing scheme for the space discretisation, an implicit scheme for the time discretisation, reflecting boundaries along the truncated discretisation of the positive quadrant, and natural 20                                   
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint t=0h t=2h t=4h t=8h t=16h Figure 4: KFE solutions for Monod growth (Case 1, top) and Haldane growth (Case 2, bottom). Case 1: X0∼N([1 ,1] ⊤,0.05 2I2×2), the spatial discretisation is performed over the domain (0 ,5] ×(0 ,5], using 256 2finite volumes. Case 2: X0∼ N ([1 .65 ,2.5] ⊤,0.05 2I2×2); the spatial discretisation is performed over the domain (0 ,3] ×(0 ,3], using 512 2
+> finite volumes. The marginal density functions are displayed as marginal curves, normalised by their maximum value for the sake of illustration.
+
+boundaries along the coordinate axes at which one of the state variables vanishes. The upwind di ff erencing scheme is chosen to ensure the non-negativity of probabilistic terms, as discussed in [ 60 ]. Our approach di ff ers from that of [ 23 ] by replacing the implicit Euler scheme with the Crank-Nicolson scheme as it led to improved stability. In Figure 4 (top), the density remains unimodal, while exhibiting a relatively high spread over time due to di ff usion. Notably, the state distribution departs from Gaussianity, as can be verified by computing its higher-order moments. In Figure 4 (bottom), the probability mass gradually splits into two regions centred around the stable equilibria. In both cases, e ff ective control of the chemostat may therefore require reducing the uncertainty in the state location. 
+
+3.2. Filtering problem for the stochastic chemostat 
+
+As discussed in Section 2.2, the state process cannot be directly observed. We introduce an observation model in which a sensor transforms the state variables in a univariate signal prone to error. Specifically, we assume noisy observations of the biogas flow rate produced by the biomass after substrate consumption. This flow, proportional to the microbial activity [ 61 , 62 ], is modelled by the mapping ( s, b) 7 → γμ (s) b, where γ is the yield parameter for biogas in Eq. (3.1) . This setting is denoted by Scenario A. Written in the form of SDE (2.24), the observation process evolves according to 
+
+d yAt
+
+|{z} 
+
+> Yt
+
+= γμ (st) bt
+
+| {z } 
+
+> hA(Xt)
+
+dt + εA
+
+|{z} 
+
+> KA
+
+d BYA
+
+> t
+
+ , (3.25) where the superscript A refers to Scenario A, and Y0 = 0. We combine Cases 1 and 2 with SDE (3.25) to design the experiments in Table 2. Over a time interval of interest [0 , T ], we simulate trajectories of X and Y using the time discretisations 
+
+∆tx and ∆ty, respectively. The trajectories of Y are illustrated in the Supplementary Material. 21 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+The observations {yAt } are assumed to be collected either at a high frequency ( ∆ty = ∆ tx) or at a low frequency ( ∆ty ≫ ∆tx). The initial pair ( b0, s0) is (1 mgL −1, 1 mgL −1) for Case 1 and (1 .65 mgL −1, 2.5 mgL −1) for Case 2.    
+
+> Table 2: Additional parameters for di ff erential equations of Xand Y.
+
+Model parameters Simulation parameters Observation function εA ∆tx ∆ty
+
+(hours) (hours) 1A - high-frequency 27 .5μ(s)b 0.01 0.01 0.01 1A - low-frequency 27 .5μ(s)b 0.01  ∆ty
+
+> ∆tx
+
+ 12 0.01 22A - high-frequency 2.75 μ(s)b 0.01 0.005 0.005 2A - low-frequency 2.75 μ(s)b 0.01  ∆ty
+
+> ∆tx
+
+ 12 0.005 2In addition to Scenario A, the Supplementary Material presents the filtering problem for Cases 1 and 2 under three additional scenarios: Scenario B, with noisy observations of the substrate concentration at a low frequency; Scenario C, with noisy observations of the biomass concentration at a low frequency; and Scenario D, with noisy observations of both biomass and substrate concentrations at a low frequency. Without the observations, the probability density of the hidden state evolved according to KFE (2.11) as illustrated in Figure 4. In light of the observations, we can now approximate the solution of the pathwise version of KSE (2.27) for all the experiments in Table 2. Figures 5 and 6 show the pathwise solution p∆t = p∆tnt , nt = 0, 1, . . .  for low-frequency observations (∆t = ∆ ty ≫ ∆tx) via the splitting-up approximation described in Section 2.2.2. Each column in Figures 5 and 6 illustrates the iterative steps of the splitting-up approximation. The top row shows the result from the prediction step based on the KFE (2.31) , the middle row depicts the likelihood ratio from Eq. (2.32) , and the bottom row presents the normalised product of these two, i.e. the corrected density. We approximate these solutions via two other methods: particle filtering, discussed in Sec-tion 2.2.2, and hereafter denoted by bootstrap particle filter (BPF), and the linearisation method known as extended Kalman filter (EKF). The experiments were run in a Precision 5820 workstation (Intel Xeon W-2245 (8C) @ 3.9GHz, 64GB of RAM). To quantify the filtering accuracy, we compare the estimated conditional mean, πt(Xt), with the true simulated state, Xt, using the Integral of Time-weighted Absolute Error (ITAE, [ 63 ]), which provides a single summary measure of the estimation error over each simulation. Smaller values of ITAE correspond to more accurate reconstructions of the state. Table 3 compares the filtering methods in terms of the ITAE metric and the average runtime per iteration. The PDE-based approximation generally benefits from mesh refinement, at the expense of higher computational cost. Likewise, the BPF exhibits improved accuracy as the number of particles increases. For the Monod case, the EKF provides the lowest runtime but with slightly lower estimation accuracy than the best-performing PDE and BPF configurations. Conversely, for the Haldane case, the finest PDE discretisation considered here (128 2) still underperforms both the BPF and the EKF. This indicates that additional mesh refinement is required, a point that is 22 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint Figure 5: Splitting-up approximation for Case 1A - low-frequency observations.
+> Figure 6: Splitting-up approximation for Case 2A - low-frequency observations.
+
+confirmed by the subsequent experiments, in which a 512 2 grid is shown to outperform the EKF. Although the ITAE provides a summary measure of the state estimation accuracy, it does not assess the agreement between the underlying filtering distributions. We therefore analyse the similarity among the approximated solutions by computing the Hellinger distance H between two probability distributions, say F1 and F2. With respect to the Lebesgue measure, let f1
+
+and f2 denote their density functions. The square of the Hellinger distance is then defined as 
+
+H2 ( f1, f2) = 12
+
+R  p f1(x) − p f2(x)2
+
+dx .23 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint Table 3: Comparison of the filtering methods in terms of the ITAE metric and average runtime in milliseconds per iteration for the Monod and Haldane kinetics over 20 independent trajectories with high-frequency observations.
+
+Case 1A (Monod) Case 2A (Haldane) ITAE Runtime ITAE Runtime Method T = 16 h ms /iter T = 16 h ms /iter KSE ·PDE (32 2) 176.37 9.67 384.42 10.61 
+
+KSE ·PDE (128 2) 37.91 174.38 15.37 2096.35 KSE ·BPF ( NP = 128) 47.85 12.31 11.30 12.30 
+
+KSE ·BPF ( NP = 1024) 36.80 74.93 9.44 80.86 KSE ·EKF 42.05 4.07 9.33 2.60 
+
+Figures 7 and 8 show comparative results at a fixed time t. For the BPF method, we let 
+
+NP = 2.5 × 10 6. The algorithms are provided in the Supplementary Material.      
+
+> Figure 7: Case 1A - approximated solution of the KSE at t=16h with the finite di ff erences and splitting-up approximation for PDEs (KSE ·PDE), the BPF (KSE ·BPF) and the EKF (KSE ·EKF). The trajectory of Xfrom which observations were simulated is shown in white and can also be found in Figure 3.
+
+Figure 9 shows the square of the Hellinger distance for Case 1 between π approximated by the splitting-up method and by the BPF. It is clear that the discretisation error decreases with a finer grid refinement. The distance between π approximated by the EKF and by the BPF is also shown. The EKF fails to capture higher moments of the distribution, hence its divergence from the BPF result. This has already been suggested by Figure 7, for which we can observe non-zero skewness and excess kurtosis resulting from having both a non-linear dynamic process and a non-linear observation process. The shape of the conditional density for di ff erent times can be found in the Supplementary Material. Figure 10 shows the square of the Hellinger distance between π approximated by the splitting-up method and by the BPF, now for Case 2A. We again include the square of the Hellinger distance between π approximated by the EKF and by the BPF. Here, the EKF su ff ers in the highly non-linear region of the state space, namely when the state is near the saddle point, t ≥ 4h. 24 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+Figure 8: Case 2A - KSE ·PDE, KSE ·BPF, and KSE ·EKF approximations at t = 8h. Di ff erently from the solution of the KFE, more probability mass moves towards the washout on account of the observations. 
+
+Figure 9: Case 1A - Squared Hellinger distances between π approximated by di ff erent grid refinements and the BPF (green), and between π approximated by the EKF and the BPF (orange). We consider three scenarios for the grid refinement, each with a total count of 32 2, 128 2, and 512 2 finite volumes. 
+
+25 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint Figure 10: Case 2A - Squared Hellinger distances between π approximated by di ff erent grid refinements and the BPF (green), and between π approximated by the EKF and the BPF (orange). Same algorithmic settings as in Figure 9. 
+
+In Figure 10, the approximation with the splitting-up method combined with finite-di ff erences on a 512 2 grid mismatches the approximation with the BPF at observation times. At t = 8h, for instance, the Hellinger distance between both distributions increases. The densities approximated by grid-based schemes or by the EKF assume that the solution is uniformly distributed within each finite volume. The density approximated by the BPF results from counting the number of particles within each finite volume. Here, we encounter the problem of degenerate volumes with no particles. This issue is similar to the so-called sample impoverishment, which is a reduction in the number of distinct sample values when the model noise variance for process X is very low. As a result, the particles will hardly diversify and may collapse to a single point in state space after a few iterations. There are di ff erent solutions for this problem, the simplest being an increase in the number of particles. This, however, leads to an unreasonable computational load. Alternatively, a density kernel estimate can smooth the particle-based approximation and extrapolate the density values for finite volumes without any particles. Other solutions are more complex and often problem-specific. See [64] and [65] for more methods to prevent sample impoverishment. 
+
+4. Discussion and concluding remarks 
+
+In the first part of this work, we established the mathematical guarantees for the inverse problem of state-estimating a stochastic chemostat. Specifically, we proved the existence and uniqueness of the solution to the SDE governing the evolution of biomass and substrate concen-trations, ensured trajectory positivity, and discussed the well-posedness of the KFE. Coupled with an observation model, we presented the filtering problem and established conditions for the well-posedness of the KSE. Consequently, the numerical pathwise approximations inherited a theoretical guarantee of reliability. As a complement to the first part, our work advances existing methodologies to numerically realise the filtering solutions for stochastic chemostats using a PDE-based approach. We presented numerical solutions to the governing SDE, the corresponding KFE, and the pathwise KSE, with the latter two realised through a grid-based scheme. These PDE-based approximations impose no 26 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+restrictions on the distribution, allowing for greater accuracy compared to linearisation methods. Furthermore, they allowed us to visualise the shape of the entire density across the state space, providing a more comprehensive understanding of system dynamics and associated uncertainty. This dual focus on theoretical and numerical methodologies contributes to the management of microbial populations, particularly in industrial settings such as bioreactors. In these environments, precise control of microbial interactions and substrate use is essential for optimising productivity and maintaining system stability. Our results provide insights into the dynamics of microbial populations with a mathematical guarantee of reliability. This allows operators to accurately predict and adjust conditions to optimise yield, e ffi ciency, or other desired operational targets. 
+
+Appendix A. Existence and uniqueness of the solution to an SDE Condition A. For all t ∈ [0 , ∞), v ∈ DV , and pairs z, z′ ∈ CZ , there exists a constant α > 0
+
+independent of t, v, z and z ′, such that 
+
+∥ct (z, v) − ct
+
+ z′, v ∥2 + ∥dt (z, v) − dt
+
+ z′, v ∥2 ≤ α∥z − z′∥2 
+
+> t
+
+, (A.1) 
+
+and 
+
+∥ct (z, v) ∥2 + ∥dt (z, v) ∥2 ≤ α 1 + ∥z∥2 
+
+> t
+
++ ∥Mt (v) ∥2 , (A.2) 
+
+in which ∥a∥t := sup s∈[0 ,t] ∥as∥, for a = z − z′ (inequality A.1) and a = z (inequality A.2), and Mt is a B (DV )-measurable functional with E hR ∞ 
+
+> 0
+
+∥Mt (V) ∥2dt i < ∞.
+
+Then, we have a theorem [33, Theorem 5.1.1], which we restate here without proof. 
+
+Theorem A (Existence and pathwise uniqueness of strong solutions). Suppose that ct, dt, (Ω, F , (Ft, t ≥
+
+0) , P), V , BZ , and z0 are given, with ct and dt non-anticipative. If Condition A holds, SDE (2.3) 
+
+has a pathwise unique strong solution. 
+
+Appendix B. Additional conditions for the KSE 
+
+1. K is invertible; 2. Condition A holds for SDE (2.23) , such that this SDE has a unique strong solution X =
+
+(Xt, t ≥ 0) by Theorem A; 3. Condition A also holds for SDE (2.24) when Mt(X) = h(Xt). 
+
+Data availability statement 
+
+The code used in this work is at BayesianFilteringLab (DOI: 10.5281 /zenodo.21377771). 
+
+References      
+
+> [1] A. Bain, D. Crisan, Fundamentals of Stochastic Filtering, Springer New York, 2008. [2] D. Crisan, B. Rozovskii, The Oxford Handbook of Nonlinear Filtering, Oxford University Press, 2011. [3] S. Lanthaler, S. Mishra, F. Weber, On bayesian data assimilation for PDEs with ill-posed forward problems, Inverse Problems 38 (8) (2022) 085012. [4] J. Clark, The design of robust approximations to the stochastic di ff erential equations of nonlinear filtering (1978). [5] E. Pardoux, ´ Equations du filtrage non lin´ eaire de la pr´ ediction et du lissage, Stochastics 6 (3-4) (1982) 193–231.
+
+27 
+
+> (which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint
+
+[6] V. E. Bene ˇs, Exact finite-dimensional filters for certain di ff usions with nonlinear drift, Stochastics 5 (1-2) (1981) 65–92. [7] R. K ´alm ´an, R. Bucy, New results in linear filtering and prediction theory, Journal of Basic Engineering 83 (1961) 95–108. [8] N. J. Gordon, D. J. Salmond, A. F. M. Smith, Novel approach to nonlinear /non-gaussian bayesian state estimation (1993). [9] G. Kitagawa, Monte carlo filter and smoother for non-gaussian nonlinear state space models, Journal of Computa-tional and Graphical Statistics 5 (1) (1996) 1–25. [10] J. Vermaak, S. Godsill, P. Perez, Monte carlo filtering for multi target tracking and data association, IEEE Transactions on Aerospace and Electronic Systems 41 (1) (2005) 309–332. [11] P. J. van Leeuwen, Particle filtering in geophysical systems, Monthly Weather Review 137 (12) (2009) 4089–4114. [12] J. Shaman, A. Karspeck, Forecasting seasonal outbreaks of influenza, Proceedings of the National Academy of Sciences 109 (50) (2012) 20425–20430. [13] F. Le Gland, Time discretization of nonlinear filtering equations, in: Proceedings of the 28th IEEE Conference on Decision and Control, Vol. 3, 1989, pp. 2601–2606. [14] F. Le Gland, Splitting-up approximation for SPDE’s and SDE’s with application to nonlinear filtering, in: Stochastic Partial Di ff erential Equations and Their Applications, Springer Berlin Heidelberg, 1992, pp. 177–187. [15] S. T. Yau, S. S.-T. Yau, Real time solution of nonlinear filtering problem without memory I, Mathematical Research Letters 7 (5–6) (2000) 671–693. [16] S. T. Yau, S. S.-T. Yau, Real time solution of the nonlinear filtering problem without memory II, SIAM Journal on Control and Optimization 47 (1) (2008) 163–195. [17] S. S.-T. Yau, X. Chen, X. Jiao, J. Kang, Z. Sun, Y. Tao, Principles of Nonlinear Filtering Theory, Vol. 33 of Algorithms and Computation in Mathematics, Springer, Cham, 2024. [18] M.-H. Yueh, W.-W. Lin, S. T. Yau, An e ffi cient numerical method for solving high-dimensional nonlinear filtering problems, Communications in Information and Systems 14 (4) (2014) 243–262. [19] Z. Liang, S. S.-T. Yau, Wavelet-Galerkin method for the kolmogorov equation, Mathematical and Computer Modelling 40 (9–10) (2004) 1093–1121. [20] D. Crisan, A. Lobbe, S. Ortiz-Latorre, An application of the splitting-up method for the computation of a neural network representation for the solution for the filtering equations, Stochastics and Partial Di ff erential Equations: Analysis and Computations 10 (3) (2022) 1050–1081. [21] K. Bågmark, A. Andersson, S. Larsson, An energy-based deep splitting method for the nonlinear filtering problem, Partial Di ff erential Equations and Applications 4 (2) (2023) 14. [22] L. Pichler, A. Masud, L. Bergman, Numerical solution of the Fokker–Planck equation by finite di ff erence and finite element methods—a comparative study (2013). [23] F. Campillo, M. Joannides, I. Larramendy, Approximation of the Fokker–Planck equation of the stochastic chemostat, Mathematics and Computers in Simulation 99 (2014) 37–53. [24] A. Bull, The renaissance of continuous culture in the post-genomics age, Journal of Industrial Microbiology and Biotechnology 37 (10) (2010) 993–1021. [25] J. Harmand, C. Lobry, A. Rapaport, T. Sari, The Chemostat: Mathematical Theory of Microorganism Cultures, John Wiley and Sons, ISTE, 2017. [26] P. Hoskisson, G. Hobbs, Continuous culture–making a comeback?, Microbiology 151 (2005) 3153–3159. [27] L. Imhof, S. Walcher, Exclusion and persistence in deterministic and stochastic chemostat models, Journal of Di ff erential Equations 217 (1) (2005) 26–53. [28] O. Hadj-Abdelkader, A. Hadj-Abdelkader, Estimation of substrate and biomass concentrations in a chemostat using an extended Kalman filter, International Journal of Bioautomation 23 (2) (2019) 215–232. [29] P. Sinner, M. Stiegler, O. Goldbeck, G. Seibold, C. Herwig, J. Kager, Online estimation of changing metabolic capac-ities in continuous Corynebacterium glutamicum cultivations growing on a complex sugar mixture, Biotechnology and Bioengineering 119 (2) (2021) 575–590. [30] X. Mao, G. Marion, E. Renshaw, Environmental brownian noise suppresses explosions in population dynamics, Stochastic Processes and their Applications 97 (1) (2002) 95–110. [31] A. Kolmogorov, S. Fomin, Introductory Real Analysis, Dover Publications, 1975. [32] R. Liptser, A. Shiryaev, Statistics of Random Processes: I. General Theory, Applications of Mathematics: Stochastic Modelling and Applied Probability Series, Springer, 2001. [33] G. Kallianpur, Stochastic Filtering Theory, Applications of mathematics, Springer, 1980. [34] R. Khasminksii, Stochastic Stability of Di ff erential Equations, Stochastic Modelling and Applied Probability, Springer Berlin Heidelberg, 2012. [35] S. Cohen, R. Elliott, Stochastic Calculus and Applications, Probability and Its Applications, Springer New York, 2015. [36] J. Doob, Stochastic Processes, Probability and Statistics Series, Wiley, 1953. 
+
+28 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint [37] A. Jazwinski, Stochastic processes and filtering theory, no. 64, Academic Press, 1970. [38] I. Karatzas, S. E. Shreve, Brownian Motion and Stochastic Calculus, Springer New York, 1991. [39] A. Friedman, Stochastic di ff erential equations and applications. Vol. 1, Academic Press, 1975. [40] G. Pavliotis, Stochastic Processes and Applications, Springer New York, 2014. [41] R. van Handel, Filtering, stability, and robustness, Ph.D. thesis, Princeton University (2007). [42] A. Kutschireiter, S. C. Surace, J. Pfister, The hitchhiker’s guide to nonlinear filtering, Journal of Mathematical Psychology 94 (2020) 102307. [43] D. Crisan, M. Kouritzin, J. Xiong, Nonlinear filtering with signal dependent observation noise, Electronic Journal of Probability 14 (2009) 1863–1883. [44] H. J. Kushner, On the di ff erential equations satisfied by conditional probability densities of Markov processes, with applications, SIAM Journal on Control and Optimization 2 (1) (1964) 106–119. [45] R. L. Stratonovich, Conditional Markov processes, Theory of Probability & Its Applications 5 (2) (1960) 156–178. [46] M. Davis, A pathwise solution of the equations of nonlinear filtering, Theory of Probability & Its Applications 27 (1) (1982) 167–175. [47] D. Scott, Multivariate Density Estimation: Theory, Practice, and Visualization, Wiley Series in Probability and Statistics, Wiley, 2015. [48] Z. Cai, F. Le Gland, H. Zhang, An adaptive local grid refinement method for nonlinear filtering (1995). [49] I. Gy ¨ongy, N. Krylov, On the splitting-up method and stochastic partial di ff erential equations, The Annals of Probability 31 (2) (2003) 564–591. [50] H. L. Smith, P. Waltman, The Theory of the Chemostat: Dynamics of Microbial Competition, Cambridge Studies in Mathematical Biology, Cambridge University Press, 1995. [51] L. Mailleret, O. Bernard, J.-P. Steyer, Nonlinear adaptive control for bioreactors with unknown kinetics, Automatica 40 (8) (2004) 1379–1385. [52] F. Mairet, O. Bernard, Robustness of bioprocess feedback control to biodiversity, AIChE Journal 63 (7) (2017) 2742–2750. [53] N. Dimitrova, M. I. Krastanov, Nonlinear adaptive stabilizing control of an anaerobic digestion model with unknown kinetics, International Journal of Robust and Nonlinear Control 22 (15) (2012) 1743–1752. [54] A. Haddon, C. Hermosilla, An algorithm for maximizing the biogas production in a chemostat, Journal of Optimiza-tion Theory and Applications 182 (3) (2019) 1150–1170. [55] J. Monod, La technique de culture continue: theorie et applications (1950). [56] J. Andrews, A mathematical model for the continuous culture of microorganisms utilizing inhibitory substrates, Biotechnology and bioengineering. 10 (6) (1968) 707–723. [57] R. Durrett, Stochastic Calculus: A Practical Introduction, Taylor and Francis, 1996. [58] F. Campillo, M. Joannides, I. Larramendy, Stochastic models of the chemostat (Nov. 2010). [59] O. Manita, S. Shaposhnikov, On the cauchy problem for Fokker–Planck–Kolmogorov equations with potential terms on arbitrary domains, J Dyn Di ff Equat 28 (2016) 493–518. [60] H. J. Kushner, P. G. Dupuis, Numerical Methods for Stochastic Control Problems in Continuous Time, Vol. 24, Springer, 1990. [61] O. Bernard, Z. Hadj-Sadok, D. Dochain, A. Genovesi, J.-P. Steyer, Dynamical model development and parameter identification for anaerobic wastewater treatment process, Biotechnology and bioengineering 75 (2001) 424–438. [62] P. Renard, D. Dochain, G. Bastin, H. Naveau, J. Nyns, Adaptive control of anaerobic digestion processes—a pilot-scale application, Biotechnology and Bioengineering 31 (1988) 287–294. [63] D. E. Seborg, D. A. Mellichamp, T. F. Edgar, F. J. Doyle III, Process Dynamics and Control, 4th Edition, John Wiley & Sons, 2016. [64] J. Carpenter, P. Cli ff ordy, P. Fearnhead, An improved particle filter for nonlinear problems, IEE Proc. Radar, Sonar Navig. 146 (1999) 2–7. [65] T. Li, S. Sun, T. Sattar, J. Corchado, Fight sample degeneracy and impoverishment in particle filters: A review of intelligent approaches, Expert Systems with Applications 41 (8) (2014) 3944–3954. 
+
+29 
+
+(which was not certified by peer review) is the author/funder. All rights reserved. No reuse allowed without permission. The copyright holder for this preprint this version posted July 21, 2026. ;https://doi.org/10.1101/2023.01.17.524503 doi: bioRxiv preprint

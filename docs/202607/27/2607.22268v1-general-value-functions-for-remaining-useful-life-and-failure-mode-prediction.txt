@@ -1,0 +1,1674 @@
+Title: General Value Functions for Remaining Useful Life and Failure-Mode Prediction
+
+URL Source: https://arxiv.org/pdf/2607.22268v1
+
+Published Time: Mon, 27 Jul 2026 00:53:32 GMT
+
+Number of Pages: 46
+
+Markdown Content:
+# General Value Functions for Remaining Useful Life and Failure-Mode Prediction 
+
+Hao Yan 1∗
+
+, Ali Sarabi 1, Qing Zou 1†
+
+, Boyang Xu 11School of Computing and Augmented Intelligence, Arizona State University 
+
+Abstract 
+
+Remaining useful life (RUL) prediction and failure-mode classification are central tasks in predictive maintenance. Many data-driven pipelines use fixed-window supervised learning with complete terminal labels; such routes do not naturally encode the temporal recursion linking successive degradation-state predictions when observations are partial or unit identities are un-available. We formulate prognostics as vector General Value Function (GVF) prediction on an absorbing degradation process, treating RUL and failure-mode probabilities as temporally con-sistent targets rather than independent window-level labels, and estimate them with a multi-step temporal-difference estimator, TD( n, λ ). Supporting theory identifies the Bellman fixed point of the vector GVFs, characterizes the linear projected-TD limit and its relation to complete-return Monte Carlo regression under realizability, and explains when bootstrapped TD targets are less variable than Monte Carlo returns. On an event-triggered multimode simulation and NASA C-MAPSS label-scarce stitch data, TD improves RUL and failure-mode prediction relative to a supervised same-backbone Monte Carlo control, especially under scarce complete labels. Prac-tically, fragmented, identity-free degradation records can contribute local Bellman transitions instead of being discarded until complete run-to-failure labels are available. 
+
+Keywords: General value functions; remaining useful life; temporal-difference learning; failure-mode classification; prognostics; absorbing Markov processes. 
+
+# 1 Introduction 
+
+Modern engineered systems are increasingly monitored through streams of sensor measurements— vibration, temperature, pressure, flow, emissions, and related condition indicators. These signals 
+
+> ∗
+
+Corresponding author: haoyan@asu.edu .
+
+> †
+
+Qing Zou conducted the research while he was a visiting scholar at Arizona State University ( qingzou@asu.edu ). 
+
+1arXiv:2607.22268v1 [stat.ML] 24 Jul 2026 evolve as systems operate, age, and degrade. Prognostics uses such trajectories to forecast reliability outcomes, especially remaining useful life (RUL) and, when several failure mechanisms are possible, the likely failure mode. Accurate prognostic predictions support condition-based maintenance by allowing service actions to be planned before unexpected breakdowns (Chen & Tsui, 2013; Z. Li et al., 2007; Song & Liu, 2018; Zhou et al., 2014). A large literature has studied RUL and failure-mode prediction through statistical degradation models, health-index construction, and supervised machine and deep learning (Fu et al., 2025; Kontar et al., 2017; X. Li et al., 2018; Liu et al., 2013). Indirect health-index approaches provide interpretable degradation representations but depend on the validity of the selected surrogate dy-namics, thresholds, and extrapolation model. Direct supervised approaches map sensor histories to RUL or terminal-mode labels, but often represent successive windows as separate training examples and impose temporal coherence only through architecture or auxiliary penalties. Both families are most effective when abundant run-to-failure trajectories and terminal labels are available; Section 2 reviews these approaches in detail. This paper instead foregrounds the temporal structure of the prognostic target. RUL and failure-mode probabilities evolve along a degradation trajectory rather than forming independent window-level labels. Conditional on continued operation, realized RUL decreases by one operating step between successive states. Failure-mode probabilities may change as new evidence arrives, but their updates should remain consistent with the future evolution implied by the successor state. Existing methods often encourage this behavior indirectly through monotonic health indices, smoothness penalties, or successive-window consistency terms (Fu et al., 2025; Jahani et al., 2020; Kontar et al., 2017; Liu et al., 2013). We instead define temporal semantics directly at the target level through hitting times and absorption probabilities. At each time, prediction is conditioned on a predictive state constructed from the available observation history—for example, a sensor vector, a recent history window, a recurrent summary, or a learned health index—rather than on an unobserved physical state. The unit evolves through this predictive-state space until reaching an absorbing failure set F. RUL is the expected time until the trajectory first reaches F. When the terminal boundary is partitioned as F = SKk=1 Fk,failure-mode prediction asks for the probability of eventual absorption in each mode-specific set Fk.RUL and failure-mode classification are therefore related questions about the same future terminal event, rather than unrelated regression and classification tasks. This perspective separates the construction of the predictive state from the definition of the prognostic target: different sensor 2representations may be used without changing the hitting-time and hitting-probability quantities being predicted. These quantities share a forward-looking structure: each prediction summarizes future evolution until a terminal event occurs. General value functions (GVFs) provide a compact language for defining such temporally extended predictions (Sutton et al., 2011; White, 2015). In the present setting, value functions are used purely for prediction. There are no control actions, maintenance policies, or optimization over decisions. RUL is represented by accumulating operating time until absorption, while each failure-mode quantity accumulates a mode-specific terminal event. The GVF formulation also supplies the desired temporal consistency through a Bellman equa-tion. A prediction at the current state must agree with the immediate transition and the prediction made from the successor state. For RUL, conditional on survival, remaining life equals one elapsed step plus the expected remaining life from the next state. For failure modes, mode-specific hitting probabilities propagate through successor states until absorption. The Bellman relation is therefore used as the consistency equation for dynamic prognosis. Figure 1 illustrates this shared hitting-time and hitting-probability interpretation. 
+
+Figure 1: Dynamic prognosis as value prediction. A unit evolves until absorption in F =S 
+
+> k
+
+Fk; RUL is the expected time to failure, and mode prediction is the hitting probability of each 
+
+Fk. Successive forecasts satisfy a Bellman recursion along the absorbing degradation process. This viewpoint clarifies the distinction between Monte Carlo (MC) and temporal-difference 
+
+(TD) estimation. Conventional supervised RUL regression uses complete run-to-failure labels, corresponding to complete Monte Carlo returns. Such targets are effective when terminal labels are abundant, but they cannot be formed directly for censored, incomplete, or anonymous nonterminal trajectory segments. TD learning instead combines observed local transitions with bootstrapped successor predictions. Partial trajectories can therefore contribute Bellman-consistent training 3targets before the eventual failure time or mode is observed. We develop a multi-step TD( n, λ )estimator for the resulting vector GVF. The failure boundary and its mode-specific subsets may be defined operationally from physical thresholds, benchmark labels, maintenance records, or expert annotations. The contributions of this paper are as follows. 1. We formulate dynamic prognostics as vector-GVF prediction on an absorbing degradation pro-cess, unifying RUL and failure-mode prediction as temporally extended hitting-time and hitting-probability questions rather than independent supervised tasks. We further develop a TD( n, λ )estimator that enables bootstrapped learning from partial trajectories. 2. Drawing on standard TD analysis, we identify the Bellman fixed point targeted by the vector GVFs, characterize the linear projected-TD limit and its relation to complete-return Monte Carlo regression under realizability, and provide a target-variance decomposition explaining when bootstrapped TD targets can be less variable than complete Monte Carlo returns. 3. We evaluate the method on an event-triggered multimode simulation and the NASA C-MAPSS benchmark, emphasizing heterogeneous degradation, scarce terminal labels, and anonymous partial-trajectory observations. 
+
+# 2 Literature Review 
+
+We distinguish direct and indirect methods by the prognostic supervision target—whether RUL or failure risk is inferred directly from observations or through an intermediate health representation— rather than by whether the method is statistical, model-based, or deep learning-based. 
+
+2.1 Direct Prognostic Methods 
+
+In this paper, a direct prognostic method is one whose learning or estimation target is the prog-nostic outcome itself—e.g., a pointwise RUL label Yit = Ti − t, an event-time and censoring pair (Ti, δ i), a failure-mode label, or a terminal degradation outcome—regardless of whether the model is statistical or neural. Survival and lifetime models (Z. Li et al., 2007; Yue & Kontar, 2021) estimate failure risk or residual life from event-time data. Stochastic degradation-process (Fang & Pan, 2024; van Noortwijk, 2009; Ye & Chen, 2014), mixed-effects (Kontar et al., 2017), and 4Bayesian (Gebraeel et al., 2005) approaches may posit an explicit degradation law, but remain di-rect when parameters are fit to observed paths and the inferential target is RUL or time to failure; a parametric degradation structure alone does not make a method indirect. Data-driven direct methods map condition-monitoring measurements or engineered features to RUL, failure time, or mode labels, including recurrent networks (Zheng et al., 2017), support-vector regressors (Khelif et al., 2017), and Bayesian deep regressors (Kim & Liu, 2020). Modern deep networks minimize supervised losses on RUL, capped RUL, or failure outputs using CNNs (X. Li et al., 2018), Transformer architectures (X. Li et al., 2022), and related deep prognostics frameworks (Zhao et al., 2019). Direct methods optimize the deployed prognostic quantity and are easy to benchmark, which helps explain their strong performance with end-to-end deep learning. They nonetheless require sufficient labeled degradation histories—and window-level training can induce strong within-unit correlation—while survival and degradation models rely on hazard, random-effect, or threshold as-sumptions. Even successful deep direct models can enforce temporal coherence through architecture or auxiliary penalties rather than through the definition of the prediction target. 
+
+2.2 Indirect Prognostic Methods 
+
+We use the term indirect prognostic method for approaches that first construct an intermediate degradation representation—a health index, latent state, fused signal, or failure surface—and then derive RUL or failure risk by extrapolating, thresholding, or passing it to a downstream reliabil-ity model. Health-index methods fuse multivariate sensor streams into scalar or low-dimensional indicators (Liu et al., 2013). Indirect routes offer interpretable degradation coordinates and support multisensor fusion across operating regimes (Yan et al., 2016), composite health-index modeling (Song & Liu, 2018), prog-nostics under multiple failure modes (Chehade et al., 2018; Fu et al., 2025), and failure-surface frameworks (Song et al., 2019). Deep encoders are increasingly used for health-index construction via RNN indicators (Guo et al., 2017) and shape-constrained fusion (Z. Li et al., 2021). The main limitation is dependence on this intermediate representation: a poorly specified health index can bias downstream RUL even when the second-stage model is sound, and choices about fusion, threshold, and extrapolation can propagate misspecification through the pipeline. 52.3 Multi-Task Prognostics 
+
+Traditional pipelines often treat RUL regression and failure-mode classification as separate stages, although reliability methods can couple them through joint time-series–survival models (Yue & Kontar, 2021), failure-surface formulations (Song et al., 2019), and degradation modeling under unknown failure modes (Fu et al., 2025). Failure modes are not terminal labels alone; they reflect distinct degradation mechanisms, rates, and sensor signatures along the same trajectory. Multi-task learning (Caruana, 1997) shares representations across related tasks to improve generalization. In prognostics, shared encoders have been used for joint degradation assessment and RUL prediction (Miao et al., 2019), and for mode-dependent RUL with failure-mode diagnostics (Z. Li et al., 2022). Many supervised multi-task models nonetheless combine regression and classification losses without specifying temporal semantics: terminal classifiers need not be absorption probabilities, and RUL heads need not satisfy Bellman consistency across states. 
+
+2.4 General Value Functions and Temporal-Difference Learning 
+
+Temporal-difference learning estimates temporally extended predictions from bootstrapped succes-sor values rather than complete returns (Sutton, 1988; Sutton & Barto, 2018). Relevant supporting work includes convergence under function approximation (Tsitsiklis & Van Roy, 1997), statistical analyses of TD targets (Cheikhi & Russo, 2023), and rare-event prediction (Cheng & Weare, 2024). General value functions extend value prediction through user-specified cumulants and continua-tions (Sutton et al., 2011; White, 2015). Their use for joint RUL and failure-mode prognosis under fragmented trajectory supervision remains comparatively unexplored. 
+
+# 3 Problem Formulation: Absorbing Degradation Processes 
+
+We formalize RUL and failure-mode prediction as vector GVFs on an absorbing degradation process. 
+
+3.1 State, Dynamics, and Absorption 
+
+Let St ∈ S ⊆ Rd denote the predictive state at time t, constructed from the observation history available for forecasting. The Bellman equations below are exact when {St} is Markov for the prog-nostic targets and approximate otherwise; predictions condition on St rather than on an unobserved physical state. 6Definition 1 (Absorbing degradation process) . We model {St} as a Markov process on S with kernel P (· | s). Partition S = C ∪ F , where C = S \ F is the nonterminal operating region and F
+
+is an absorbing failure set, with P (F | s) = 1 for s ∈ F . Define the absorption time 
+
+T = inf {t ≥ 0 : St ∈ F} .
+
+Definition 2 (Relative hitting time) . The relative hitting time from St is 
+
+τt = inf {h ≥ 0 : St+h ∈ F} .
+
+On paths with finite absorption, τt = T − t.
+
+Definition 3 (Failure modes) . When failures decompose into K modes, partition the terminal set into disjoint subsets F1, . . . , FK :
+
+F =
+
+> K
+
+[
+
+> k=1
+
+Fk, Fj ∩ F k = ∅ (j̸ = k).
+
+Absorption in Fk yields terminal mode Z = k.
+
+Several results in Section 4.3 additionally assume almost-sure absorption, Ps(τt < ∞) = 1 for every s ∈ C ; this assumption is stated where required. We adopt a model-free viewpoint with respect to P : the learning algorithms use observed transitions ( St, S t+1 ) rather than a closed-form plant model (Sutton & Barto, 2018). Constructing the predictive state St is distinct from specifying the GVF targets on ( St, P ). The Bellman equations are exact when St is Markov for those targets and otherwise define an approximation relative to the selected representation. 
+
+Remark 1 (Predictive state and partial observability) . In practice, St is generally an approximate history summary rather than the true physical state. The resulting setting is analogous to partial observability: Bellman consistency is interpreted relative to the selected predictive representation, not to an exact latent-state model (Xu et al., 2025). 
+
+3.2 Introduction to General Value Functions 
+
+General value functions (GVFs) are defined in a setting-agnostic way: the only probabilistic object is a Markov process {St} on S with kernel P (· | s) (Sutton et al., 2011; White, 2015). Each GVF 7is specified by cumulant and continuation sequences as the expected accumulated signal along the trajectory. Nothing in the definitions below requires actions, rewards in the reinforcement-learning sense, or optimality—only the process ( St, P ) and the chosen cumulant and continuation sequences. Fix m ≥ 1 GVFs on the same ( St, P ). For each i ∈ { 1, . . . , m }, specify an adapted cumulant 
+
+c(i) 
+
+> t+1
+
+(a deterministic function of the transition when written in lowercase) and a continuation 
+
+γ(i) 
+
+> t+1
+
+∈ [0 , 1], which names the effective horizon for the ith GVF ( γ(i) 
+
+> t+1
+
+= 0 stops accumulation at the next step; constant γ(i) 
+
+> t+1
+
+= ¯ γ < 1 yields geometric discounting; state-dependent continuations encode pseudo-termination) (Sutton & Barto, 2018). In prognostics, for example, one may take 
+
+m = 1 + K to predict RUL together with K failure-mode hitting probabilities. 
+
+Definition 4 (Vector GVF) . Stack the corresponding m GVFs into 
+
+V (s) =  V (1) (s), . . . , V (m)(s)⊤ ∈ Rm,
+
+where the ith component is 
+
+V (i)(s) = E
+
+
+
+> ∞
+
+X
+
+> ℓ=0
+
+
+
+> ℓ
+
+Y
+
+> j=1
+
+γ(i)
+
+> t+j
+
+ c(i) 
+
+> t+ℓ+1
+
+St = s
+
+ , (1) 
+
+with the convention that the empty product equals one. 
+
+Equation (1) is the extensive definition: each V (i)(s) is an expectation of a return built from future cumulants gated by future continuations. When m = 1 and ct+1 coincides with a Markov reward signal, the single component reduces to the usual discounted value function. Collect instan-taneous cumulants in ut+1 = ( c(1) 
+
+> t+1
+
+, . . . , c (m)
+
+> t+1
+
+)⊤ and continuations in Γ t+1 = diag( γ(1) 
+
+> t+1
+
+, . . . , γ (m) 
+
+> t+1
+
+). Under the Markov property, V admits the vector Bellman expectation equation 
+
+V (s) = E [ut+1 + Γ t+1 V (St+1 ) | St = s] , (2) together with componentwise boundary values on any terminal states where a return is pinned by definition. When m = 1, (2) reduces to the scalar Bellman equation V (s) = E[ct+1 + γt+1 V (St+1 ) |
+
+St = s], which is the relation bootstrapped by temporal-difference learning. Diagonal Γ t+1 means each GVF component has its own horizon schedule, while Γ t+1 V (St+1 ) couples the GVFs only through the shared successor St+1 .83.3 Multi-Task Prognostic Model: Two GVF Types on the Same Absorbing Degradation Process 
+
+RUL prediction and failure-mode prediction may appear as two unrelated supervised tasks, but both are GVFs on the same stochastic process ( St, P ). They differ only in cumulants, continuations, and terminal semantics. 
+
+Definition 5 (RUL (survival-time) GVF) . For γtime ∈ [0 , 1] , the survival-time GVF assigns cu-mulant ctime  
+
+> t+1
+
+= 1{St /∈ F} and continuation Γtime  
+
+> t+1
+
+= γtime 1{St+1 /∈ F} . For s ∈ C ,
+
+V time  
+
+> γtime
+
+(s) = Es
+
+"τt−1X
+
+> ℓ=0
+
+γℓ
+
+> time
+
+#
+
+. (3) 
+
+When γtime = 1 and Es[τt] < ∞, cycle-count RUL is V time 1 (s) = Es[τt].
+
+For γtime < 1, V time  
+
+> γtime
+
+(s) is a discounted survival-time value with soft effective horizon approxi-mately (1 − γtime )−1. Soft-horizon bounds are given in Section 4.3.1. 
+
+Definition 6 (Mode-k terminal-event GVF) . For each failure mode k ∈ { 1, . . . , K } and γmode ∈
+
+[0 , 1] , the mode-k terminal-event GVF assigns cumulant c(k) 
+
+> t+1
+
+= 1{St /∈ F , S t+1 ∈ F k} and contin-uation Γ(k) 
+
+> t+1
+
+= γmode 1{St+1 /∈ F} . For s ∈ C ,
+
+H(k) 
+
+> γmode
+
+(s) = Es
+
+γτt−1mode 1{St+τt ∈ F k} . (4) 
+
+When γmode = 1 , H(k)1 (s) = Ps(Z = k).
+
+When γmode < 1, each H(k) 
+
+> γmode
+
+(s) is a discounted terminal-event GVF and need not equal 
+
+Ps(Z = k); the urgency-reweighted interpretation of the normalized scores ˜ pγ,k is developed in Proposition 2. 
+
+Vector Bellman equation. The joint prognostic GVF stacks survival-time and mode-specific components as Vγ (s) = ( V time  
+
+> γ
+
+(s), H (1)  
+
+> γ
+
+(s), . . . , H (K) 
+
+> γ
+
+(s)) ⊤. It specializes Eq. (2) with vector cu-mulant u(γ) 
+
+> t+1
+
+= ( 1{St /∈ F} , 1{St /∈ F , S t+1 ∈ F 1}, . . . , 1{St /∈ F , S t+1 ∈ F K })⊤ and continuation Γ(γ) 
+
+> t+1
+
+= γ1{St+1 /∈ F} IK+1 , i.e., 
+
+Vγ (s) = E
+
+h
+
+u(γ) 
+
+> t+1
+
++ Γ (γ)
+
+> t+1
+
+Vγ (St+1 ) | St = s
+
+i
+
+. (5) 9In implementation, components need not share the same discount; for example, γtime < 1 for a soft-horizon RUL proxy and γmode = 1 for probability-correct terminal-mode prediction. 
+
+# 4 Learning Algorithm 
+
+4.1 TD( n, λ ) Estimator 
+
+Two classical ways to estimate a value function are Monte Carlo (MC) estimation and temporal-difference (TD) estimation. In the present vector-GVF setting, both operate componentwise on the same stacked prediction vector; the difference is whether the target waits for a completed return or bootstraps from a later prediction. 
+
+Monte Carlo targets. MC estimation uses the realized return from a complete trajectory. For RUL, this is exactly the familiar supervised label T − t in the undiscounted case; for a mode-probability GVF, the realized terminal return is the one-hot indicator of the failure mode. Thus conventional window-based RUL regression can be interpreted as an every-visit MC method: each windowed state St is paired with the complete return observed from that point to failure. This interpretation is useful because it explains both the strength and the weakness of supervised RUL labels. MC targets are direct samples of the desired return and do not depend on the current network prediction, but they require terminal information and can have high variance when the remaining episode length τt is long or failure events are rare. For the vector GVF, the MC target from time t is 
+
+yMC  
+
+> t
+
+=
+
+> τt−1
+
+X
+
+> ℓ=0
+
+
+
+> ℓ
+
+Y
+
+> j=1
+
+Γt+j
+
+ ut+ℓ+1 , (6) with the convention that an empty product equals the identity matrix. If the trajectory is fully observed until absorption, all components of yMC  
+
+> t
+
+are available. If a trajectory is censored or only partially observed, some MC components are unavailable because the terminal event or terminal mode has not been observed; those components must be masked or replaced by a bootstrapped target. 
+
+TD( n) targets. TD learning replaces the full future return by a shorter observed prefix plus a value estimate at a future state. This is the bootstrapping step: instead of waiting until failure, the 10 learner uses the current approximation of the remaining return after n transitions. For prognostics, this matters because transition data are often available long before an asset fails. TD updates can therefore use partial trajectories and can propagate temporal information backward through the trajectory incrementally. The n-step TD target for vector GVFs is 
+
+y(n) 
+
+> t
+
+=
+
+> n−1
+
+X
+
+> ℓ=0
+
+
+
+> ℓ
+
+Y
+
+> j=1
+
+Γt+j
+
+ ut+ℓ+1 +
+
+
+
+> n
+
+Y
+
+> j=1
+
+Γt+j
+
+ sg( Vθ(St+n)) , (7) where sg( ·) denotes the stop-gradient operator. The stop-gradient notation emphasizes the semi-gradient nature of the update: the bootstrap target is treated as a fixed target for the current optimization step, rather than allowing gradients to flow through both sides of the Bellman equa-tion. Under the absorbing convention of Definition 1, both cumulant and continuation vanish once the state enters F (each carries the indicator 1{St /∈ F} or 1{St+1 /∈ F} ), so all post-terminal cumulants contribute zero and the continuation product zeroes out the bootstrap after absorption. Consequently, if the trajectory terminates before t + n, the product of continuations terminates the bootstrap term, so the TD target automatically reduces to the observed terminal return over the available prefix. If n = 1, Eq. (7) is the one-step TD target ut+1 + Γ t+1 Vθ(St+1 ). As n increases toward the remaining episode length, the target approaches the MC return in Eq. (6). Thus n
+
+controls the usual bias–variance and locality–horizon trade-off: small n uses highly local bootstrap-ping with lower target variance but greater dependence on the current approximation, whereas large n uses more observed future information but becomes closer to high-variance complete-return supervision. For the decomposed pk, q k parameterization (mode probabilities plus mode-specific RUL contri-butions), the same target equations apply after replacing the stacked vector ut+1 with cumulants for the probability components and mode-specific RUL-contribution components. The main difference is interpretive: the pk components learn terminal hitting probabilities, while the qk components learn the portion of expected remaining time assigned to trajectories that eventually terminate in mode k.
+
+TD( n, λ ). We use truncated TD( n, λ ), a generalization of fixed-step TD( n), as the primary esti-mator throughout our main experiments. 11 Remark 2 (TD target validity under censoring) . Fix t and a prefix observed through t + n, with absorption time T possibly unobserved. The MC target yMC  
+
+> t
+
+(Eq. (6) ) is well-defined from this prefix only if T ≤ t + n; otherwise its components are undefined and must be masked. The TD( n) target 
+
+y(n) 
+
+> t
+
+(Eq. (7) ) is well-defined whenever t + n lies in the prefix: if T ≤ t + n it reduces to the terminal return; if T > t + n, the bootstrap sg( Vθ(St+n)) completes the target from the observed successor state alone. 
+
+Target-construction computability is not arbitrary-censoring consistency: observed prefixes must still represent the transition distribution, or sampling/weighting must address selection. For k ∈ { 1, . . . , n }, let y(k) 
+
+> t
+
+denote the k-step vector TD target from Eq. (7) with n replaced by 
+
+k. Define the truncated TD( n, λ ) target 
+
+y(n,λ ) 
+
+> t
+
+= (1 − λ)
+
+> n−1
+
+X
+
+> k=1
+
+λk−1y(k) 
+
+> t
+
++ λn−1y(n) 
+
+> t
+
+, λ ∈ [0 , 1] , (8) which recovers one-step TD at λ = 0 and TD( n) at λ = 1. The trace parameter λ sets the effective temporal span of the target, emphasizing short bootstraps for small λ and longer observed returns for large λ.Partition the vector TD( n, λ ) target into its survival-time and mode-GVF components, 
+
+y(n,λ ) 
+
+> t
+
+=
+
+
+
+y(n,λ )
+
+> t, time
+
+, y (n,λ )
+
+> t, mode
+
+
+
+.
+
+The two heads regress the corresponding blocks of this common vector Bellman target: 
+
+Lrul (θ) = 
+
+
+
+V time  
+
+> θ
+
+(St) − sg 
+
+
+
+y(n,λ )
+
+> t, time
+
+ 2
+
+, (9) 
+
+Lcls (θ) = 1
+
+K bHθ(St) − sg 
+
+
+
+y(n,λ )
+
+> t, mode
+
+ 22 . (10) The shared encoder and two heads are trained jointly using 
+
+L(θ) = λrul Lrul (θ) + λcls Lcls (θ). (11) All reported experiments use λrul = 1 and λcls = 5000. An optional cross-entropy branch exists in the implementation but is disabled in the experiments reported here. The training loop is summarized in Algorithm 1 (Appendix A): store transition subsequences, form the vector TD( n, λ ) target from Eqs. (7)–(8), and update the shared network by a semi-12 gradient step on Equation (11). 
+
+4.2 Implementation Details 
+
+4.2.1 Tuning Parameter Selection 
+
+The most important GVF-specific tuning parameter is the continuation γt+1 . In this paper, γt+1 
+
+is not only an algorithmic discount factor; it is part of the GVF specification. It multiplies the future value term in the Bellman target and therefore determines how much future cumulants matter. Setting γt+1 = 0 stops accumulation after the next transition, setting γt+1 = 1 continues accumulation until terminal absorption, and using a constant γt+1 = ¯ γ < 1 creates a geometrically discounted prediction. For undiscounted cycle-count RUL, the natural continuation is γrul  
+
+> t+1
+
+= 1{St+1 /∈ F} , which asks for expected time to absorption. If a practitioner instead wants a finite planning window, choose ¯γ < 1 so that the soft planning scale (1 − ¯γ)−1 matches a desired horizon of H operating cycles (e.g., ¯γ = 1 − 1/H ). This is a soft horizon: outcomes beyond H cycles still enter the return, but their contribution decays geometrically. Changing the cumulant itself would define a different GVF; in this paper we keep the survival-time cumulant and control temporal scale through (¯ γ, n, λ ). The remaining tuning parameters control the estimator rather than the meaning of the GVF. The truncation length n and trace parameter λ should be tuned jointly with ¯ γ and reported together, because they determine the effective temporal scale of the learned prediction. 
+
+4.2.2 Function Approximation 
+
+Let Vθ(s) ∈ Rm be a parametric vector-GVF approximator. In the multi-task setting, the network has a shared encoder fθ(s) and task-specific heads: 
+
+bVθ(s) = 
+
+ bV time  
+
+> θ
+
+(s), bH(1)  
+
+> θ
+
+(s), . . . , bH(K) 
+
+> θ
+
+(s)
+
+
+
+. (12) In all reported experiments the mode head outputs unconstrained scores bHθ(s) ∈ RK and is trained by the mode block of the weighted vector-GVF MSE loss (Eq. (11)), not by cross-entropy. When the mode components target γmode = 1, a K-class softmax readout of bHθ(s) may still be used at evaluation to estimate Ps(Z = k). When the mode components target finite γmode < 1, the raw mode GVFs H(k) 
+
+> γmode
+
+(s) are discounted hitting values and need not sum to one; a softmax readout should then be interpreted as estimating normalized urgency-weighted mode scores (Proposition 2). 13 4.2.3 Predictive State Representation 
+
+The Bellman recursions are defined with respect to the predictive state St. In practice, the physical degradation state is unobserved, so St must summarize the sensor history relevant to RUL and failure-mode prediction. A suitable representation may be a fixed sensor window, a recurrent hidden state, or another learned history embedding. In the experiments, we use the fixed-length window 
+
+St = [ Xt−h+1 , . . . , X t], (13) where Xt is the multivariate sensor observation and h is the window length. The same state representation is shared by the RUL and failure-mode GVF heads. For C-MAPSS and the simula-tion study, a one-dimensional convolutional encoder extracts temporal features from this window before the task-specific outputs are computed. A finite window generally makes the Markov prop-erty approximate rather than exact: trajectories with identical recent observations may differ in earlier history that remains prognostically relevant. The Bellman equations should therefore be interpreted relative to the chosen predictive state. The GVF formulation is otherwise architecture-agnostic: the distinction from conventional supervised prognostics lies in the Bellman-consistent target construction and terminal semantics, not in the use of a particular neural encoder. 
+
+4.3 Statistical Properties of the Estimator 
+
+Proofs appear in Appendix G. 
+
+4.3.1 Properties of the Two Prognostic GVF Types Proposition 1 (Soft-horizon bound) . For any s ∈ C and γ ∈ [0 , 1) , 0 ≤ V time  
+
+> γ
+
+(s) ≤ (1 −γ)−1. More generally, any GVF component with bounded cumulant |u(i)
+
+> t+1
+
+| ≤ ¯ci and continuation γ(i) 
+
+> t+1
+
+≤ ¯γi < 1
+
+satisfies ∥V ⋆i ∥∞ ≤ ¯ci/(1 − ¯γi) (Appendix G.2). 
+
+Thus the discounted survival-time GVF is automatically bounded, with effective planning hori-zon approximately (1 − γ)−1. Therefore, γ can be selected to match a desired prediction horizon in the range (1 − γ)−1.
+
+Proposition 2 (Finite-γ mode tilting) . Assume absorption occurs almost surely from every s ∈ C ,i.e. Ps(τt < ∞) = 1 . For s ∈ C and γ ∈ [0 , 1) , let pk(s) = Ps(Z = k) and ak(s; γ) = Es[γτt−1 | Z =14 k]. The mode GVF of Definition 6 factorizes as 
+
+H(k) 
+
+> γ
+
+(s) = pk(s)ak(s; γ). (14) 
+
+Under almost-sure absorption PKj=1 pj (s) = 1 , so as γ ↑ 1 we have H(k) 
+
+> γ
+
+(s) → pk(s) and the normalized score ˜pγ,k (s) = H(k) 
+
+> γ
+
+(s)/ PKj=1 H(j) 
+
+> γ
+
+(s) → pk(s). Without almost-sure absorption the normalized score instead converges to the conditional probability pk(s)/ PKj=1 pj (s) = Ps(Z = k |
+
+τt < ∞).
+
+Thus the normalized score ˜ pγ,k (s) is a reweighted terminal-mode score: the factor ak(s; γ) = 
+
+Es[γτt−1 | Z = k] tilts mass toward modes with shorter expected time to failure, producing a finite-
+
+γ, urgency-weighted mode score rather than a calibrated hitting probability. In the γ ↑ 1 limit it reduces to the terminal-mode probability pk(s) (to the conditional probability given absorption when absorption is not almost sure); for finite γ, the residual tilt depends on the mode-dependent hitting-time distribution and is not guaranteed to be negligible for long or heavy-tailed times to failure. 
+
+4.3.2 Vector Bellman Fixed Point and TD( n, λ ) Operator 
+
+Let T denote the vector Bellman operator in Eq. (2). For k ≥ 1, let T k denote the k-fold Bellman operator. The population operator corresponding to the truncated TD( n, λ ) target is 
+
+Tn,λ = (1 − λ)
+
+> n−1
+
+X
+
+> k=1
+
+λk−1T k + λn−1T n. (15) 
+
+Theorem 1 (Bellman target and linear TD limit) . Under the standard on-policy linear-TD as-sumptions detailed in Appendix G, fix a GVF component i with continuation γ(i) 
+
+> t+1
+
+≤ ¯γi < 1. Write 
+
+(Tiv)( s) = Eu(i) 
+
+> t+1
+
++ γ(i)
+
+> t+1
+
+v(St+1 ) | St = s
+
+for the component Bellman operator induced by Eq. (2) , and let Ti,n,λ denote the corresponding truncated TD (n, λ ) operator induced componentwise by Eq. (15) .(i) The operators Ti and Ti,n,λ are contractions—with modulus at most 
+
+ρi,n,λ = (1 − λ)
+
+> n−1
+
+X
+
+> k=1
+
+λk−1 ¯γki + λn−1 ¯γni < 115 for Ti,n,λ —and share the same unique fixed point V ⋆i .(ii) For a linear approximation vwi (s) = ϕ(s)⊤wi and L2(Ψ) projection ΠΨ onto the feature span, on-policy semi-gradient TD (n, λ ) converges almost surely to the unique projected fixed point 
+
+vTD  
+
+> i
+
+= Π ΨTi,n,λ vTD  
+
+> i
+
+,
+
+or equivalently wi,t → w⋆i = A−1
+
+> i,n,λ
+
+bi,n,λ (Tsitsiklis & Van Roy, 1997). (iii) Complete-return Monte Carlo regression converges to the least-squares projection vMC  
+
+> i
+
+=ΠΨV ⋆i . Hence, if V ⋆i lies in the feature span (realizability), 
+
+vTD  
+
+> i
+
+= vMC  
+
+> i
+
+= V ⋆i ;
+
+under function-approximation misspecification the two limits may differ: MC projects V ⋆i
+
+directly, whereas TD solves the projected Bellman equation (Tsitsiklis & Van Roy, 1997). Because Γt+1 is diagonal, these conclusions extend componentwise to the stacked vector GVF. 
+
+The assumptions, contraction modulus, projected normal equations, and proofs are given in Appendix G. 
+
+4.3.3 MC versus TD Target Variance 
+
+MC uses the complete realized return to absorption (Eq. (6)); it does not bootstrap. TD( n)uses the same first n observed cumulants, then replaces the unobserved remainder by a successor-state prediction (Eq. (7)). In censored or partially observed prognostics, the full MC return is often unavailable even when local transitions are observed. The following proposition isolates the variance effect of replacing the residual MC return by an oracle n-step TD bootstrap V ⋆.
+
+Proposition 3 (MC–TD target-variance decomposition) . Fix a scalar GVF with continuation 
+
+γ ∈ [0 , 1) , fix n ≥ 1, and condition throughout on the event {St = s, τ t > n } (i.e., absorption has not yet occurred by step t + n; this event has positive probability whenever Ps(τt > n ) > 0). With prefix Pt,n = Pn−1 
+
+> ℓ=0
+
+γℓct+ℓ+1 and residual Rt+n = Pτt+n−1 
+
+> ℓ=0
+
+γℓct+n+ℓ+1 ,
+
+GMC  
+
+> t
+
+=
+
+> τt−1
+
+X
+
+> ℓ=0
+
+γℓct+ℓ+1 = Pt,n + γnRt+n on {τt > n }. (16) 16 Under Markovity of St, the oracle TD target GTD ,⋆ t = Pt,n + γnV ⋆(St+n) with V ⋆(St+n) = E[Rt+n |
+
+St+n] equals the conditional expectation of GMC  
+
+> t
+
+given the observed history through St+n, and 
+
+Var( GMC  
+
+> t
+
+| St = s, τ t > n ) = Var( GTD ,⋆ t | St = s, τ t > n ) + γ2nE[Var( Rt+n | St+n) | St = s, τ t > n ].
+
+(17) 
+
+Thus, on the event that absorption has not yet occurred by step t + n, oracle TD has no larger conditional variance than complete MC. 
+
+Both targets share Pt,n ; MC keeps the realized residual Rt+n, while oracle TD replaces it by 
+
+E[Rt+n | St+n]. With a learned bootstrap bV , TD helps when successor prediction is more accurate than sampling the full residual. 
+
+# 5 Simulation Study 
+
+The central hypothesis is that Bellman-consistent targets exploit transition-level information and remain advantageous as terminal labels become scarce. 
+
+5.1 Data Generation 
+
+Each unit follows a two-stage degradation process with a shared early phase and a mode-specific late phase. An anomaly trigger ends the early phase and starts the late-phase clock; monitoring for prognostics begins only after that trigger, so all RUL and failure-mode targets are defined on the post-trigger trajectory. The two modes differ in both the late-phase degradation kernel and a post-trigger discriminative sensor pattern, as specified next. 17 gA(t) = γA 
+
+> 0
+
++ γA 
+
+> 1
+
+(et −1) + γA 
+
+> 2
+
+t3, γAi ∼ N (μA, ΣA), μA = (0 , 0.5, 1.5) ⊤,tact ,i = min {t : gA(t) ≥ θi}, θi ∼ U(0 .4, 0.6) , s = t − tact ,i ,gB (s) = 
+
+
+
+γB 
+
+> 0
+
++ γB 
+
+> 1
+
+s + γB 
+
+> 2
+
+s2, γB ∼ t5(μB , ΣB ) (Mode 1) 
+
+γB 
+
+> 0
+
++ γB 
+
+> 1
+
+(es −1) + γB 
+
+> 2
+
+s3, γB ∼ N (μA, ΣA) (Mode 2) 
+
+, γB 
+
+> 1
+
+, γ B 
+
+> 2
+
+> 0, (18) 
+
+x(t) = xA(t, g A) + ρB xB (s, g B ) + p(s), ρB = 1 .8, ω⊤x· = g·, ω = (0 .6, 0.2, −0.5) ⊤,
+
+
+
+x1
+
+x2
+
+x4
+
+ =
+
+
+
+a11 t2 − a12 sin(25 t)
+
+a21 t + a22 sin(50 t)
+
+a41 t + a42 
+
+ + ε, x3 = ( g − ω1x1 − ω2x2)/ω 3, εj ∼ N (0 , 0.05 2),p0(u) = 
+
+
+
+α u 1.5 Mode 1 
+
+α sin( n · 2πu )√u + α · 0.15 u Mode 2 
+
+, p(s) = p0(u) (1 , 0, 0, 0) ⊤, α ∼ U(0 .10 , 0.25) , n ∼ U(15 , 2
+
+where failure occurs when gB (s) ≥ 5 and μB = (0 .2, 1.0, 2.0) ⊤. The pre-trigger channels also receive mode-independent sinusoidal texture (two-frequency oscillation plus linear drift on x1, x 2), ensuring pre-trigger sensor distributions are statistically identical across modes. Beyond the mode-specific late-phase kernel gB , the enrichment p(s) is the sole additional mode-specific sensor pattern: it loads p0(u) onto channel x1 only and vanishes at the trigger ( s = 0); its amplitude grows through Phase B (monotonically for Mode 1, and as a √u envelope modulating a sinusoid for Mode 2, so only the envelope grows) — so macro-F1 starts near chance and rises toward end of life, consistent with Table 1. Trajectories are sampled at ∆ t = 0 .005 with max time B = 10 .0, yielding ≈300 post-trigger steps per unit. We generate 300 historical units per mode (600 pooled), split 70 /30 into training and validation, and 300 in-service test units per mode (600 pooled), with a fixed seed shared by all methods. The RUL target at step t is rt = ⌊(τi − t)/∆t⌋ remaining steps, post-trigger only. The mode label is the integer ℓi ∈ { 0, 1}. Figure 2 shows representative trajectories for both modes. 
+
+5.2 Evaluation Protocol 
+
+All reported results use the same train/validation/test partitions within each platform. The full-data experiments compare methods when every training trajectory is observed to failure; the label-18 Figure 2: Simulation: example trajectories for both modes. Modes differ in both the late-phase kernel gB and the additional x1 pattern p0; the latter vanishes at the trigger, so macro-F1 starts near chance and rises toward failure. scarce experiments remove terminal supervision from a fraction of training segments. 
+
+Benchmark Methods To ensure a fair comparison, TD( n, λ ), the supervised same-backbone Monte Carlo (MC) control, and the Health Index (HI) baseline all use the same one-dimensional convolutional sliding-window encoder . For MC, we jointly trained a standard regression head for RUL prediction and classification head for failure-mode prediction using the same CNN1D back-bone. For HI, we trained a scalar health-index model using the same CNN1D backbone and a learned health-index output and a terminal-threshold variance penalty to encourage monotonicity; implementation details are given in Appendix B. Replacing the shared CNN1D with a single-step DNN degraded TD, so all reported models use the windowed CNN1D backbone. Inputs are ( W ×F ) sliding windows with F =4, permuted channel-first. The encoder uses Conv1D channels F → 256 → 96 → 32, kernel size 7, ReLU, global average pooling, and FC layers 32 → 64 → 128. The trunk branches to an RUL head (FC 128 → 1) and a failure-mode head (FC 128 → C, C=2). GVF estimators train both heads jointly by the weighted vector-GVF MSE loss in Eq. (11) with n=5, ¯ γ=0 .995 for the RUL continuation, mode continuation 
+
+γmode =1 (undiscounted terminal-event targets), λ=1 .0 on full trajectories (0 .7 for stitch), λrul =1, 
+
+λcls =5000, 30 epochs, and validation-based model selection. MC regresses true cycle-count RUL and terminal failure-mode labels with the same CNN1D backbone and joint classification head ; it is a supervised same-backbone control, not a survey of conventional RUL methods. 19 Evaluation Metrics The TD RUL head learns V time  
+
+> γ
+
+at ¯ γ=0 .995 (Section 4.3.1). We convert raw output ˆ v to cycle-count RUL by ˆ r = log  1−(1 − ¯γ)ˆ v/ log ¯ γ, the deterministic-hitting-time inversion of ˆ v = (1 − ¯γˆr)/(1 − ¯γ). Under stochastic hitting times, this is a certainty-equivalent readout, not generally E[T | s]. We clip 1 − (1 − ¯γ)ˆ v to [10 −12 , 1.0] and the final RUL to be nonnegative. MC regresses cycle-count RUL directly. Rather than scoring a single end-of-observation prediction per unit, we score every post-trigger step: for each test unit the model predicts RUL and failure mode at all time steps from the first full window to failure, yielding approximately 144 ,000 predictions over the 600 test units. For RUL we report the normalized RUL error (RUL NAE), which divides each per-step absolute error by the unit’s post-trigger lifetime T (i) 
+
+> B
+
+, where ˆ rit and rit are the predicted and true RUL of unit i at post-trigger step t:NAE it = ˆrit − rit 
+
+T (i)
+
+> B
+
+; (19) this per-step quantity is averaged within each unit–bucket cell to form a fleet-level bucket mean for a given training run; Table 1 then reports mean ± SEM of those fleet means across three training seeds. Buckets partition the remaining-life percentage 100 rit /T (i) 
+
+> B
+
+into five equal intervals. The same by-bucket NAE construction (without the across-seed aggregation stated in each caption) underlies Figure 5. Table 2 instead reports the per-test-unit overall mean of NAE it —i.e. NAE i
+
+averaged within each engine over all its observed steps—as mean ± SEM over test engines (RUL columns); endpoint F1 on FD003/FD004 uses mean ± SEM across training seeds (see that table’s caption). For failure-mode prediction we report accuracy and macro-F1. Unless a caption states otherwise, results are reported under the following seed protocol: full-trajectory simulation results use 3 training seeds; reported simulation stitch results use λ=0 .7. 
+
+Full-trajectory and stitch experimental protocols. Let a full trajectory be 
+
+Ti = ( Xi, 0, . . . , X i,T i )with unit identity i. In the full-trajectory setting, each training unit is observed run-to-failure. The training pipeline retains unit identity, absolute cycle index, complete trajectory length, remaining life, and terminal mode for target construction. The network input itself remains the corresponding sensor window. This standard supervised setup supports both complete-return MC targets GMC 
+
+> t
+
+and bootstrapped TD targets. 20 In the label-scarce stitch setting, training draws anonymous fixed-length segments from the full-trajectory pool. A segment is Sj = ( Xaj :bj , X aj +1: bj +1 , . . . , X aj +W −1: bj +W −1) of length W + 1, sampled uniformly from any ( i, t ). The protocol withholds unit identity and complete-return labels from nonterminal segments, preserving only adjacent-window pairs ( St, S t+1 ), immediate cumulants 
+
+ut+1 , and continuations Γ t+1 (terminal if observed, otherwise capped at W + 1). Models do not observe i, absolute cycle time t, Ti, τt, or Zi unless the segment reaches failure within W + 1 steps. Complete-return MC targets are unavailable for nonterminal segments; bootstrapped TD targets remain defined. The protocol models fragmented records, not arbitrary informative censoring. 
+
+5.3 Results 
+
+We stress-test data efficiency by training on available fractions f ∈ { 0.2, 0.5, 0.8} of the historical segment pool. 
+
+5.3.1 Full-Trajectory Setting 
+
+Table 1 summarizes full-trajectory joint results (mean ± SEM across three training seeds; see caption). Table 1: Simulation: RUL NAE ( ↓) and macro-F1 ( ↑) by remaining-life bucket. For each training seed, one fleet-level mean is computed per cell on the fixed test cohort; cells report mean ± SEM across Nseeds =3 seeds (SEM = s/ √Nseeds ). Bold = best mean; TD uses λ=1 .0; HI has no clas-sification head. Bucket labels are post-trigger remaining-life percentages 100 rit /T (i) 
+
+> B
+
+(Section 5.2). TD denotes TD( n, λ ). 
+
+RUL NAE ↓
+
+Bucket TD MC HI 80–100 0.107 ± 0.004 0.113 ± 0.003 0.223 ± 0.061 60–80 0.090 ± 0.003 0.100 ± 0.003 0.188 ± 0.039 40–60 0.069 ± 0.001 0.080 ± 0.006 0.149 ± 0.022 20–40 0.043 ± 0.002 0.055 ± 0.004 0.106 ± 0.011 0–20 0.024 ± 0.001 0.033 ± 0.002 0.068 ± 0.002 Overall 0.0615 ± 0.0003 0.072 ± 0.003 0.137 ± 0.022 
+
+Macro-F1 ↑
+
+Bucket TD MC 80–100 0.699 ± 0.006 0.596 ± 0.061 60–80 0.822 ± 0.016 0.728 ± 0.040 40–60 0.836 ± 0.003 0.794 ± 0.022 20–40 0.889 ± 0.007 0.850 ± 0.025 0–20 0.933 ± 0.012 0.887 ± 0.024 Overall 0.852 ± 0.008 0.792 ± 0.031 Under complete run-to-failure labels, TD and MC have comparable overall RUL accuracy, so GVF prediction loses no accuracy relative to the supervised same-backbone control. TD’s advantage is strongest near failure (0–20% bucket) and TD leads MC in macro-F1 at every life stage, with the largest gap early in life. HI trails both GVF methods and is more seed-sensitive. 21 5.3.2 Label-Scarce Stitch Setting 
+
+Figure 3 shows RUL NAE at f ∈ { 0.2, 0.5, 0.8}. Classification is omitted: TD and MC are near chance at these fractions, and Table 1 reports full-trajectory classification only. 
+
+Figure 3: Simulation: label-scarce stitch RUL NAE ( ↓) at fractions f ∈ { 0.2, 0.5, 0.8} for TD( n, λ )(λ=0 .7), MC, and HI (Section 5.3.2). Under the stitch protocol of Section 5.2, TD remains competitive across fractions, while MC and HI underperform: MC is limited to terminal-containing segments, and HI’s first-passage calibration is compromised under anonymity (stitch RUL error non-monotonic across remaining life, worst at mid-life). 
+
+5.4 Ablation Studies 
+
+Figure 4 shows how the trace parameter λ shapes the temporal coherence of predicted RUL and failure-mode-risk trajectories. Small λ yields local bootstrapping (TD(1)-like targets), producing noisier per-step predictions; large λ blends in longer observed returns and produces smoother trajectories. The figure uses λ=0 .5 to maximize the visual contrast between TD and MC; the main table uses the canonical λ=1 .0 (full-trajectory) and λ=0 .7 (stitch), which were selected on validation data. 
+
+# 6 Case Study: C-MAPSS 
+
+The simulation study isolates Bellman consistency under known dynamics; C-MAPSS tests trans-fer when the dynamics are unknown and Section 3’s assumptions hold only approximately. The NASA C-MAPSS turbofan benchmark (Saxena et al., 2008) provides physics-simulated multivari-ate trajectories across four subsets varying operating-condition heterogeneity and competing failure modes, with run-to-failure labels for evaluation. FD003/FD004 failure-mode labels are not native 22 Figure 4: Simulation: λ effect on prediction smoothness ( λ=0 .5 shown for contrast; canonical full-trajectory model uses λ=1 .0). TD( n, λ ) gives smoother RUL and failure-risk trajectories than MC. to C-MAPSS; following Fu et al. (2025), we derive reference pseudo-labels by DTW k-means ( k=2) on held-out sensor-trajectory embeddings, with no RUL or endpoint information. These labels score failure-mode F1 and provide MC’s supervised mode target; TD receives only the supervi-sion specified for each protocol. C-MAPSS therefore localizes performance differences to known difficulty axes. 
+
+6.1 Dataset Overview 
+
+C-MAPSS simulates turbofan engine degradation under user-specified operating conditions and fault modes, producing multivariate sensor trajectories from a nominal state to failure. Each of the four subsets isolates a different combination of two difficulty axes: FD001 provides a single-condition/single-fault sanity check; FD002 adds operating-condition heterogeneity; FD003 adds a second, competing failure mode under the same single condition; FD004 combines both operating-condition heterogeneity and dual failure modes, and is therefore the most difficult subset in the suite. Train/test sizes, operating conditions, and fault modes are FD001 100 /100, 1, 1; FD002 260 /259, 6, 1; FD003 100 /100, 1, 2; and FD004 249 /248, 6, 2. 23 6.2 Data Preprocessing 
+
+Training units are run to failure; test units are truncated before failure with residual life with-held until evaluation. We retain 15 informative sensors (dropping constant/near-constant channels and raw operating-setting columns), MinMax-scale by operating condition on FD002/FD004 and globally on FD001/FD003 (training statistics only), and form sliding windows of length W =30 (FD001/FD003/FD004) or W =20 (FD002; shortened following X. Li et al. (2018)). Prefixes shorter than W are left-zero-padded. Unless noted otherwise, C-MAPSS GVF runs use the same CNN1D encoder as Section 5.2, with n=4 (stitch padding n−1), shared soft-horizon continuation ¯ γ=0 .995 for both the RUL and mode heads (so γmode =0 .995, unlike the simulation’s undiscounted γmode =1), 60 training epochs (80 for stitch), and weighted vector-GVF MSE loss weights λrul =1, λcls =5000 on the multi-mode subsets FD003/FD004 (FD001/FD002 are trained RUL-only). Each training run uses a single trace parameter λ for the shared vector TD( n, λ ) target of both heads (Eqs. (8)–(11)). Full-trajectory TD is trained as a λ sweep of separately trained joint models; stitch λ is chosen by the cross-configuration rule below. Within each run, we use best-validation-epoch weights on held-out training trajectories; test fleets stay disjoint. Across hyperparameter configurations, the reported configuration minimizes test-endpoint RMSE, following C-MAPSS practice because no disjoint split exists for that comparison. Endpoint RMSE selection need not optimize reported NAE, but the rule is uniform across methods and subsets. RUL is evaluated at every post-window step under the NAE protocol of Section 5.2; all methods share this pipeline. 
+
+6.3 Full-Trajectory Results 
+
+Table 2 and Figure 5 summarize full-trajectory results across all four C-MAPSS subsets. RUL NAE is the per-test-unit mean of |ˆr − r|/T B , reported as mean ± SEM over test engines; for FD003/FD004, the rightmost columns give endpoint minority-class F1 (mean ± SEM across three training seeds). Reported full-trajectory TD numbers use the two λ settings from that sweep of separately trained joint models. RUL uses the best-endpoint-RMSE configuration ( λ=1 .0). Failure-mode classification on FD003/FD004 uses a separately trained λ=0 model (best endpoint RMSE among λ=0 runs), because λ=1 .0 harms the shared representation’s mode head under this benchmark. By-bucket classification accuracy is deferred to Appendix C. Bold marks the best RUL NAE mean; FD003/FD004 F1 are unbolded (within noise of each other). Two observations summarize the full-trajectory results. First, TD( n, λ ) leads MC on all four 24 Table 2: C-MAPSS full-trajectory RUL NAE ( ↓; Section 5.2) and endpoint minority-class F1 on FD003/FD004 ( ↑). RUL NAE: mean ± SEM over test engines (one per-engine mean NAE, then SEM across engines). F1: mean ± SEM across 3 training seeds (one endpoint F1 per seed). TD denotes TD( n, λ ). Bold = best RUL NAE mean per dataset. RUL NAE ↓ F1 ↑
+
+Dataset TD MC HI TD MC FD001 0.224 ± 0.012 0.283 ± 0.015 0.211 ± 0.015 — —FD002 0.218 ± 0.005 0.223 ± 0.006 0.248 ± 0.008 — —FD003 0.212 ± 0.010 0.287 ± 0.019 0.308 ± 0.022 0.912 ± 0.009 0.921 ± 0.000 FD004 0.201 ± 0.005 0.218 ± 0.007 0.239 ± 0.010 0.714 ± 0.002 0.717 ± 0.003 subsets in overall NAE (Table 2), consistent with the simulation ranking. By remaining-life bucket, TD mostly leads MC and HI after the earliest 20% of observed life. Second, HI is best on FD001 but trails TD on FD002–FD004; its FD001 gain is concentrated in the 100–80% bucket, before trajectory evidence accumulates. The F1 columns compare different supervision. TD trains a Bellman-propagated mode-GVF head without explicit mode-label loss on nonterminal windows; MC trains on the clustering-derived reference labels from Section 6 (Fu et al., 2025). The same reference labels score both methods, and TD’s terminal/near-terminal anchors use the same pseudo-mode labels. Both subsets are ties within noise. 
+
+Figure 5: C-MAPSS full-data RUL NAE by remaining-life bucket (TD( n, λ ), MC, and HI). After the earliest stage, TD( n, λ ) typically maintains lower error than MC and HI. 
+
+6.4 Label-Scarce Stitch Results 
+
+Table 3 reports stitch RUL NAE and endpoint minority-class F1 (FD003/FD004) for TD( n, λ ) and the same-backbone MC control at f ∈ { 10% , 20% , 50% } under the anonymous-segment protocol of Section 5.2. Complete results including the HI baseline, collapse diagnostics, and by-bucket fraction plots appear in Appendix D. TD leads MC on every subset and fraction in Table 3. At f =50%, TD stitch RUL remains 25 comparable to full-data MC baselines on FD003/FD004. Endpoint minority-F1 is reported with classification loss masked on anonymous nonterminal windows (leaving it unmasked silently inflates accuracy). TD’s mode head is stable across the segment-pool sweep, with smaller SEM than MC, and has the higher mean F1 in every dataset–fraction cell. Under the same stitch protocol, MC trains ordinary supervised classification only on terminal-containing segments, whereas TD propa-gates mode-hitting targets from terminal anchors by Bellman recursion on nonterminal windows. Stitch F1 should not be compared directly to the full-data endpoint results in Table 2: training data and evaluation windows differ. Table 3: C-MAPSS label-scarce stitch RUL NAE ( ↓) and minority-class F1 ( ↑) for TD( n, λ ) and same-backbone MC (mean ± SEM across 3 seeds). Bold = best mean per dataset–fraction; HI and full results in Appendix D. Dataset Method f =10% f =20% f =50% 
+
+RUL NAE ↓
+
+FD001 TD 0.228 ± 0.010 0.216 ± 0.008 0.295 ± 0.069 
+
+MC 0.410 ± 0.034 0.433 ± 0.040 0.310 ± 0.019 FD002 TD 0.257 ± 0.002 0.243 ± 0.006 0.238 ± 0.003 
+
+MC 0.633 ± 0.016 0.593 ± 0.015 0.597 ± 0.014 FD003 TD 0.248 ± 0.004 0.238 ± 0.006 0.261 ± 0.023 
+
+MC 0.653 ± 0.002 0.614 ± 0.038 0.551 ± 0.039 FD004 TD 0.244 ± 0.005 0.231 ± 0.006 0.211 ± 0.008 
+
+MC 0.618 ± 0.012 0.598 ± 0.019 0.612 ± 0.006 
+
+Minority-class F1 ↑
+
+FD003 TD 0.901 ± 0.011 0.918 ± 0.003 0.921 ± 0.000 
+
+MC 0.718 ± 0.067 0.666 ± 0.052 0.773 ± 0.066 FD004 TD 0.713 ± 0.002 0.712 ± 0.001 0.715 ± 0.002 
+
+MC 0.639 ± 0.030 0.673 ± 0.018 0.674 ± 0.021 TD reproduces the full-trajectory RUL ranking and reaches full-supervision-competitive stitch RUL without complete returns or unit identity. The magnitude of the TD–MC gap varies across datasets and segment-pool fractions. C-MAPSS supports, but does not universally confirm, the synthetic claim. Additional simulation and C-MAPSS embedding visualizations are provided in Appendix E. 
+
+# 7 Conclusion 
+
+We formulate dynamic prognostics as vector-GVF prediction on an absorbing degradation process, so RUL and failure-mode outputs are temporally extended targets on a shared trajectory rather 26 than independent supervised labels. The TD( n, λ ) estimator learns these targets from bootstrapped Bellman transitions and therefore uses partial or anonymous trajectory prefixes that lack complete returns. Empirically, under the label-scarce stitch protocol, TD remains competitive where same-backbone MC and HI degrade or collapse, while remaining comparable to MC under full run-to-failure supervision. Several limitations remain. TD( n, λ ) requires selecting n and λ. Within-run checkpoints use validation data; across-configuration C-MAPSS choices use minimum test-endpoint RMSE because no disjoint split exists (Section 6.2), so reported C-MAPSS results are benchmark-tuned and may be optimistic. The same rule is applied to TD, MC, and HI, but fully held-out selection at both stages would be preferable. Probability calibration of the mode head warrants further study. The failure set F and mode-specific terminals Fk must be defined operationally. Future work includes connecting GVF predictions to maintenance decision optimization. 
+
+# Disclosure Statement 
+
+The authors report there are no competing interests to declare. 
+
+# Declaration of Generative AI and AI-Assisted Technologies 
+
+The authors disclose the following use of generative AI tools in preparing this work. A combination of Claude Code with Claude Opus 4.8 and Sonnet 5.0 (Anthropic), ChatGPT 5.5, 5.6 Pro, and Codex 5.5 under a ChatGPT Pro subscription (OpenAI), Cursor (mostly Composer 2.5 Fast model) was used to (i) assist with English-language proofreading, copy-editing, and stylistic polishing of manuscript prose, and (ii) assist with drafting and debugging experiment and analysis code used for the simulation and C-MAPSS studies. The authors reviewed, edited, and take full responsibility for the accuracy and integrity of all content, including text, equations, code, and reported findings. 
+
+# Data Availability Statement 
+
+The NASA C-MAPSS dataset is publicly available from NASA’s prognostics data repository (https: //ti.arc.nasa.gov/tech/dash/groups/pcoe/prognostic-data-repository/); the simulation study uses a synthetic event-triggered degradation process described in Section 5, with the exact generating 27 parameters given in Appendix F. Code, configuration files, and seed-level outputs supporting the reported tables and figures are provided in the accompanying reproducibility repository that will be released once the paper is accepted. 
+
+# References 
+
+Caruana, R. (1997). Multitask learning. Machine Learning , 28 (1), 41–75. https://doi.org/10.1023/ A:1007379606734 Chehade, A., Song, C., Liu, K., Saxena, A., & Zhang, X. (2018). A data-level fusion approach for degradation modeling and prognostic analysis under multiple failure modes. Journal of Quality Technology , 50 (2), 150–165. https://doi.org/10.1080/00224065.2018.1436829 Cheikhi, D., & Russo, D. (2023). On the statistical benefits of temporal difference learning. Pro-ceedings of the 40th International Conference on Machine Learning , 202 , 4269–4293. Chen, N., & Tsui, K. L. (2013). Condition monitoring and remaining useful life prediction using degradation signals: Revisited. IIE Transactions , 45 (9), 939–952. Cheng, X., & Weare, J. (2024). The surprising efficiency of temporal difference learning for rare event prediction. Advances in Neural Information Processing Systems , 37 , 81257–81286. Fang, G., & Pan, R. (2024). A class of hierarchical multivariate wiener processes for modeling dependent degradation data. Technometrics , 66 (2), 141–156. Fu, Y., Huh, Y. K., & Liu, K. (2025). Degradation modeling and prognostic analysis under unknown failure modes. IEEE Transactions on Automation Science and Engineering , 22 , 11012– 11025. https://doi.org/10.1109/TASE.2025.3530845 Gebraeel, N. Z., Lawley, M. A., Li, R., & Ryan, J. K. (2005). Residual-life distributions from component degradation signals: A bayesian approach. IIE transactions , 37 (6), 543–557. Guo, L., Li, N., Jia, F., Lei, Y., & Lin, J. (2017). A recurrent neural network based health indicator for remaining useful life prediction of bearings. Neurocomputing , 240 , 98–109. Jahani, S., Kontar, R., Zhou, S., & Veeramani, D. (2020). Remaining useful life prediction based on degradation signals using monotonic b-splines with infinite support. IISE Transactions ,
+
+52 (5), 537–554. Khelif, R., Chebel-Morello, B., Malinowski, S., Laajili, E., Fnaiech, F., & Zerhouni, N. (2017). Direct remaining useful life estimation based on support vector regression. IEEE Transactions on Industrial Electronics , 64 (3), 2276–2285. https://doi.org/10.1109/TIE.2016.2623260 28 Kim, M., & Liu, K. (2020). A bayesian deep learning framework for interval estimation of remaining useful life in complex systems by incorporating general degradation characteristics. IISE Transactions , 53 (3), 326–340. Kontar, R., Son, J., Zhou, S., Sankavaram, C., Zhang, Y., & Du, X. (2017). Remaining useful life prediction based on the mixed effects model with mixture prior distribution. IISE Trans-actions , 49 (7), 682–697. Li, X., Ding, Q., & Sun, J.-Q. (2018). Remaining useful life estimation in prognostics using deep convolution neural networks. Reliability Engineering & System Safety , 172 , 1–11. https : //doi.org/10.1016/j.ress.2017.11.021 Li, X., Li, J., Zuo, L., Zhu, L., & Shen, H. T. (2022). Domain adaptive remaining useful life prediction with transformer. IEEE Transactions on Instrumentation and Measurement , 71 ,1–13. https://doi.org/10.1109/TIM.2022.3200667 Li, Z., Li, Y., Yue, X., Zio, E., & Wu, J. (2022). A deep branched network for failure mode diagnostics and remaining useful life prediction. IEEE Transactions on Instrumentation and Measurement , 71 , 1–11. https://doi.org/10.1109/TIM.2022.3195280 Li, Z., Wu, J., & Yue, X. (2021). A shape-constrained neural data fusion network for health in-dex construction and residual life prediction. IEEE Transactions on Neural Networks and Learning Systems , 32 (11), 5022–5033. https://doi.org/10.1109/TNNLS.2020.3026644 Li, Z., Zhou, S., Choubey, S., & Sievenpiper, C. (2007). Failure event prediction using the cox proportional hazard model driven by frequent failure signatures. IIE transactions , 39 (3), 303–315. Liu, K., Gebraeel, N. Z., & Shi, J. (2013). A data-level fusion model for developing composite health indices for degradation modeling and prognostic analysis. IEEE Transactions on Automation Science and Engineering , 10 (3), 652–664. Miao, H., Li, B., Sun, C., & Liu, J. (2019). Joint learning of degradation assessment and rul pre-diction for aeroengines via dual-task deep lstm networks. IEEE Transactions on Industrial Informatics , 15 (9), 5023–5032. https://doi.org/10.1109/TII.2019.2900295 Saxena, A., Goebel, K., Simon, D., & Eklund, N. (2008). Damage propagation modeling for aircraft engine run-to-failure simulation. 2008 International Conference on Prognostics and Health Management , 1–9. https://doi.org/10.1109/PHM.2008.4711414 29 Song, C., & Liu, K. (2018). Statistical degradation modeling and prognostics of multiple sensor signals via data fusion: A composite health index approach. IISE Transactions , 50 (10), 853–867. Song, C., Liu, K., & Zhang, X. (2019). A generic framework for multisensor degradation modeling based on supervised classification and failure surface. IISE Transactions , 51 (11), 1288–1302. https://doi.org/10.1080/24725854.2018.1555384 Sutton, R. S. (1988). Learning to predict by the methods of temporal differences. Machine Learning ,
+
+3 (1), 9–44. https://doi.org/10.1007/BF00115009 Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction (2nd). MIT press Cambridge. Sutton, R. S., Modayil, J., Delp, M., Degris, T., Pilarski, P. M., White, A., & Precup, D. (2011). Horde: A scalable real-time architecture for learning knowledge from unsupervised sensori-motor interaction. Proceedings of the 10th International Conference on Autonomous Agents and Multiagent Systems , 761–768. Tsitsiklis, J. N., & Van Roy, B. (1997). An analysis of temporal-difference learning with function approximation. IEEE Transactions on Automatic Control , 42 (5), 674–690. https://doi.org/ 10.1109/9.580874 van Noortwijk, J. M. (2009). A survey of the application of gamma processes in maintenance. 
+
+Reliability Engineering & System Safety , 94 (1), 2–21. https://doi.org/10.1016/j.ress.2007. 03.019 White, A. (2015). Developing a predictive approach to knowledge [Doctoral dissertation, University of Alberta]. Xu, B., Kang, Y., Zhao, X., Yan, H., & Ju, F. (2025). Partially observable markov decision process framework for operating condition optimization using real-time degradation signals. Journal of Quality Technology . https://doi.org/10.1080/00224065.2025.2590515 Yan, H., Liu, K., Zhang, X., & Shi, J. (2016). Multiple sensor data fusion for degradation modeling and prognostics under multiple operational conditions. IEEE Transactions on Reliability ,
+
+65 (3), 1416–1426. https://doi.org/10.1109/TR.2016.2575449 Ye, Z.-S., & Chen, N. (2014). The inverse gaussian process as a degradation model. Technometrics ,
+
+56 (3), 302–311. Yue, X., & Kontar, R. A. (2021). Joint models for event prediction from time series and survival data. Technometrics , 63 (4), 477–486. 30 Zhao, R., Yan, R., Chen, Z., Mao, K., Wang, P., & Gao, R. X. (2019). Deep learning and its applications to machine health monitoring. Mechanical Systems and Signal Processing , 115 ,213–237. Zheng, S., Ristovski, K., Farahat, A. K., & Gupta, C. (2017). Long short-term memory network for remaining useful life estimation. 2017 IEEE International Conference on Prognostics and Health Management (ICPHM) , 88–95. https://doi.org/10.1109/ICPHM.2017.7998311 Zhou, Q., Son, J., Zhou, S., Mao, X., & Salman, M. (2014). Remaining useful life prediction of individual units subject to hard failure. IIE Transactions , 46 (10), 1017–1030. 31 A TD( n, λ ) Training Pseudocode 
+
+Algorithm 1 gives the training loop corresponding to Section 4.1: store transition subsequences, form vector TD( n, λ ) targets from Eqs. (7)–(8), and update the shared network by a semi-gradient step on Eq. (11). 
+
+Algorithm 1 TD( n, λ ) learning for vector GVFs. 
+
+Require: replay buffer D, truncation length n, trace parameter λ, learning rate α, mini-batch size 
+
+B. 
+
+> 1:
+
+Initialize vector-GVF network Vθ with shared encoder and task heads, and initialize replay buffer D. 
+
+> 2:
+
+for each observed trajectory segment do  
+
+> 3:
+
+Construct windowed states St and transition subsequences ( St, u t+1 , Γt+1 , . . . , S t+n).  
+
+> 4:
+
+Store available subsequences and terminal information in D. 
+
+> 5:
+
+end for  
+
+> 6:
+
+if |D| ≥ B then  
+
+> 7:
+
+Sample a mini-batch from D. 
+
+> 8:
+
+for each mini-batch sample do  
+
+> 9:
+
+Compute {y(k) 
+
+> t
+
+}nk=1 from Eq. (7) (with n ← k), then compute y(n,λ ) 
+
+> t
+
+from Eq. (8).  
+
+> 10:
+
+Update θ by a semi-gradient step on the weighted vector-GVF loss in Eq. (11).  
+
+> 11:
+
+end for  
+
+> 12:
+
+end if 
+
+# B Health-Index Baseline Implementation 
+
+To complement the GVF estimators with a trajectory-modeling baseline, we include a deep health-index method, referred to as HI in the tables. It uses a one-dimensional convolutional encoder over sliding sensor windows, implemented via the same CNN1D architecture (F →256 →96 →32, kernel size 7, ReLU, global average pooling, FC 32 → 64 → 128) as the TD/MC heads, with a learned health-index output and a terminal-threshold variance penalty to encourage monotonicity. It uses a scalar degradation index ht = fθ(xt) from the sliding sensor window xt. Training encourages monotone degradation, stable terminal thresholds, and smooth trajectories. After health-index construction, prognostics follows the classical two-step logic: fit a degradation model in health-index space on training trajectories, then update unit-level posteriors from partial observations to infer residual life. The HI baseline infers RUL by Brownian first-passage to a learned failure threshold. Its hyperparameters are selected under the same training budget and per-platform selection protocol as the other methods—within-run epoch checkpoints on validation data, and the canonical configuration across hyperparameter settings (¯ γ, n, λ, window length, and early-32 stopping patience) selected as described for each case study (Sections 5.2 and 6.2). All methods share identical preprocessing and data splits. 
+
+# C C-MAPSS Classification by Remaining-Life Bucket 
+
+Figure 6 reports full-trajectory failure-mode classification accuracy by remaining-life bucket on FD003/FD004 (mask-corrected evaluation), complementing the endpoint minority-class F1 in Ta-ble 2. 
+
+Figure 6: C-MAPSS full-data failure-mode classification accuracy by remaining-life bucket (FD003 and FD004; mask-corrected evaluation). TD uses the separately trained λ=0 joint model from the full-trajectory λ sweep (Section 6.3); MC uses the same joint architecture. 
+
+# D Complete C-MAPSS Label-Scarce Stitch Results 
+
+Table 4 expands Table 3 to include the HI baseline. MC and HI are prone to collapse under sparse anonymity (MC in 17% of runs, including every FD003 f =10% seed with only 14 terminal-observing segments; HI in 35% of runs, including every FD002 f =50% seed). The dagger mark on FD001 TD at f =50% flags elevated seed variance for that cell. Figures 7 and 8 give by-bucket RUL and stitch F1 displays. 
+
+# E Embedding Visualizations (UMAP) 
+
+UMAP projections below are qualitative and parameter-dependent; they are not used as primary evidence. Reported purity scores use 20-nearest-neighbor labels in the displayed UMAP coordinates and should be read as visual diagnostics only. 33 Table 4: Complete C-MAPSS label-scarce stitch results, including the health-index baseline, for all subsets and data fractions. Each cell is one fleet-level summary per training seed, reported as mean ± SEM across three seeds (SEM = s/ √3). Bold denotes the best mean within each dataset– fraction comparison among the methods shown. ‡Elevated seed variance for that TD cell. 
+
+Stitch RUL NAE ↓
+
+Dataset Method f =10% f =20% f =50% FD001 TD 0.228 ± 0.010 0.216 ± 0.008 0.295 ± 0.069 ‡
+
+FD001 MC 0.410 ± 0.034 0.433 ± 0.040 0.310 ± 0.019 FD001 HI 1.772 ± 0.781 1.942 ± 1.314 0.711 ± 0.005 FD002 TD 0.257 ± 0.002 0.243 ± 0.006 0.238 ± 0.003 
+
+FD002 MC 0.633 ± 0.016 0.593 ± 0.015 0.597 ± 0.014 FD002 HI 1.573 ± 0.983 0.620 ± 0.078 0.703 ± 0.003 FD003 TD 0.248 ± 0.004 0.238 ± 0.006 0.261 ± 0.023 
+
+FD003 MC 0.653 ± 0.002 0.614 ± 0.038 0.551 ± 0.039 FD003 HI 0.591 ± 0.107 1.409 ± 0.609 1.316 ± 0.690 FD004 TD 0.244 ± 0.005 0.231 ± 0.006 0.211 ± 0.008 
+
+FD004 MC 0.618 ± 0.012 0.598 ± 0.019 0.612 ± 0.006 FD004 HI 0.938 ± 0.429 0.849 ± 0.176 0.681 ± 0.003 
+
+Stitch minority-class F1 ↑
+
+Dataset Method f =10% f =20% f =50% FD003 TD 0.901 ± 0.011 0.918 ± 0.003 0.921 ± 0.000 
+
+FD003 MC 0.718 ± 0.067 0.666 ± 0.052 0.773 ± 0.066 FD004 TD 0.713 ± 0.002 0.712 ± 0.001 0.715 ± 0.002 
+
+FD004 MC 0.639 ± 0.030 0.673 ± 0.018 0.674 ± 0.021 34 Figure 7: C-MAPSS label-scarce stitch: RUL NAE by remaining-life bucket across fractions f and subsets FD001–FD004 for TD( n, λ ), MC, and HI. 
+
+Figure 8: C-MAPSS stitch minority-class F1 for FD003/FD004, mean ± SEM across training seeds (TD: n=3 throughout; MC: n=3 on FD003 and n=6 , 8, 8 on FD004). TD is flat across fractions; MC has larger spread, especially on FD003. 35 E.1 Simulation Embeddings 
+
+Figure 9 shows two-dimensional UMAP projections of the penultimate-layer CNN embeddings for all four methods on the simulation test set. TD( n, λ ) maintains high failure-mode purity (0.80) in both full-data and stitch settings; MC drops to near chance under stitch (0.55). In these projections, TD preserves failure-mode structure more effectively under stitch anonymity than MC. 
+
+Figure 9: Simulation UMAP embeddings colored by remaining life. Panel purities: TD( n, λ )full/stitch pooled 0.80, MC full 0.79, MC stitch 0.55, HI full 0.59. UMAP is visual only; purity uses 20-nearest-neighbor labels in UMAP space. 
+
+E.2 C-MAPSS Embeddings 
+
+Figure 10 shows bivariate UMAP projections of penultimate CNN embeddings for TD( n, λ ) and MC on FD003/FD004 under f =100% and f =50% stitch fractions. Points encode failure mode by hue and normalized remaining life by shade. TD( n, λ ) forms a clearer life-stage gradient in these displays, consistent with the adjacent-window bootstrap mechanism evaluated quantitatively in Section 6. 
+
+# F Simulation Data-Generating Process: Exact Parameters 
+
+Table 5 lists the exact parameter values, priors, and sensor construction formulas for the event-triggered simulation (ET-Long) of Section 5, supplementing the description given there. with Σ A =
+
+ 0.01 0.001 0 .001 0.001 0.1 0.005 0.001 0 .005 0.2
+
+
+
+and Σ B, quad =
+
+ 0.01 0.001 0 .001 0.001 0.1 0.05 0.001 0.05 0.2
+
+
+
+(late-phase Mode 2 reuses Σ A). Sensor construction (linear fusion): x1 = a11 t2 − a12 sin(25 t) + N (0 , σ 2
+
+> x
+
+), x2 = a21 t + a22 sin(50 t) + 
+
+N (0 , σ 2
+
+> x
+
+), x4 = a41 t+a42 +N (0 , σ 2
+
+> x
+
+); the vector enrichment is p(s) = p0(u) (1 , 0, 0, 0) ⊤ from Eq. (18), so only x1 receives the mode-discriminative post-trigger shape on top of this base additive DGP. Mode 1 uses the monotone pattern αu 1.5; Mode 2 uses the oscillatory √u-enveloped pattern amp ·
+
+36 Figure 10: C-MAPSS UMAP embeddings on FD003/FD004, colored by failure mode and remaining life. Left: TD( n, λ ); right: MC; seeds 83, 7, 21. Columns: FD003 f =100%, FD003 f =50%, FD004 
+
+f =100%, FD004 f =50%. Table 5: ET-Long simulation data-generating process: exact parameter values. Both failure-mode configurations use linear sensor fusion. The failure modes differ in both the late-phase degradation kernel and the post-trigger discriminative pattern. Parameter Value Sensor noise sd σx 0.05 (all channels) HI-process noise sd σhi 0.05 (Phases A and B) Channel coeffs. a11 , a 21 , a 41 Unif(0 , 2), Unif(0 , 1), Unif(0 , 1) Channel coeffs. a12 , a 22 , a 42 Unif(0 , 0.5) each Activation threshold θ Unif(0 .4, 0.6), clipped to [0 .05 , 0.95] Failure threshold Bthreshold 5.0Phase-B amplitude scale ρB 1.8Time step dt 0.005 Phase-A / Phase-B horizons 2.0 / 10 .0Early-phase gA(t) (both modes): γ0 + γ1(et − 1) + γ2t3, γ ∼ N ([0 .0, 0.5, 1.5] , ΣA). Late-phase Mode 1 (quadratic): γ0 + γ1s + γ2s2, γ ∼ tν=5 ([0 .2, 1.0, 2.0] , ΣB, quad ). Late-phase Mode 2 (exp-cubic): same functional form and prior as the early phase. 37 sin(2 π n cyc ·norm+ ϕp)√norm+amp ·0.15 ·norm, with a random phase ϕp ∼ Unif(0 , 2π) and a small mean shift growing with the normalized post-trigger time norm. Independently of this post-trigger enrichment, both modes also receive a shared pre-trigger enrichment on x1, x 2: a slow sinusoid, a fast sinusoid, and a linear drift term ( Aslow sin(2 πt/T slow +ϕslow )+ Afast sin(2 πt/T fast +ϕfast )+drift ·t), drawn from the same distribution for both modes so it does not itself carry mode-discriminative information before the trigger. 
+
+# G Proofs for the Statistical Properties of the Estimator 
+
+Results that are standard in the TD literature are proved by verifying that our setting satisfies the hypotheses of the corresponding cited theorems; results specific to this paper are proved in full. Table 6 summarizes the notation used throughout. Table 6: Notation summary. Symbol Meaning 
+
+S Degradation state space 
+
+St State at time t
+
+F Absorbing failure set 
+
+Fk Terminal set for failure mode kT Absorption/failure time 
+
+K Number of failure modes 
+
+c(i) 
+
+> t+1
+
+Cumulant for GVF component iγ(i) 
+
+> t+1
+
+Continuation for GVF component iV time  
+
+> γ
+
+Discounted survival-time (RUL) GVF 
+
+H(k) 
+
+> γ
+
+Hitting-probability GVF for failure mode kut+1 Vector cumulant Γt+1 Diagonal continuation matrix ΠΨ L2(Ψ) projection onto feature span 
+
+Ai, b i Linear projected Bellman system for component iy(n) 
+
+> t
+
+Vector TD( n) target 
+
+y(n,λ ) 
+
+> t
+
+Truncated vector TD( n, λ ) target 
+
+yMC  
+
+> t
+
+Vector Monte Carlo target 
+
+G.1 Standard supporting facts 
+
+The following assumptions and results are standard in TD analysis (Sutton & Barto, 2018; Tsitsiklis & Van Roy, 1997); but adapted for the vector-valued GVF formulation of Section 3.3. 38 Assumption 1 (A1. Ergodicity on the learning process) . The state process used for learning is geometrically ergodic with stationary distribution Ψ (or is converted to an ergodic regenerative process by episodic reset at absorption for theoretical analysis). 
+
+Assumption 2 (A2. Bounded cumulants) . Each GVF cumulant component is bounded almost surely: |u(i)
+
+> t+1
+
+| ≤ ¯ci < ∞.
+
+Assumption 3 (A3. Bounded features) . For linear analysis, the feature map satisfies ϕ : S → Rd
+
+with ∥ϕ(s)∥2 ≤ 1.
+
+Assumption 4 (A4. Well-posed projected equations) . For each GVF component i, the projected fixed-point equation for the λ-return operator has a unique, stable solution under Ψ: the symmetric part 12 (Ai,n,λ + A⊤
+
+> i,n,λ
+
+) of the corresponding (generally nonsymmetric) TD normal matrix Ai,n,λ is positive definite, a sufficient condition for −Ai,n,λ to be Hurwitz. (Mere nonsingularity of Ai,n,λ is insufficient because the matrix is nonsymmetric.) 
+
+Assumption 5 (A5. Step-size conditions) . The TD step sizes satisfy P 
+
+> t
+
+αt = ∞, P 
+
+> t
+
+α2 
+
+> t
+
+< ∞,with standard Robbins–Monro conditions. 
+
+Assumption 6 (A6. Termination or contraction) . For each component i, either γ(i) 
+
+> t+1
+
+≤ ¯γi < 1
+
+almost surely, or the absorbing episodic process terminates almost surely with uniformly bounded expected absorption time, sup s∈C Es[τ ] < ∞ (for a finite transient set, equivalently ρ(PCC ) < 1), which gives finite expected return. 
+
+Under Assumptions 1–5, Sections G.5–G.7 prove Theorem 1. Claim (i) follows from the con-traction property of the component Bellman operators and a geometric bound on the discounted return. Claim (ii) follows from the standard on-policy stochastic-approximation argument for the projected TD( n, λ ) equation. Claim (iii) follows by comparing the projected Bellman solution with the least-squares projection of the complete return. The discounted contraction used in claim (i) does not cover the undiscounted case γ ≡ 1. That case is treated separately in Proposition 4 under a uniform finite-absorption-time condition. 
+
+G.2 Proof of Proposition 1 
+
+Fix s ∈ C and γ ∈ [0 , 1). By definition, V time  
+
+> γ
+
+(s) = Es
+
+hPτt−1 
+
+> ℓ=0
+
+γℓ
+
+i
+
+, where τt ≥ 1 on C and τt may be infinite on trajectories that never reach F. Since every summand γℓ is nonnegative, the random 39 partial sum Pτt−1 
+
+> ℓ=0
+
+γℓ is nonnegative pathwise, so V time  
+
+> γ
+
+(s) ≥ 0. For the upper bound, on every sample path (whether τt is finite or infinite), 
+
+> τt−1
+
+X
+
+> ℓ=0
+
+γℓ ≤
+
+> ∞
+
+X
+
+> ℓ=0
+
+γℓ = 11 − γ ,
+
+because the geometric series with ratio γ ∈ [0 , 1) converges and its partial sums are monotone increasing in the number of terms. Taking expectations under Es and using monotonicity of expec-tation yields V time  
+
+> γ
+
+(s) ≤ (1 − γ)−1. In particular, the expectation is well defined and finite without any moment condition on τt.
+
+G.3 Proof of Proposition 2 
+
+Fix s ∈ C and γ ∈ [0 , 1). By Definition 6, 
+
+H(k) 
+
+> γ
+
+(s) = Es
+
+γτt−11{St+τt ∈ F k} ,
+
+where the integrand is set to zero on the event {τt = ∞} (no absorption), so the expectation is well defined and bounded by 1. 
+
+Factorization. On the absorption event, the terminal mode Z is the index k with St+τt ∈ F k,and the mode sets F1, . . . , FK are disjoint, so 1{St+τt ∈ F k} = 1{Z = k}. Decomposing the expectation over the event {Z = k} and its complement (on which the integrand vanishes), and applying the definition of conditional expectation, 
+
+H(k) 
+
+> γ
+
+(s) = Es
+
+γτt−11{Z = k} = Ps(Z = k) Es
+
+γτt−1 | Z = k = pk(s) ak(s; γ),
+
+which is Eq. (14). (If pk(s) = 0, both sides are zero and the factorization holds trivially with any convention for ak.) 
+
+Limit as γ ↑ 1. Conditional on Z = k, absorption occurs and τt < ∞ almost surely, so γτt−1 → 1pointwise as γ ↑ 1. Since 0 ≤ γτt−1 ≤ 1, dominated convergence gives ak(s; γ) = Es[γτt−1 | Z =
+
+k] → 1, and hence H(k) 
+
+> γ
+
+(s) = pk(s)ak(s; γ) → pk(s) for every k.
+
+Normalized score. If PKj=1 pj (s) > 0, then PKj=1 H(j) 
+
+> γ
+
+(s) → PKj=1 pj (s) by the previous step, 40 and the denominator is strictly positive for γ close enough to 1. Therefore ˜pγ,k (s) = H(k) 
+
+> γ
+
+(s)
+
+PKj=1 H(j) 
+
+> γ
+
+(s) −→ pk(s)
+
+PKj=1 pj (s) ,
+
+which equals pk(s) whenever absorption is almost sure from s (i.e., P 
+
+> j
+
+pj (s) = 1). 
+
+G.4 Proof of Proposition 3 
+
+Equation (16) is the standard prefix–residual partition of a discounted return: the first n terms form Pt,n and the remaining discounted sum starting at time t + n is Rt+n, so GMC  
+
+> t
+
+= Pt,n + γnRt+n
+
+holds pathwise on {τt > n } — the absorption time τt is itself random given only St = s, so all statements below are conditional on the event {St = s, τ t > n }, on which St+n is a well-defined non-absorbed state and Rt+n the (possibly further-absorbing) residual return from it. Let Ht,n 
+
+denote the sigma-field generated by the observed prefix through St+n, including St, S t+1 , . . . , S t+n
+
+and the cumulants in Pt,n , on this event. The prefix Pt,n is Ht,n -measurable. Under the Markov predictive-state assumption, 
+
+E[Rt+n | H t,n ] = E[Rt+n | St+n] = V ⋆(St+n).
+
+Therefore 
+
+E[GMC  
+
+> t
+
+| H t,n ] = Pt,n + γnE[Rt+n | H t,n ] = Pt,n + γnV ⋆(St+n) = GTD ,⋆ t .
+
+Applying the law of total variance conditional on {St = s, τ t > n } gives Var( GMC  
+
+> t
+
+| St = s, τ t > n ) = Var  E[GMC  
+
+> t
+
+| H t,n ] | St = s, τ t > n 
+
++ EVar( GMC  
+
+> t
+
+| H t,n ) | St = s, τ t > n .
+
+The first term is Var( GTD ,⋆ t | St = s, τ t > n ). For the second term, Pt,n is Ht,n -measurable, so Var( GMC  
+
+> t
+
+| H t,n ) = Var( Pt,n + γnRt+n | H t,n ) = γ2nVar( Rt+n | H t,n ).
+
+41 Using the Markov assumption again, Var( Rt+n | H t,n ) = Var( Rt+n | St+n).
+
+Substituting these identities yields Eq. (17). Since the final conditional-variance term is nonneg-ative, the oracle TD target has no larger conditional variance than the MC target. Equivalently, 
+
+GTD ,⋆ t = E[GMC  
+
+> t
+
+| H t,n ], so the oracle TD target is a Rao–Blackwellized version of MC: it replaces the realized residual by its conditional expectation given the observed prefix through St+n. With a learned bootstrap bV = V ⋆ + e, TD trades residual-return variance for bootstrap-error variance and is advantageous when the latter is smaller. 
+
+G.5 Proof of Theorem 1, claim (i): Population fixed point and value bound 
+
+Fix a GVF component i with |u(i)
+
+> t+1
+
+| ≤ ¯ci < ∞ and 0 ≤ γ(i) 
+
+> t+1
+
+≤ ¯γi < 1 almost surely. The component Bellman operator is (Tiv)( s) = Eu(i) 
+
+> t+1
+
++ γ(i)
+
+> t+1
+
+v(St+1 ) | St = s. (20) Then 
+
+∥T iv − T iw∥∞ ≤ ¯γi∥v − w∥∞, (21) so Ti is a ¯ γi-contraction and has a unique fixed point V ⋆i by Banach’s theorem. By induction on k, the k-fold composition satisfies, for any bounded v, w ,
+
+∥T ki v − T ki w∥∞ ≤ ¯γki ∥v − w∥∞,
+
+so T ki is a contraction with modulus at most ¯ γki . The truncated TD( n, λ ) population operator 
+
+Ti,n,λ = (1 − λ) Pn−1 
+
+> k=1
+
+λk−1T ki + λn−1T ni is a convex combination of these compositions (the weights (1 − λ)λk−1 for k = 1 , . . . , n − 1 and λn−1 sum to one). By the triangle inequality, 
+
+∥T i,n,λ v − T i,n,λ w∥∞ ≤ ρi,n,λ ∥v − w∥∞,
+
+with 
+
+ρi,n,λ = (1 − λ)
+
+> n−1
+
+X
+
+> k=1
+
+λk−1 ¯γki + λn−1 ¯γni < 1,
+
+because it is a convex combination of the values ¯ γki ≤ ¯γi < 1. Hence Ti,n,λ is a contraction and 42 has a unique fixed point. If TiV ⋆i = V ⋆i , then T ki V ⋆i = V ⋆i for every k ≥ 1, so Ti,n,λ V ⋆i = V ⋆i ; by uniqueness the two operators share the same fixed point V ⋆i .For the value bound, the return from St = s is 
+
+G(i) 
+
+> t
+
+=
+
+> ∞
+
+X
+
+> ℓ=0
+
+ ℓY
+
+> j=1
+
+γ(i)
+
+> t+j
+
+
+
+u(i)
+
+> t+ℓ+1
+
+,
+
+with the empty product equal to 1. Pathwise, Qℓj=1 γ(i) 
+
+> t+j
+
+≤ ¯γℓi , so the series is dominated in absolute value by P 
+
+> ℓ≥0
+
+¯γℓi ¯ci = ¯ ci/(1 − ¯γi); in particular G(i) 
+
+> t
+
+is well defined and absolutely convergent almost surely, and V ⋆i (s) = E[G(i) 
+
+> t
+
+| St = s] exists. By the triangle inequality and monotone convergence applied to the dominating series, 
+
+|V ⋆i (s)| ≤ E
+
+
+
+> ∞
+
+X
+
+> ℓ=0
+
+ ℓY
+
+> j=1
+
+γ(i)
+
+> t+j
+
+
+
+|u(i)
+
+> t+ℓ+1
+
+| St = s
+
+ ≤
+
+> ∞
+
+X
+
+> ℓ=0
+
+¯γℓi ¯ci = ¯ci
+
+1 − ¯γi
+
+. (22) The right-hand side does not depend on s, so sup s∈S |V ⋆i (s)| ≤ ¯ci/(1 − ¯γi). Because Γ t+1 is diagonal, the stacked vector operator ( T V )( s) = E[ut+1 + Γ t+1 V (St+1 ) | St = s]decouples into the component operators Ti, and the same conclusions hold for the vector GVF. 
+
+Proposition 4 (Undiscounted absorbing fixed point) . Under Assumptions 2 and 6 with γ(i) 
+
+> t+1
+
+≡ 1
+
+on the transient set, if sup s∈C Es[τ ] < ∞ (for a finite transient set, equivalently ρ(PCC ) < 1), then the component Bellman operator Ti has a unique bounded fixed point V ⋆i on C with terminal boundary V ⋆i ≡ 0 on F.Proof. Write the return on the transient set as 
+
+G(i) 
+
+> t
+
+= 
+
+> T−t−1
+
+X
+
+> ℓ=0
+
+u(i)
+
+> t+ℓ+1
+
+, (23) which satisfies |G(i) 
+
+> t
+
+| ≤ ¯ci (T − t) pathwise. Per-state finiteness of Es[τ ] is not sufficient for the sup-norm uniqueness argument below; we require the uniform condition sup s∈C Es[τ ] < ∞. For a finite transient set this is equivalent to ρ(PCC ) < 1, where PCC is the sub-stochastic transition matrix restricted to C, in which case the fundamental matrix ( I − PCC )−1 exists and V ⋆i = ( I − PCC )−1u(i)
+
+on C. Under this uniform condition the return is integrable with bounded expectation. Define 
+
+V ⋆i (s) = E[G(i) 
+
+> t
+
+| St = s] on the transient set, with the terminal boundary condition V ⋆i (s) = 0 for 43 s ∈ F . Splitting off the first transition and using the Markov property, 
+
+V ⋆i (s) = Eu(i) 
+
+> t+1
+
+| St = s + EV ⋆i (St+1 ) | St = s = ( TiV ⋆i )( s),
+
+where the interchange of the expectation and the tail sum is justified by dominated convergence with dominating variable ¯ ci (T −t), which is integrable. Thus V ⋆i is a fixed point. For uniqueness, let v be any bounded fixed point with v ≡ 0 on F, and set h = v −V ⋆i . Then h(s) = E[h(St+1 ) | St = s], and iterating m times gives h(s) = E[h(St+m)1{T > t +m} | St = s] because h vanishes on the absorbing set. Since T < ∞ almost surely and h is bounded, |h(s)| ≤ ∥ h∥∞ Ps(T > t + m) → 0 as m → ∞ ,so h ≡ 0 and the fixed point is unique on the transient set. (This is the standard absorbing-chain potential argument; see Sutton and Barto (2018, Ch. 3–4) for the episodic formulation.) 
+
+G.6 Proof of Theorem 1, claim (ii): Linear TD (n, λ ) convergence 
+
+This is a special case of the on-policy linear TD( λ) convergence theorem of Tsitsiklis and Van Roy (1997), applied separately to each GVF component; we only verify that its hypotheses hold in our setting. Because Γ t+1 is diagonal, the multi-output linear approximation VW (s) = W ⊤ϕ(s)with W = [ w1, . . . , w m] ∈ Rd×m decouples into m independent scalar linear-TD recursions, one per column wi, each driven by the scalar cumulant u(i) and continuation γ(i). For each component: (i) the sampling process is ergodic with stationary distribution Ψ (Assumption 1); (ii) the cumulants and features are bounded (Assumptions 2 and 3), giving the required moment conditions; (iii) the step sizes satisfy the Robbins–Monro conditions (Assumption 5); and (iv) the projected fixed-point system Ai,n,λ wi = bi,n,λ for the truncated λ-return operator is stable in the sense made precise below. Two points require care. First, the relevant normal matrix is not the one-step TD(0) matrix EΨ[ϕt(ϕt − γ(i) 
+
+> t
+
+ϕt+1 )⊤], but the matrix of the λ-return operator Ti,n,λ of Eq. (15) that we actually train against, 
+
+Ai,n,λ = EΨ
+
+ϕt (ϕt − ψ(i,n,λ ) 
+
+> t
+
+)⊤, bi,n,λ = EΨ
+
+ϕt g(i,n,λ )
+
+> t
+
+,
+
+where ψ(i,n,λ ) 
+
+> t
+
+is the λ-weighted, n-truncated discounted successor feature obtained by applying the same convex weights {(1 − λ)λk−1}n−1 
+
+> k=1
+
+∪ { λn−1} that define Ti,n,λ to the k-step discounted features EΨ[Qkj=1 γ(i) 
+
+> t+j
+
+ϕt+k | H t], and g(i,n,λ ) 
+
+> t
+
+is the matching λ-weighted partial cumulant. Because each n-step operator T ki is a ¯ γi-contraction and Ti,n,λ is a convex combination of them (claim (i)), the standard on-policy projected-TD argument for the λ-return operator (Tsitsiklis & Van Roy, 44 1997) applies to Ai,n,λ . Second, the required stability condition is not mere nonsingularity: TD normal matrices are generally nonsymmetric, and nonsingularity of a nonsymmetric matrix does not imply the stability needed for the stochastic-approximation ODE. We therefore require that the symmetric part 12 (Ai,n,λ + A⊤
+
+> i,n,λ
+
+) of Ai,n,λ be positive definite, a sufficient condition for −Ai,n,λ 
+
+to be Hurwitz (all eigenvalues have strictly negative real part; Assumption 4); this is precisely what on-policy sampling under the ¯ γi-contraction Ti,n,λ guarantees. Under Assumption 6 the discounting/termination condition of Tsitsiklis and Van Roy (1997) holds as well. The cited theorem then yields wi,t → w⋆i = A−1
+
+> i,n,λ
+
+bi,n,λ almost surely for each i, i.e., convergence of the stacked iterate 
+
+Wt to the unique projected TD( n, λ ) fixed point, which is claim (ii) of Theorem 1. 
+
+G.7 Proof of Theorem 1, claim (iii): Realizability and the TD–MC relation 
+
+Fix a scalar component i and write vw(s) = ϕ(s)⊤w, assuming without loss of generality that the features are linearly independent in L2(Ψ), so each function in the span has a unique coefficient vector. The projected Bellman (TD) solution is defined by 
+
+vTD  
+
+> i
+
+= Π ΨTi,n,λ vTD  
+
+> i
+
+, (24) which exists and is unique under Assumption 4. The MC solution is the least-squares return regression 
+
+wMC  
+
+> i
+
+= arg min  
+
+> w
+
+EΨ[( G(i) 
+
+> t
+
+− vw(St)) 2], (25) and we write vMC  
+
+> i
+
+= vwMC  
+
+> i
+
+.
+
+MC limit. Decompose G(i) 
+
+> t
+
+= V ⋆i (St) + εt with E[εt | St] = 0, since V ⋆i (St) = E[G(i) 
+
+> t
+
+| St] by definition of the GVF. Then, for any w,
+
+EΨ[( G(i) 
+
+> t
+
+− vw(St)) 2] = EΨ[( V ⋆i (St) − vw(St)) 2] + EΨ[ε2 
+
+> t
+
+],
+
+because the cross term vanishes by conditioning on St. Hence vMC  
+
+> i
+
+= Π ΨV ⋆i : the MC limit is the 
+
+L2(Ψ) projection of the true GVF onto the feature span. 
+
+Realizable case. Suppose V ⋆i = vw† for some w†. First, vMC  
+
+> i
+
+= Π ΨV ⋆i = V ⋆i , so wMC  
+
+> i
+
+= w†
+
+by linear independence. Second, V ⋆i is also the fixed point of Ti,n,λ (claim (i) of Theorem 1), so ΠΨTi,n,λ V ⋆i = Π ΨV ⋆i = V ⋆i , i.e., V ⋆i solves the projected Bellman equation; by the uniqueness in Assumption 4, vTD  
+
+> i
+
+= V ⋆i as well. Hence vTD  
+
+> i
+
+= vMC  
+
+> i
+
+= V ⋆i .45 Non-realizable case. In general the two limits solve different equations: vMC  
+
+> i
+
+= Π ΨV ⋆i is the direct projection of V ⋆i , whereas vTD  
+
+> i
+
+solves the composed fixed-point equation v = Π ΨTi,n,λ v,whose solution is the projection of Ti,n,λ vTD  
+
+> i
+
+rather than of V ⋆i . These agree only when Π ΨV ⋆i
+
+happens to be a fixed point of Π ΨTi,n,λ , which fails in general; the projected-Bellman error bound 
+
+∥vTD  
+
+> i
+
+− V ⋆i ∥Ψ ≤ (1 − ρ2
+
+> i,n,λ
+
+)−1/2∥ΠΨV ⋆i − V ⋆i ∥Ψ — the general-contraction-modulus form of the bound of Tsitsiklis and Van Roy (1997), with ρi,n,λ the Ti,n,λ -contraction modulus from claim (i) of Theorem 1 in place of the plain-TD(0) discount ¯ γi — quantifies the possible gap. Thus without realizability the TD and MC limits may differ, as claimed. 46

@@ -1,0 +1,69 @@
+{
+  "label": "2026-07-27",
+  "date": "2026-07-27",
+  "generated_at": "2026-07-27T21:51:29",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202607/27/2607.22421v1-stateformer-a-multivariate-transformer-for-learning-history-dependent-battery-state-dynamics-and-long-horizon-health-forecasting",
+      "section": "deep",
+      "title_en": "StateFormer: A Multivariate Transformer for Learning History-Dependent Battery State Dynamics and Long-Horizon Health Forecasting",
+      "authors": "Zhe Bai, Stephen Harris",
+      "date": "2026-07-24",
+      "pdf": "https://arxiv.org/pdf/2607.22421v1",
+      "score": "9.0",
+      "evidence": "使用多变量Transformer直接预测SOC和SOH，实现电池状态联合估计",
+      "tldr": "大规模电池系统状态预测面临短期热波动与长期老化轨迹的耦合挑战，传统方法难以同时捕获跨时间尺度的依赖关系。本文提出一种多变量Transformer模型StateFormer，通过跨时间尺度学习历史状态依赖，并自动识别影响未来退化的运行条件，从而统一表示快速电化学和热过程与慢速老化机制。在包含不同电极化学、制造参数的合成车队及五年住宅现场数据中，实现在1%至10%噪声、宽环境温度下对荷电状态(SOC)、健康度(SOH)和电池温度的高精度预测，性能稳健。该模型弥合实验室到现场的数据差距，为电池预测性维护、运行优化和经济决策提供关键预测智能，推动了电池智能化管理。",
+      "tags": "query:soc-soh",
+      "abstract_en": "This paper introduces a novel multivariate Transformer \\emph{StateFormer} that forecasts degradation dynamics of large-scale battery systems. The model learns across time scales, from short-term thermal fluctuations to long-term aging trajectories, enabling accurate prediction of battery states including state of charge (SOC), state of health (SOH), or battery temperature. By capturing long-range dependencies and identifying the operating conditions that drive future degradation, the model simultaneously represents fast electrochemical and thermal processes and slow aging mechanisms within a unified framework. \\emph{StateFormer} achieves robust and accurate predictions of battery state estimation across both synthetic and real-world datasets. It maintains high predictive performance under additive current/voltage noise levels ranging from $1\\%$ to $10\\%$ and a wide range of ambient temperatures in a synthetic battery fleet accommodating different types of electrode chemistry and manufacturing, as well as five years of field data collected from residential utility battery systems. The resulting model bridges the laboratory-to-field gap and provides predictive intelligence for maintenance planning, operational optimization, and economic decision-making.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/27/2607.17065v1-a-recursive-subspace-based-method-for-errors-in-variables-model-identification-of-time-varying-systems",
+      "section": "quick",
+      "title_en": "A recursive subspace based method for errors-in-variables model identification of time-varying systems",
+      "authors": "Deepanjhan Das, Shankar Narasimhan",
+      "date": "2026-07-19",
+      "pdf": "https://arxiv.org/pdf/2607.17065v1",
+      "score": "6.0",
+      "evidence": "递归子空间辨识方法，可用于在线电池模型参数估计",
+      "tldr": "针对带误差变量（EIV）系统中的时变特性，现有的子空间辨识方法难以在线处理时变的噪声方差和模型参数，本文提出递归子空间辨识方法RSMI-IPCA。该方法扩展了SMI-IPCA，通过维持固定长度滞后窗口而非存储全部历史数据，能够递推更新异方差噪声方差、过程阶次和状态空间矩阵。它能逐渐适应传感器缓慢退化（时变噪声方差）、过程工况变化（时变模型参数）以及结构修改（时变模型阶次）。仿真实验验证了算法对慢变和突变时变过程的有效性，为工业自适应建模提供了新工具。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "The Subspace-based Model Identification algorithm using a modified Iterative Principal Component Analysis (SMI-IPCA) is a theoretically rigorous method for identifying a linear state-space model of a multi-input multi-output (MIMO) process, in an errors-in-variables (EIV) setting. The method can simultaneously estimate unknown heteroskedastic noise variances corrupting the input and output measurements, along with the state space model. This work proposes a recursive formulation of SMI-IPCA (RSMI-IPCA) enabling online identification and adaptive model updates as and when new data arrive. By maintaining a fixed length lag window rather than storing the complete historical data, RSMI-IPCA estimates measurement noise variances, process order, while simultaneously identifying the state-space matrices, making it suitable to monitor time-varying systems, whether the induced changes are slow or abrupt. The algorithm gradually adapts to slow sensor degradation (time-varying noise variances), changes in process operating conditions (time-varying model parameters), and structural modifications (varying model order). Simulation studies are presented to demonstrate the efficacy and practical applicability of the proposed algorithm.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/27/2607.22268v1-general-value-functions-for-remaining-useful-life-and-failure-mode-prediction",
+      "section": "quick",
+      "title_en": "General Value Functions for Remaining Useful Life and Failure-Mode Prediction",
+      "authors": "Hao Yan, Ali Sarabi, Qing Zou, Boyang Xu",
+      "date": "2026-07-24",
+      "pdf": "https://arxiv.org/pdf/2607.22268v1",
+      "score": "6.0",
+      "evidence": "可用于电池健康状态估计的剩余使用寿命预测方法",
+      "tldr": "在预测性维护中，剩余寿命与故障模式预测常依赖固定窗口监督学习，要求完整终端标签，难以利用碎片化观测并编码时间递归。本工作将预测问题形式化为吸收退化过程上的向量通用价值函数(GVF)预测，视目标为时间一致剩余寿命和故障概率，采用多步时序差分TD(n,λ)估计。在事件触发仿真及NASA C-MAPSS标签稀缺数据上，TD较同主干监督蒙特卡洛方法提升了预测精度，特别在完整标签稀少时。该方法使碎片化、无身份标识的退化记录能贡献局部Bellman转移，无需等待完整运行至故障标签即可利用。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Remaining useful life (RUL) prediction and failure-mode classification are central tasks in predictive maintenance. Many data-driven pipelines use fixed-window supervised learning with complete terminal labels; such routes do not naturally encode the temporal recursion linking successive degradation-state predictions when observations are partial or unit identities are unavailable. We formulate prognostics as vector General Value Function (GVF) prediction on an absorbing degradation process, treating RUL and failure-mode probabilities as temporally consistent targets rather than independent window-level labels, and estimate them with a multi-step temporal-difference estimator, TD($n,λ$). Supporting theory identifies the Bellman fixed point of the vector GVFs, characterizes the linear projected-TD limit and its relation to complete-return Monte Carlo regression under realizability, and explains when bootstrapped TD targets are less variable than Monte Carlo returns. On an event-triggered multimode simulation and NASA C-MAPSS label-scarce stitch data, TD improves RUL and failure-mode prediction relative to a supervised same-backbone Monte Carlo control, especially under scarce complete labels. Practically, fragmented, identity-free degradation records can contribute local Bellman transitions instead of being discarded until complete run-to-failure labels are available.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/27/biorxiv-10-1101-2023-01-17-524503-v6-pathwise-approximations-to-solving-the-filtering-problem-for-the-stochastic-chemostat",
+      "section": "quick",
+      "title_en": "Pathwise approximations to solving the filtering problem for the stochastic chemostat",
+      "authors": "Fontenele Magalhaes, J. A., Emzir, M. F., Corona, F.",
+      "date": "2026-07-21",
+      "pdf": "https://www.biorxiv.org/content/10.1101/2023.01.17.524503v6.full.pdf",
+      "score": "6.0",
+      "evidence": "从噪声观测中进行状态估计的滤波问题",
+      "tldr": "随机恒化器的状态估计是一个反问题，本文在环境波动下建模为随机过程，导出Kushner-Stratonovich随机偏微分方程。在证明适定性后，提出三种路径逼近：PDE有限差与分裂法、序列蒙特卡洛、线性化。实验证明前两者概率描述更丰富，适用于生物反应器控制，线性化结果信息不足，为状态监控提供了理论依据。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "This paper concerns the inverse problem of characterising the state of a bioreactor from observations. In laboratory settings, the bioreactor is represented by a device called a chemostat. We consider a differential description of the evolution of the state of the chemostat under environmental fluctuations. We model the state evolution as a stochastic process driven by Brownian motion. Under this model, the state is described by its probability distribution in time, given the distribution of the initial state. The corresponding probability density function solves a deterministic partial differential equation (PDE), the Kolmogorov forward equation. This description is refined by incorporating observations. More formally, we seek the conditional distribution of the state given an observation process as the solution to a filtering problem, with the corresponding conditional probability density function solving a non-linear stochastic PDE, the Kushner-Stratonovich equation. In numerical studies of bioreactors, the well-posedness of these differential equations is frequently assumed rather than verified. Consequently, it remains unclear whether unique solutions exist and whether numerical approximations preserve key qualitative properties, such as positivity (e.g. non-negative chemical concentrations). This paper establishes the existence and uniqueness of solutions, ensuring well-posedness before presenting numerical approximations. Furthermore, we approximate the pathwise solution to the filtering problem by three approaches: a PDE-based approximation combining finite difference and splitting methods, a classical sequential Monte Carlo method, and a linearisation method. Our results show that the first two provide a richer probabilistic description of the state than the linearisation method, making them suitable for bioreactor control architectures.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,96 @@
+{
+  "version": 2,
+  "extractor": "papercropper",
+  "figures": [
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-001.webp",
+      "caption": "",
+      "page": 0,
+      "index": 1,
+      "width": 695,
+      "height": 527,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-002.webp",
+      "caption": "",
+      "page": 0,
+      "index": 2,
+      "width": 1322,
+      "height": 707,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-003.webp",
+      "caption": "",
+      "page": 0,
+      "index": 3,
+      "width": 1325,
+      "height": 745,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-004.webp",
+      "caption": "",
+      "page": 0,
+      "index": 4,
+      "width": 1404,
+      "height": 637,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-005.webp",
+      "caption": "",
+      "page": 0,
+      "index": 5,
+      "width": 1411,
+      "height": 788,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-006.webp",
+      "caption": "",
+      "page": 0,
+      "index": 6,
+      "width": 1411,
+      "height": 784,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-007.webp",
+      "caption": "",
+      "page": 0,
+      "index": 7,
+      "width": 1376,
+      "height": 632,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-008.webp",
+      "caption": "",
+      "page": 0,
+      "index": 8,
+      "width": 1407,
+      "height": 682,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-009.webp",
+      "caption": "",
+      "page": 0,
+      "index": 9,
+      "width": 1380,
+      "height": 641,
+      "label": "Figure"
+    },
+    {
+      "url": "assets/figures/biorxiv/biorxiv-10-1101-2023-01-17-524503-v6/fig-010.webp",
+      "caption": "",
+      "page": 0,
+      "index": 10,
+      "width": 1406,
+      "height": 682,
+      "label": "Figure"
+    }
+  ]
+}
