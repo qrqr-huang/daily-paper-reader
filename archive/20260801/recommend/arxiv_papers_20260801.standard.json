@@ -1,0 +1,99 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-01T21:36:10.183388+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.26038v1",
+      "source": "arxiv",
+      "title": "Collaborative System Failure Prognostics via Federated Longitudinal-Survival Modeling",
+      "abstract": "Time-to-event modeling provides a systematic framework for estimating time-dependent failure risk, reliability, and remaining useful life (RUL) from longitudinal condition monitoring data. However, applying these models to distributed prognostics remains challenging because sensor trajectories and failure-time records are often stored across organizations or operational sites and cannot be centrally pooled due to privacy or proprietary constraints. Moreover, the classical Cox proportional hazards model relies on a nonseparable partial likelihood involving global risk sets, making direct optimization difficult under standard federated learning protocols. This paper presents a federated longitudinal-survival modeling framework for collaborative system failure prognostics. The proposed framework combines longitudinal sensor representation learning with a client-separable discrete-time hazard objective, enabling multiple clients to collaboratively train a prognostic model without sharing raw sensor measurements or individual failure records. Time-dependent representations extracted from multivariate sensor histories are used to estimate interval-specific failure hazards, reliability curves, and system RUL. Experiments on the four C-MAPSS turbofan engine degradation subsets under simulated decentralized settings demonstrate that the proposed framework consistently improves prognostic performance over isolated local training while maintaining performance comparable to centralized training across heterogeneous operating conditions and failure modes. These results demonstrate the potential of federated longitudinal-survival modeling for collaborative, data-aware condition monitoring and system failure prognostics.",
+      "authors": [
+        "Fan Yang",
+        "Madelyn Weller",
+        "Dimuthu Fernando",
+        "Hila Livneh",
+        "Yuxin Wen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-28T17:46:19+00:00",
+      "link": "https://arxiv.org/pdf/2607.26038v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "federated longitudinal-survival modeling for system failure prognostics",
+      "llm_evidence_cn": "基于联邦纵向生存模型的系统故障预测",
+      "llm_evidence": "基于联邦纵向生存模型的系统故障预测",
+      "canonical_evidence": "基于联邦纵向生存模型的系统故障预测",
+      "llm_tldr_en": "Proposes a federated learning framework for time-to-event modeling of system failures using distributed sensor data, enabling collaborative RUL estimation without sharing raw data.",
+      "llm_tldr_cn": "针对分布式系统中难以集中共享传感器数据进行故障预测的问题，提出了一种联邦纵向生存建模框架。该方法结合Cox比例风险模型与联邦学习，在不共享原始数据的情况下协同估计设备剩余寿命。实验表明模型能有效利用多方数据进行故障风险评估，为分布式预后与健康管理提供了新途径。",
+      "llm_tldr": "针对分布式系统中难以集中共享传感器数据进行故障预测的问题，提出了一种联邦纵向生存建模框架。该方法结合Cox比例风险模型与联邦学习，在不共享原始数据的情况下协同估计设备剩余寿命。实验表明模型能有效利用多方数据进行故障风险评估，为分布式预后与健康管理提供了新途径。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.26790v1",
+      "source": "arxiv",
+      "title": "Joint State-Parameter Inference Enhances Estimation Performance in Model-Based Digital Therapeutics for Type 1 Diabetes",
+      "abstract": "Blood glucose estimation is the cornerstone of model-based decision support (DS) and Automated Insulin Delivery (AID) systems. Control systems that rely on physiologic/compartmental models depend heavily on model parameterization, which is either defined using population values or personalized through the user's data. Often, the model parameters are defined as constants. However, under real-world free-living conditions, fixed parameters can limit the accurate reconstruction and estimation of glucose levels and states. In this paper, we propose and discuss a recursive filtering framework for online joint state estimation and parameter identification in nonlinear, time-varying physiological models for Type 1 Diabetes (T1D). Specifically, we employ a Rao-Blackwellized Stein Variational Gradient Descent (RBSVGD) filter to compute the joint posterior distributions of model states and parameters. The proposed approach is applied to the Hovorka glucose-insulin model and validated using data generated by the the Oregon Health & Science University (OHSU) simulator across 20 virtual patients. We perform a comparative analysis against: (i) a standard Extended Kalman Filter (EKF) with fixed model parameters, and (ii) an Augmented Extended Kalman Filter (AEKF) for joint state-parameter estimation. The results demonstrate that the proposed RBSVGD-based framework outperforms both EKF and AEKF approaches not only in terms of the accuracy of glucose estimation, but also in terms of estimated model parameters.",
+      "authors": [
+        "Milad Banitalebi Dehkordi",
+        "Vihangkumar V. Naik",
+        "Manas Mejari",
+        "Dario Piga",
+        "Jose Garcia-Tirado"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-07-29T11:31:41+00:00",
+      "link": "https://arxiv.org/pdf/2607.26790v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "joint state estimation and parameter identification using recursive filtering for model-based digital therapeutics",
+      "llm_evidence_cn": "基于递归滤波的联合状态估计与参数辨识用于模型驱动的数字疗法",
+      "llm_evidence": "基于递归滤波的联合状态估计与参数辨识用于模型驱动的数字疗法",
+      "canonical_evidence": "基于递归滤波的联合状态估计与参数辨识用于模型驱动的数字疗法",
+      "llm_tldr_en": "This paper proposes a recursive filtering framework for online joint state and parameter estimation in physiological models for diabetes, enhancing glucose estimation under real-world conditions.",
+      "llm_tldr_cn": "针对固定参数在真实自由生活条件下限制血糖状态准确估计的问题，本文提出一种递归滤波框架，用于非线性时变生理模型的在线联合状态估计与参数辨识，提升了糖尿病模型中葡萄糖水平的估计性能，为自适应闭环胰岛素输送系统提供支持。",
+      "llm_tldr": "针对固定参数在真实自由生活条件下限制血糖状态准确估计的问题，本文提出一种递归滤波框架，用于非线性时变生理模型的在线联合状态估计与参数辨识，提升了糖尿病模型中葡萄糖水平的估计性能，为自适应闭环胰岛素输送系统提供支持。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "combining model driven and data driven approaches for joint battery state estimation using voltage, current, and temperature signals",
+      "matched_requirement_id": "req-18",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

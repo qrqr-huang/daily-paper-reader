@@ -1,0 +1,1048 @@
+Title: Collaborative System Failure Prognostics via Federated Longitudinal-Survival Modeling
+
+URL Source: https://arxiv.org/pdf/2607.26038v1
+
+Published Time: Wed, 29 Jul 2026 19:30:49 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Collaborative System Failure Prognostics via Federated Longitudinal–Survival Modeling 
+
+Fan Yang 1, Madelyn Weller 1, Dimuthu Fernando 2, Hila Livneh 1, and Yuxin Wen 1
+
+Abstract — Time-to-event modeling provides a systematic framework for estimating time-dependent failure risk, reliabil-ity, and remaining useful life (RUL) from longitudinal condition monitoring data. However, applying these models to distributed prognostics remains challenging as sensor trajectories and failure-time records are often stored across organizations or operational sites and cannot be centrally pooled due to pri-vacy or proprietary constraints. Moreover, the classical Cox proportional hazards model relies on a nonseparable partial likelihood involving global risk sets, making direct optimiza-tion difficult under standard federated learning protocols. This paper presents a federated longitudinal–survival modeling framework for collaborative system failure prognostics. The proposed framework combines longitudinal sensor represen-tation learning with a client-separable discrete-time hazard objective, enabling multiple clients to collaboratively train a prognostic model without sharing raw sensor measurements or individual failure records. Time-dependent representations extracted from multivariate sensor histories are used to estimate interval-specific failure hazards, reliability curves, and RUL of systems. Experiments on the four C-MAPSS turbofan engine degradation subsets under simulated decentralized settings demonstrate that the proposed framework consistently im-proves prognostic performance over isolated local training while maintaining performance comparable to centralized training across heterogeneous operating conditions and failure modes. These results demonstrate the potential of federated longitudi-nal–survival modeling for collaborative, data-aware condition monitoring and system failure prognostics. 
+
+Index Terms — Federated learning, Discrete-time Cox model, Prognostics and health management (PHM), Remaining useful life (RUL) prediction 
+
+I. I NTRODUCTION 
+
+Maintaining high reliability in complex mechanical sys-tems is essential for ensuring operational efficiency and mission success in demanding environments [1]. Failure prognostics plays a central role in this objective by esti-mating future failure risk and remaining useful life (RUL), thereby enabling proactive maintenance before systems vio-late safety-critical operating specifications. Recent advances in the Industrial Internet of Things (IoT) and onboard sensing technologies have made it possible to continuously moni-tor system health through high-fidelity, multivariate sensor streams. These data provide detailed longitudinal records          
+
+> *This work was supported in part by the National Science Foundation under Grant Nos. 2501643 and 2518849, and in part by The Fletcher Jones Foundation.
+> 1F. Yang, M. Weller, H. Livneh and Y. Wen are with the Fowler School of Engineering, Chapman University, Orange, CA 92866 USA
+
+fayang@chapman.edu, mweller@chapman.edu, livneh@chapman.edu, yuwen@chapman.edu  
+
+> 2D. Fernando is with the Department of Statistics, Grand Valley State University, Allendale, MI 49401 USA
+
+fernadim@gvsu.edu 
+
+of degradation processes and create new opportunities for dynamic failure prediction in complex engineering systems [2], [3]. Given such degradation histories, system failure prognostics seeks to answer fundamental maintenance ques-tions, including: ‘What is the probability that a system will continue operating beyond a future time t?’ and ‘How much useful life remains before failure?’. Reliable answers to these questions are critical for predictive maintenance, operational risk assessment, and maintenance scheduling. Over the past decade, numerous failure prediction models have been developed to support informed prognostics and maintenance decision-making in complex systems [2]–[5]. These models generally fall into two categories: soft failure models, which define failure as degradation exceeding a predefined operational threshold, and hard failure models, which characterize sudden, catastrophic events using hazard functions. Soft failure models leverage longitudinal sensor data, such as vibration, temperature, and pressure signals, to capture the temporal evolution of system health. In contrast, hard failure models rely on time-to-event data, typically derived from maintenance logs, to estimate the probability of discrete failure events. In practice, these failure modes are often intrinsically correlated. For example, in hydraulic actuators, wear-induced degradation (soft failure) can increase debris accumulation, subsequently increasing the likelihood of abrupt clamp stagnation (hard failure) [6]. By integrating longitudinal sensor streams with time-to-event data, a more comprehensive representation of system health can be achieved. Existing models that focus exclusively on one failure type may ignore these underlying correlations, potentially leading to suboptimal reliability estimates in safety-critical deployments. To leverage both degradation trajectories and failure-time information, recent studies have explored joint modeling frameworks for the simultaneous analysis of longitudinal and time-to-event data. For example, Zhou et al. applied joint modeling to failure prediction in automotive lead-acid batter-ies [7]. Later, Yan et al. used functional principal component analysis (FPCA) within a joint modeling framework to learn longitudinal degradation trajectories and improve dynamic prediction [8]. Yue et al. combined multivariate Gaussian convolution processes with the Cox proportional hazards (PH) model to fuse time-series observations and survival out-comes for event prediction [9]. Wen et al. further introduced a neural-network-based Cox model for IoT signal fusion and failure prediction, showing how deep representations can be integrated with hazard-based prognostics [10]. More recently, Brumm et al. developed a joint modeling framework for arXiv:2607.26038v1 [cs.LG] 28 Jul 2026 degradation signals and time-to-event data that uses particle filtering for online learning and dynamic RUL prediction [11]. A key advantage of these survival-based formulations is that they do not require a pre-specified degradation threshold. Instead, failure risk is modeled through the hazard function and the corresponding survival probability. The joint models above rely largely on parametric or kernel-based degradation representations. Deep learning has expanded modeling capacity along two largely separate lines. Neural survival models, such as DeepSurv and DeepHit [12], [13], learn nonlinear risk functions or event-time distribu-tions. However, they operate on fixed baseline covariates and do not accommodate the time-varying degradation state that prognostics requires. In Prognostics and Health Manage-ment (PHM), convolutional, recurrent, attention-based, and Transformer-based models learn degradation representations from multivariate sensor streams for RUL prediction [14]– [16], but most formulate the task as direct RUL regression rather than survival learning, returning a point estimate of re-maining life without hazard functions, survival probabilities, or time-dependent failure risks. These modeling advances assume access to a single, sufficiently rich training corpus. In practice, system-level prognostic data, including sensor histories and corresponding failure-time outcomes, are often limited within a single man-ufacturer, fleet operator, or maintenance center. As a result, locally trained models may not capture sufficient variation in degradation patterns and failure mechanisms. Collaborative learning across organizations can improve prognostic relia-bility by leveraging broader operational experience, but direct data pooling is often infeasible due to privacy, proprietary, and operational constraints [17]. Federated learning (FL) provides a natural paradigm for decentralized model training, with FedAvg enabling collaborative optimization without centralizing raw data [18], [19]. Extensions such as FedProx and SCAFFOLD further address client heterogeneity and client drift in distributed optimization [20], [21]. Recent fed-erated prognostics studies have also explored collaborative RUL estimation across distributed industrial assets, including FedAvg-based failure prognosis and feature-matched aggre-gation for heterogeneous edge devices [22], [23]. Extending federated learning from RUL regression to time-to-event modeling, however, raises a challenge that standard federated optimization does not resolve. Many joint longitudinal–time-to-event models use the Cox proportional hazards (PH) model to relate an evolving degradation state to failure risk. Although the Cox model accommodates time-dependent system conditions without requiring a fully specified failure-time distribution [24], its partial likelihood depends on globally ordered failure times and risk sets that may span multiple clients. The objective is therefore not client-separable, and averaging locally computed partial-likelihood gradients does not recover the global objective. Only a limited number of studies have addressed this through distributed Cox optimization or discrete-time reformulations [25], [26]. These methods, however, were developed for static, low-dimensional clinical covariates and evaluate risk ranking, leaving federated time-to-event modeling for high-dimensional longitudinal sensor data largely unexplored. Building on this emerging research, we develop a feder-ated time-to-event prognostic framework for complex engi-neering systems with high-dimensional sensor streams. To make survival learning compatible with federated optimiza-tion, we use a discrete-time formulation whose interval-level likelihood decomposes into a sum of client-local terms, removing the global risk sets that couple the continuous-time partial likelihood across clients. Within this formulation, we learn representations of longitudinal sensor trajectories through a temporal encoder and adopt the complementary log-log link to obtain an exact grouped-data proportional-hazards model. Interval-specific failure hazards, reliability curves, and RUL are then estimated from local sensor histories without sharing raw sensor trajectories or failure-time records. The main contributions of this work are as follows: (1) We integrate high-dimensional, time-dependent sensor trajectories with failure-time outcomes in a unified prognostic framework, connecting longitudinal degradation representation learning with hazard-based failure-risk esti-mation. (2) We adapt a discrete-time Cox formulation to the federated setting, showing that its interval-level likelihood is client-separable and therefore eliminates global risk-set construction during local optimization and parameter aggre-gation. (3) We evaluate the proposed framework on the four C-MAPSS high-fidelity turbofan engine degradation datasets under decentralized settings. The results demonstrate that collaborative training consistently improves prognostic per-formance over isolated local training while retaining strong performance relative to centralized data pooling. The remainder of the paper is organized as follows. Section II presents the proposed methodology. In Section III, a case study is presented to investigate the effectiveness of the proposed method. Section IV concludes the paper and outlines future research directions. II. M ETHODOLOGY 
+
+This section presents the proposed privacy-aware prog-nostic framework. First, the federated learning setting is defined to formalize collaborative model training under data-local constraints. Next, the continuous-time Cox PH model is introduced, and the limitation imposed by its nonsepara-ble partial likelihood is addressed through a discrete-time reformulation suitable for federated optimization. Finally, longitudinal sensor histories are transformed into degrada-tion representations and integrated with the resulting client-separable hazard model to estimate failure risk and RUL. 
+
+A. Federated Learning Setting 
+
+Federated learning enables multiple clients to train ashared model without exchanging raw data. This setting is relevant to industrial prognostics, where sensor trajectories and failure records may be distributed across maintenance centers, manufacturers, or fleet operators and subject to proprietary or operational constraints [22]. Considering a set of K clients, each client represents an independent site. Each site k operates multiple systems and maintains a local dataset Dk = {(Xi, T i, δ i)}i∈N k , where 
+
+Nk denotes the index set of systems belonging to client k.For each system i, Xi = [ Xi1, X i2, . . . , X iT i ] represents the multivariate longitudinal sensor trajectory observed up to time Ti, with Ti denoting the failure or censoring time and δi ∈ { 0, 1} is the corresponding event indicator, with 
+
+δi = 1 if system i experiences the failure event and δi = 0 if the observation is right-censored. The global objective is to optimize a shared model parameter Θ by aggregating local learning processes. The global optimization objective in the federated setting is formulated as the weighted aggregation of client-specific losses: 
+
+LF (Θ) = 
+
+> K
+
+X
+
+> k=1
+
+Nk
+
+N Lk(Θ), (1) where Nk = |N k| denotes the number of systems maintained by client k, and N = PKk=1 Nk is the total number of systems across all clients. Federated learning aims to minimize LF (Θ) through iterative collaboration without exchanging raw data. At each communication round r, the server broadcasts Θ(r) to the clients. Each client performs local optimization on Dk and returns the updated parameters 
+
+Θ(r+1)  
+
+> k
+
+. The server then applies weighted averaging, 
+
+Θ(r+1) =
+
+> K
+
+X
+
+> k=1
+
+Nk
+
+N Θ(r+1)  
+
+> k
+
+. (2) This procedure is repeated until convergence or until apredefined stopping criterion is satisfied. 
+
+B. Continuous-Time Cox PH Model 
+
+Let T denote a nonnegative event time and z ∈ Rd acovariate vector. The continuous-time hazard function is 
+
+λ(t | z) = lim 
+
+> ∆t→0
+
+Pr ( t ≤ T < t + ∆ t | T ≥ t, z)∆t . (3) The Cox PH model specifies 
+
+λ(t | z) = λ0(t) exp 
+
+
+
+β⊤z
+
+
+
+, (4) where λ0(t) is an unspecified baseline hazard and β is a coefficient vector. For two covariate vectors z1 and z2, the hazard ratio is 
+
+λ(t | z1)
+
+λ(t | z2) = exp 
+
+h
+
+β⊤(z1 − z2)
+
+i
+
+, (5) which is constant over time under the PH assumption. The regression coefficients are commonly estimated by maximizing the partial log-likelihood 
+
+ℓ(β) = X
+
+> i:δi=1
+
+β⊤zi − log 
+
+X
+
+> q∈R i
+
+exp 
+
+
+
+β⊤zq
+
+ , (6) where Ri = {q : Tq ≥ Ti} is the risk set at event time Ti. The denominator couples each event contribution to all observations in the corresponding risk set. When the observations are distributed across clients, direct evaluation of Eq. (6) requires global risk-set information and is therefore not naturally compatible with standard federated averaging. The fixed-covariate formulation in Eq. (4) also does not directly encode the high-dimensional longitudinal patterns used for dynamic prognostics. Although the counting-process extension of the Cox model accommodates time-varying covariates [27], its partial likelihood remains defined through event-specific risk sets that couple contributions across obser-vations and, in distributed settings, across clients [24], [25]. A federated prognostic formulation must therefore support learned temporal representations while avoiding global risk-set construction. 
+
+C. Federated Longitudinal–Survival Framework 
+
+A federated longitudinal–survival framework is developed for collaborative prognostics using decentralized sensor data. Building on the federated discrete-time survival formulation of [25], in which the interval-level objective is separa-ble across subjects, the proposed framework learns failure hazards collaboratively without global risk-set construction. Within each client, a temporal encoder maps longitudinal sensor trajectories to representations that drive the estimation of interval-specific failure hazards. These hazard estimates support dynamic prediction of failure risk without sharing raw sensor data or individual failure records. Fig. 1 provides an overview of the proposed framework. The individual components are described in the following subsections. 
+
+1) Time Discretization and Client-Separable Hazard Learning: The continuous-time Cox partial likelihood is non-separable because each event contribution depends on a risk set Ri that may span multiple clients. Consequently, Eq. (6) cannot be decomposed into independent client-local objectives without communicating global risk-set informa-tion. To obtain a client-separable objective, we reformulate the survival problem over a finite set of non-overlapping time intervals. Let 0 = t0 < t 1 < · · · < t M denote a discretiza-tion grid, where the horizon tM is specified from domain knowledge, such as the monitoring window or the maximum operating life of the system, so that Ti ∈ (0 , t M ] for all systems. The jth interval is Ij = ( tj−1, t j ], j = 1 , . . . , M. 
+
+The left-open, right-closed convention assigns each observed time to a unique interval so that an event occurring exactly at 
+
+tj falls in Ij rather than Ij+1 . Let Ji ∈ { 1, . . . , M } denote the index of the interval containing Ti. The observed time of each system is thereby converted into a sequence of Ji
+
+interval-level binary labels, one for each interval in which the system remains under observation: 
+
+yij =
+
+(
+
+1, if j = Ji and δi = 1 ,
+
+0, otherwise , j = 1 , . . . , J i, (7) where δi = 1 indicates failure and δi = 0 censoring. Thus, a failed system has a sequence of zeros followed by a one in its failure interval, whereas a censored system contributes only zeros up to its censoring interval. For each interval Ij , the discrete-time hazard is defined as the conditional probability that system i fails within this Federated Training Framework 
+
+Motivation: Continuous-time Cox partial likelihood requires global risk-set construction          
+
+> ↓
+> Discrete-time formulation yields a client-separable objective
+> Only model updates are communicated. Raw sensor and event records remain local.
+> Central Server (Global Model Θ(r))
+> Aggregate: Θ(r+1) ←∑Kk=1
+> Nk
+> NΘ(r+1)
+> k
+> Client 1 Client 2
+
+. . . Client K
+
+> Broadcast Θ (r)
+> Upload Θ (r+1) 1
+
+Local Architecture (Client k)          
+
+> Multivariate Sensors
+> Xi
+> Sliding Window
+> Length L
+> LSTM Encoder
+> Hidden States hiτ
+> Attention Layer
+> Temporal Weights →zi
+> Discrete-Time Hazard Head
+> Interval hazards hj(zi)
+> Local Event Records
+> (Ti, δ i)
+> Common Event-Time Grid
+> fixed before training, {tj}Mj=0
+> Target Generation
+> Interval labels yij
+> Client-Separable Survival NLL
+> Local Objective Lk
+> targets
+
+Global Inference     
+
+> New Test Stream
+> Xtest
+> Trained Global Model
+> Θ(R)
+> Survival Curve
+> S(tj|zi) =
+> j∏
+> ℓ=1
+> {1−hℓ(zi)}
+> Expected RUL ̂
+> RUL ij
+> local update
+
+Fig. 1. Overview of the federated longitudinal–survival framework. A common event-time grid is used to construct interval labels over the locally observed at-risk intervals. Each client trains an LSTM-attention encoder and a discrete-time hazard model using its local sensor windows and failure records, and only model updates are transmitted for federated aggregation. The trained global model produces interval-specific failure risks, reliability curves, and RUL estimates for new sensor windows. 
+
+interval, given that it has survived to the beginning of the interval and given its covariate or feature information zi:
+
+hj (zi) = Pr ( Ti ∈ Ij | Ti > t j−1, zi) , (8) where zi is the representation extracted from the sensor trajectories available at the prediction time. Unlike the continuous-time hazard λ(t | zi), hj (zi) is a conditional failure probability over a finite interval. To connect Eq. (8) with the continuous-time Cox model, let S(t | zi) denote the conditional survival function, rep-resenting the probability that system i remains operational beyond time t. Under Eq. (4), 
+
+S(t | zi) = exp 
+
+
+
+−
+
+Z t
+
+0
+
+λ(u | zi) du 
+
+
+
+= S0(t)exp( β⊤zi),
+
+(9) where S0(t) = exp[ − R t
+
+0 λ0(u) du ]. The conditional proba-bility of surviving interval Ij is 
+
+1 − hj (zi) = Pr ( Ti > t j | Ti > t j−1, zi) = S(tj | zi)
+
+S(tj−1 | zi) .
+
+(10) Let 
+
+Λ0j =
+
+Z tj
+
+tj−1
+
+λ0(u) du (11) denote the baseline cumulative-hazard increment over Ij .Substitution into Eq. (10) gives 
+
+1 − hj (zi) = exp 
+
+h
+
+−Λ0j exp 
+
+
+
+β⊤zi
+
+i 
+
+. (12) Applying the complementary log-log transformation yields 
+
+cloglog {hj (zi)} = log {− log[1 − hj (zi)] } = αj + β⊤zi,
+
+(13) where αj = log Λ 0j . Equivalently, 
+
+hj (zi) = 1 − exp 
+
+n
+
+− exp 
+
+
+
+αj + β⊤zi
+
+o 
+
+. (14) For a reference instance satisfying β⊤zi = 0, Eq. (14) reduces to hj (zi) = 1 − exp {− exp( αj )} . Hence, αj
+
+represents the log baseline cumulative-hazard increment over interval Ij . If the covariates are treated as constant within each interval, discretizing the continuous-time Cox model yields the complementary log-log hazard formulation directly [28], [29]. Therefore, the cloglog link function preserves the proportional-hazards interpretation of the original Cox model after discretization. An alternative commonly used in discrete-time survival analysis is the logit link function, which corresponds to a proportional-odds formulation [30]. The cloglog and logit links yield similar hazard estimates when interval-specific failure probabilities are small. We adopt the cloglog link as it preserves the connection to the continuous-time Cox PH model. Under the formulation, the survival process is represented as a sequence of conditional Bernoulli trials over the at-risk intervals. Thus, the likelihood contribution of system i is 
+
+Li =
+
+JiY
+
+j=1 
+
+hj (zi)yij (1 − hj (zi)) 1−yij . (15) The corresponding mean negative log-likelihood at client k
+
+is 
+
+Lk(Θ) = − 1
+
+Nk
+
+X
+
+> i∈N k
+> Ji
+
+X
+
+> j=1
+
+h
+
+yij log hj (zi)+ (1 − yij ) log (1 − hj (zi)) 
+
+i
+
+.
+
+(16) where the model parameters are collected as Θ = ( ψ, ω, α),with ψ the temporal-encoder parameters, ω the risk-function parameters, and α = (α1, . . . , α M ) the interval-specific baseline parameters. This objective is a binary cross-entropy loss over the stacked system–interval observations. Since each client evaluates Eq. (16) using only its local observa-tions, the objective is client-separable, eliminating the need to construct global Cox risk sets. The time grid determines the temporal resolution of the hazard model. Fine grids resolve short-term variation in risk but increase the number of interval-specific parameters αj
+
+and can produce intervals containing few or no failures. If an interval contains at-risk observations but no failures, the unregularized likelihood drives the corresponding baseline parameter toward −∞ . A coarser grid improves estima-tion stability by pooling events but may smooth short-term changes in risk. In the paper, two construction strategies are considered: equidistant discretization and a censoring-aware adaptive grid based on the Kaplan–Meier (KM) estimator [31]. Under equidistant discretization, the grid is determined by a single width ∆t, with boundaries tj = j∆t, j = 0 , . . . , M .With Ij = ( tj−1, t j ], the interval index of an observed time 
+
+Ti > 0 follows in closed form, 
+
+Ji =
+
+ Ti
+
+∆t
+
+
+
+. (17) Uniform spacing is suitable when observations, inspections, or maintenance decisions occur at regular time increments. The second strategy derives the grid from the KM esti-mator. Let u1 < u 2 < · · · denote the distinct failure times observed across all clients and define the pooled counts 
+
+dℓ = X
+
+> i∈N
+
+1(Ti = uℓ, δ i = 1) , rℓ = X
+
+> i∈N
+
+1(Ti ≥ uℓ),
+
+(18) where 1(·) is the indicator function, dℓ and rℓ denote the number of failures and the number of systems at risk at 
+
+uℓ, respectively. The survival function can be estimated nonparametrically using the KM estimator as 
+
+bSKM (t) = Y
+
+> uℓ≤t
+
+
+
+1 − dℓ
+
+rℓ
+
+
+
+. (19) Let tM denote the upper boundary of the modeled follow-up range. For j = 1 , . . . , M − 1, the adaptive boundaries are defined as 
+
+tj = inf 
+
+
+
+t : bSKM (t) ≤ 1 − jM
+
+h
+
+1 − bSKM (tM )
+
+i
+
+. (20) This construction partitions the follow-up period according to the estimated failure-time distribution while accounting for right censoring. It allocates failure information more evenly across intervals and can improve the stability of the estimated interval-specific baseline parameters when failures are unevenly distributed over time. The KM-based grid, unlike the equidistant grid, depends on the failure-time distribution and must therefore be esti-mated from data. To avoid sharing individual failure times, the central server first specifies a common fine reference grid 0 = v0 < v 1 < · · · < v B = tM . For each reference bin b = 1 , . . . , B , client k computes the local number of observed failures d(k) 
+
+> b
+
+= P 
+
+> i∈N k
+
+1(vb−1 < T i ≤ vb, δ i = 1) 
+
+and the local number of systems at risk at the start of the bin 
+
+r(k) 
+
+> b
+
+= P 
+
+> i∈N k
+
+1(Ti > v b−1) . The server aggregates these counts as 
+
+db =
+
+> K
+
+X
+
+> k=1
+
+d(k) 
+
+> b
+
+, rb =
+
+> K
+
+X
+
+> k=1
+
+r(k) 
+
+> b
+
+, (21) and forms the binned KM estimate recursively from 
+
+bSbin KM (v0) = 1 by 
+
+bSbin KM (vb) = bSbin KM (vb−1)
+
+
+
+1 − db
+
+rb
+
+
+
+, (22) with the convention that the factor equals one when rb = 0 .The adaptive boundaries are then obtained from Eq. (20) with bSKM replaced by bSbin KM and broadcast to all clients in one preliminary communication round. The resulting grid remains fixed throughout training. This procedure discloses aggregated event and risk-set counts over the reference bins rather than individual failure times, and the bin width 
+
+vb − vb−1 controls the granularity of that disclosure: a finer reference grid improves the approximation in Eq. (22) but localizes failure times more precisely. 
+
+2) Attention-Based Temporal Representation Learning: 
+
+To incorporate longitudinal degradation information into the proposed model, the sensor sequence Xi is mapped to a covariate representation used in the interval-specific hazard. Static covariates and handcrafted summaries may not fully capture the nonlinear behavior, operating-regime changes, and long-term dependencies in multivariate sensor data [32]. We therefore use an attention-based temporal encoder to learn the representation directly from the sensor sequence. For system i, let Xi = [ xi1, xi2, . . . , xiL ]⊤ ∈ RL×p denote the most recent sensor window available at the prediction time, where xiτ ∈ Rp is the sensor vector at step τ within the window, for τ = 1 , . . . , L , and L is the window length. The window contains only measurements observed at or before the prediction time. A Long Short-Term Memory (LSTM) network first encodes the sequence and produces a hidden state at each time step, 
+
+hiτ = LSTM ψ (xiτ , hi,τ −1) , τ = 1 , . . . , L, (23) where hiτ ∈ Rdh . Subsequently, additive attention [33] assigns each hidden state the score 
+
+eiτ = v⊤ tanh ( Wahiτ + ba) , (24) with the corresponding normalized weight 
+
+aiτ = exp( eiτ )
+
+PLq=1 exp( eiq ) , τ = 1 , . . . , L. (25) The resulting temporal representation is 
+
+zi =
+
+> L
+
+X 
+
+> τ=1
+
+aiτ hiτ . (26) Here, Wa ∈ Rda×dh , ba ∈ Rda , and v ∈ Rda are learned jointly with the LSTM parameters and they are denoted by ψ.To further allow a nonlinear association between the learned representation and failure risk, we replace the linear predictor 
+
+β⊤zi in Eq. (14) with a scalar risk function gω (zi), so that the interval-specific hazard becomes 
+
+hj (zi) = 1 − exp {− exp [ αj + gω (zi)] } . (27) The function gω contains no separate intercept, since any constant offset can be absorbed into the interval baseline parameters αj . As new measurements arrive, a new window and representation are formed, so the predictions can be made over time. 
+
+3) Federated Training and Prognostic Inference: The model is trained collaboratively across K decentralized clients without pooling their sensor trajectories or time-to-event records. Recall that Θ = ( ψ, ω, α) collects the temporal-encoder, risk-function, and interval-baseline param-eters. The global objective is 
+
+bΘ = arg min  
+
+> Θ
+
+L(Θ) = arg min 
+
+> Θ
+> K
+
+X
+
+> k=1
+
+Nk
+
+N Lk(Θ), (28) where Lk is the local negative log-likelihood at client k
+
+defined in Eq. (16). At communication round r, the server broadcasts the global parameters Θ(r) to the participating clients. Each client initializes its local model with these parameters and performs E epochs of gradient-based optimization on Dk,
+
+Θ(r+1)  
+
+> k
+
+= LocalUpdate 
+
+
+
+Θ(r), Dk, E, η 
+
+
+
+, (29) where η is the learning rate. The server then forms the next global model through sample-size-weighted averaging, 
+
+Θ(r+1) =
+
+> K
+
+X
+
+> k=1
+
+Nk
+
+N Θ(r+1)  
+
+> k
+
+. (30) These steps repeat for R communication rounds, yielding the trained parameters Θ(R). The discretization grid is defined before training and shared across clients to ensure consistent interval-specific baseline parameters. Each client constructs its sensor windows and interval-level labels locally, while only model parameters are exchanged during training. After training, the global trained model Θ(R) is used locally to estimate failure risk and RUL. Let hij = hj (zi)
+
+denote the predicted hazard for system i in interval Ij ,based on the temporal representation obtained from the sensor window available at the prediction time. The survival 
+
+Algorithm 1 Federated Training and Prediction for the Proposed Discrete-Time Survival Model 
+
+Require: Client datasets {D k}Kk=1 , common discretization grid {tj }Mj=0 with interval widths ∆j = tj − tj−1,window length L
+
+Require: Communication rounds R, local epochs E, learn-ing rate η
+
+Ensure: Trained global parameters Θ(R); local survival and RUL estimates  
+
+> 1:
+
+Server initializes Θ(0) = ( ψ(0) , ω(0) , α(0) ). 
+
+> 2:
+
+Server broadcasts Θ(0) and {tj }Mj=0 to all clients.  
+
+> 3:
+
+for all clients k = 1 , . . . , K in parallel do  
+
+> 4:
+
+Construct sliding-window sensor sequences of length 
+
+L from {Xi}i∈N k . 
+
+> 5:
+
+Construct interval labels yij from {(Ti, δ i)}i∈N k as in Eq. (7).  
+
+> 6:
+
+end for  
+
+> 7:
+
+for r = 0 , 1, . . . , R − 1 do  
+
+> 8:
+
+for all clients k = 1 , . . . , K in parallel do  
+
+> 9:
+
+Client k receives Θ(r) and sets Θ(r, 0)  
+
+> k
+
+← Θ(r). 
+
+> 10:
+
+for e = 0 , 1, . . . , E − 1 do  
+
+> 11:
+
+Encode each local sensor sequence to obtain 
+
+zi. 
+
+> 12:
+
+Compute interval-specific cloglog hazards 
+
+hj (zi) via Eq. (27).  
+
+> 13:
+
+Evaluate the local discrete-time loss 
+
+Lk(Θ(r,e ) 
+
+> k
+
+). 
+
+> 14:
+
+Update the local parameters over one epoch of minibatch gradient steps: 
+
+Θ(r,e +1)  
+
+> k
+
+← OptimizerStep 
+
+
+
+Θ(r,e ) 
+
+> k
+
+, ∇L k(Θ(r,e ) 
+
+> k
+
+), η 
+
+
+
+. 
+
+> 15:
+
+end for  
+
+> 16:
+
+Set Θ(r+1)  
+
+> k
+
+← Θ(r,E ) 
+
+> k
+
+and send Θ(r+1)  
+
+> k
+
+to the server.  
+
+> 17:
+
+end for  
+
+> 18:
+
+Server aggregates the local parameters using FedAvg (Eq. (30)): 
+
+Θ(r+1) ←
+
+> K
+
+X
+
+> k=1
+
+Nk
+
+N Θ(r+1)  
+
+> k
+
+. 
+
+> 19:
+
+end for 
+
+Prediction (per client, using Θ(R)):  
+
+> 20:
+
+Compute interval hazards hij = hj (zi). 
+
+> 21:
+
+Compute survival Sij = Qjℓ=1 (1 − hiℓ ), with Si0 = 1 . 
+
+> 22:
+
+Estimate [RUL ij = 1
+
+Sij 
+
+PMℓ=j+1 ∆ℓ Siℓ , where j = 0 
+
+denotes the prediction origin. probability through the end of interval Ij can be expressed as 
+
+Sij = Pr( Ti > t j | zi) = 
+
+> j
+
+Y
+
+> ℓ=1
+
+(1 − hiℓ ) , (31) and the cumulative probability of failure by tj is its comple-Fig. 2. Turbofan-engine structure represented in the C-MAPSS simulation environment. 
+
+ment, 
+
+Fij = 1 − Sij . (32) Conditional on survival through tj , the RUL is 
+
+RUL ij = E [Ti − tj | Ti > t j , zi] , (33) which is approximated from the estimated survival curve over the remaining horizon as 
+
+[RUL ij =
+
+> M
+
+X
+
+> ℓ=j+1
+
+∆ℓ
+
+Siℓ 
+
+Sij 
+
+, ∆ℓ = tℓ − tℓ−1. (34) Here Siℓ /S ij is the conditional probability of surviving beyond tℓ given survival beyond tj . For an equidistant grid 
+
+∆ℓ = ∆ t; for the KM-based grid ∆ℓ accounts for unequal interval lengths. At the prediction origin, j = 0 and Si0 = 1 .As new sensor measurements become available, each client updates the input window and recomputes the haz-ard, survival, and RUL trajectories. The complete federated training and local prediction procedure is summarized in Algorithm 1. III. C ASE STUDY 
+
+A. Data Description 
+
+The proposed framework is evaluated on the NASA Commercial Modular Aero-Propulsion System Simulation (C-MAPSS) dataset [34], a widely used benchmark for prognostics and health management. C-MAPSS contains four run-to-failure turbofan-engine subsets, FD001–FD004, with different combinations of operating regimes and fault modes. These subsets represent progressively increasing levels of prognostic heterogeneity. Each engine starts in a healthy condition and is observed over consecutive flight cycles until failure in the training data or until a pre-failure truncation point in the test data. At each cycle, three operating settings and 21 sensor measurements are recorded from major engine components, including the fan, low-pressure compressor, high-pressure compressor, high-pressure turbine, and low-pressure turbine, as illustrated in Fig. 2. The nominal subset characteristics and the numbers of test engines retained after window construction are summarized in Table I.                        
+
+> TABLE I CHARACTERISTICS OF THE C-MAPSS S UBSETS
+> Dataset Regimes Fault modes Train engines Test engines *
+> FD001 11100 96 FD002 61260 244 FD003 12100 99 FD004 62249 232
+> *Numbers retained after excluding test trajectories with 40 or fewer cycles, which cannot form a complete input window for L= 40 .
+
+B. Data Preprocessing 
+
+The raw trajectories are transformed into cycle-level RUL targets. For training engine i, let T fail  
+
+> i
+
+denote its final recorded cycle, corresponding to functional failure. Follow-ing common C-MAPSS practice, a piecewise-linear target is used to limit the influence of the early-life region, where degradation information is weak [15]. With the maximum RUL set to Rmax = 125 , the training target at cycle t is 
+
+RUL train  
+
+> i
+
+(t) = min  T fail  
+
+> i
+
+− t, R max 
+
+ .
+
+Test trajectories are truncated before failure, and C-MAPSS provides the ground-truth RUL only at the final observed cycle. Let Tobs ,i be the last observed cycle of test engine 
+
+i, and let RUL end  
+
+> i
+
+be the corresponding provided RUL. The implied failure cycle is 
+
+T fail  
+
+> i
+
+= Tobs ,i + RUL end  
+
+> i
+
+.
+
+The RUL at any observed test cycle t is then reconstructed as 
+
+RUL test  
+
+> i
+
+(t) = min 
+
+h
+
+RUL end  
+
+> i
+
++ ( Tobs ,i − t) , R max 
+
+i
+
+.
+
+This reconstruction provides a target for every observed test cycle. Accordingly, the reported RUL metrics are computed over all valid test windows rather than only at the final ob-served cycle, enabling trajectory-level evaluation throughout the degradation process. To account for operating-condition differences, the sensor and operating-setting channels are normalized using regime-specific training statistics [35]. The three operating-setting variables are clustered by k-means into the known number of operating regimes: K = 1 for FD001 and FD003 and 
+
+K = 6 for FD002 and FD004. Within each regime, every channel is standardized to zero mean and unit variance using the corresponding training-set mean and standard deviation. The same transformations are then applied to the test data. This regime-aware normalization reduces condition-induced offsets and scale differences in the raw measurements. The normalized trajectories are segmented using a sliding window of length L, with each window forming a multi-variate input sequence. Based on the sensitivity analysis in Section III-D.1, L = 40 is used in the main experiments. Test trajectories containing fewer than 40 cycles cannot form a complete input window and are therefore excluded from evaluation. Accordingly, Table I reports the actual numbers of test engines included in the experiments. C. Evaluation Metrics 
+
+We evaluate the proposed framework in terms of survival discrimination, calibration of predicted survival probabilities, and cycle-level RUL prediction accuracy. 
+
+1) Concordance index (C-index): The C-index assesses survival discrimination by measuring the concordance be-tween predicted risk rankings and observed failure times. A higher value indicates that engines failing earlier are more consistently assigned higher predicted risk. It is calculated by 
+
+C = P (ri > r j | Ti < T j ) , (35) where ri is the aggregate risk score and Ti is the true remaining life of engine i. A value of 1 indicates perfect ranking, whereas 0.5 corresponds to random ranking. 
+
+2) Integrated Brier score (IBS): The IBS measures the squared discrepancy between the predicted survival proba-bility ˆS(t | zi) and the observed survival status yi(t) over the evaluation horizon: 
+
+IBS = 1
+
+Tmax 
+
+Z Tmax 
+
+> 0
+
+1
+
+N
+
+> N
+
+X
+
+> i=1
+
+h ˆS(t | zi) − yi(t)
+
+i2
+
+dt. (36) Lower IBS values indicate better probabilistic accuracy. 
+
+3) Mean absolute error (MAE): The MAE measures the average absolute difference between the predicted and ground-truth RUL values across all valid test windows: 
+
+MAE = 
+
+PNi=1 
+
+PTobs ,i  
+
+> t=L
+
+[RUL i(t) − RUL test  
+
+> i
+
+(t)
+
+PNi=1 (Tobs ,i − L + 1) , (37) where [RUL i(t) denotes the RUL predicted for engine i at cycle t.
+
+4) Root mean squared error (RMSE): RMSE measures the square root of the average squared difference between the predicted and ground-truth RUL values across all valid test windows: 
+
+RMSE = 
+
+vuuutPNi=1 
+
+PTobs ,i 
+
+> t=L
+
+[RUL i(t) − RUL test  
+
+> i
+
+(t)
+
+2
+
+PNi=1 (Tobs ,i − L + 1) .
+
+(38) 
+
+D. Results and Discussion 
+
+We evaluate the proposed framework in two stages. First, FD001 is used as a controlled setting to select the tem-poral window length and event-time discretization scheme under federated training. The selected settings are then fixed and applied uniformly across FD001–FD004 and across all training paradigms, ensuring that subsequent differences reflect dataset heterogeneity and training strategy rather than paradigm-specific hyperparameter tuning. Second, using these fixed settings, we assess sensitivity to the link function and compare federated, centralized, and local-only training across all four subsets.                                                                                           
+
+> TABLE II WINDOW -L ENGTH SENSITIVITY ON FD001 (M EAN ±STANDARD
+> DEVIATION OVER FIVE SEEDS )Window size C-index ↑IBS ↓RMSE ↓
+> 15 0.757 ±0.004 0.0605 ±0.0010 19 .19 ±0.45
+> 20 0.761 ±0.004 0.0618 ±0.0010 18 .62 ±0.58
+> 25 0.765 ±0.007 0.0650 ±0.0024 19 .21 ±1.00
+> 30 0.781 ±0.022 0.0659 ±0.0028 18 .04 ±1.28
+> 35 0.799 ±0.014 0.0648 ±0.0027 17 .25 ±0.76
+> 40 0.794 ±0.024 0.0656 ±0.0050 17 .71 ±1.65
+> 45 0.801 ±0.024 0.0671 ±0.0029 17 .42 ±0.89
+> 50 0.773 ±0.021 0.0786 ±0.0043 19 .62 ±0.87 20 30 40 50
+> Window size
+> 0.75
+> 0.76
+> 0.77
+> 0.78
+> 0.79
+> 0.80
+> 0.81
+> 0.82
+> C-index
+> C-index IBS
+> 0.060
+> 0.065
+> 0.070
+> 0.075
+> 0.080
+> IBS
+> Fig. 3. Sensitivity of the proposed model to temporal window length on FD001.
+
+1) Selection of Window Length and Discretization Scheme: We first examine sensitivity to the temporal win-dow length by varying L ∈ { 15 , 20 , 25 , 30 , 35 , 40 , 45 , 50 }.Each configuration is evaluated over five runs with different random seeds, and the results are reported as the mean ±
+
+standard deviation. The corresponding results are presented in Table II and Fig. 3. It is observed that the mean C-index generally increases with L, reaching approximately 0.80 for 
+
+L = 35 –45. RMSE also decreases over this range relative to the shorter windows. IBS varies moderately for L ≤ 45 
+
+but increases from 0.0671 at L = 45 to 0.0786 at L = 50 ,indicating deterioration in calibration for the longest window. Within the stable region L = 35 –45, the differences in the mean metrics are small relative to the observed seed-to-seed variability. We therefore select L = 40 as a representative interior point that balances discrimination, calibration, and RUL prediction accuracy while avoiding the performance degradation observed at L = 50 .
+
+2) Event-Time Discretization: Using L = 40 , we next compare equidistant and KM-based event-time discretization. A target of 50 intervals is specified for both strategies to ensure a comparable initial temporal resolution. For equidis-tant discretization, this yields 50 uniformly spaced intervals. For KM-based discretization, repeated empirical quantiles are merged, resulting in 37 distinct effective intervals. As shown in Table III, KM-based discretization reduces the mean IBS from 0.0694 to 0.0656 and the mean RMSE from 18.46 to 17.70, corresponding to relative reductions TABLE III COMPARISON OF EVENT -T IME DISCRETIZATION SCHEMES ON FD001 (L = 40 ; M EAN ± STANDARD DEVIATION OVER FIVE SEEDS )Scheme Bins C-index ↑ IBS ↓ RMSE ↓
+
+KM (default) 37 0.787 ± 0.024 0.0656 ± 0.0050 17 .70 ± 1.64 
+
+Equidistant 50 0.785 ± 0.011 0.0694 ± 0.0034 18 .46 ± 0.63 FD001 FD002 FD003 FD004      
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> C-index (higher is better)
+> (a) Discrimination
+> FD001 FD002 FD003 FD004
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> IBS (lower is better)
+> (b) Calibration
+> Federated Centralized Local-avg
+
+Fig. 4. Comparison of federated, centralized, and local-average training across the four C-MAPSS subsets. Federation consistently improves on local-only training, while its relationship with centralized training varies with subset heterogeneity. 
+
+of approximately 5.5% and 4.1%, respectively. The mean C-index also increases slightly from 0.785 to 0.787. Thus, the KM-based grid achieves better calibration and lower RUL prediction error using a more compact event-time representation, while maintaining comparable discrimination. Based on these results, KM-based discretization is used in the remaining experiments. 
+
+3) Effect of the Link Function: Using the selected window length and event-time discretization scheme, we next evalu-ate the sensitivity of the framework to the link function. The cloglog formulation is compared with a logit-link benchmark using (L=40) and KM-based event-time discretization. As discussed in Section II-C.1, the cloglog link arises from discretizing the continuous-time Cox PH model, whereas the logit link corresponds to a discrete-time proportional-odds formulation. This comparison therefore serves as a robustness analysis, assessing whether the predictive per-formance of the framework depends strongly on the link-function assumption. Table IV reports the corresponding C-index and IBS values, together with paired Wilcoxon signed-rank tests at the federated and local levels. The two link functions yield broadly comparable predic-tive performance. No federated-level comparison and no C-index comparison reaches the nominal p < 0.05 level. At the local level, cloglog yields lower mean IBS on FD002 and FD004, with unadjusted p-values of 0.020 and 0.010, respectively. However, neither difference remains significant after Holm correction across the 16 tests. These findings indicate that the main predictive results are not driven by the choice between the cloglog and logit links and do not establish a consistent advantage for either formulation. The cloglog link is retained in the remaining experiments as it preserves the proportional-hazards interpretation of the continuous-time Cox model. FD001 FD002 FD003 FD004        
+
+> 0.60
+> 0.65
+> 0.70
+> 0.75
+> 0.80
+> 0.85
+> C-index
+> (a) Discrimination
+> FD001 FD002 FD003 FD004
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> 0.18
+> IBS
+> (b) Calibration
+> Individual clients Local-avg Federated ±std
+
+Fig. 5. Distribution of local-client C-index values across the ten clients, with the federated result shown as a reference. The spread illustrates the variability and instability of isolated local training. 
+
+4) Comparison of Training Strategies: Using the design choices selected on FD001, we evaluate the proposed frame-work across all four C-MAPSS subsets, FD001–FD004, which represent different operating conditions and fault modes. For each subset, the training engines are partitioned by engine identity across (K=10) disjoint simulated clients, with all windows from the same engine assigned to asingle client. This preserves complete engine trajectories and represents a multisite setting in which engine data cannot be pooled. Federated training aggregates client updates, while the local-only baseline trains one independent model per client without aggregation. Centralized training uses the same engines pooled into a single training set. All three paradigms are evaluated on the same held-out test engines, ensuring that the reported differences reflect the training strategy rather than differences in training or test data. Table V and Fig. 4 compare the performance of federated, centralized, and local-only training, while Fig. 5 presents the distribution of C-index values across local clients. From Table V and Fig. 4 we can observe that the proposed federated model outperforms the Local-avg baseline across all four subsets and all four metrics. Relative to Local-avg, federated training increases the C-index by 0.027–0.105, decreases IBS by 0.0320–0.0674, decreases MAE by 2.43– 7.78 cycles, and decreases RMSE by 2.03–10.25 cycles. The largest improvements are observed on FD001–FD003. Although the gains are smaller on FD004, which contains six operating conditions and two fault modes, federated training continues to improve all four metrics relative to Local-avg. The client-level dispersion in Fig. 5 further illustrates the instability of isolated local training. On FD001, for example, the Local-worst result has a C-index of 0.574 and an RMSE of 36.54 cycles, compared with 0.787 and 17.70 cycles, respectively, under federated training. These results show that federated aggregation not only improves average predictive performance but also reduces the risk of poor outcomes caused by limited client-specific data. Compared with centralized training, federated perfor-mance is dataset- and metric-dependent. On FD001, the federated model shows lower discrimination but better cali-bration, while MAE and RMSE remain similar. On FD002, federated training performs better across all four metrics. In contrast, centralized training retains a clear advantage on FD003 and FD004, particularly in discrimination and RUL TABLE IV COMPARISON OF CLOGLOG AND LOGIT LINK FUNCTIONS USING PAIRED WILCOXON SIGNED -R ANK TESTS (L = 40 )Dataset Level Metric n Logit Cloglog p-value FD001 Federated C-index 5 0.7959 0.7871 0.313 Federated IBS 5 0.0643 0.0656 0.313 Local C-index 10 0.6859 0.6855 0.846 Local IBS 10 0.1270 0.1243 0.375 FD002 Federated C-index 5 0.8463 0.8483 0.625 Federated IBS 5 0.0649 0.0638 0.313 Local C-index 10 0.7412 0.7428 0.846 Local IBS 10 0.1269 0.1224 0.020* FD003 Federated C-index 5 0.7372 0.7432 0.625 Federated IBS 5 0.0558 0.0572 0.438 Local C-index 10 0.6747 0.6739 1.000 Local IBS 10 0.1253 0.1246 0.846 FD004 Federated C-index 5 0.7941 0.7577 0.063 Federated IBS 5 0.0567 0.0635 0.125 Local C-index 10 0.7286 0.7308 0.625 Local IBS 10 0.0982 0.0955 0.010* TABLE V COMPARISON OF FEDERATED , C ENTRALIZED , AND LOCAL -O NLY TRAINING (M EAN ± STANDARD DEVIATION OVER FIVE SEEDS ; L OCAL 
+
+SUMMARIES COMPUTED ACROSS TEN CLIENTS )Dataset Method C-index ↑ IBS ↓ MAE ↓ RMSE ↓
+
+FD001 Federated (proposed) 0.787 ± 0.024 0.0656 ± 0.0050 11 .42 ± 0.71 17 .70 ± 1.64 
+
+Centralized 0.838 ± 0.009 0.0742 ± 0.0031 11 .11 ± 0.44 17 .25 ± 0.35 
+
+Local-avg 0.686 ± 0.050 0.1243 ± 0.0253 18 .51 ± 3.87 26 .88 ± 4.31 
+
+Local-best 0.726 ± 0.042 0.0946 ± 0.0113 15 .11 ± 1.89 23 .00 ± 2.54 
+
+Local-worst 0.574 ± 0.068 0.1723 ± 0.0281 27 .15 ± 5.13 36 .54 ± 5.88 
+
+FD002 Federated (proposed) 0.848 ± 0.006 0.0638 ± 0.0017 11 .05 ± 0.38 18 .02 ± 0.49 
+
+Centralized 0.837 ± 0.005 0.0861 ± 0.0030 12 .52 ± 0.28 19 .01 ± 0.44 
+
+Local-avg 0.743 ± 0.030 0.1224 ± 0.0186 17 .34 ± 2.32 24 .94 ± 2.53 
+
+Local-best 0.765 ± 0.019 0.1155 ± 0.0105 16 .35 ± 1.12 23 .73 ± 1.43 
+
+Local-worst 0.698 ± 0.010 0.1267 ± 0.0057 17 .55 ± 0.58 26 .00 ± 0.41 
+
+FD003 Federated (proposed) 0.743 ± 0.023 0.0572 ± 0.0058 9.33 ± 0.94 17 .64 ± 1.65 
+
+Centralized 0.814 ± 0.011 0.0493 ± 0.0027 7.18 ± 0.32 13 .43 ± 0.46 
+
+Local-avg 0.674 ± 0.039 0.1246 ± 0.0333 17 .11 ± 4.32 27 .89 ± 5.39 
+
+Local-best 0.748 ± 0.014 0.0824 ± 0.0025 11 .27 ± 0.33 21 .75 ± 0.63 
+
+Local-worst 0.629 ± 0.010 0.1166 ± 0.0113 16 .45 ± 1.23 26 .94 ± 1.43 
+
+FD004 Federated (proposed) 0.758 ± 0.028 0.0635 ± 0.0033 10 .49 ± 0.55 20 .44 ± 1.04 
+
+Centralized 0.827 ± 0.007 0.0588 ± 0.0027 8.24 ± 0.21 16 .00 ± 0.29 
+
+Local-avg 0.731 ± 0.030 0.0955 ± 0.0133 12 .92 ± 1.69 22 .47 ± 2.08 
+
+Local-best 0.789 ± 0.011 0.0767 ± 0.0019 10 .63 ± 0.16 20 .04 ± 0.61 
+
+Local-worst 0.691 ± 0.008 0.1072 ± 0.0051 14 .35 ± 0.77 24 .33 ± 0.99 
+
+prediction accuracy. The greater fault-mode heterogeneity of these subsets may reduce the effectiveness of global parame-ter aggregation. Nevertheless, the federated model continues to outperform Local-avg across every metric, demonstrating that cross-client collaboration remains beneficial even when centralized performance is not attained. Table VI summarizes the performance preservation of federated and local-only training relative to centralized train-ing. Across all four C-MAPSS subsets, federated training preserves a substantially larger fraction of centralized perfor-mance than local-only training. On FD001 and FD002, the federated model achieves performance close to or better than centralized training for most metrics, indicating that collab-orative learning can effectively recover the benefit of pooled data without direct data sharing. On the more challenging FD003 and FD004 subsets, which involve multiple failure modes, the gap between federated and centralized train-ing becomes more pronounced, particularly for MAE and RMSE. Nevertheless, federated training remains consistently stronger than local-only training, demonstrating the value of cross-client collaboration for survival-based prognostics under data-local constraints. Aggregate metrics can obscure substantial engine-level heterogeneity. Fig. 6 therefore compares federated and cen-tralized predictions for four selected FD001 engines: the best-performing case (Engine 33), the worst-performing case (Engine 79), and two representative intermediate cases (En-gines 16 and 98). For Engines 33, 16, and 98, the federated survival curve declines near the true failure cycle, whereas the centralized curve remains close to bS = 1 for longer 0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0   
+
+> S(t)
+> Engine 33 error 0.0 cyc
+> Best
+> Engine 16 error 8.0 cyc
+> Typical (lower error)
+
+0 20 40 60 80 100 120 
+
+Cycle 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0  
+
+> S(t)
+> Engine 98 error 13.0 cyc
+> Typical (higher error)
+
+0 20 40 60 80 100 120 
+
+Cycle        
+
+> Engine 79 error 58.0 cyc
+> Worst
+> Federated S(tzi)Centralized S(tzi)True failure cycle
+
+Fig. 6. Predicted survival curves for four FD001 test engines selected to span the absolute RUL-error distribution of the federated model, from the best- to the worst-performing case. Solid and dashed curves denote federated and centralized predictions, respectively. Shaded bands indicate ±1 standard deviation across five training seeds, and dotted vertical lines mark the corresponding ground-truth failure cycles. TABLE VI PERFORMANCE PRESERVATION RELATIVE TO CENTRALIZED TRAINING 
+
+(%). Dataset Method PC PIBS PMAE PRMSE 
+
+FD001 Federated 93.9 113.1 97.3 97.5 Local-avg 81.9 59.7 60.0 64.2 FD002 Federated 101.3 134.9 113.3 105.5 Local-avg 88.8 70.3 72.2 76.2 FD003 Federated 91.3 86.2 77.0 76.2 Local-avg 82.8 39.6 42.0 48.1 FD004 Federated 91.7 92.6 78.6 78.2 Local-avg 88.4 61.6 63.8 71.2 For C-index, PC = 100 × CMethod /C Centralized . For IBS, MAE, and RMSE, PE = 100 × ECentralized /E Method . Thus, larger values consistently indicate better performance, and 100% denotes parity with centralized training. 
+
+and crosses bS = 0 .5 later, indicating delayed failure-risk assessment. The opposite pattern is observed for Engine 79, where the federated model predicts failure substantially too late, while the centralized curve more closely reflects the true failure timing. The seed-to-seed uncertainty bands are gen-erally widest during the transition from high to low survival, indicating greater variability when degradation becomes ev-ident. Beyond point RUL error, these results demonstrate an important advantage of survival modeling: the predicted curves characterize the full evolution and uncertainty of failure risk over time rather than providing only a single RUL estimate. Overall, the case study demonstrates that the proposed federated survival framework consistently improves upon local-only training without pooling client data and achieves strong prognostic performance across fleets with diverse operating conditions and fault modes. IV. C ONCLUSION AND FUTURE WORK 
+
+This study developed a federated longitudinal–survival framework for collaborative system prognostics using decen-tralized sensor data. By integrating temporal representation learning with discrete-time Cox proportional-hazards mod-eling, the framework estimates interval-specific failure risks, survival probabilities, and RUL without pooling raw sensor trajectories or individual time-to-event records. The client-separable likelihood enables federated optimization while retaining the proportional-hazards interpretation through the cloglog link. Experiments on the four C-MAPSS subsets show that collaborative training consistently improves per-formance over isolated local models and achieves dataset-dependent performance relative to centralized training. Future work will investigate client-specific and hierar-chical model components to better accommodate heteroge-neous operating conditions and failure mechanisms. Uncer-tainty quantification and calibration methods will also be incorporated to provide prediction intervals and reliability guarantees for RUL estimates. Additional directions include adaptive event-time discretization, partial client participation, communication-efficient optimization, secure aggregation, and differential privacy. Finally, evaluation on additional industrial datasets with censoring, irregular sampling, and re-alistic cross-site heterogeneity will be conducted to assess the generalizability and deployment readiness of the proposed framework. REFERENCES [1] Y. Lei, N. Li, L. Guo, N. Li, T. Yan, and J. Lin, “Machinery health prognostics: A systematic review from data acquisition to rul prediction,” Mechanical systems and signal processing , vol. 104, pp. 799–834, 2018. [2] E. Zio, “Prognostics and health management (phm): Where are we and where do we (need to) go in theory and practice,” Reliability Engineering & System Safety , vol. 218, p. 108119, 2022. [3] Y. Wen, M. F. Rahman, H. Xu, and T.-L. B. Tseng, “Recent advances and trends of predictive maintenance from data-driven machine prog-nostics perspective,” Measurement , vol. 187, p. 110276, 2022. [4] T. Zhu, Y. Ran, X. Zhou, and Y. Wen, “A survey of predictive maintenance: Systems, purposes and approaches,” arXiv preprint arXiv:1912.07383 , 2019. [5] Y. Wen, J. Wu, D. Das, and T.-L. B. Tseng, “Degradation modeling and rul prediction using wiener process subject to multiple change points and unit heterogeneity,” Reliability Engineering & System Safety , vol. 176, pp. 113–124, 2018. [6] J. Hu, Q. Sun, and Z.-S. Ye, “Condition-based maintenance planning for systems subject to dependent soft and hard failures,” ieee Trans-actions on Reliability , vol. 70, no. 4, pp. 1468–1480, 2020. [7] Q. Zhou, J. Son, S. Zhou, X. Mao, and M. Salman, “Remaining useful life prediction of individual units subject to hard failure,” IIE transactions , vol. 46, no. 10, pp. 1017–1030, 2014. [8] F. Yan, X. Lin, R. Li, and X. Huang, “Functional principal components analysis on moving time windows of longitudinal data: dynamic prediction of times to event,” Journal of the Royal Statistical Society Series C: Applied Statistics , vol. 67, no. 4, pp. 961–978, 2018. [9] X. Yue and R. A. Kontar, “Joint models for event prediction from time series and survival data,” Technometrics , vol. 63, no. 4, pp. 477–486, 2021. [10] Y. Wen, X. Guo, J. Son, and J. Wu, “A neural-network-based propor-tional hazard model for iot signal fusion and failure prediction,” IISE Transactions , vol. 55, no. 4, pp. 377–391, 2023. [11] S. Brumm, E. Linstead, J. Chen, N. Balakrishnan, and Y. Wen, “Joint modeling of degradation signals and time-to-event data for the pre-diction of remaining useful life,” Quality and Reliability Engineering International , vol. 41, no. 2, pp. 607–624, 2025. [12] J. L. Katzman, U. Shaham, J. Bates, A. Cloninger, T. Jiang, and Y. Kluger, “Deepsurv: personalized treatment recommender system using a cox proportional hazards deep neural network,” BMC Medical Research Methodology , vol. 18, no. 1, p. 24, 2018. [13] C. Lee, W. R. Zame, J. Yoon, and M. van der Schaar, “Deephit: A deep learning approach to survival analysis with competing risks,” in 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , vol. 32, no. 1, 2018. [14] G. Sateesh Babu, P. Zhao, and X.-L. Li, “Deep convolutional neural network based regression approach for estimation of remaining useful life,” in International conference on database systems for advanced applications . Springer, 2016, pp. 214–228. [15] X. Li, Q. Ding, and J.-Q. Sun, “Remaining useful life estimation in prognostics using deep convolution neural networks,” Reliability Engineering & System Safety , vol. 172, pp. 1–11, 2018. [16] Z. Zhang, W. Song, and Q. Li, “Dual aspect self-attention based on transformer for remaining useful life prediction,” IEEE Transactions on Instrumentation and Measurement , vol. 71, pp. 1–11, 2022. [17] K. Zhang, T. Xia, D. Wang, G. Chen, E. Pan, and L. Xi, “Privacy-preserving and sensor-fused framework for prognostic & health man-agement in leased manufacturing system,” Mechanical Systems and Signal Processing , vol. 184, p. 109666, 2023. [18] H. B. McMahan, E. Moore, D. Ramage, S. Hampson, and B. A. y Arcas, “Communication-efficient learning of deep networks from decentralized data,” in Proceedings of the 20th International Confer-ence on Artificial Intelligence and Statistics , 2017. [19] P. Kairouz, H. B. McMahan, B. Avent, A. Bellet, M. Bennis, A. N. Bhagoji, K. Bonawitz, Z. Charles, G. Cormode, R. Cummings et al. ,“Advances and open problems in federated learning,” Foundations and trends® in machine learning , vol. 14, no. 1–2, pp. 1–210, 2021. [20] T. Li, A. K. Sahu, M. Zaheer, M. Sanjabi, A. Talwalkar, and V. Smith, “Federated optimization in heterogeneous networks,” in Proceedings of Machine Learning and Systems , vol. 2, 2020, pp. 429–450. [21] S. P. Karimireddy, S. Kale, M. Mohri, S. J. Reddi, S. U. Stich, and A. T. Suresh, “Scaffold: Stochastic controlled averaging for federated learning,” in Proceedings of the 37th International Conference on Machine Learning , 2020, pp. 5132–5143. [22] M. Dhada, A. K. Jain, and A. K. Parlikad, “Empirical Convergence Analysis of Federated Averaging for Failure Prognosis*,” IFAC-PapersOnLine , vol. 53, pp. 360–365, Jan. 2020. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S2405896320302081 [23] A. Arunan, Y. Qin, X. Li, and C. Yuen, “A federated learning-based industrial health prognostics for heterogeneous edge devices using matched feature extraction,” arXiv preprint arXiv:2305.07854 , 2023. [24] D. R. Cox, “Partial likelihood,” Biometrika , vol. 62, no. 2, pp. 269– 276, 1975. [25] M. Andreux, A. Manoel, A. Romagnoni, C. Wack et al. , “Feder-ated survival analysis with discrete-time cox models,” arXiv preprint arXiv:2006.08997 , 2020. [26] D. K. Zhang, F. Toni, and M. Williams, “A federated cox model with non-proportional hazards,” in Multimodal AI in healthcare: A paradigm shift in health intelligence . Springer, 2022, pp. 171–185. [27] P. K. Andersen and R. D. Gill, “Cox’s regression model for counting processes: a large sample study,” The annals of statistics , pp. 1100– 1120, 1982. [28] R. L. Prentice and L. A. Gloeckler, “Regression analysis of grouped survival data with application to breast cancer data,” Biometrics , pp. 57–67, 1978. [29] J. D. Kalbfleisch and R. L. Prentice, The statistical analysis of failure time data . John Wiley & Sons, 2002. [30] P. D. Allison, “Discrete-time methods for the analysis of event histories,” Sociological methodology , vol. 13, pp. 61–98, 1982. [31] J. T. Rich, J. G. Neely, R. C. Paniello, C. C. Voelker, B. Nussenbaum, and E. W. Wang, “A practical guide to understanding kaplan-meier curves,” Otolaryngology—Head and Neck Surgery , vol. 143, no. 3, pp. 331–336, 2010. [32] R. Zhou, N. Gebraeel, and N. Serban, “Degradation modeling and monitoring of truncated degradation signals,” IIE Transactions , vol. 44, no. 9, pp. 793–803, 2012. [33] D. Bahdanau, K. Cho, and Y. Bengio, “Neural machine trans-lation by jointly learning to align and translate,” arXiv preprint arXiv:1409.0473 , 2014. [34] E. Ramasso and A. Saxena, “Performance benchmarking and analysis of prognostic methods for cmapss datasets.” International Journal of Prognostics and Health Management , vol. 5, no. 2, pp. 1–15, 2014. [35] T. Wang, J. Yu, D. Siegel, and J. Lee, “A similarity-based prognostics approach for remaining useful life estimation of engineered systems,” in 2008 international conference on prognostics and health manage-ment . IEEE, 2008, pp. 1–6.
