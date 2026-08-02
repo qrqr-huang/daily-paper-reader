@@ -1,0 +1,54 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-02T21:29:30.707892+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2607.23482v1",
+      "source": "arxiv",
+      "title": "Charging Phase Health Indicators for Battery State-of-Health Estimation: A Systematic Comparison of CC, CV, and Combined Approaches under Cross-Battery Validation",
+      "abstract": "Accurate State-of-Health estimation is essential for safe battery operation and cost-effective maintenance. Although numerous health indicators have been derived from constant-current (CC) and constant-voltage (CV) charging phases, their effectiveness under realistic cross-battery validation remains insufficiently studied. This work addresses this gap through a systematic comparison of CC-only, CV-only, and combined indicator sets using rigorous Leave-One-Battery-Out (LOBO) validation on the NASA battery aging dataset. Four CV-phase indicators and CC phase duration are evaluated individually and in combination. Results show that the combined CC+CV approach achieves the best performance (R2 = 0.874), confirming that CC and CV phases capture complementary degradation information. Moreover, a 119% performance gap is observed between standard 5-fold cross-validation and LOBO validation, indicating that conventional evaluation overestimates practical accuracy. Based on these findings, practical guidelines are provided for indicator selection under data and computational constraints.",
+      "authors": [
+        "Huy Hoang Le",
+        "Kim-Anh Nguyen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-26T06:12:16+00:00",
+      "link": "https://arxiv.org/pdf/2607.23482v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Systematic comparison of charging phase health indicators for battery state-of-health estimation",
+      "llm_evidence_cn": "系统比较恒流、恒压及组合充电阶段健康指标用于电池健康状态估计",
+      "llm_evidence": "系统比较恒流、恒压及组合充电阶段健康指标用于电池健康状态估计",
+      "canonical_evidence": "系统比较恒流、恒压及组合充电阶段健康指标用于电池健康状态估计",
+      "llm_tldr_en": "The paper systematically compares CC-only, CV-only, and combined charging-phase health indicators for SOH estimation under cross-battery validation on NASA dataset, showing combined CC+CV approach achieves best accuracy.",
+      "llm_tldr_cn": "该文针对电池健康状态估计，系统比较了恒流、恒压及组合充电阶段健康指标在跨电池验证下的效果。使用NASA电池老化数据集进行留一电池交叉验证，评估了四种CV指标和CC持续时间。结果表明，组合CC+CV方法实现了最佳估计精度，为可靠SOH监测提供了实用方案。",
+      "llm_tldr": "该文针对电池健康状态估计，系统比较了恒流、恒压及组合充电阶段健康指标在跨电池验证下的效果。使用NASA电池老化数据集进行留一电池交叉验证，评估了四种CV指标和CC持续时间。结果表明，组合CC+CV方法实现了最佳估计精度，为可靠SOH监测提供了实用方案。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

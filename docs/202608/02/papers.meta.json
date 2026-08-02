@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-02",
+  "date": "2026-08-02",
+  "generated_at": "2026-08-02T21:33:01",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/02/2607.23482v1-charging-phase-health-indicators-for-battery-state-of-health-estimation-a-systematic-comparison-of-cc-cv-and-combined-approaches-under-cross-battery-validation",
+      "section": "deep",
+      "title_en": "Charging Phase Health Indicators for Battery State-of-Health Estimation: A Systematic Comparison of CC, CV, and Combined Approaches under Cross-Battery Validation",
+      "authors": "Huy Hoang Le, Kim-Anh Nguyen",
+      "date": "2026-07-26",
+      "pdf": "https://arxiv.org/pdf/2607.23482v1",
+      "score": "9.0",
+      "evidence": "系统比较恒流、恒压及组合充电阶段健康指标用于电池健康状态估计",
+      "tldr": "电池健康状态估计对安全运行和维护至关重要，但恒流(CC)和恒压(CV)充电阶段健康指标在真实跨电池验证下的有效性研究不足。本研究在NASA电池老化数据集上，采用严格的留一电池交叉验证，系统比较了CC、CV及两者组合指标。结果表明，CC+CV组合方法获得最佳性能（R²=0.874），确认CC和CV阶段捕获互补退化信息。此外，标准5折交叉验证相比LOBO验证高估性能119%，强调实际评估的重要性。基于此，为资源受限场景提供了指标选择实践指南。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Accurate State-of-Health estimation is essential for safe battery operation and cost-effective maintenance. Although numerous health indicators have been derived from constant-current (CC) and constant-voltage (CV) charging phases, their effectiveness under realistic cross-battery validation remains insufficiently studied. This work addresses this gap through a systematic comparison of CC-only, CV-only, and combined indicator sets using rigorous Leave-One-Battery-Out (LOBO) validation on the NASA battery aging dataset. Four CV-phase indicators and CC phase duration are evaluated individually and in combination. Results show that the combined CC+CV approach achieves the best performance (R2 = 0.874), confirming that CC and CV phases capture complementary degradation information. Moreover, a 119% performance gap is observed between standard 5-fold cross-validation and LOBO validation, indicating that conventional evaluation overestimates practical accuracy. Based on these findings, practical guidelines are provided for indicator selection under data and computational constraints.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
