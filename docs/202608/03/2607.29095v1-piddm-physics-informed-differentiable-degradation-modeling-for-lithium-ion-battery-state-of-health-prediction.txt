@@ -1,0 +1,345 @@
+Title: PiDDM: Physics-Informed Differentiable Degradation Modeling for Lithium-Ion Battery State-of-Health Prediction
+
+URL Source: https://arxiv.org/pdf/2607.29095v1
+
+Published Time: Mon, 03 Aug 2026 00:37:31 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# PiDDM: Physics-Informed Differentiable Degradation Modeling for Lithium-Ion Battery State-of-Health Prediction 
+
+Zeping Chen a, Ruda Jian b, Sachin Sigdel b, Guoping Xiong b, Jian-Xun Wang c,d , Tengfei Luo a,c, ∗
+
+> aDepartment of Chemical and Biomolecular Engineering, University of Notre Dame, Notre Dame, IN, USA
+> bDepartment of Mechanical Engineering, The University of Texas at Dallas, Richardson, TX, USA
+> cDepartment of Aerospace and Mechanical Engineering, University of Notre Dame, Notre Dame, IN, USA
+> dSibley School of Mechanical and Aerospace Engineering, Cornell University, Ithaca, NY, United States of America
+
+Abstract 
+
+Accurate prediction of lithium-ion battery state-of-health (SOH) is essential for the reliable operation of modern energy storage systems. However, purely data-driven machine learning models often general-ize poorly across different cycling protocols and may produce physically implausible predictions during long-term extrapolation. To address these limitations, we developed a physics-informed differentiable degradation modeling framework (PiDDM) for lithium-ion battery SOH degradation prediction. The proposed framework incorporates empirical Arrhenius degradation kinetics associated with solid elec-trolyte interphase (SEI) growth and loss of lithium inventory (LLI) into the neural network training objec-tive. By embedding this degradation regularization into the loss function, PiDDM encourages physically consistent monotonic capacity fade under diverse operating conditions. We evaluate the model on a public dataset containing 55 batteries cycled under six distinct operating protocols. PiDDM achieves the lowest average prediction error compared to other existing models, outperforming both a standard multilayer perceptron (MLP) and a baseline physics-informed neural network (PINN), with a substan-tially reduced mean squared error. In extrapolation tests, the models are trained on only the first 90% of each battery’s cycle life and evaluated on the remaining unseen 10%. Under this setting, PiDDM ac-curately captures the accelerated end-of-life degradation while avoiding the non-physical capacity re-generation observed in the baseline models. These results demonstrate that incorporating degradation physics into neural network training improves both predictive accuracy and physical consistency, pro-viding a promising framework for practical battery health monitoring. 
+
+Keywords: Machine learning, Lithium-ion batteries, State-of-health, Battery degradation 
+
+> ∗Corresponding author: tluo@nd.edu arXiv:2607.29095v1 [cs.LG] 31 Jul 2026
+
+1. Introduction 
+
+Lithium-ion batteries have become the dominant rechargeable energy storage technology world-wide, supporting electrified transportation, consumer electronics, and an increasing share of stationary storage for renewable energy integration [1–5]. Their importance continues to grow as electric vehicle adoption accelerates. In 2023, nearly 14 million new electric cars were registered globally, representing a 35% increase relative to 2022 [6]. This growth is driving a rapid rise in battery demand. The Interna-tional Energy Agency estimated that demand for electric-vehicle batteries exceeded 750 GWh in 2023, a 40% increase compared with 2022 [7]. These trends underscore the central role of lithium-ion bat-teries in modern energy systems. However, their performance and service life remain constrained by aging and degradation. During storage and cycling, capacity decreases and internal resistance increases, reducing usable energy and power while potentially increasing safety risks. Understanding how degrada-tion evolves under different operating protocols is, therefore, essential for improving battery utilization, enabling reliable health management, and designing charging and discharging strategies that extend service life [8–12]. Models are available for predicting battery life but face persistent challenges in practical deployment. For example, physics-based models, particularly porous electrode models, provide mechanistic descrip-tions of coupled transport and electrochemical processes and can help interpret degradation behavior in terms of underlying physical mechanisms [12–16]. However, their application in real-world settings often requires extensive parameterization and calibration, and many of the required parameters are dif-ficult to identify from routine measurements [16–18]. As a result, physics-based approaches are fre-quently combined with estimation or data-driven components to compensate for limited observability, highlighting the difficulty of relying on physics alone for robust battery state tracking in practice [17, 19]. In parallel, data-driven methods have shown considerable promise for degradation forecasting, but they often struggle to generalize when operating conditions differ from those represented in the training data, particularly under accelerated aging or protocol shifts [20–24]. These limitations motivate the develop-ment of methods that preserve physical grounding while improving robustness across diverse operating conditions. Deep learning has advanced rapidly across a wide range of scientific and engineering disciplines, including manufacturing [25], computational mechanics [26], and battery modeling [20–23, 27–29]. In the battery field, the increasing availability of public datasets [20, 21, 27–29] and the ability of neural 2networks to learn directly from voltage, current, and time-series measurements have made machine learning an important direction for state-of-health (SOH) prediction. Many studies have reported strong predictive accuracy under controlled conditions and within specific cycling protocols [20–23, 27–29]. However, performance often degrades when models are evaluated outside the training distribution, es-pecially when both charging and discharging protocols vary. This limitation is critical for real-world applications, where operating conditions differ substantially across users, climates, and use cases. Akey challenge is therefore to develop learning-based health models that remain accurate, stable, and physically credible across a broad range of cycling protocols without extensive retraining for each new condition. To address this challenge, we developed Physics-informed Differentiable degradation modeling (PiDDM) for battery SOH prediction. Unlike conventional physics-informed neural networks (PINNs) that impose generic residual penalties [30, 31], PiDDM embeds battery-aging kinetics as a degradation-direction con-straint that directly regularizes the temporal evolution of SOH. In particular, the model accounts for degradation associated with solid electrolyte interphase growth and loss of lithium inventory [11, 12, 32, 33], thereby encouraging physically consistent capacity fade under diverse operating conditions. We evaluate PiDDM on a public dataset of 55 batteries [27] cycled under six distinct operating protocols, ranging from constant-current conditions to highly dynamic load profiles. Compared with a standard multilayer perceptron (MLP) and a baseline PINN, PiDDM achieves lower average prediction error and improved extrapolation performance. In particular, when the models are trained only on the first 90% of each battery’s cycle life and evaluated on the remaining unseen 10%, PiDDM captures the accelerated end-of-life degradation more accurately while avoiding the non-physical capacity regeneration observed in the baseline models. These results demonstrate the value of incorporating degradation physics into neural network training for more robust and physically consistent battery health prediction. 
+
+2. Methodology 
+
+2.1. Battery degradation mechanisms and physics-informed degradation-rate 
+
+Lithium-ion battery aging arises from coupled electrochemical, transport, and interfacial side re-actions that progressively reduce usable capacity and increase internal resistance [8–12]. A complete mechanistic description of cell operation can be constructed using porous-electrode models, partic-ularly the Doyle–Fuller–Newman framework, which resolves electrolyte transport, interfacial reaction 3kinetics, and solid-phase lithium diffusion at the electrode scale [13–16]. However, full physics-based degradation models require extensive parameterization, including solid-phase diffusivities, electrolyte transport properties, reaction-rate constants, active surface areas, and degradation-specific kinetic pa-rameters. Many of these quantities are difficult to identify uniquely from routine cycling measurements such as voltage, current, temperature, and capacity. This limitation motivates the use of semi-empirical degradation representations that preserve physically meaningful aging trends while remaining compat-ible with data-driven learning [12, 17]. At the cell level, lithium-ion battery degradation is commonly interpreted through measurable degra-dation modes, including loss of lithium inventory (LLI), loss of active material at the positive electrode, loss of active material at the negative electrode, and impedance rise [8–12]. Among these mechanisms, LLI associated with continuous solid electrolyte interphase (SEI) growth on the graphite negative elec-trode is widely recognized as a major contributor to capacity fade under conventional graphite-based lithium-ion operating conditions [32–37]. The SEI forms because the graphite anode operates at poten-tials where common organic carbonate electrolytes are thermodynamically unstable. During storage and cycling, electrolyte-reduction products accumulate on the anode surface and form a passivating inter-phase. Although this interphase is necessary for stable cell operation, its continued growth irreversibly consumes cyclable lithium, increases interfacial resistance, and reduces extractable cell capacity [38–40]. The rate of these parasitic degradation reactions is strongly affected by temperature. This thermal acceleration is commonly represented using an Arrhenius-type relation, 
+
+r = k0 exp 
+
+μ
+
+− Ea
+
+RT 
+
+¶
+
+,where r is the reaction-rate term, k0 is the pre-exponential factor, Ea is the apparent activation energy, 
+
+R is the universal gas constant, and T is the absolute temperature. In lithium-ion battery aging models, Arrhenius-type relations are widely used to describe the increase in degradation rate at elevated temper-ature [37, 41–45]. In addition to temperature, capacity fade depends on usage severity, including depth of discharge ( DoD ), accumulated ampere-hour throughput ( Ah ), C-rate, and cycling-profile variabil-ity [42, 44, 46]. Semi-empirical cycle-life models commonly represent these dependencies using power-law terms in time or charge throughput combined with Arrhenius temperature acceleration [37, 42–44]. The degradation relation used in this work is therefore designed to act as a physics-informed learn-ing prior rather than a fully prescribed electrochemical model. It must satisfy three requirements. First, it should preserve the physically expected direction of capacity evolution, namely monotonic capac-4ity fade rather than non-physical capacity regeneration. Second, it should encode the main operating-condition dependencies known to accelerate aging, including temperature, time, depth of discharge, and accumulated charge throughput. Third, it should remain differentiable so that it can be embedded directly into the neural-network training objective and optimized through gradient-based learning. A purely data-driven model can learn local correlations from cycling data, but it may produce physically implausible trajectories under extrapolation or protocol shift [20–23, 27]. In contrast, the semi-empirical degradation-rate prior used here provides an intermediate formulation: it does not resolve all electrode-scale degradation pathways, but it constrains the learned SOH trajectory using physically meaningful degradation structure. The Arrhenius–power-law form in Eq. (1) was selected as a reduced-order kinetic prior because its components have physically interpretable origins while remaining compatible with cycling-level mea-surements. For SEI-related degradation, the Arrhenius temperature dependence is motivated by transition-state and reaction-rate theory, according to which thermally activated interfacial reactions exhibit an exponential dependence on inverse absolute temperature. The time-dependent power-law term ac-commodates the sublinear behavior commonly associated with transport-limited SEI growth, while the power-law dependencies on depth of discharge and accumulated charge throughput follow established semi-empirical cycle-life models used to represent cycling severity and cumulative exposure. This for-mulation is not claimed to be a unique or complete description of battery aging. It does not explic-itly resolve interactions among degradation mechanisms, including lithium plating, loss of active ma-terial, impedance growth, or changes in the dominant mechanism under extreme temperatures and C-rates. Therefore, the learned coefficients should be interpreted as effective, data-calibrated parameters within the operating conditions represented by the training data. Based on these considerations, the capacity-fade rate is represented as the sum of an SEI-associated time-dependent contribution and an LLI-associated cycling-severity contribution: 
+
+dQ d t = − kSE I exp 
+
+μ
+
+− ESE I 
+
+RT 
+
+¶
+
+t α − kLLI exp 
+
+μ
+
+− ELLI 
+
+RT 
+
+¶
+
+DoD b1 Ah b2 . (1) Here, Q denotes battery capacity, t is time, T is absolute temperature, R is the universal gas constant, 
+
+DoD is the depth of discharge, and Ah is the accumulated ampere-hour throughput. The coefficients 
+
+kSE I and kLLI represent effective degradation-rate factors associated with SEI-dominated aging and LLI-related cycling degradation, respectively. The apparent activation energies ESE I and ELLI describe the thermal sensitivity of the two degradation contributions, while α, b1, and b2 describe the empirical sen-5sitivity of degradation to time, depth of discharge, and accumulated charge throughput. In the proposed PiDDM framework, Eq. (1) is used as a differentiable degradation-rate prior dur-ing model training. The neural network is not required to operate as a complete physics-based battery model. Instead, it learns effective degradation parameters and latent operating-state dependencies from cycling features, while the physics-informed term regularizes the temporal evolution of predicted ca-pacity. The negative sign in Eq. (1) enforces the physically expected direction of capacity loss, while the Arrhenius and power-law terms encode thermal acceleration and cycling-severity effects. This formula-tion therefore integrates degradation physics with machine learning by using physical knowledge as an inductive bias rather than as a rigid forward model [30, 31]. Equation (1) is not intended to resolve every electrode-scale degradation pathway explicitly. Mech-anisms such as loss of active material at the positive electrode, loss of active material at the negative electrode, lithium plating, transition-metal dissolution, cathode structural degradation, and electrolyte oxidation are not separately parameterized in the present formulation [11, 12, 46]. Instead, their ef-fects are treated as unresolved contributions that may be absorbed into the learned degradation coeffi-cients when their signatures appear in the training data. This formulation provides a compact physics-informed regularization constraint: it preserves the monotonic and thermally activated character of lithium-ion battery aging while remaining compatible with cycling-level measurements used for SOH prediction. 
+
+2.2. Battery degradation modeling 
+
+To connect the degradation mechanisms described above with observable battery behavior, we de-velop a surrogate modeling framework that integrates empirical degradation kinetics with data-driven learning. Figure 1 presents an overview of the proposed framework. The proposed framework is de-signed to model battery degradation across diverse operating conditions. Instead of treating the rela-tionship between operational inputs and state of health (SOH) as a purely black-box mapping, PiDDM embeds empirical aging information into the learning process. In this way, the model links measurable cycling behavior with degradation-governing factors, allowing it to better capture SOH evolution under different charging and discharging protocols. This integration improves the physical consistency of the predicted degradation trajectories and enhances the model’s ability to generalize to previously unseen regions. 6Figure 1: Overview of the Physics-informed Differentiable degradation modeling (PiDDM) framework for battery state-of-health (SOH) prediction. Charging and discharging protocol information is processed by the PiDDM, which combines data-driven learning with empirical degradation kinetics to predict physically consistent SOH trajectories over the battery lifetime. 
+
+2.3. PiDDM Framework 
+
+Purely data-driven neural networks can capture complex degradation patterns within the training distribution, but they often become unreliable when extrapolated beyond the observed data. To im-prove extrapolation performance and physical consistency, PiDDM incorporates the Arrhenius–power-law degradation relation introduced in Eq. (1) as a differentiable physics-based constraint during train-ing. The overall model structure is illustrated in Figure 2. For cycle n, let xn ∈ R16 denote the normalized charging-feature vector provided to PiDDM. The neural network, with trainable weights and biases φ, produces the five-dimensional output 
+
+bθn = fφ(xn ) = ¡ bESEI, n , bαn , bELLI, n , bb1, n , bb2, n
+
+¢ .These quantities are effective, cycle-dependent kinetic parameters inferred from the charging features. They are distinct from the neural-network weights and biases φ and should not be interpreted as inde-pendently measured electrochemical parameters. Their values describe the degradation behavior rep-resented by the training data and may therefore depend on the operating regime over which the model 7Figure 2: Physics-informed Differentiable degradation modeling (PiDDM). (a) Empirical capacity-fade relation containing SEI-associated and LLI-associated degradation contributions. (b) The neural network maps the 16-dimensional charging-feature vector xn to five effective, cycle-dependent kinetic parameters bθn . These parameters are combined with the global trainable pre-exponential factors κ and the known operating variables zn in the differentiable degradation module. Temporal integration of the resulting degradation rate produces the predicted capacity trajectory. 
+
+is trained. The two pre-exponential degradation-rate factors are denoted by 
+
+κ = (kSEI , kLLI ) . Both kSEI and kLLI are global trainable scalar parameters. They are initialized before training and opti-mized jointly with φ through the PiDDM training objective. They are not prescribed from literature val-ues or independently predicted by the neural network at each cycle; instead, each coefficient is shared across all batteries and cycles within a given trained model. The remaining quantities entering Eq. (1) are known operating variables, which are grouped as 
+
+zn = (Tn , tn , DoD n , Ah n ) . Here, Tn and DoD n are obtained from the operating protocol, whereas tn and Ah n denote the elapsed 8time and accumulated ampere-hour throughput calculated from the cycling record. The universal gas constant R is fixed. None of the quantities in zn is predicted by the neural network. As shown in Figure 2(b), the input vector xn consists of 16 statistical features extracted from the reg-ular charging segment. The features are derived from a short, fixed window of the constant-current (CC) charging stage and the subsequent constant-voltage (CV) stage, including the voltage response near the cut-off threshold and the current decay during the CV period [20, 21, 27–29]. They include the mean, standard deviation, kurtosis, skewness, charging time, accumulated charge, curve slope, and entropy-related descriptors of the measured charging signals [20, 21, 27–29]. Because these features are con-structed only from routinely available charging measurements, they do not directly include discharge-capacity information or the target SOH trajectory. This reduces target leakage and facilitates application across batteries operated under previously unseen discharge protocols [20, 21, 27]. In practical applica-tions, the required features could be collected through standardized diagnostic charging measurements. The baseline models, neural-network architectures, training hyperparameters, and evaluation protocols are described in Section 2.4. The model is trained and evaluated using the public battery dataset reported by Wang et al. [27]. The dataset contains 55 lithium-nickel-cobalt-manganese-oxide (NCM) batteries cycled to failure un-der six distinct charge and discharge protocols. These protocols include constant-current conditions, resistance-based aging conditions, random-walk loading, and geosynchronous earth orbit (GEO) satel-lite mission profiles, providing a challenging benchmark for evaluating model generalization across di-verse operating conditions [20, 21, 27]. Within the differentiable degradation module, the network-predicted kinetic parameters bθn , the global trainable coefficients κ, and the known operating variables zn are combined to evaluate the capacity-fade rate: 
+
+c˙Qn = g ¡bθn , zn ; κ¢ ,where g (·) is defined by Eq. (1). Because the battery measurements are sampled once per charge–discharge cycle, the degradation equation is integrated on the discrete cycle coordinate. Let c˙Qi ,n denote the degra-dation rate predicted for battery i at cycle n. The capacity trajectory is computed using a first-order forward-Euler scheme: 
+
+bQi ,n+1 = bQi ,n + c˙Qi ,n ∆n, ∆n = 1 cycle, (2) 9which is equivalently expressed as the cumulative sum 
+
+bQi ,n = Qi ,0 +
+
+> n−1
+
+X 
+
+> j=0
+
+c˙Qi , j ∆n. (3) Here, Qi ,0 is the capacity measured at the first available cycle of battery i and provides the initial con-dition for integration. It is not predicted by the neural network. The numerical integration therefore uses one step per observed cycle and does not employ a higher-order Runge–Kutta method. The model-level output is the resulting predicted capacity or SOH trajectory, rather than the intermediate kinetic parameters themselves. For the temporal-extrapolation experiment, the integration is initialized only once using Qi ,0 at the beginning of each battery trajectory. The same forward-Euler recursion is continued from the observed training region into the held-out extrapolation region. The capacity is not reinitialized at the training– extrapolation boundary, and no measured capacity from the held-out region is introduced. Conse-quently, the first extrapolated capacity is calculated from the preceding predicted capacity, and the re-maining extrapolated values are generated recursively from the predicted degradation rates. Apart from the first measured capacity Qi ,0 , which provides the initial condition for temporal inte-gration, the experimentally observed capacity values are used only as supervised training targets and are not provided to the neural network as input features. The model minimizes the discrepancy between the predicted and observed capacity trajectories while enforcing the Arrhenius-based degradation struc-ture. This formulation guides the network toward physically consistent SOH evolution and improves its stability during long-horizon prediction. 
+
+2.4. Baseline models, training procedure, and evaluation protocol 
+
+To evaluate the contribution of the proposed physics-informed degradation formulation, PiDDM was compared with two neural-network baselines: an MLP and a baseline PINN. All three methods were evaluated using the same battery dataset, input-feature construction, normalization procedure, and evaluation metrics. Each neural-network component was implemented using fully connected lay-ers with three hidden layers and 60 neurons per hidden layer. 
+
+2.4.1. Data-driven MLP baseline 
+
+The MLP baseline represents a direct data-driven mapping from the cycle-dependent charging fea-tures to the corresponding battery SOH. For battery i at cycle n, let xi ,n ∈ R16 denote the normalized charging-feature vector and let yi ,n denote the measured SOH. The MLP prediction is written as 10 by MLP   
+
+> i,n
+
+= fMLP 
+
+¡xi ,n ; φMLP 
+
+¢ , (4) where φMLP denotes the trainable network parameters. The MLP contains three fully connected hid-den layers with 60 neurons per layer and a scalar output representing the predicted SOH. Unlike PiDDM, the MLP does not contain an explicit degradation equation or physics-informed temporal constraint. The MLP is trained by minimizing the mean-squared error between the predicted and measured SOH values, 
+
+LMLP = 1
+
+Ntr 
+
+X 
+
+> (i,n)∈Dtr
+
+³by MLP   
+
+> i,n
+
+− yi ,n
+
+´2
+
+, (5) where Dtr denotes the training dataset and Ntr is the total number of training samples. 
+
+2.4.2. Baseline PINN 
+
+The baseline PINN follows the battery degradation framework proposed by Wang et al. [27]. The model consists of two coupled neural networks: a solution network, F , that maps the charging features and cycle coordinate to SOH, and a dynamics network, G , that learns the corresponding degradation law. For battery i at cycle n, let xi ,n ∈ R16 denote the normalized charging features and let τi ,n denote the normalized cycle coordinate. The predicted SOH is given by 
+
+bsi ,n = F ¡τi ,n , xi ,n ; Φ¢ , (6) where Φ denotes the trainable parameters of the solution network. The temporal and feature deriva-tives of bs are obtained through automatic differentiation and provided to the dynamics network, 
+
+bri ,n = G
+
+μ
+
+τi ,n , xi ,n , bsi ,n , ∂bsi ,n
+
+∂τ , ∇x bsi ,n ; Θ
+
+¶
+
+, (7) where bri ,n represents the learned SOH degradation rate and Θ contains the trainable parameters of the dynamics network. The physics-informed residual is then defined as 
+
+Hi ,n = ∂bsi ,n
+
+∂τ − bri ,n . (8) 11 The two networks are trained jointly using a supervised data loss, a degradation-residual loss, and a monotonicity penalty. The data loss measures the discrepancy between the predicted and measured SOH, 
+
+Ldata = X 
+
+> (i,n)∈Dtr
+
+¯¯bsi ,n − si ,n
+
+¯¯2 , (9) while the physics-informed loss constrains the predicted SOH trajectory to be consistent with the learned degradation dynamics, 
+
+LPDE = X 
+
+> (i,n)∈Dtr
+
+¯¯Hi ,n
+
+¯¯2 . (10) Because battery capacity is expected to decrease with continued cycling, a monotonicity penalty is applied to upward changes in the predicted SOH, 
+
+Lmono = X
+
+> i
+
+X
+
+> n
+
+ReLU ¡bsi ,n+1 − bsi ,n
+
+¢ . (11) The complete training objective is 
+
+LPINN = Ldata + λPDE LPDE + λmono Lmono , (12) where λPDE and λmono control the contributions of the degradation-residual and monotonicity terms, respectively. The loss weights and network architectures follow the configuration reported for the XJTU dataset by Wang et al. [27], with the complete training settings summarized in Section 2.4.5 The baseline PINN and PiDDM incorporate degradation information in fundamentally different ways. In the baseline PINN, the degradation operator is represented by the flexible neural network G and in-ferred from the observed data. PiDDM instead introduces the Arrhenius–power-law degradation re-lation in Eq. 1 as an explicit differentiable component of the forward model. The comparison there-fore evaluates whether prescribing physically motivated degradation structure provides greater stability and extrapolation capability than learning the degradation dynamics through an unconstrained neural-network operator. 
+
+2.4.3. PiDDM architecture 
+
+PiDDM receives the normalized 16-dimensional charging-feature vector as its input. The neural net-work maps the charging features to the parameters and dynamic variables required by the degradation 12 relation in Eq. (1). These outputs are then passed to the differentiable degradation module, which eval-uates the capacity-fade rate. The predicted capacity trajectory is obtained through temporal integration of the resulting degradation rate. Unlike the MLP , which directly maps the input features to SOH, PiDDM generates the predicted ca-pacity trajectory through the degradation model. The Arrhenius–power-law relation therefore serves as a structural component of the PiDDM forward calculation and constrains the predicted trajectory toward physically consistent capacity fade. 
+
+2.4.4. Network architectures 
+
+Table 1 summarizes the neural-network architectures used for PiDDM, the MLP, and the baseline PINN. PiDDM and the MLP use the same fully connected backbone, whereas the baseline PINN follows the two-network architecture proposed by Wang et al. [27].             
+
+> Table 1: Neural-network architectures used for PiDDM, the MLP, and the baseline PINN.
+> Model component Input size Network architecture
+> PiDDM 16 [16, 60, 60, 60, 5] MLP 16 [16, 60, 60, 60, 1] PINN solution network, F17 [17, 60, 60, 32, 32, 1] PINN dynamics network, G35 [35, 60, 60, 1]
+
+The PINN solution network F receives the 16 charging features together with the cycle coordinate and predicts SOH. The dynamics network G represents the learned degradation operator and receives the predicted SOH, the cycle-dependent features, and the corresponding first-order derivatives obtained through automatic differentiation. Sine activation functions are applied within the hidden layers of both PINN components, following the original implementation [27]. The dynamics network is used to con-strain model training, whereas SOH estimation during inference is performed using the solution net-work. The architectures were not forced to have identical layer structures. Instead, PiDDM and the MLP share the same data-driven backbone to isolate the effect of the differentiable degradation model, while the baseline PINN retains the architecture of the published method. The comparison is conducted using the same input information, data partitions, preprocessing procedure, and evaluation metrics. 13 2.4.5. Training procedure 
+
+All models were optimized using the Adam optimizer. A learning-rate warmup schedule was applied during the first 30 epochs, followed by cosine decay to the final learning rate. PiDDM and the MLP were trained for 500 epochs. The solution and degradation-dynamics networks of the PINN were optimized jointly. As described in Section 2.4.2, the baseline PINN objective combines the supervised SOH loss, the degradation-residual loss, and the monotonicity loss, 
+
+LPINN = Ldata + λPDE LPDE + λmono Lmono . (13) For the dataset considered in this work, the loss weights were set to λPDE = 0.7 and λmono = 20, fol-lowing Wang et al. [27]. The complete training settings are summarized in Table 2. 
+
+> Table 2: Training hyperparameters for PiDDM, the MLP, and the baseline PINN.
+
+Hyperparameter PiDDM & MLP Baseline PINN 
+
+Epochs 500 200 Batch size 10000 256 Base learning rate 0.001 0.01 Final learning rate 0.0002 0.0002 Warmup epochs 30 30 Warmup learning rate 0.002 0.002 Normalization method Min–max Min–max PDE-loss weight, λPDE Not applicable 0.7 Monotonicity-loss weight, 
+
+λmono 
+
+Not applicable 20 
+
+All input features and SOH values were normalized using training-set statistics. For a variable x,min–max normalization is expressed generally as 
+
+ex = 2 · x − xtr min 
+
+xtr max − xtr min 
+
+− 1, (14) 14 where xtr min and xtr max are calculated exclusively from the training data, and [ a, b] denotes the pre-scribed normalization interval. The resulting transformation was applied unchanged to the validation and testing data to prevent information leakage. 
+
+2.4.6. Evaluation protocol 
+
+The models were trained and evaluated using the public NCM battery dataset reported by Wang et al. [27]. The dataset contains 55 batteries cycled to failure under six operating protocols: constant-current 2C and 3C protocols, randomized-discharge R2.5 and R3 protocols, a random-walk (RW) pro-tocol, and a geosynchronous Earth orbit satellite-mission (Sim) protocol. The 3C protocol contains 15 batteries, numbered 1-15; batteries 4 and 8 were reserved for testing, while the remaining 13 batteries were used for training. Each of the other five protocols contains eight batteries; batteries 1, 2, 3, 5, 6, and 7 were used for training, while batteries 4 and 8 were reserved for testing. This battery-level partition resulted in 43 training batteries and 12 independent test batteries, accounting for all 55 batteries in the dataset. PiDDM, the MLP , and the baseline PINN were evaluated using this identical partition in every experiment. Two evaluation settings were considered. In the standard prediction setting, the models were trained using the complete trajectories assigned to the training dataset and evaluated on batteries excluded from model training. This experiment evaluates the ability of each method to estimate SOH across the six operating protocols. In the temporal-extrapolation setting, only the initial 90% of each degradation trajectory was in-cluded during training. The final 10% was excluded from optimization and treated as the unseen extrap-olation region. No SOH labels from this held-out region were used to optimize the models. Model performance was quantified using mean absolute percentage error (MAPE), root mean squared error (RMSE), mean absolute error (MAE), and mean squared error (MSE). For Nte evaluation samples, these metrics are defined as 15 MAPE = 1
+
+Nte 
+
+> Nte
+
+X 
+
+> j=1
+
+¯¯¯¯by j − y j
+
+y j
+
+¯¯¯¯ , (15) RMSE =
+
+vuut 1
+
+Nte 
+
+> Nte
+
+X 
+
+> j=1
+
+¡ by j − y j
+
+¢2, (16) MAE = 1
+
+Nte 
+
+> Nte
+
+X 
+
+> j=1
+
+¯¯ by j − y j
+
+¯¯ , (17) MSE = 1
+
+Nte 
+
+> Nte
+
+X 
+
+> j=1
+
+¡ by j − y j
+
+¢2 , (18) where y j and by j denote the measured and predicted SOH, respectively. Lower values indicate im-proved prediction accuracy. 
+
+3. Results 
+
+The predictive performance of the PiDDM framework is evaluated through two sets of experiments. First, we compare PiDDM with baseline deep-learning models to assess its accuracy across multiple cy-cling protocols. Second, we examine its extrapolation capability by training the models only on the early portion of the battery life and evaluating their performance on the remaining unseen cycles. Through comparison with purely data-driven MLP and baseline PINN models, these experiments highlight the role of physics-based regularization in improving both predictive accuracy and physical consistency. 
+
+3.1. PiDDM performance 
+
+To evaluate the predictive accuracy of PiDDM, we compare it with a purely data-driven MLP and a baseline PINN. Table 3 summarizes the prediction errors in terms of MAPE, RMSE, MAE, and MSE across six battery aging protocols. Overall, PiDDM achieves the lowest average error across all four metrics, indicating improved gener-alization across diverse operating conditions. In particular, the average MSE of PiDDM is 6.6271 × 10 −5,compared with 1.7702 × 10 −4 for the baseline PINN and 2.4187 × 10 −4 for the MLP. The improvement is especially evident for the highly dynamic RW and Satellite protocols, where the auto-regressive structure of PiDDM better captures the temporal evolution of capacity degradation. Although PiDDM performs best on most protocols and metrics, a small deviation is observed for the R2.5 protocol. In this case, the baseline PINN achieves slightly lower MAPE (7.9637 × 10 −3) and MAE 16 Table 3: Comparison of prediction error metrics across models and datasets. Performance of MLP, baseline PINN, and the proposed PiDDM is evaluated on six battery testing protocols (2C, 3C, R2.5, R3, RW, and Satellite). The lowest value for each metric and protocol is highlighted in bold. 
+
+(7.3411 × 10 −3) than PiDDM (8.0314 × 10 −3 and 7.4570 × 10 −3, respectively). As shown in Figure 3, the ground-truth SOH trajectory for R2.5 contains localized upward fluctuations, which are likely associ-ated with measurement noise or temporary regeneration artifacts. Because PiDDM is regularized by degradation physics that enforces non-increasing SOH trajectories, it does not track these local upward variations as closely as the baseline PINN. As a result, its absolute mean error is slightly higher for this protocol. Despite this behavior, PiDDM still yields lower RMSE (9.3210 × 10 −3) and MSE (8.6882 × 10 −5) for the R2.5 dataset. Because RMSE and MSE penalize larger deviations more strongly than MAE and MAPE, these results indicate that PiDDM remains less sensitive to large prediction errors and outliers, even when the absolute mean errors are comparable. Taken together, the results in Table 3 show that inte-grating physics-based regularization improves the robustness of SOH prediction across diverse cycling conditions. Figure 3 provides a qualitative comparison of the predicted SOH trajectories. The purely data-driven MLP exhibits noticeable variance and does not consistently capture the nonlinear degradation trends, particularly during the later stages of cycling. The baseline PINN produces smoother trajectories, but it 17 Figure 3: Predictive performance of PiDDM across diverse protocols. SOH predictions from PiDDM (green) are compared with those of MLP (blue) and PINN (red) across six cycling protocols: constant current (2C, 3C), randomized discharge (R2.5, R3), random walk (RW), and satellite missions. 
+
+still shows visible deviations from the ground truth and does not always capture the onset of the end-of-life degradation knee accurately. In contrast, PiDDM more closely follows the true trajectories across all six protocols, capturing both the gradual degradation phase and the accelerated end-of-life decline with improved stability. 
+
+3.2. Extrapolation performance 
+
+To assess the extrapolation capability of PiDDM, we evaluate the models under an extrapolation set-ting in which only the early portion of the degradation trajectory is available during training. Figure 4 illustrates the evaluation setup. For each battery in the training dataset, the SOH trajectory is divided into an initial training region and a subsequent extrapolation region. Only the data in the training region are used for model fitting. After training, the models are evaluated using the independent testing dataset, which contains complete trajectories spanning both the corresponding early-cycle region and the final 18 extrapolation region. The final portion of each trajectory is therefore temporally outside the range used for model training. This setup tests whether the learned models can extend the observed degradation behavior and produce physically plausible predictions beyond the temporal range represented during training.   
+
+> Figure 4: Extrapolation evaluation protocol for SOH prediction. Observed degradation data (gray points) are used for training, while the extrapolation region corresponds to the unseen portion of the SOH trajectory that must be predicted by the model.
+
+Under the extrapolation setup described above, the models are trained using only the initial 90% of each available training trajectory and are required to predict beyond this temporal range during testing. Table 4 summarizes the prediction errors under this extrapolation condition. PiDDM achieves the lowest average error across all four metrics, with an average MSE of 1.1067 × 10 −4, compared with 2.4381 × 10 −4
+
+for the baseline PINN and 8.2631 ×10 −4 for the MLP. PiDDM also achieves the lowest errors for five of the six protocols: 2C, 3C, R2.5, RW, and Satellite. The R3 protocol is the exception, for which the MLP attains the lowest values across all four reported metrics, including an MSE of 1.5786 × 10 −4, compared with 3.4648 ×10 −4 for PiDDM. Thus, the MLP provides greater pointwise prediction accuracy than PiDDM for R3, although PiDDM performs better on average and across the other five protocols. To provide additional qualitative insight into the model predictions, Figure 5 compares the extrapo-19 Table 4: Comparison of prediction error metrics under extrapolation. Models are trained on the initial 90% of each battery’s cycle life and evaluated on the remaining unseen 10%. The lowest value for each metric and protocol is highlighted in bold. 
+
+lated SOH trajectories produced by the three models. In the following discussion, trajectory instability refers specifically to visually apparent cycle-to-cycle spikes, high-frequency noise, and local upward re-versals in the predicted SOH trajectory; it does not refer to numerical divergence during training and is not introduced as an additional quantitative metric. The ground-truth R3 trajectory exhibits an accel-erated capacity drop near the end of life. The MLP remains sufficiently close to the measured R3 values to achieve the lowest aggregate prediction error, but its predicted trajectory also contains pronounced noise and a large downward spike followed by an upward reversal near the end of the extrapolation re-gion. These observations are not contradictory: the error metrics quantify the average discrepancy be-tween the predicted and measured SOH values, whereas the trajectory plot also reveals the smoothness and directional consistency of the cycle-to-cycle predictions. In comparison, PiDDM produces a smoother and more nearly monotonic R3 prediction, although its pointwise error is higher for this protocol. The Arrhenius-based degradation module constrains the predicted capacity-fade rate through the assumed temperature-dependent degradation kinetics, thereby discouraging abrupt cycle-to-cycle changes and pronounced upward reversals. The R3 result should therefore be interpreted as a distinction between two aspects of prediction quality rather than as an unqualified improvement by either model: the MLP more accurately reproduces the measured R3 values 20 Figure 5: Temporal extrapolation performance across diverse cycling protocols. SOH predictions from MLP, PINN, and PiDDM are compared across six protocols: varying C-rates (2C and 3C), resistance-based aging conditions (R2.5 and R3), and dynamic load profiles (RW and Satellite). Models are trained on the initial 90% of the cycle life and evaluated on the remaining unseen 10%. 
+
+according to the four reported error metrics, whereas PiDDM more clearly preserves the expected long-term direction and smoothness of cumulative capacity degradation. Similar qualitative behavior can be observed across the other protocols in Figure 5. The MLP pro-duces visible noise or isolated spikes in several late-stage predictions, while the baseline PINN exhibits pronounced upward spikes for protocols such as 3C, R2.5, and Satellite. PiDDM largely suppresses these artifacts and produces smoother extrapolated trajectories while capturing the accelerated degradation knee. Because measured SOH can contain experimental noise and temporary apparent capacity recov-ery, an isolated increase should not automatically be interpreted as physical capacity regeneration. Nev-ertheless, the reduced occurrence of large spikes and short-term reversals indicates that PiDDM follows the underlying cumulative degradation trend more consistently. Overall, the quantitative results demon-21 strate that PiDDM achieves the best average extrapolation accuracy and the lowest errors for five of the six protocols, while the trajectory plots qualitatively show smoother and more physically consistent long-horizon predictions. The exception is R3, for which the MLP remains the most accurate model according to all four reported error metrics. 
+
+4. Conclusion and Discussion 
+
+In this work, we demonstrated a physics-informed differentiable degradation modeling (PiDDM) for lithium-ion battery state-of-health (SOH) prediction under diverse cycling conditions. The framework combines data-driven learning with an empirical degradation law that accounts for capacity fade associ-ated with solid electrolyte interphase growth and loss of lithium inventory. By incorporating this degra-dation relation into the training objective, PiDDM improves the physical consistency of the predicted SOH trajectories while maintaining strong predictive performance across varied operating protocols. The model was evaluated on the public battery dataset, which contains 55 batteries cycled under six distinct charge and discharge protocols. Compared with a purely data-driven MLP and a baseline PINN, PiDDM achieved lower average prediction error across standard prediction tasks. The improvement was particularly evident under dynamic operating conditions, such as the random-walk and satellite proto-cols, where the combined effects of temporal dependence and protocol variability make accurate pre-diction more challenging. PiDDM also showed improved extrapolation performance when the models were trained only on the initial 90% of each battery’s cycle life and evaluated on the remaining unseen 10%. Under this setting, the proposed framework produced smoother and more physically consistent degradation trajectories than the baseline models, while more accurately capturing the accelerated end-of-life degradation knee. In contrast, the MLP exhibited unstable oscillatory behavior during long-horizon prediction, and the base-line PINN occasionally produced non-physical upward fluctuations in SOH. These results indicate that incorporating Arrhenius-based degradation regularization can improve both the stability and physical plausibility of long-horizon battery health prediction. At the same time, the results also highlight an important tradeoff. Because PiDDM is regularized to-ward physically consistent degradation behavior, it does not always follow localized upward fluctuations in the measured SOH trajectory as closely as less constrained models. As observed for the R2.5 protocol, this can lead to a slightly higher absolute error in cases where the experimental data contain measure-22 ment noise or temporary regeneration-like artifacts. However, this behavior is beneficial for practical battery health monitoring, where robustness and physical consistency are often more important than fitting local fluctuations that may not reflect true degradation. Overall, this study shows that embedding empirical degradation physics into neural network train-ing provides an effective route toward more reliable battery SOH prediction across both standard and extrapolative settings. Future work will focus on extending the framework to incorporate additional op-erating variables and degradation indicators, such as time-varying temperature and internal resistance, and on evaluating its performance across a broader range of battery chemistries and usage conditions. 
+
+Data and code availability 
+
+Data and code are available upon request. 
+
+Acknowledgment 
+
+G.X. would like to acknowledge the funds from the National Science Foundation (NSF) grant (No. 2533718) in supporting this study. 
+
+Author Contributions 
+
+Z.C., G.X., and T.L. contributed to the ideation and design of the research; Z.C. G.X., and T.L. per-formed the research; Z.C. wrote the manuscript; R.J., S.S., G.X., and T.L. contributed to manuscript edit-ing. 
+
+Competing interests 
+
+The authors declare no competing interests. 
+
+Corresponding authors: Tengfei Luo ( tluo@nd.edu ). 
+
+References 
+
+[1] J.-M. Tarascon, M. Armand, Issues and challenges facing rechargeable lithium batteries, Nature 414 (2001) 359–367. doi:10.1038/35104644 .23 [2] M. Armand, J.-M. Tarascon, Building better batteries, Nature 451 (2008) 652–657. doi:10.1038/ 451652a .[3] B. Dunn, H. Kamath, J.-M. Tarascon, Electrical energy storage for the grid: A battery of choices, Science 334 (6058) (2011) 928–935. doi:10.1126/science.1212741 .[4] J. B. Goodenough, K.-S. Park, The li-ion rechargeable battery: A perspective, Journal of the American Chemical Society 135 (4) (2013) 1167–1176. doi:10.1021/ja3091438 .[5] N. Nitta, F. Wu, J. T. Lee, G. Yushin, Li-ion battery materials: Present and future, Materials Today 18 (5) (2015) 252–264. doi:10.1016/j.mattod.2014.10.040 .[6] International Energy Agency, Global ev outlook 2024: Trends in electric cars, accessed 2026-04-29 (2024). URL https://www.iea.org/reports/global-ev-outlook-2024/trends-in-electric-cars 
+
+[7] International Energy Agency, Global ev outlook 2024: Trends in electric vehicle batteries, accessed 2026-04-29 (2024). URL https://www.iea.org/reports/global-ev-outlook-2024/trends-in-electric-vehicle-batteries 
+
+[8] J. Vetter, P . Novák, M. R. Wagner, C. Veit, K.-C. Möller, J. O. Besenhard, M. Winter, M. Wohlfahrt-Mehrens, C. Vogler, A. Hammouche, Ageing mechanisms in lithium-ion batteries, Journal of Power Sources 147 (1–2) (2005) 269–281. doi:10.1016/j.jpowsour.2005.01.006 .[9] A. Barré, B. Deguilhem, S. Grolleau, M. Gérard, F. Suard, D. Riu, A review on lithium-ion battery age-ing mechanisms and estimations for automotive applications, Journal of Power Sources 241 (2013) 680–689. doi:10.1016/j.jpowsour.2013.05.040 .[10] C. R. Birkl, M. R. Roberts, E. McTurk, P. G. Bruce, D. A. Howey, Degradation diagnostics for lithium ion cells, Journal of Power Sources 341 (2017) 373–386. doi:10.1016/j.jpowsour.2016.12.011 .[11] J. S. Edge, S. O’Kane, R. Prosser, N. D. Kirkaldy, A. N. Patel, A. Hales, A. Ghosh, W. Ai, J. Chen, J. Yang, S. Li, M.-C. Pang, L. Bravo Diaz, A. Tomaszewska, M. W. Marzook, K. N. Radhakrishnan, H. Wang, Y. Patel, B. Wu, G. J. Offer, Lithium ion battery degradation: What you need to know, Physical Chem-istry Chemical Physics 23 (2021) 8200–8221. doi:10.1039/D1CP00359C .24 [12] S. E. J. O’Kane, W. Ai, G. Madabattula, D. Alonso-Alvarez, R. Timms, V. Sulzer, J. S. Edge, G. J. Offer, Lithium-ion battery degradation: How to model it, Physical Chemistry Chemical Physics 24 (2022) 7909–7922. doi:10.1039/D2CP00417H .[13] J. Newman, W. Tiedemann, Porous-electrode theory with battery applications, AIChE Journal 21 (1) (1975) 25–41. doi:10.1002/aic.690210103 .[14] M. Doyle, T. F. Fuller, J. Newman, Modeling of galvanostatic charge and discharge of the lithi-um/polymer/insertion cell, Journal of The Electrochemical Society 140 (6) (1993) 1526–1533. doi: 10.1149/1.2221597 .[15] T. F. Fuller, M. Doyle, J. Newman, Simulation and optimization of the dual lithium ion insertion cell, Journal of The Electrochemical Society 141 (1) (1994) 1–10. doi:10.1149/1.2054684 .[16] Z. Chen, D. L. Danilov, R.-A. Eichel, P. H. L. Notten, Porous electrode modeling and its applica-tions to li-ion batteries, Advanced Energy Materials 12 (32) (2022) 2201506. doi:10.1002/aenm. 202201506 .[17] H. Yu, H. Zhang, Z. Zhang, S. Yang, State estimation of lithium-ion batteries via physics-machine learning combined methods: A methodological review and future perspectives, eTransportation 24 (2025) 100420. doi:10.1016/j.etran.2025.100420 .[18] V. Sulzer, S. G. Marquis, R. Timms, M. Robinson, S. J. Chapman, Python Battery Mathematical Mod-elling (PyBaMM), Journal of Open Research Software 9 (1) (2021) 14. doi:10.5334/jors.309 .[19] G. L. Plett, Extended kalman filtering for battery management systems of lipb-based hev battery packs: Part 3. state and parameter estimation, Journal of Power Sources 134 (2) (2004) 277–292. 
+
+doi:10.1016/j.jpowsour.2004.02.033 .[20] K. A. Severson, P . M. Attia, N. Jin, N. Perkins, B. Jiang, Z. Yang, M. H. Chen, M. Aykol, P. K. Her-ring, D. Fraggedakis, M. Z. Bazant, S. J. Harris, W. C. Chueh, R. D. Braatz, Data-driven predic-tion of battery cycle life before capacity degradation, Nature Energy 4 (5) (2019) 383–391. doi: 10.1038/s41560-019-0356-8 .[21] P. M. Attia, A. Grover, N. Jin, K. A. Severson, T. M. Markov, Y.-H. Liao, M. H. Chen, B. Cheong, N. Perkins, Z. Yang, P . K. Herring, M. Aykol, S. J. Harris, R. D. Braatz, S. Ermon, W. C. Chueh, Closed-25 loop optimization of fast-charging protocols for batteries with machine learning, Nature 578 (2020) 397–402. doi:10.1038/s41586-020-1994-5 .[22] R. R. Richardson, M. A. Osborne, D. A. Howey, Gaussian process regression for forecasting battery state of health, Journal of Power Sources 357 (2017) 209–219. doi:10.1016/j.jpowsour.2017. 05.004 .[23] D. Roman, S. Saxena, V. Robu, M. Pecht, D. Flynn, Machine learning pipeline for battery state-of-health estimation, Nature Machine Intelligence 3 (2021) 447–456. doi:10.1038/ s42256-021-00312-3 .[24] J. Sadler, R. Mohammed, M. Castle, K. Uddin, Diagnostic forecasting of battery degradation through contrastive learning, Scientific Reports 15 (1) (2025) 33360. doi:10.1038/s41598-025-17183-y .[25] D. P. Akhare, Z. Chen, R. Gulotty, T. Luo, J.-X. Wang, Probabilistic physics-integrated neural differ-entiable modeling for isothermal chemical vapor infiltration process, npj Computational Materials 10 (1) (2024) 265. doi:10.1038/s41524-024-01407-y .[26] Z. Chen, M. Yacouti, M. Shakiba, J.-X. Wang, T. Luo, V. Varshney, Predicting stress and damage in carbon fiber-reinforced composites deformation process using composite u-net surrogate model, Theoretical and Applied Mechanics Letters 16 (1) (2026) 100634. doi:https://doi.org/10.1016/ j.taml.2025.100634 .[27] F. Wang, Z. Zhai, Z. Zhao, Y. Di, X. Chen, Physics-informed neural network for lithium-ion battery degradation stable modeling and prognosis, Nature Communications 15 (1) (2024) 4332. doi:10. 1038/s41467-024-48779-z .[28] L. Ma, et al., A multi-stage dataset for lithium-ion battery aging study with various charging condi-tions, Scientific Data 11 (1) (2024) 651. doi:10.1038/s41597-024-03277-z .[29] J. Zhu, Y. Wang, Y. Huang, B. R. Gopaluni, Y. Cao, M. Heere, M. J. Mühlbauer, L. Mereacre, H. Dai, X. Liu, A. Senyshyn, X. Wei, M. Knapp, H. Ehrenberg, Data-driven capacity estimation of commercial lithium-ion batteries from voltage relaxation, Nature Communications 13 (1) (2022) 2261. doi: 10.1038/s41467-022-29837-w .26 [30] M. Raissi, P . Perdikaris, G. E. Karniadakis, Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equa-tions, Journal of Computational Physics 378 (2019) 686–707. doi:10.1016/j.jcp.2018.10.045 .[31] G. E. Karniadakis, I. G. Kevrekidis, L. Lu, P. Perdikaris, S. Wang, L. Yang, Physics-informed machine learning, Nature Reviews Physics 3 (2021) 422–440. doi:10.1038/s42254-021-00314-5 .[32] E. Peled, S. Menkin, Review–SEI: Past, present and future, Journal of The Electrochemical Society 164 (7) (2017) A1703–A1719. doi:10.1149/2.1441707jes .[33] M. B. Pinson, M. Z. Bazant, Theory of SEI formation in rechargeable batteries: Capacity fade, accel-erated aging and lifetime prediction, Journal of The Electrochemical Society 160 (2) (2013) A243– A250. doi:10.1149/2.044302jes .[34] E. Peled, The electrochemical behavior of alkali and alkaline earth metals in nonaqueous battery systems–the solid electrolyte interphase model, Journal of The Electrochemical Society 126 (12) (1979) 2047–2051. doi:10.1149/1.2128859 .[35] J. Christensen, J. Newman, Cyclable lithium and capacity loss in li-ion cells, Journal of The Electro-chemical Society 152 (4) (2005) A818–A829. doi:10.1149/1.1870752 .[36] P. Ramadass, B. Haran, R. White, B. N. Popov, Mathematical modeling of the capacity fade of Li-ion cells, Journal of Power Sources 123 (2) (2003) 230–240. doi:10.1016/S0378-7753(03)00531-7 .[37] P. Keil, A. Jossen, Calendar aging of lithium-ion batteries, Journal of The Electrochemical Society 163 (9) (2016) A1872–A1880. doi:10.1149/2.0411609jes .[38] H. J. Ploehn, P . Ramadass, R. E. White, Solvent diffusion model for aging of lithium-ion battery cells, Journal of The Electrochemical Society 151 (3) (2004) A456–A462. doi:10.1149/1.1644601 .[39] P. Ramadass, B. Haran, P . M. Gomadam, R. White, B. N. Popov, Development of first principles ca-pacity fade model for li-ion cells, Journal of The Electrochemical Society 151 (2) (2004) A196–A203. 
+
+doi:10.1149/1.1634273 .[40] F. Single, A. Latz, B. Horstmann, Identifying the mechanism of continued growth of the solid-electrolyte interphase, ChemSusChem 11 (12) (2018) 1950–1955. doi:10.1002/cssc.201800077 .27 [41] I. Bloom, B. W. Cole, J. J. Sohn, S. A. Jones, E. G. Polzin, V. S. Battaglia, G. L. Henriksen, C. G. Motloch, R. Richardson, T. Unkelhaeuser, D. Ingersoll, H. L. Case, An accelerated calendar and cycle life study of li-ion cells, Journal of Power Sources 101 (2) (2001) 238–247. doi:10.1016/S0378-7753(01) 00783-2 .[42] J. Wang, P . Liu, J. Hicks-Garner, E. Sherman, S. Soukiazian, M. Verbrugge, H. Tataria, J. Musser, P . Fi-namore, Cycle-life model for graphite-LiFePO4 cells, Journal of Power Sources 196 (8) (2011) 3942– 3948. doi:10.1016/j.jpowsour.2010.11.134 .[43] J. Schmalstieg, S. Käbitz, M. Ecker, D. U. Sauer, From accelerated aging tests to a lifetime prediction model: Analyzing lithium-ion batteries, in: Proceedings of the 2013 World Electric Vehicle Sym-posium and Exhibition (EVS27), IEEE, Barcelona, Spain, 2013, pp. 1–12. doi:10.1109/EVS.2013. 6914753 .[44] J. Schmalstieg, S. Käbitz, M. Ecker, D. U. Sauer, A holistic aging model for Li(NiMnCo)O2 based 18650 lithium-ion batteries, Journal of Power Sources 257 (2014) 325–334. doi:10.1016/j. jpowsour.2014.02.012 .[45] F. Leng, C. M. Tan, M. Pecht, Effect of temperature on the aging rate of li ion battery operating above room temperature, Scientific Reports 5 (2015) 12967. doi:10.1038/srep12967 .[46] X. Lin, J. Park, L. Liu, Y. Lee, A. M. Sastry, W. Lu, A comprehensive capacity fade model and analysis for Li-ion batteries, Journal of The Electrochemical Society 160 (10) (2013) A1701–A1710. doi:10. 1149/2.040310jes .28

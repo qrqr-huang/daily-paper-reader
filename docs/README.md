@@ -6,23 +6,23 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-02
-- 运行时间：2026-08-02 21:32:47 UTC
+- 最新运行日期：2026-08-03
+- 运行时间：2026-08-03 21:56:41 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：1
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读一篇电池健康评估高分论文，系统对比了恒流、恒压及混合充电特征在跨电池验证下的表现。  
-最值得关注的是，融合充电阶段特征的混合模型在跨电池场景中展现出更好泛化能力。  
-想了解电池寿命预测的朋友，可留意这类不依赖完整放电曲线的实用监测方法。
-- 详情：[/202608/02/README](/202608/02/README)
+今日精读一篇高评分研究，深入解析物理信息驱动的锂电池健康预测新方法。  
+核心发现：该模型将电池退化物理机制与可微分建模结合，显著提升了健康状态预测的精度与可解释性。  
+建议关注这类物理增强的AI模型，它们正在改变电池寿命管理方式。
+- 详情：[/202608/03/README](/202608/03/README)
 
 ### 精读区论文标签
-1. [Charging Phase Health Indicators for Battery State-of-Health Estimation: A Systematic Comparison of CC, CV, and Combined Approaches under Cross-Battery Validation](/202608/02/2607.23482v1-charging-phase-health-indicators-for-battery-state-of-health-estimation-a-systematic-comparison-of-cc-cv-and-combined-approaches-under-cross-battery-validation)  
+1. [PiDDM: Physics-Informed Differentiable Degradation Modeling for Lithium-Ion Battery State-of-Health Prediction](/202608/03/2607.29095v1-piddm-physics-informed-differentiable-degradation-modeling-for-lithium-ion-battery-state-of-health-prediction)  
    标签：评分：9.0/10、query:soc-soh
-   evidence：系统比较恒流、恒压及组合充电阶段健康指标用于电池健康状态估计
+   evidence：基于物理信息的可微退化建模用于锂离子电池健康状态预测
 
 ### 速读区论文标签
 - 本次无速读推荐。

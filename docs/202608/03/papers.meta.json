@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-03",
+  "date": "2026-08-03",
+  "generated_at": "2026-08-03T21:56:51",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/03/2607.29095v1-piddm-physics-informed-differentiable-degradation-modeling-for-lithium-ion-battery-state-of-health-prediction",
+      "section": "deep",
+      "title_en": "PiDDM: Physics-Informed Differentiable Degradation Modeling for Lithium-Ion Battery State-of-Health Prediction",
+      "authors": "Zeping Chen, Ruda Jian, Sachin Sigdel, Guoping Xiong, Jian-Xun Wang, Tengfei Luo",
+      "date": "2026-07-31",
+      "pdf": "https://arxiv.org/pdf/2607.29095v1",
+      "score": "9.0",
+      "evidence": "基于物理信息的可微退化建模用于锂离子电池健康状态预测",
+      "tldr": "锂离子电池SOH预测对储能运行至关重要，但纯数据驱动模型跨工况泛化差且外推产生非物理行为。提出PiDDM，将阿伦尼乌斯退化动力学融入训练，鼓励物理一致容量衰减。在55个电池、6种工况实验中，PiDDM实现最低平均预测误差，且外推时能捕捉末期加速衰减，避免非物理容量再生。该框架提升预测精度与物理一致性，为实际电池健康监测提供有效方案。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Accurate prediction of lithium-ion battery state of health (SOH) is essential for reliable energy storage operation. However, purely data-driven models may generalize poorly across cycling protocols and produce physically implausible behavior during long-term extrapolation. We developed a physics-informed differentiable degradation modeling framework (PiDDM) for battery SOH prediction. PiDDM incorporates empirical Arrhenius degradation kinetics associated with solid electrolyte interphase growth and loss of lithium inventory into the training objective, encouraging physically consistent capacity fade under diverse operating conditions. The framework was evaluated using a public dataset of 55 batteries cycled under six operating protocols. PiDDM achieved the lowest average prediction error among the evaluated models and substantially reduced mean squared error relative to a multilayer perceptron and a baseline physics-informed neural network. For extrapolation, the models were trained on the first 90% of each battery's cycle life and evaluated on the unseen final 10%. PiDDM captured accelerated end-of-life degradation while avoiding the nonphysical capacity regeneration produced by the baseline models. These results show that incorporating degradation physics into neural network training improves predictive accuracy and physical consistency, providing a promising approach for practical battery health monitoring.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
