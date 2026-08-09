@@ -6,22 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-08
-- 运行时间：2026-08-08 21:02:36 UTC
+- 最新运行日期：2026-08-09
+- 运行时间：2026-08-09 21:03:51 UTC
 - 运行状态：成功
-- 本次总论文数：0
+- 本次总论文数：1
 - 精读区：0
-- 速读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202608/08/README](/202608/08/README)
+今日速读了一篇关于自适应分裂合并高斯混合滤波器的文章，用于处理非线性多模态状态估计。  
+其核心是在高斯混合框架中动态调整分量数量，以更好捕捉复杂多峰分布。  
+若你对机器人定位或目标跟踪中的多假设问题感兴趣，这篇方法值得一瞥。
+- 详情：[/202608/09/README](/202608/09/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation](/202608/09/2608.04430v1-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation)  
+   标签：评分：6.0/10、query:soc-soh
+   evidence：用于动态条件的非线性状态估计滤波器
 
 
 <div class="dpr-home-promo-card">

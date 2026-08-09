@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-09",
+  "date": "2026-08-09",
+  "generated_at": "2026-08-09T21:03:57",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/09/2608.04430v1-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation",
+      "section": "quick",
+      "title_en": "An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation",
+      "authors": "San Kim, Won Chang, Daniel B. Forger, Dae Wook Kim",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.04430v1",
+      "score": "6.0",
+      "evidence": "用于动态条件的非线性状态估计滤波器",
+      "tldr": "非线性状态估计广泛存在于气候模型、自主系统等领域，但非线性动力学易导致状态概率密度呈现多模态和不对称性，使得基于单高斯假设的传统滤波方法失效。高斯混合滤波虽能通过多粒子建模非高斯性，但在线自适应调整粒子数量和权重仍为开放难题。为此，我们开发了自适应分裂-组合高斯混合滤波器（AMF），它通过无在线优化的自适应分裂与组合机制动态管理高斯粒子：分裂操作沿目标水平集点方向进行，且保证方差减小以精准捕获分布模式；组合操作则合并相似粒子以控制计算复杂度。在单/耦合范德波尔振子和洛伦兹吸引子等基准上，AMF一致优于多种现有滤波器，且并行实现使高保真概率密度估计计算可行，为复杂非线性滤波提供了准确、高效的新工具。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Filtering combines model predictions with measurements to estimate the probability density function (PDF) of a system state over time. The PDF often becomes highly asymmetric and even multimodal in nonlinear systems with oscillatory or chaotic dynamics. Such non-Gaussian features violate the single-Gaussian assumption underlying Kalman-type filters. To address this problem, Gaussian mixture filtering has been proposed. However, accurately propagating mixture components and adaptively adjusting their number and weights over time remain open challenges. Here, we develop an adaptive split-combine Gaussian mixture filter (AMF) that estimates the time evolution of asymmetric and multimodal PDFs by adaptively splitting and combining Gaussian particles without auxiliary online numerical optimization. Notably, the proposed splitting method guarantees a reduction in variance along a target level-set-point direction of a Gaussian particle. This enables accurate and efficient propagation of particles. We show that AMF consistently outperforms various baseline filters across diverse benchmarks, including single and coupled slow-fast Van der Pol oscillators and the Lorenz attractor. We also propose a parallel implementation of AMF, allowing high-fidelity PDF estimation with practical computational cost.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
