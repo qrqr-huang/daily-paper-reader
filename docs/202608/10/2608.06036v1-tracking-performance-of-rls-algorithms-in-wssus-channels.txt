@@ -1,0 +1,1486 @@
+Title: Tracking performance of RLS algorithms in WSSUS channels
+
+URL Source: https://arxiv.org/pdf/2608.06036v1
+
+Published Time: Fri, 07 Aug 2026 01:01:19 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+> DRAFT 1
+
+# Tracking performance of RLS algorithms in WSSUS channels 
+
+Y. Zakharov, Senior Member, IEEE and L. Shen, Member, IEEE 
+
+School of Physics, Engineering and Technology, University of York, UK 
+
+Abstract —Adaptive algorithms are widely used for estima-tion of linear time-varying systems, such as communication channels. Their tracking performance depends on the level of noise, characteristics of time variations, and the algorithm parameters. Optimizing these parameters and predicting the algorithm performance is an important task. In this paper, we present an approach for analysing the tracking performance of recursive least squares (RLS) adaptive algorithms in channels with time variations described as wide-sense stationary un-correlated scattering (WSSUS) random processes characterised by a power spectral density (PSD). We focus on exponential RLS and sliding-window RLS (SRLS) algorithms, for which general formulas for the mean square deviation (MSD) as a measure of the tracking performance are obtained in terms of spectral moments of the PSD. As examples, they are specified for random processes with uniform, Jakes’ and autoregressive PSDs. These results are further generalized to RLS algorithms with delays, e.g. processing delays or delays introduced in non-causal adaptive RLS algorithms, and to the SRLS-L algorithm with approximation of channel time variations using Legendre polynomials. Numerical examples show good match between the analytical MSD and simulation results. 
+
+Index Terms —Adaptive filter, exponential window, RLS, sliding window, time-varying channel, tracking performance 
+
+I. I NTRODUCTION 
+
+Recursive least squares (RLS) adaptive algorithms (filters) are widely used for identification of linear systems, such as communications channels [1]. They have been applied to channel estimation in multi-antenna communication sys-tems [2], underwater acoustic communication systems [3]–[5], full-duplex systems [6], [7], etc. The estimation performance depends on the level of noise, characteristics of time variations and algorithm parameters. Optimizing the parameters and prediction of the algorithm performance is an important task, which has been well addressed in the literature. In most works, the tracking performance of the exponential-window RLS (ERLS) algorithm is studied for channel varia-tions described by the first-order Markov process [2], [8]–[13]. In [8], the excess lag mean squared error (MSE) is derived for the ERLS adaptive filter. In [11], closed-form expressions for the steady-state excess MSE and mean squared deviation (MSD) for the ERLS algorithm are obtained. A more practical channel model for mobile communication applications is the wide-sense stationary uncorrelated scat-tering (WSSUS) channel with Jakes’ power spectral density (PSD) of the channel tap variations [1], [2]. The work in [2] considers approximation of Jakes’ model by an autoregressive (AR) model to simplify the analysis of the ERLS tracking performance. In [14], the MSD (called the mean square identification error in [14] and [1]) is obtained for the ERLS algorithm as an integral of the channel scattering function, which is difficult to analyse and use in practice. In [1], a unified expression is obtained for calculating the MSD for ERLS and sliding-window RLS (SRLS) algorithms. This is given in a form of an integral of PSD of channel tap variations and specified into a simple expression for Jakes’ PSD. However, this expression does not take into account an important error component, the least squares (LS) modelling component, and therefore, as will be shown in our paper, it is not applicable to adaptive algorithms with improved tracking performance, such as non-causal RLS algorithms with delays or to non-causal RLS algorithms with approximation of time variations by basis functions [6], [15]–[17], e.g., Legendre polynomials in the SRLS-L algorithm [16], [17]. In [17], we derived a general MSD expression for the SRLS and SRLS-L algorithms, which is however difficult to analyse and use in practice. A delay ( t0) in an adaptive filter is the time shift between the time instant of the last sample used in the RLS estimation and the time to which this estimate is assigned. The delay t0 can be zero, positive or negative. The case t0 = 0 corresponds to classical RLS algorithms. The case t0 < 0 corresponds to a processing delay when implementing the adaptive filter; in other words, the channel estimate is used later than the last received signal sample involved in computation of this estimate; as a result, the tracking performance degrades. The case t0 > 0 corresponds to non-causal RLS adaptive filters, when the impulse response estimate is assigned to a previous time instant; this can be acceptable in communication systems, but it results in a latency in data transmission. In the case 
+
+t0 > 0, the tracking performance can be significantly improved compared to the case t0 = 0 [6], [15]–[17]. In this paper, we analyse the tracking performance of SRLS and ERLS adaptive filters with and without delay in WSSUS channels and compare the theoretical results with corresponding simulation results. The contributions of the paper are as follows.  
+
+> •
+
+An approach is proposed for analysing the tracking performance of RLS algorithms in channels with time variations described as WSSUS random processes.  
+
+> •
+
+Based on this approach, general simple formulas for pre-diction of tracking performance of classical RLS adaptive filters in WSSUS channels are derived for arbitrary PSD, which are then specified for uniform, Jakes’ and AR PSDs.  
+
+> •
+
+The results are generalized to RLS algorithms with de-arXiv:2608.06036v1 [eess.SP] 6 Aug 2026 DRAFT 2
+
+lays, such as the delayed SRLS (dSRLS) and delayed ERLS (dERLS) algorithms, and to the SRLS-L algorithm.  
+
+> •
+
+Numerical simulation is conducted, which shows good match between analytical and simulation results. The paper is organized as follows. Section II describes the channel model and methodology of the analysis. In Sec-tions III, IV and V, we analyse the tracking performance of the SRLS, SRLS-L and ERLS adaptive filters, respectively. In Section VI we compare the tracking performance obtained analytically and in simulation. Section VII concludes the paper. II. C HANNEL MODEL AND METHODOLOGY 
+
+In this section, the linear channel model is introduced in subsection II-A. Characteristics of the channel time variations are described in subsection II-B. Methods to generate channel realizations in the simulation are described in subsection II-C. The analysis methodology adopted in the paper is described in subsection II-D. 
+
+A. Channel model 
+
+We consider the channel model described by the discrete-time relationship: 
+
+x(i) = hT (i)s(i) + n(i), (1) where s(i) = [ s(i), s (i − 1) , . . . , s (i − L + 1)] T is an L × 1
+
+vector, s(i) is the signal at the input of the channel with a time-varying impulse response h(i) to be estimated, and n(i) is a noise signal. The input signal s(i) and noise n(i) are sequences of independent zero-mean Gaussian random numbers with variances σ2 
+
+> s
+
+and σ2
+
+> n
+
+, respectively. We assume that elements (impulse response taps) hℓ(i), ℓ = 0 , . . . , L − 1, of the L × 1
+
+vector h(i) are samples of realizations of continuous-time random processes hℓ(t): hℓ(i) = hℓ(iT s), where Ts is a sampling interval. More specifically, {hℓ(t)} are independent zero-mean stationary Gaussian random processes. To simplify the notation, we write hℓ(i) to denote a discrete-time tap, while hℓ(t) denotes the corresponding continuous-time tap. To simplify the presentation, we assume that all variables in (1) are real-valued. 
+
+B. Characteristics of channel time variations 
+
+The process hℓ(t) is defined by the normalized PSD Gh(ω):
+
+12π
+
+Z ∞−∞ 
+
+Gh(ω)dω = 1 . (2) The impulse response h(t) = [ h0(t), . . . , h ℓ(t), . . . , h L−1(t)] T
+
+is also characterised by the power delay profile (PDP) {Pℓ},
+
+ℓ = 0 , . . . , L − 1, which is an L-length vector of variances of corresponding channel taps, Pℓ = E{h2 
+
+> ℓ
+
+(t)}; two examples will be used for the numerical simulation: the uniform PDP (Pℓ = 1 ) and triangle PDP ( Pℓ = 1 − ℓ/L ). For the analysis, we will be using the spectral moments 
+
+λ2p = 12π
+
+Z ∞−∞ 
+
+ω2pGh(ω)dω, p = 0 , 1, 2 . . . . (3) Note that Pℓλ2p is the variance of the pth derivative h(p) 
+
+> ℓ
+
+(t)
+
+of hℓ(t), i.e., Pℓλ2p = E{[h(p) 
+
+> ℓ
+
+(t)] 2} [18], [19]. We will arrive at expressions for modelling and approximation errors as functions of the spectral moments using the Taylor series for representation of the time variant tap in the vicinity of 
+
+t = 0 :
+
+hℓ(t) = 
+
+> ∞
+
+X
+
+> p=0
+
+h(p) 
+
+> ℓ
+
+(0) 
+
+p! tp. (4) Note that the use of the spectral moments for analysing the accuracy of approximation of random processes is a well known approach [18]–[20]. Three specific PSDs will be considered as examples: uni-form, Jakes’ and AR PSD. The uniform PSD is given by 
+
+Gh(ω) = 
+
+ (2 fmax )−1, |ω| < 2πf max ,
+
+0, otherwise , (5) where fmax is the maximum frequency of the random process, and the corresponding spectral moments are 
+
+λ2p = (2 πf max )2p
+
+2p + 1 , λ 2 = 4( πf max )2
+
+3 , λ 4 = 16( πf max )4
+
+5 . (6) For Jakes’ PSD, often used to describe time-variations of mobile wireless communication channels [21], we have 
+
+Gh(ω) = 
+
+"
+
+πf max 
+
+r
+
+1 −
+
+ ω
+
+> 2πf max
+
+2
+
+#−1
+
+, |ω| < 2πf max ,
+
+0, otherwise ,
+
+(7) and the corresponding spectral moments are 
+
+λ2p = (2 p)!( πf max )2p
+
+(p!) 2 ,λ2 = 2( πf max )2, λ 4 = 6( πf max )4. (8) The AR PSD is given by 
+
+Gh(ω) = 2μμ2 + ω2 , (9) where the parameter μ characterises the frequency bandwidth of the random process. Note that, for this process, the spectral moments in (3) do not exist (for p > 0, the integral is infinity). However, a discrete-time version of the process (see subsection II-C) is often used for analysing the tracking performance of adaptive filters and therefore we will also consider this case in our analysis. 
+
+C. Generating random channels in the numerical simulation 
+
+In the numerical simulation, realizations of a random pro-cess describing the time-varying channel taps will be generated as 
+
+hℓ(t) = pPℓA cos( ωt + φ), (10) where A, ω and φ are independent random variables. The probability density functions of A and φ are given by 
+
+pA(A) = A exp 
+
+
+
+− A2
+
+2
+
+
+
+, A ≥ 0, (11) 
+
+pφ(φ) = 12π , −π < φ ≤ π, (12) DRAFT 3
+
+respectively, i.e., A has the Rayleigh distribution and φ has the uniform distribution. In this case, hℓ(t) in (10) is a zero-mean Gaussian random process with variance E{h2 
+
+> ℓ
+
+(t)} = Pℓ.For achieving a specific PSD Gh(ω), the random variable ω should have the probability density function 
+
+(2 π)−1Gh(ω) [19]. For the uniform PSD in (5), ω is uni-formly distributed in the interval [−2πf max , 2πf max ]. For Jakes’ PSD in (7), the random variable ω is computed as 
+
+ω = 2 πf max sin( u), where u is a random variable uniformly distributed within [−π/ 2, π/ 2] .There are other methods to generate realizations of random processes with predefined PSDs, e.g., the frequency-domain methods [22], [23] or some methods to generate Jakes’ fading channels [24]–[26]. These methods however are approximate, i.e., statistical characteristics of the generated random pro-cesses are not exactly the same as predefined, e.g., in (5) or (7). This can make validation of the analytically derived formulas inaccurate, whereas the method described above guarantees exact statistical characteristics as predefined. We emphasize however that the channel realizations in (10) are only used for the numerical simulation, they are not used in the analytical analysis. The AR process with the PSD (9) corresponds to generating the channel taps according to 
+
+hℓ(t) = μ
+
+Z ∞
+
+> 0
+
+e−μτ zℓ(t − τ )dτ, (13) where zℓ(t) is a white Gaussian process and μ > 0. This is a continuous-time equivalent of generating the channel taps in the discrete time as the first-order Markov process: 
+
+h(i) = βh(i − 1) + z(i), (14) where z(i) is a vector of samples of {zℓ(t)} at t = iT s and 
+
+β = e−μT s . This channel model is used in many works (e.g., see [8], [11], [27]) for analysis of the tracking performance of the classical ERLS algorithm. Therefore, we will also consider it in our analysis. 
+
+D. Methodology 
+
+We consider an adaptive filter as an estimator of the channel impulse response h(t). Since the channel is described as a stationary random process, in our analysis, we can consider any time instant, e.g. t = 0 ; we also assume that the adaptive filter was initialized at t = −∞ , i.e. the transient period of the adaptive filter has finished by the time t = 0 .The performance of the adaptive filter will be measured in terms of the normalized MSD NMSD = E{|| h(0) − ˆh(0) || 2}
+
+E{|| h(0) || 2} = 1
+
+P
+
+> L−1
+
+X
+
+> ℓ=0
+
+E{e2 
+
+> ℓ
+
+(0) }, (15) where P = PL−1 
+
+> ℓ=0
+
+Pℓ, ˆh(0) is an estimate of h(0) , eℓ(t) = 
+
+hℓ(t) − ˆhℓ(t) is the estimation error of the ℓth tap and ˆhℓ(t)
+
+is the ℓth tap estimate. Assuming that the noise n(i) is independent of the channel response h(i) and the input signal s(i), the NMSD can be expressed as a sum of two components (e.g., see [27]) NMSD = ϵam + ϵn, (16) 
+
+Fig. 1: Channel model. 
+
+Fig. 2: Equivalent channel model. where ϵam is an approximation and modelling component, and 
+
+ϵn is a noise component. The component ϵn depends on the noise and does not depend on the channel response. This component is given by [28], [29] 
+
+ϵn ≈ Lσ 2
+
+> n
+
+M σ 2 
+
+> s
+
+P = LM · SNR , (17) 
+
+ϵn ≈ (1 − λ)Lσ 2
+
+> n
+
+(1 + λ)σ2 
+
+> s
+
+P = (1 − λ)(1 + λ) · L
+
+SNR , (18) for the SRLS and ERLS algorithms, respectively, where M is the observation window length of the SRLS algorithm, λ is the forgetting factor of the ERLS algorithm, and SNR = σ2 
+
+> sPσ2
+> n
+
+is the signal-to-noise ratio. The component ϵam depends on characteristics of the chan-nel variations and properties of the adaptive algorithm; it does not depend on the noise. When analysing the tracking perfor-mance, we focus on finding this component, assuming that the noise n(i) is absent. We show below that ϵam contains an LS modelling component ϵm and an approximation component ϵa:
+
+ϵam = ϵm + ϵa.Fig. 1 illustrates the channel model described by the time-variant channel response h(i). Here, we assume that, at every time instant i, the channel is described by two vectors, c0(i)
+
+and c1(i); c0(i) is a vector of parameters estimated by an LS algorithm, implemented as an adaptive filter, and c1(i) is a vector of parameters (nuisance parameters) not covered by the LS signal model. If c1(i) is a non-zero vector, there is a modelling error, which can be transformed into a modelling noise nmod (i) as shown in Fig. 2. The modelling noise is a result of filtering the input signal s(i) by a filter described by the parameters c1(i).The modelling noise in an observation time window w(t),over which the LS estimation is performed, can be represented as 
+
+nmod (t) = 
+
+> L−1
+
+X
+
+> ℓ=0
+
+˜hℓ(t)s(t − ℓT s), (19) where ˜hℓ(t) is the channel impulse response component, which is not covered by the LS signal model. We will assume that DRAFT 4
+
+the time variant tap hℓ(t) in the observation interval can be represented as the linear combination 
+
+hℓ(t) = c0,ℓ L0(t) + c1,ℓ L1(t), (20) where L0(t) and L1(t) are two orthonormal basis functions with respect to the window w(t) and c0,ℓ and c1,ℓ are corre-sponding expansion coefficients: 
+
+cℓ,q =
+
+Z ∞−∞ 
+
+w(t)hℓ(t)Lq (t)dt, q = 0 , 1. (21) The window w(t) is rectangular for SRLS algorithms and exponential for ERLS algorithms. The parameters {c0,ℓ } are covered by the LS signal model [28], whereas parameters 
+
+{c1,ℓ } are not. In this case, ˜hℓ(t) = c1,ℓ L1(t). Then (19) can be rewritten as 
+
+nmod (t) = L1(t)
+
+> L−1
+
+X
+
+> ℓ=0
+
+c1,ℓ s(t − ℓT s). (22) It can be seen that in general the modelling noise nmod (t) is non-stationary due to the factor L1(t). To simplify our deriva-tion, we replace the non-stationary noise by an equivalent stationary noise with variance equal to the average variance of nmod (t) over the observation interval. The variance of nmod (t) is given by 
+
+E{n2
+
+> mod
+
+(t)} = σ2 
+
+> s
+
+L21(t)
+
+> L−1
+
+X
+
+> ℓ=0
+
+E{c21,ℓ }. (23) Here we used the independence of the channel components 
+
+hℓ(t) and the channel input s(t). The average variance is found as 
+
+σ2 
+
+> mod
+
+= 1
+
+|| w2|| 
+
+Z ∞−∞ 
+
+w2(t)E{n2
+
+> mod
+
+(t)}dt 
+
+= kwσ2
+
+> sL−1
+
+X
+
+> ℓ=0
+
+E{c21,ℓ }, (24) where kw = || w2|| −1 R ∞−∞ w2(t)L21(t)dt and || w2|| =R ∞−∞ w2(t)dt . Then the modelling NMSD component can be estimated using formulas (17) and (18) and replacing σ2 
+
+> n
+
+with 
+
+σ2 
+
+> mod
+
+from (24) for SRLS and ERLS algorithms, respectively. Let us consider the classical ERLS or SRLS adaptive filter. If the channel is time-invariant, i.e. h(i) = h, and the channel length L is the same as the length of the vector c0(i),so that c0(i) = h, we obtain that c1(i) is a zero vector and there is no modelling error: ϵm = 0 . Therefore, in the absence of the noise n(i) and with a proper input signal s(i),the ERLS or SRLS algorithm can solve the LS problem in finding the vector c0(i) = h without errors. If the channel is time-variant, the vector c1(i) is non-zero, thus resulting in a non-zero modelling component ϵm > 0. However, now the vector c0(i) estimated by the LS algorithm is not the same as h(i): c0(i)̸ = h(i); this inequality results in a non-zero approximation component ϵa > 0.If an LS estimator estimates both the vectors c0(i) and 
+
+c1(i), then the modelling error is zero, but the approximation error may still be present. This will be further discussed when considering the SRLS-L adaptive filter in Section IV. TABLE I: Classical SRLS algorithm               
+
+> Step Equation
+> for every i > −∞ , repeat: 1b(i) = ST(i)x(i)
+> 2R(i) = ST(i)S(i)
+> 3Solve the system: R(i)ˆh(i) = b(i)
+> 4Output of the algorithm: ˆh(i)
+
+TABLE II: Delayed SRLS (dSRLS) algorithm                       
+
+> Step Equation
+> for every i > −∞ , repeat: 1b(i) = ST(i+i0)x(i+i0)
+> 2R(i) = ST(i+i0)S(i+i0)
+> 3Solve the system: R(i)ˆh(i) = b(i)
+> 4Output of the algorithm: ˆh(i)
+
+III. T RACKING PERFORMANCE OF SRLS ADAPTIVE FILTERS 
+
+In this section, we first consider the classical SRLS adap-tive algorithm presented in Table I. The estimate of the impulse response ˆh(i) at every time instant i is found by solving the system of equations R(i)ˆh(i) = b(i), where 
+
+R(i) = ST (i)S(i) is the L × L autocorrelation matrix of the channel input and b(i) = ST (i)x(i) is the L × 1 vector of cross-correlation between the channel input and output, 
+
+S(i) = [ s(i), . . . , s(i − M + 1)] T is an M × L matrix of the input signal, x(i) = [ x(i), x (i − 1) , . . . , x (i − M + 1)] T
+
+is an M × 1 observed signal vector, and M is the length of the sliding window. We then consider a more general case of the delayed SRLS (dSRLS) adaptive algorithm (see Table II) with a delay 
+
+i0 = t0/T s, assuming that the ratio t0/T s is an integer number (negative, zero or positive). The only difference between the dSRLS and SRLS algorithms is the delay i0 in the processed signals x(i) and s(i). In the case i0 = 0 , the dSRLS algorithm is transformed into the SRLS algorithm. 
+
+A. Modelling error of SRLS algorithms 
+
+For SRLS algorithms, the observation window is w(t) = 
+
+T −1 if t ∈ [−T / 2, T / 2] and zero otherwise. We choose 
+
+L0(t) = 1 and L1(t) = 2 √3( t/T ), i.e. they are, respectively, zero and first order orthonormal Legendre polynomials [30] defined over the interval [−T / 2, T / 2] , while c0,ℓ and c1,ℓ are given by 
+
+cq,ℓ = 1
+
+T
+
+Z T / 2
+
+> −T / 2
+
+hℓ(t)Lq (t)dt, q = 0 , 1. (25) Note that an SRLS algorithm solves the LS problem defined by the signal model hℓ(t) = c0,ℓ L0(t) and thus it estimates parameters c0,ℓ . If c1,ℓ = 0 for ℓ = 0 , . . . , L − 1, i.e., h(t) is time-invariant within [−T / 2, T / 2] , there is no LS modelling error and the output of the SRLS algorithm, in the absence of the additive noise n(i), is a vector with elements c0,ℓ , so that 
+
+ˆhℓ(0) = c0,ℓ L0(0) = hℓ(0) .DRAFT 5
+
+If c1,ℓ ̸ = 0 , there will be a modelling error ˜hℓ = c1,ℓ L1(t).Since hℓ(t) is a random process, then c1,ℓ is a random variable. Using the Taylor series in (4), from (21) we obtain 
+
+c1,ℓ = h(1)  
+
+> ℓ
+
+(0) 1
+
+T
+
+Z T / 2
+
+> −T / 2
+
+t · L1(t)dt = T
+
+√12 h(1)  
+
+> ℓ
+
+(0) . (26) Finally, from (24), using kw = 1 and the relationship 
+
+E{[h(1)  
+
+> ℓ
+
+(0)] 2} = Pℓλ2, we arrive at the average variance of the modelling error, 
+
+σ2 
+
+> mod
+
+= P σ 2
+
+> s
+
+λ2T 2
+
+12 . (27) It is seen that σ2 
+
+> mod
+
+increases with the speed of the channel variations manifested by the spectral moment λ2. As λ2 → 0,the extra noise due to the LS modelling error vanishes. Using (17) (and replacing σ2 
+
+> n
+
+with σ2
+
+> mod
+
+), the contribution of the modelling noise into the NMSD can be computed as 
+
+ϵ(SRLS) m ≈ λ2T 2
+
+12 
+
+ LM
+
+
+
+. (28) This formula and its variants for the uniform and Jakes’ PSDs are shown in Table III, where we denote γ = fmax T . We can also write γ = fmM , where fm = fmax Ts is the bandwidth 
+
+fmax of the channel variations normalized to the sampling frequency 1/T s.The analysis of the modelling component of the NMSD has been done assuming that the observation interval is 
+
+[−T / 2, T / 2] . However, since the random process describing the channel variations is stationary, this result is the same for other (time-shifted) intervals of length T . This result is equally applicable to the classical SRLS and dSRLS algorithms, which estimate the vector c0 with elements {c0,ℓ } in (25) or their time-shifted version. However, c0 is only an approximation of the channel impulse response and thus there is an approxima-tion error that we need to analyse. 
+
+B. Approximation error of SRLS algorithms 
+
+We will now derive the variance of the approximation error in terms of the spectral moments λ2p assuming that the additive and modelling noises are not present. We assume that the estimate ˆhℓ(0) of a single tap is given by 
+
+ˆhℓ(0) = 1
+
+T
+
+Z t0
+
+> t0−T
+
+hℓ(t)dt, (29) where t0 is a delay. In the classical SRLS algorithm, the delay 
+
+t0 = 0 . However, we will be considering here a more general case of arbitrary delay t0. In the dSRLS algorithm considered in [6], [16], [17], t0 = T / 2, and we show below that this is an optimal delay. Using the Taylor series (4), the estimate in (29) is repre-sented as 
+
+ˆhℓ(0) = 1
+
+T
+
+> ∞
+
+X
+
+> p=0
+
+h(p) 
+
+> ℓ
+
+(0) (p + 1)! 
+
+h
+
+tp+1 0 − (t0 − T )p+1 i
+
+. (30) In (30), the term p = 0 is equal to hℓ(0) , the true value of the channel impulse response tap. Let η = t0/T be the delay in terms of the sliding window length T , then the estimation error edSRLS ,ℓ = ˆhℓ(0) − hℓ(0) can be represented as 
+
+edSRLS ,ℓ =
+
+> ∞
+
+X
+
+> p=1
+
+h(p) 
+
+> ℓ
+
+(0) T p
+
+(p + 1)! φp+1 (η), (31) where φp(η) = ηp − (η − 1) p.
+
+1) Approximation NMSD component for the classical SRLS algorithm: For the classical SRLS algorithm, η = 0 and, since 
+
+φp(0) = ( −1) p, we arrive at the error 
+
+eSRLS ,ℓ =
+
+> ∞
+
+X
+
+> p=1
+
+h(p) 
+
+> ℓ
+
+(0) T p
+
+(p + 1)! (−1) p+1 (32) 
+
+≈ h(1)  
+
+> ℓ
+
+(0) T
+
+2 − h(2)  
+
+> ℓ
+
+(0) T 2
+
+6 + · · · 
+
+Therefore, we obtain the variance of a single tap estimate as: 
+
+E{e2
+
+> SRLS ,ℓ
+
+} ≈ Pℓ
+
+ λ2T 2
+
+4 + λ4T 4
+
+36 
+
+
+
+. (33) To obtain these two terms, we take into account that a ran-dom process and its derivative are uncorrelated [19]. Finally, from (15), we arrive at the approximation NMSD component for the classical SRLS algorithm: 
+
+ϵ(SRLS) a ≈ λ2T 2
+
+4 + λ4T 4
+
+36 . (34) This formula is applicable to a random process describing the channel variations by an arbitrary PSD with finite spectral moments λ2 and λ4. It can be further specified for a random process with a specific PSD Gh(ω); the corresponding formu-las for the uniform and Jakes’ PSDs are presented in Table III. Typically, γ = fmax T ≪ 1, i.e., the window length is much smaller than the correlation interval (approximately f −1
+
+> max
+
+) of the channel variations. In this case, the first term in (34) can provide an accurate prediction of the SRLS approximation NMSD component. Note that the first term in (34) can also be obtained from an integral MSD expression in [1]. Moreover, in [1], the first term of ϵ(SRLS) a for Jakes’ PSD has been obtained in the same form as shown in Table III. It can also be seen in Table III that, for a fixed sliding window length and maximum frequency fmax of channel variations, the approximation NMSD component is higher for Jakes’ PSD than for the uniform PSD. This is explained by the fact that, for Jakes’ process, the time variations on average are faster due to its high PSD values concentrating closely to 
+
+fmax as opposed to the uniform PSD. From (34), it can also be seen that the NMSD approximation component does not depend on the PDP of the channel. 
+
+2) Approximation NMSD component for the dSRLS algo-rithm with the optimal delay η = 1/2: For the dSRLS algorithm, we first find an optimal value of η, for which the term p = 1 in (31) vanishes. This optimal value is found by solving φ2(η) = 0 and the solution is η = 1 /2, i.e., the optimal delay t0 = T / 2 is a half of the sliding-window length. In this case, taking into account that φ3(1 /2) = 1 /4, from (31) we obtain 
+
+edSRLS ,ℓ ≈ h(2)  
+
+> ℓ
+
+(0) T 2
+
+24 . (35) DRAFT 6
+
+Then the error variance for a single tap is given by 
+
+E{e2
+
+> dSRLS ,ℓ
+
+} ≈ Pℓ
+
+ λ4T 4
+
+576 
+
+
+
+(36) and, from (15), the approximation NMSD component for the dSRLS algorithm with the optimal delay η = 1 /2 is 
+
+ϵ(dSRLS) a ≈ λ4T 4
+
+576 . (37) Table III specifies this formula for uniform and Jakes’ PSDs. 
+
+3) Approximation NMSD component for the dSRLS algo-rithm with an arbitrary delay η: For other values of η,from (31) we obtain 
+
+edSRLS ,ℓ ≈ h(1)  
+
+> ℓ
+
+(0) T
+
+2 φ2(η) + h(2)  
+
+> ℓ
+
+(0) T 2
+
+3 φ3(η). (38) Then, by using derivations similar to those for the classical SRLS and optimal dSRLS algorithms, we arrive at the NMSD approximation component for the dSRLS algorithm with ar-bitrary delay: 
+
+ϵ(dSRLS) a ≈ λ2T 2
+
+4 φ22(η) + λ4T 4
+
+36 φ23(η). (39) Table III summarizes results of this section by presenting the modelling and approximation NMSD components for the SRLS algorithms. IV. T RACKING PERFORMANCE OF THE SRLS-L ADAPTIVE FILTER 
+
+The analysis above shows that if the channel impulse response is constant over the observation interval (the time window of the adaptive filter), the LS signal model used for deriving the RLS algorithms is precise and the NMSD component ϵam is zero. However, this case is of no practical interest since the channel would then be time-invariant. In time-varying channels, the LS signal model is not accurate (the RLS parameters cannot accurately describe the channel variations within the observation interval). The accuracy can be improved by introducing additional parameters that make the LS signal model more accurate. The time-variation of the channel tap hℓ(t) on the observa-tion interval can be represented using two Legendre polynomi-als {Lq (t)}q=0 ,1 (instead of one Legendre polynomial L0(t)
+
+used in the classical SRLS and dSRLS algorithms), i.e. 
+
+ˆhℓ(t) = c0,ℓ L0(t) + c1,ℓ L1(t), t ∈ [−T / 2, T / 2] , (40) where c0,ℓ and c1,ℓ are expansion coefficients, L0(t) is a constant over [−T / 2, T / 2] and L1(t) is a linear function over 
+
+[−T / 2, T / 2] with L1(0) = 0 . Note that we are only interested in the estimate ˆhℓ(0) at time t = 0 . Since L1(0) = 0 , we have ˆhℓ(t) = c0,ℓ L0(t), i.e., we do not need c1,ℓ to recover the estimate. However, when solving the LS problem for the model in (40), we have to estimate both c0,ℓ and c1,ℓ jointly and only after these estimates are found, we can discard c1,ℓ .In the classical SRLS and dSRLS algorithms, the LS model is time-invariant: ˆhℓ(t) = c0,ℓ L0(t) and the expansion coefficient 
+
+c0,ℓ found by solving the time-invariant LS problem differs from that found by solving the LS time-variant problem with the LS signal model in (40). The more accurate signal model (in the absence of an additive noise) should result in a more accurate channel estimate. The representation (40) is used in the non-causal basis-expansion model (BEM) adaptive filter based on the Legendre polynomials [6], [17]. The SRLS-L algorithm is presented in Table IV, where 
+
+Φp = diag {Lp(−T / 2) , L p(−T / 2 + Ts), . . . , L p(T / 2) } is an 
+
+M × M diagonal matrix, S(i) = [ s(i), . . . , s(i − M + 1)] T
+
+is the M × L observation matrix, and Ri = s(i)sT (i). The matrix R(i) is a block matrix with blocks Rp,q (i), p, q = 0 , 1,
+
+b(i) = [ bT 
+
+> 0
+
+(i); bT 
+
+> 1
+
+(i)] T , and c(i) = [ c0(i); c1(i)] .For the SRLS-L algorithm, the modelling NMSD compo-nent can be found using the same approach as for the SRLS algorithm. Using the Taylor series (4), it is straightforward to obtain that now (with L0(t) and L1(t) precisely recovering terms p = 0 and p = 1 in the Taylor series) the channel impulse response component ˜hℓ(t) not covered by the LS signal model can be represented as ˜hℓ(t) ≈ c2,ℓ L2(t), where 
+
+L2(t) = (1 /2) p5/T [3(2 t/T )2 − 1] is the second-order Legendre polynomial [30] and 
+
+c2,ℓ = h(2)  
+
+> ℓ
+
+(0) 
+
+T
+
+Z T / 2
+
+> −T / 2
+
+ t2
+
+2
+
+
+
+L2(t)dt =
+
+r 5
+
+TT 2
+
+60 h(2)  
+
+> ℓ
+
+(0) . (41) Then the modelling noise (19) can be represented as 
+
+nmod (t) = L2(t)
+
+> L−1
+
+X
+
+> ℓ=0
+
+c2,ℓ s(t − ℓT s), (42) and the average variance of the modelling noise is given by 
+
+σ2 
+
+> mod
+
+= σ2
+
+> sL−1
+
+X
+
+> ℓ=0
+
+E{c22,ℓ } = σ2 
+
+> s
+
+P λ4T 4
+
+720 . (43) From results in [17], it follows that for the SRLS-L algorithm with two basis functions, L0(t) and L1(t), the noise NMSD component can still be computed using the formula (17). Then, the modelling NMSD component for the SRLS-L algorithm is 
+
+ϵ(SRLS-L) m ≈ λ4T 4
+
+720 
+
+ LM
+
+
+
+. (44) In the SRLS-L algorithm, the channel estimate is given by 
+
+ˆhℓ(0) = c0,ℓ L0(0) , the same as for the dSRLS algorithm with optimal delay. Therefore, the NMSD approximation compo-nent at the optimal delay t0 = T / 2 (or η = 0 .5) is given by 
+
+ϵ(SRLS-L) a = ϵ(dSRLS) a ≈ λ4T 4
+
+576 . (45) Note that for other delays the expression (39) can be used. The expressions (44) and (45) specified for uniform and Jakes’ PSDs are shown in Table III. V. T RACKING PERFORMANCE OF ERLS ADAPTIVE FILTERS 
+
+We first consider the performance of the classical ERLS algorithm (with zero delay). In the ERLS algorithm, as shown in Table V, the estimate of the impulse response ˆh(i) at every time instant i is found by solving the system of equations 
+
+R(i)ˆh(i) = b(i), where R(i) is the L × L autocorrelation matrix of the channel input and b(i) is the L × 1 vector of DRAFT 7
+
+TABLE III: NMSD modelling and approximation components of SRLS, dSRLS and SRLS-L algorithms 
+
+NMSD component SRLS (η = 0 )dSRLS (arbitrary η)Optimal dSRLS (η = 0 .5)SRLS-L (η = 0 .5)Approximation (general form) λ2T 2 
+
+> 4
+
++ λ4T 4  
+
+> 36
+> λ2T2
+> 4
+
+φ22(η) + λ4T 4 
+
+> 36
+
+φ23(η) λ4T 4 
+
+> 576
+> λ4T4
+> 576
+
+Approximation (Uniform PSD)  
+
+> π2γ2
+> 3
+
++ 4π4γ4 
+
+> 45
+> π2γ2
+> 3
+
+φ22(η) + 4π4γ4 
+
+> 45
+
+φ23(η) π4γ4
+
+> 180
+> π4γ4
+> 180
+
+Approximation (Jakes’ PSD)  
+
+> π2γ2
+> 2
+
++ π4γ4 
+
+> 6
+> π2γ2
+> 2
+
+φ22(η) + π4γ4 
+
+> 6
+
+φ23(η) π4γ4
+
+> 96
+> π4γ4
+> 96
+
+Modelling (general form) λ2T 2 
+
+> 12
+
+· LMλ4T 4 
+
+> 720
+
+· LM
+
+Modelling (Uniform PSD)  
+
+> π2γ2
+> 9
+
+· LMπ4γ4 
+
+> 225
+
+· LM
+
+Modelling (Jakes’ PSD)  
+
+> π2γ2
+> 6
+
+· LMπ4γ4 
+
+> 120
+
+· LM
+
+TABLE IV: SRLS-L algorithm 
+
+Step Equation 
+
+Initialization: ˆh(i) = 0 for i < 0
+
+for i > −∞ , repeat: 1 bp(i) = SH (i + i0)Φpx(i + i0), p = 0 , 1
+
+2 Rp,q (i) = PM −1 
+
+> k=0
+
+Lp(−T / 2 + kT s)Ri+i0 Lq (−T / 2 + kT s)
+
+3 Generate matrix R(i) and vector b(i)
+
+4 Solve system of equations R(i)c(i) = b(i) ⇒ [ˆ c0(i); ˆ c1(i)] 
+
+5 Output of the algorithm: ˆh(i) = ˆ c0(i)
+
+TABLE V: ERLS algorithm 
+
+Step Equation 
+
+Initialization: b(−∞ ) = 0 , R(−∞ ) = εIL
+
+for every i > −∞ , repeat: 1 b(i) = λb(i − 1) + x(i)s(i)
+
+2 R(i) = λR(i) + s(i)sT (i)
+
+3 Solve system of equations R(i)ˆh(i) = b(i)
+
+4 Output of the algorithm: ˆh(i)
+
+cross-correlation between the channel input and output; ε > 0
+
+is a regularization parameter and 0 < λ < 1 is the forgetting factor [29]. We will then consider a more general case of the ERLS adaptive filter (see Table VI) with a delay i0 = t0/T s,assuming that the ratio t0/T s is an integer number (negative, zero or positive). The only difference of the dERLS and ERLS algorithms is the delay i0 in the processed signals x(i)
+
+and s(i).
+
+A. Modelling error of ERLS algorithms 
+
+For ERLS algorithms, the observation window is w(t) = 
+
+αe αt , where t ∈ [−∞ , 0) , α = ln( λ)/T s and the basis functions L0(t) = 1 and L1(t) = 1 + αt are orthonormal Laguerre polynomials with respect to the window function 
+
+w(t) [30]. Corresponding expansion coefficients are given by 
+
+cq,ℓ =
+
+Z 0
+
+> −∞
+
+w(t)hℓ(t)Lq (t)dt, q = 0 , 1. (46) To compute the modelling NMSD component, we use (24). From (46) and the relationship 
+
+E{hℓ(t)hℓ(τ )} = Pℓ
+
+2π
+
+Z ∞−∞ 
+
+Gh(ω)ejω (t−τ )dω, (47) we arrive at 
+
+E{c21,ℓ } = Pℓ
+
+2π
+
+Z ∞−∞ 
+
+Gh(ω)|L 1(ω)|2dω, (48) TABLE VI: Delayed ERLS (dERLS) algorithm 
+
+Step Equation 
+
+Initialization: b(−∞ ) = 0 , R(−∞ ) = εIL
+
+for every i > −∞ , repeat: 1 b(i) = λb(i − 1) + x(i + i0)s(i + i0)
+
+2 R(i) = λR(i) + s(i + i0)sT (i + i0)
+
+3 Solve system of equations R(i)ˆh(i) = b(i)
+
+4 Output of the algorithm: ˆh(i)
+
+where L1(ω) = −jαω/ (α − jω )2 is the Fourier transform of w(t)L1(t). From (24) and using kw = 1 /2, we obtain the average variance of the modelling error for ERLS algorithms: 
+
+σ2 
+
+> mod
+
+= P σ 2
+
+> s
+
+4π
+
+Z ∞−∞ 
+
+Gh(ω) α2ω2
+
+(α2 + ω2)2 dω. (49) Using the approximation (1 + x)−2 ≈ 1 − 2x [31] in the last integral and equation (18) for conversion of the modelling noise into the corresponding NMSD component, for random processes with finite λ2 we obtain 
+
+ϵ(ERLS) m ≈ λ2
+
+2α2
+
+(1 − λ)L
+
+(1 + λ) . (50) This formula and its variants for the uniform and Jakes’ PSDs are shown in Table VII. Note that for the AR random process with the PSD Gh(ω)
+
+in (9) the spectral moment λ2 does not exist and therefore the approximation in (50) is not valid. In this case, the direct integration in (49) results in 
+
+ϵ(ERLS) m ≈ μα 
+
+4( μ + α)2
+
+(1 − λ)L
+
+(1 + λ) (51) 
+
+= ln( λ) ln( β)4[ln( λ) + ln( β)] 2
+
+(1 − λ)L
+
+(1 + λ) . (52) 
+
+B. Approximation NMSD component for ERLS algorithms 1) Approximation NMSD component for the classical ERLS algorithm: For the channel variations represented as the Taylor series (4), from (46) we obtain 
+
+ˆhℓ(0) = α
+
+> ∞
+
+X
+
+> p=0
+
+h(p) 
+
+> ℓ
+
+(0) 
+
+p!
+
+Z 0
+
+> −∞
+
+tpeαt dt. (53) The integral in (53) is given by [31] 
+
+Z 0
+
+> −∞
+
+tpeαt dt = ( −1) p p!
+
+αp+1 . (54) DRAFT 8
+
+TABLE VII: Approximation and modelling NMSD components of ERLS and dERLS algorithms 
+
+NMSD component Classical ERLS (t0 = 0 )dERLS (arbitrary t0)Optimal dERLS (t0 = α−1)Approximation (general form) λ2 
+
+> α2
+
++ λ4 
+
+> α4
+> λ2
+> α2
+
+(1 − αt 0)2 + λ4
+
+> α4
+
+
+
+1 − αt 0 + α2t20
+
+> 2
+
+2 λ4
+
+> 4α4
+
+Approximation (Uniform PSD)  
+
+> ξ2
+> 3
+
++ ξ4 
+
+> 5
+> ξ2
+> 3
+
+(1 − αt 0)2 + ξ4
+
+> 5
+
+
+
+1 − αt 0 + α2t20
+
+> 2
+
+2 ξ4
+
+> 20
+
+Approximation (Jakes’ PSD)  
+
+> ξ2
+> 2
+
++ 3ξ4 
+
+> 8
+> ξ2
+> 2
+
+(1 − αt 0)2 + 3ξ4
+
+> 8
+
+
+
+1 − αt 0 + α2t20
+
+> 2
+
+2 3ξ4
+
+> 32
+
+Approximation (AR process)  
+
+> μα+μ
+
+= ln( β)ln( βλ ) − −
+
+Modelling (general form) λ2 
+
+> 2α2
+
+· (1 −λ)L
+
+> 1+ λ
+
+Modelling (Uniform PSD)  
+
+> ξ2
+> 6
+
+· (1 −λ)L
+
+> 1+ λ
+
+Modelling (Jakes’ PSD)  
+
+> ξ2
+> 4
+
+· (1 −λ)L
+
+> 1+ λ
+
+Modelling (AR process)  
+
+> μα
+> 4( μ+α)2
+
+· (1 −λ)L 
+
+> 1+ λ
+
+= ln( λ) ln( β)4[ln( λ)+ln( β)] 2 · (1 −λ)L
+
+> 1+ λ
+
+Therefore, the estimate in (53) can be written as: 
+
+ˆhℓ(0) = 
+
+> ∞
+
+X
+
+> p=0
+
+(−1) ph(p) 
+
+> ℓ
+
+(0) 
+
+αp . (55) The term p = 0 in (55) is hℓ(0) , therefore the estimation error 
+
+eERLS ,ℓ = ˆhℓ(0) − hℓ(0) can be written as: 
+
+eERLS ,ℓ =
+
+> ∞
+
+X
+
+> p=1
+
+(−1) ph(p) 
+
+> ℓ
+
+(0) 
+
+αp . (56) To find the variance of the error eERLS ,ℓ , E{e2
+
+> ERLS ,ℓ
+
+}, we keep the first two terms in (56) and take into account that 
+
+h(1) (0) and h(2) (0) are uncorrelated; as a result, we obtain 
+
+E{e2
+
+> ERLS ,ℓ
+
+} ≈ Pℓ
+
+ λ2
+
+α2 + λ4
+
+α4
+
+
+
+. (57) Finally, from (15), we arrive at the approximation NMSD component for the classical ERLS algorithm: 
+
+ϵ(ERLS) a ≈ λ2
+
+α2 + λ4
+
+α4 . (58) This formula and its variants for the uniform and Jakes’ PSDs are shown in Table VII, where we take into account that 
+
+α = − ln ( λ)/T s and denote ξ = 2 πf m/ ln λ. Note that the first term in (58) can also be obtained from an integral MSD expression in [1], where the first term of ϵ(ERLS) a for Jakes’ PSD has also been obtained in the same form as shown in Table VII. We now consider the approximation error for the AR process. In this case, we cannot use the representation (4) since this process is not differentiable. Instead, we need to directly consider 
+
+E{e2
+
+> ERLS ,ℓ
+
+} = E
+
+(
+
+hℓ(0) − α
+
+Z 0
+
+> −∞
+
+eαt hℓ(t)dt 
+
+2)
+
+. (59) This can be represented as E{e2
+
+> ERLS ,ℓ
+
+} = Pℓ − J1 + J2, where 
+
+J1 and J2 are integrals defined below. First we compute 
+
+J1 = 2 α
+
+Z 0
+
+> −∞
+
+eατ ρh(τ )dτ = 2αP ℓ
+
+α + μ , (60) where ρh(τ ) = Pℓe−μ|τ | is the correlation function of the process hℓ(t). The second integral J2 is given by 
+
+J2 = α2
+
+Z 0
+
+> −∞
+
+Z 0
+
+> −∞
+
+eα(t+τ )ρh(t − τ )dtdτ = αP ℓ
+
+α + μ . (61) By combining results in (60) and (61), for the AR process, we obtain 
+
+E{e2
+
+> ERLS ,ℓ
+
+} = μP ℓ
+
+α + μ . (62) Finally, using (15) and (62), we arrive at the approximation NMSD component 
+
+ϵ(ERLS) a = μα + μ . (63) Taking into account that λ = e−αT s and β = e−μT s , we obtain this component in terms of the parameters λ (forgetting factor of the ERLS algorithm) and β (the memory factor of the channel time variations) as 
+
+ϵ(ERLS) a = ln( β)ln( βλ ) . (64) 
+
+2) Approximation NMSD component for the dERLS algo-rithm: We assume that, without additive noise, the dERLS algorithm for a time-varying tap h(t), at a time t = 0,computes the estimate 
+
+ˆh(0) = α
+
+Z t0
+
+> −∞
+
+eα(t−t0)h(t)dt. (65) In this case, for the channel variations represented by the Taylor series (4), we obtain 
+
+ˆhℓ(0) = 
+
+> ∞
+
+X
+
+> p=0
+
+h(p) 
+
+> ℓ
+
+(0) 
+
+p!
+
+
+
+α
+
+Z t0
+
+> −∞
+
+tpeα(t−t0)dt 
+
+
+
+. (66) The integral in (66) can be computed as: 
+
+α
+
+Z t0
+
+> −∞
+
+tpeαt dt = p!
+
+> p
+
+X
+
+> k=0
+
+(−1) p−k tk
+
+> 0
+
+k!αp−k . (67) Therefore, the estimate in (66) can be written as: 
+
+ˆhℓ(0) = 
+
+> ∞
+
+X
+
+> p=0
+
+(−1) ph(p) 
+
+> ℓ
+
+(0) 
+
+αppX
+
+> k=0
+
+(−1) k αktk
+
+> 0
+
+k! . (68) DRAFT 9
+
+The term p = 0 in (68) is hℓ(0) , therefore the estimation error 
+
+edERLS ,ℓ = ˆhℓ(0) − hℓ(0) can be written as: 
+
+edERLS ,ℓ =
+
+> ∞
+
+X
+
+> p=1
+
+(−1) ph(p) 
+
+> ℓ
+
+(0) 
+
+αppX
+
+> k=0
+
+(−1) k αktk
+
+> 0
+
+k! . (69) The first two terms in (69) provide an approximation 
+
+edERLS ,ℓ ≈ − h(1)  
+
+> ℓ
+
+(0) 
+
+α (1 − αt 0)+ h(2)  
+
+> ℓ
+
+(0) 
+
+α2
+
+
+
+1 − αt 0 + α2t20
+
+2
+
+
+
+. (70) It can be seen that the error due to the first derivative (linear channel variation) can be completely eliminated by setting the delay t0 = α−1, and, in this case, the error is given by 
+
+edERLS ,ℓ ≈ h(2)  
+
+> ℓ
+
+(0) 2α2 . (71) The error variance E{e2
+
+> dERLS ,ℓ
+
+} for the optimal delay t0 = α−1
+
+is then given by 
+
+E{e2
+
+> dERLS ,ℓ
+
+} ≈ Pℓ
+
+λ4
+
+4α4 . (72) Finally, the approximation NMSD component for the dERLS algorithm with the optimal delay t0 = α−1 is then given by 
+
+ϵdERLS  
+
+> a
+
+≈ λ4
+
+4α4 . (73) For other values of t0, we obtain 
+
+εdERLS ≈ λ2
+
+α2 (1 − αt 0)2 + λ4
+
+α4
+
+
+
+1 − αt 0 + α2t20
+
+2
+
+2
+
+. (74) In the case t0 = 0 , from (74) we obtain the approximation NMSD component (58) for the ERLS algorithm. Table VII summarises results of this section. VI. N UMERICAL RESULTS 
+
+In our simulation examples, we focus on scenarios, in which the additive noise is not present; the known formulas (17) and (18) can predict the noise NMSD component. 
+
+A. SRLS, dSRLS and SRLS-L algorithms 
+
+We first consider numerical examples for SRLS algorithms. Fig. 3 presents the dSRLS performance against the delay 
+
+η = t0/T for the case L = 10 , specifically ϵm, ϵa, and 
+
+ϵam = ϵa + ϵm computed according to formulas in Table III and corresponding simulation results. Fig. 3(a) and Fig. 3(b) show these dependencies for the uniform and Jakes’ PSDs. It is seen that in the vicinity of the optimal delay, the NMSD is mostly defined by the modelling component, while away from the optimal delay, the approximation component provides an accurate prediction; the combined NMSD obtained from the theoretical results in Table III provides accurate prediction of the numerical results for any t0; the maximum discrepancy between the theoretical and numerical results is about 0.2 dB, which is observed at the optimal delay η = 0 .5; at other η,it is smaller, and for the classical SRLS algorithm ( η = 0 ), it is less than 0.03 dB. It is also seen that the NMSD for the         
+
+> (a) Uniform PSD, uniform PDP, fm= 10 −5
+> (b) Jakes’ PSD, uniform PDP, fm= 10 −5
+> (c) Jakes’ PSD, triangle PDP, fm= 10 −5
+> (d) Jakes’ PSD, triangle PDP, fm= 10 −3
+
+Fig. 3: NMSD performance of the dSRLS algorithm against the normalized delay η in the time-varying multipath channel: 
+
+L = 10 , M = 40 .uniform PSD is lower than that for Jakes’ PSD; according to Table III, the ratio between them is approximately 1.5, i.e. 1.8 dB, consistent with what is observed in Fig. 3(a) and Fig. 3(b). Fig. 3(c) shows results for the triangle PDP. Comparison with Fig. 3(b) confirms that NMSD does not depend on PDP. Fig. 3(d) shows results for significantly faster DRAFT 10 
+
+Fig. 4: MSD performance of the SRLS-L algorithm against the delay η in the multipath channel, L = 10 , M = 40 , Jakes’ PSD, triangle PDP, fm = 10 −3.
+
+Fig. 5: MSD performance of the SRLS-L algorithm against the window length M in the multipath channel ( L = 10 ) with Jakes’ PSD and uniform PDP; η = 0 .5.channel variations ( fm = 10 −3 against fm = 10 −5 in the other subfigures). It is seen that the theoretical prediction is still accurate with a maximum discrepancy of less than 0.15 dB at η = −1; for other delays the discrepancy is significantly lower. Fig. 4 shows results for the SRLS-L algorithm in channels with fm = 10 −3. In this case, the modelling error is almost negligible, so the tracking performance is dominated by the approximation error, and we can see a good match between the theoretical and numerical results. The highest discrepancy 1.4 dB is observed at the optimal delay η = 0.5, at the other values of η shown in Fig. 4, it is smaller than 0.04 dB. Comparison with results in Fig. 3(d) shows that, at the optimal delay ( η = 0.5), the tracking performance of the SRLS-L algorithm is significantly better compared to the dSRLS algorithm, the improvement is about 24 dB. Fig. 5 shows the SRLS-L performance against the window length M for the optimal delay ( i0 = M/ 2). We can again         
+
+> (a) λ= 1 −1/(8 L) = 0 .9875
+> (b) λ= 1 −1/(2 L) = 0 .95
+
+Fig. 6: NMSD performance of the dERLS algorithm against the delay t0 in the time-varying multipath channels ( L = 10 )with the uniform PDP and uniform PSD with fm = 10 −4.observe good match between the theoretical prediction and numerical results. Higher discrepancies are observed in the fast-varying channel ( fm = 0 .01 ) at longer M ; note that, in such cases, the parameter γ takes values in the interval 
+
+γ ∈ [0 .24 , 0.8] with γ = 0.8 for M = 80 , i.e., the relationship γ ≪ 1 is not satisfied. For such values of γ, the linear approximation of channel variations over the observation window is not accurate and more Taylor series terms (e.g., parabolic) are required for a better channel representation. 
+
+B. ERLS and dERLS algorithms 
+
+Fig. 6 shows the MSD performance of the dERLS algorithm against the delay for two values of the forgetting factor λ.It can be seen that, for λ close to 1 in Fig. 6(a), the theoretical and simulation results are very close: a (maximum) discrepancy of 0.3 dB is observed at t0 near the optimal delay ( αt 0 ≈ 1, i0 = 79 ). However, for the classical ERLS algorithm ( t0 = 0 ), the discrepancy is as small as 0.02 dB. For smaller λ (λ = 0 .95 ), i.e., a narrower observation window, the (maximum) discrepancy in the vicinity of the optimal delay increases to 0.5 dB; this can be explained by the fact that for smaller λ, the integral approximation in (65) of dERLS estimates is less accurate. However, with such a small λ,
+
+λ = 0 .95 , for the classical ERLS algorithm ( t0 = 0 ), the DRAFT 11 
+
+Fig. 7: The MSD performance of the dERLS algorithm against the forgetting factor λ for the channel with the uniform PDP and uniform PSD: theoretical and numerical results in the multipath channel ( L = 10 ). The delay is set close to the optimal delay t0 = α−1; more specifically, (αT s)−1 =
+
+−1/ ln λ is rounded to the nearest integer number. For the forgetting factors λ = 0 .9, 0.95 , 0.975 , 0.9875 , 0.9938 used in this simulation example, the delays are i0 = 9 , 19 , 39 , 79 , 159 ,respectively. discrepancy, while slightly increased (compared to the case 
+
+λ = 0 .9875 ), remains only 0.06 dB. Since the maximum discrepancy between the theoretical and numerical results is observed in the vicinity of the optimal delay, in Fig. 7 we investigate the accuracy of the performance prediction at a delay close to the optimal delay at different 
+
+λ and speed of channel variations. It can be seen that the prediction improves as λ approaches 1 and speed of the channel variations reduces. For the smallest λ, λ = 0.9,the discrepancy is about 1.4 dB for all the channel variation speeds, and with increase in λ it becomes significantly smaller. An exception is for the highest speed of channel variations (fm = 10 −3) and highest λ = 0 .9938 , when the discrepancy is about 2.3 dB; in this case, the efficient time window of the adaptive algorithm is about 320 samples, which is comparable with the channel time coherence, about 1/f m = 1000 samples. The prediction accuracy can be improved if more Taylor series terms are included in the derivation of the modelling and approximation NMSD components. Fig. 8 shows similar results for the AR PSD channel time variations described by the parameter β. It can be seen that the formulas derived in this paper more accurately predict the ERLS tracking performance in comparison with the prediction 
+
+ϵam ≈ (1 − β2)/(1 − λ2), which follows from results in [8]. VII. C ONCLUSIONS 
+
+In this paper, we have proposed a novel approach for analysing the tracking performance of RLS adaptive algo-rithms in WSSUS channels. The normalised MSD is ex-
+
+Fig. 8: MSD performance of the ERLS algorithm ( t0 = 0 )against the forgetting factor λ for the channel with the uniform PDP and AR PSD: theoretical and numerical results in the multipath channel ( L = 10 ). pressed as a sum of three components: noise, modelling and approximation components. Previous works addressing the tracking performance of classical RLS algorithms, such as the ERLS and SRLS algorithms, did not account for the modelling component caused by the channel variations. This was justified since the modelling component for the classical RLS algorithms is relatively low compared with the approximation component. However, for RLS algorithms with improved tracking performance, such as the dSRLS and dERLS algorithms, in the vicinity of the optimal delay, the modelling component dominates the tracking performance, therefore known approaches are no longer valid. The proposed approach has been used to derive simple formulas for prediction of the MSD performance of the classical RLS algorithms against the algorithm parameters and channel characteristics, such as spectral moments of the PSD of channel variations. They have been specified for uniform, Jakes’ and AR PSDs. Some of the expressions of the approximation component are similar to those previously derived in the literature. Our MSD formulas provide similar or improved match with numerical simulation results, when compared to known results. The proposed approach has also enabled us to derive simple expressions for the MSD of the dSRLS, dERLS and SRLS-L adaptive algorithms; these expressions have been shown to provide a good match with numerical results in a variety of simulation scenarios. When analysing the MSD performance, we tried to avoid operations with matrices, since they significantly complicate the analysis. Therefore, a number of idealizations were intro-duced as follows. 1) The discrete-time calculations, involved in the oper-ation of the adaptive algorithms, have been replaced with continuous-time operations. The replacement of the sums by integrals introduces errors that we ignore in this DRAFT 12 
+
+paper. An analysis of these errors is required to better justify such a step. 2) The tap decoupling has been assumed in the derivations. Although, this is widely true for time-invariant systems, this assumption requires a justification for the time-variant case, which is the case of interest in this paper. 3) The fact that derivatives of stationary Gaussian random processes are uncorrelated has been exploited in the derivations. This allows at most two terms of the Taylor series to be kept in the analysis. Although two terms have been enough for scenarios considered in the paper, for faster channel variations, more terms can be useful. 4) The non-stationary modelling noise has been replaced with a stationary noise with a variance equal to the average variance of the non-stationary noise, plugged into equations (17) and (18) derived for a stationary noise. Such a treatment of the modelling noise requires a justification or a replacement with a more rigorous step. Also, for the analysis of the AR process of the first order, the derived general formulas with the spectral moments cannot be used, since the required spectral moments do not exist. Still, the direct integration in our analysis has resulted in more accurate (compared to known) expressions for calculating the MSD performance. However, these idealizations have resulted in simple and accurate formulas for prediction of tracking performance of multiple RLS adaptive algorithms used for estimation of time-varying impulse responses of linear systems with the parameter variations described as WSSUS processes. Future work will focus on validating these idealizations/assumptions. REFERENCES [1] J. Lin, J. G. Proakis, F. Ling, and H. Lev-Ari, “Optimal tracking of time-varying channels: A frequency domain approach for known and new algorithms,” IEEE Journal on Selected Areas in Communications ,vol. 13, no. 1, pp. 141–154, 1995. [2] E. Karami, “Tracking performance of least squares MIMO channel estimation algorithm,” IEEE Transactions on Communications , vol. 55, no. 11, pp. 2201–2209, 2007. [3] H. Yeo, B. Sharif, O. Hinton, and A. Adams, “Improved RLS algorithm for time-variant underwater acoustic communications,” Electronics Let-ters , vol. 36, no. 2, pp. 191–192, 2000. [4] Y. Zhang, Y. V. Zakharov, and J. Li, “Soft-decision-driven sparse chan-nel estimation and turbo equalization for MIMO underwater acoustic communications,” IEEE Access , vol. 6, pp. 4955–4973, 2018. [5] Y. V. Zakharov and J. Li, “Sliding window adaptive filter with diagonal loading for estimation of sparse UWA channels,” in IEEE OCEANS, Shanghai , 2016, pp. 1–5. [6] L. Shen, Y. Zakharov, L. Shi, and B. Henson, “BEM adaptive filtering for SI cancellation in full-duplex underwater acoustic systems,” Signal Processing , vol. 191, p. 108366, 2022. [7] L. Shen, B. Henson, Y. Zakharov, and P. Mitchell, “Digital self-interference cancellation for underwater acoustic systems,” IEEE Trans-actions on Circuits and Systems II: Express Briefs , vol. 67, no. 1, pp. 192–196, 2020. [8] E. Eleftheriou and D. Falconer, “Tracking properties and steady-state performance of RLS adaptive filter algorithms,” IEEE Transactions on Acoustics, Speech, and Signal Processing , vol. 34, no. 5, pp. 1097–1110, 1986. [9] N. Bershad, S. McLaughlin, and C. Cowan, “Performance comparison of RLS and LMS algorithms for tracking a first order Markov commu-nications channel,” in IEEE International Symposium on Circuits and Systems , 1990, pp. 266–270. [10] L. Guo, L. Ljung, and P. Priouret, “Tracking performance analysis of the forgetting factor RLS algorithm,” in Proceedings of the 31st IEEE Conference on Decision and Control , 1992, pp. 688–693. [11] E. Eweda, “Comparison of RLS, LMS, and sign algorithms for tracking randomly time-varying channels,” IEEE Transactions on Signal Process-ing , vol. 42, no. 11, pp. 2937–2944, 1994. [12] M. T. Silva and V. H. Nascimento, “Improving the tracking capability of adaptive filters via convex combination,” IEEE Transactions on Signal Processing , vol. 56, no. 7, pp. 3137–3149, 2008. [13] R. Claser and V. H. Nascimento, “On the tracking performance of adaptive filters and their combinations,” IEEE Transactions on Signal Processing , vol. 69, pp. 3104–3116, 2021. [14] V. Filimon, W. Kozek, W. Kreuzer, and G. Kubin, “LMS and RLS track-ing analysis for WSSUS channels,” in IEEE International Conference on Acoustics, Speech, and Signal Processing , vol. 3, 1993, pp. 348–351. [15] M. Nied´ zwiecki and M. Ciołek, “Generalized Savitzky–Golay filters for identification of nonstationary systems,” Automatica , vol. 108, p. 108477, 2019. [16] L. Shen, Y. Zakharov, B. Henson, N. Morozs, and P. D. Mitchell, “Adaptive filtering for full-duplex UWA systems with time-varying self-interference channel,” IEEE Access , vol. 8, pp. 187 590–187 604, 2020. [17] L. Shen, Y. Zakharov, L. Shi, and B. Henson, “Performance of adaptive filtering based on Legendre polynomials,” in IEEE Statistical Signal Processing Workshop (SSP) , 2021, pp. 6–10. [18] H. Cram´ er and M. R. Leadbetter, Stationary and related stochastic processes: Sample function properties and their applications . Courier Corporation, 2013. [19] M. R. Leadbetter, G. Lindgren, and H. Rootz´ en, Extremes and related properties of random sequences and processes . Springer Science & Business Media, 2012. [20] Y. V. Zakharov, T. C. Tozer, and J. F. Adlard, “Polynomial spline-approximation of Clarke’s model,” IEEE Transactions on Signal Pro-cessing , vol. 52, no. 5, pp. 1198–1208, 2004. [21] T. Feng and T. R. Field, “Statistical analysis of mobile radio reception: An extension of clarke’s model,” IEEE Transactions on Communica-tions , vol. 56, no. 12, pp. 2007–2012, 2008. [22] D. B. Percival, “Simulating Gaussian random processes with specified spectra,” Computing Science and Statistics , pp. 534–534, 1993. [23] D. R. Brillinger, “Fourier analysis of stationary processes,” Proceedings of the IEEE , vol. 62, no. 12, pp. 1628–1643, 1974. [24] Y. R. Zheng and C. Xiao, “Improved models for the generation of mul-tiple uncorrelated Rayleigh fading waveforms,” IEEE Communications Letters , vol. 6, no. 6, pp. 256–258, 2002. [25] C. Xiao, Y. R. Zheng, and N. C. Beaulieu, “Second-order statistical prop-erties of the WSS Jakes’ fading channel simulator,” IEEE Transactions on Communications , vol. 50, no. 6, pp. 888–891, 2002. [26] Y. R. Zheng and C. Xiao, “Simulation models with correct statistical properties for Rayleigh fading channels,” IEEE Transactions on Com-munications , vol. 51, no. 6, pp. 920–928, 2003. [27] S. Haykin, A. H. Sayed, J. R. Zeidler, P. Yee, and P. C. Wei, “Adaptive tracking of linear time-variant systems by extended RLS algorithms,” 
+
+IEEE Transactions on Signal Processing , vol. 45, no. 5, pp. 1118–1128, 1997. [28] S. M. Kay, “Statistical signal processing: Estimation theory,” Prentice Hall , 1993. [29] A. H. Sayed, Fundamentals of adaptive filtering . John Wiley & Sons, 2003. [30] I. Gradshteyn and I. Ryzhik, Table of integrals, series, and products .Elsevier Science, 2014. [31] H. B. Dwight, “Tables of integrals and other mathematical data,” New York: The MacMillan Company , 1947.

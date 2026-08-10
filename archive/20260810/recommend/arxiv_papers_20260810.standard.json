@@ -1,0 +1,96 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-10T21:21:18.471775+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.06036v1",
+      "source": "arxiv",
+      "title": "Tracking performance of RLS algorithms in WSSUS channels",
+      "abstract": "Adaptive algorithms are widely used for estimation of linear time-varying systems, such as communication channels. Their tracking performance depends on the level of noise, characteristics of time variations, and the algorithm parameters. Optimizing these parameters and predicting the algorithm performance is an important task. In this paper, we present an approach for analysing the tracking performance of recursive least squares (RLS) adaptive algorithms in channels with time variations described as wide-sense stationary uncorrelated scattering (WSSUS) random processes characterised by a power spectral density (PSD). We focus on exponential RLS and sliding-window RLS (SRLS) algorithms, for which general formulas for the mean square deviation (MSD) as a measure of the tracking performance are obtained in terms of spectral moments of the PSD. As examples, they are specified for random processes with uniform, Jakes' and autoregressive PSDs. These results are further generalized to RLS algorithms with delays, e.g. processing delays or delays introduced in non-causal adaptive RLS algorithms, and to the SRLS-L algorithm with approximation of channel time variations using Legendre polynomials. Numerical examples show good match between the analytical MSD and simulation results.",
+      "authors": [
+        "Yuriy Zakharov",
+        "Lu Shen"
+      ],
+      "primary_category": "eess.SP",
+      "categories": [
+        "eess.SP"
+      ],
+      "published": "2026-08-06T13:46:06+00:00",
+      "link": "https://arxiv.org/pdf/2608.06036v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "RLS adaptive algorithms for parameter estimation in time-varying systems, applicable to equivalent circuit model identification for SOC estimation.",
+      "llm_evidence_cn": "用于时变系统参数估计的RLS自适应算法，可应用于等效电路模型辨识以进行SOC估计。",
+      "llm_evidence": "用于时变系统参数估计的RLS自适应算法，可应用于等效电路模型辨识以进行SOC估计。",
+      "canonical_evidence": "用于时变系统参数估计的RLS自适应算法，可应用于等效电路模型辨识以进行SOC估计。",
+      "llm_tldr_en": "Analyzes tracking performance of recursive least squares (RLS) algorithms in communication channels with WSSUS fading, providing general formulas for mean square deviation; the RLS methodology is widely used for online parameter identification in battery equivalent circuit models, relevant to SOC estimation.",
+      "llm_tldr_cn": "本文分析了指数型RLS和滑动窗RLS算法在广义平稳非相关散射（WSSUS）信道中的跟踪性能，推导了均方偏差的一般公式。RLS是一类重要的自适应算法，在电池建模中常用于在线辨识等效电路模型参数，从而支撑荷电状态估计。虽然本文背景为通信信道，但其性能分析方法和算法变体可为电池状态估计中的参数辨识环节提供理论参考，提升模型精度和实时性。",
+      "llm_tldr": "本文分析了指数型RLS和滑动窗RLS算法在广义平稳非相关散射（WSSUS）信道中的跟踪性能，推导了均方偏差的一般公式。RLS是一类重要的自适应算法，在电池建模中常用于在线辨识等效电路模型参数，从而支撑荷电状态估计。虽然本文背景为通信信道，但其性能分析方法和算法变体可为电池状态估计中的参数辨识环节提供理论参考，提升模型精度和实时性。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.04430v2",
+      "source": "arxiv",
+      "title": "An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation",
+      "abstract": "Filtering combines model predictions with measurements to estimate the probability density function (PDF) of a system state over time. The PDF often becomes highly asymmetric and even multimodal in nonlinear systems with oscillatory or chaotic dynamics. Such non-Gaussian features violate the single-Gaussian assumption underlying Kalman-type filters. To address this problem, Gaussian mixture filtering has been proposed. However, accurately propagating mixture components and adaptively adjusting their number and weights over time remain open challenges. Here, we develop an adaptive split-combine Gaussian mixture filter (AMF) that estimates the time evolution of asymmetric and multimodal PDFs by adaptively splitting and combining Gaussian particles without auxiliary online numerical optimization. Notably, the proposed splitting method guarantees a reduction in variance along a target level-set-point direction of a Gaussian particle. This enables accurate and efficient propagation of particles. We show that AMF consistently outperforms various baseline filters across diverse benchmarks, including single and coupled slow-fast Van der Pol oscillators and the Lorenz attractor. We also propose a parallel implementation of AMF, allowing high-fidelity PDF estimation with practical computational cost.",
+      "authors": [
+        "San Kim",
+        "Won Chang",
+        "Daniel B. Forger",
+        "Dae Wook Kim"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA",
+        "stat.ML"
+      ],
+      "published": "2026-08-05T04:21:22+00:00",
+      "link": "https://arxiv.org/pdf/2608.04430v2",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Adaptive Gaussian mixture filter for nonlinear state estimation, potentially applicable to battery SOC estimation.",
+      "llm_evidence_cn": "用于非线性状态估计的自适应高斯混合滤波器，可能适用于电池SOC估计。",
+      "llm_evidence": "用于非线性状态估计的自适应高斯混合滤波器，可能适用于电池SOC估计。",
+      "canonical_evidence": "用于非线性状态估计的自适应高斯混合滤波器，可能适用于电池SOC估计。",
+      "llm_tldr_en": "Develops an adaptive split-combine Gaussian mixture filter for estimating asymmetric and multimodal probability densities in nonlinear systems, addressing limitations of Kalman-type filters; the method adaptively manages mixture components, potentially benefitting battery state estimation under nonlinear dynamics.",
+      "llm_tldr_cn": "针对非线性系统中状态概率密度函数的不对称性和多模态问题，本文提出一种自适应分裂-合并高斯混合滤波器（AMF），克服了传统卡尔曼类滤波器的高斯假设限制。该方法通过自适应分裂和合并混合分量，准确估计非高斯分布的时间演化。虽然未直接针对电池系统，但其处理非线性、多模态状态估计的能力，可为锂电池在动态工况下的荷电状态估计提供一种新的滤波框架，提高估计精度。",
+      "llm_tldr": "针对非线性系统中状态概率密度函数的不对称性和多模态问题，本文提出一种自适应分裂-合并高斯混合滤波器（AMF），克服了传统卡尔曼类滤波器的高斯假设限制。该方法通过自适应分裂和合并混合分量，准确估计非高斯分布的时间演化。虽然未直接针对电池系统，但其处理非线性、多模态状态估计的能力，可为锂电池在动态工况下的荷电状态估计提供一种新的滤波框架，提高估计精度。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

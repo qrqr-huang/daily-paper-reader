@@ -1,0 +1,3113 @@
+Title: An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation
+
+URL Source: https://arxiv.org/pdf/2608.04430v2
+
+Published Time: Fri, 07 Aug 2026 00:23:19 GMT
+
+Number of Pages: 60
+
+Markdown Content:
+# An adaptive split–combine Gaussian mixture filter for nonlinear and multimodal state estimation 
+
+San Kim a, Won Chang b,c , Daniel B. Forger d,e , Dae Wook Kim a,f, ∗
+
+> a
+
+Department of Brain and Cognitive Sciences, KAIST, Daejeon, 34141, Republic of Korea 
+
+> b
+
+Department of Statistics, Seoul National University, Seoul, 08826, Republic of Korea 
+
+> c
+
+The Institute for Data Innovation in Science, Seoul National University, Seoul, 08826, Republic of Korea 
+
+> d
+
+Department of Mathematics, University of Michigan, Ann Arbor, 48109, MI, USA 
+
+> e
+
+Department of Computational Medicine and Bioinformatics, Ann Arbor, 48109, MI, USA 
+
+> f
+
+KI for Human Augmentation Convergence, KAIST, Daejeon, 34141, Republic of Korea 
+
+Abstract 
+
+Filtering combines model predictions with measurements to estimate the probability density function (PDF) of a system state over time. The PDF often becomes highly asymmetric and even multimodal in nonlinear systems with oscillatory or chaotic dynamics. Such non-Gaussian features violate the single-Gaussian assumption underlying Kalman-type filters. To address this problem, Gaussian mixture filtering has been proposed. However, accu-rately propagating mixture components and adaptively adjusting their num-ber and weights over time remain open challenges. Here, we develop an adaptive split–combine Gaussian mixture filter (AMF) that estimates the time evolution of asymmetric and multimodal PDFs by adaptively splitting and combining Gaussian particles without auxiliary online numerical opti-mization. Notably, the proposed splitting method guarantees a reduction in variance along a target level-set-point direction of a Gaussian particle. This enables accurate and efficient propagation of particles. We show that AMF consistently outperforms various baseline filters across diverse bench-marks, including single and coupled slow–fast Van der Pol oscillators and the Lorenz attractor. We also propose a parallel implementation of AMF, allowing high-fidelity PDF estimation with practical computational cost. 
+
+> ∗
+
+Corresponding author 
+
+Email address: daewook@kaist.ac.kr (Dae Wook Kim) arXiv:2608.04430v2 [math.NA] 6 Aug 2026 Keywords: Nonlinear filtering; Gaussian mixture modeling; Uncertainty propagation; Slow-fast oscillators; Chaotic systems; Data assimilation 
+
+1. Introduction 
+
+Nonlinear dynamics, such as oscillations and chaos, are ubiquitous across physical and biological systems, including atmospheric convection [1], neu-ronal activity [2], cardiac pacemaking [3], and circadian rhythms [4]. The full state of these systems, however, often remains inaccessible to direct measure-ment despite advances in experimental techniques. For example, gene and hormone expression levels in deep brain regions cannot be directly measured in practice [5, 6, 7]. Due to this limitation, estimating unobservable states in stochastic sys-tems is essential. One approach to this problem is recursive Bayesian es-timation, i.e., Bayesian filtering [8]. This framework iteratively alternates between two steps: a time -update step, which propagates the state between consecutive measurements, and a measurement -update step, which corrects the prediction from the time-update step using the latest measurement. Al-though the optimal Bayesian filter solution can be represented conceptually, its exact computation is generally intractable for nonlinear systems [9, 10]. Thus, nonlinear filters rely on numerical approximations that can be broadly categorized into two classes. In the first class, the posterior density is con-strained to take an a priori form, typically Gaussian. Continuous–discrete Kalman filters, such as the continuous–discrete cubature Kalman filter (CD-CKF) [10], belong to this class. In the second class, no assumptions are made about the form of the posterior density, and a representative example is the particle filter (PF) [11, 12]. Although these methods have been widely used in many applications to date [13, 14, 15], their accuracy and computational efficiency deteriorate when estimating highly nonlinear dynamic states [8]. For example, CD-CKF employs a 1.5–order Itô–Taylor expansion of the stochastic differential equa-tion (SDE) to perform the time-update step, and thus its accuracy strongly depends on the system’s local nonlinearity: when the system is highly nonlin-ear, the probability density function (PDF) of the state variables may exhibit non-Gaussian features such as asymmetry (e.g., skewness) and multimodal-ity [10]. While non-Gaussian state propagation can be tracked through se-quential importance sampling within PF, its performance is constrained by 2a trade-off between the degree of nonlinearity and the number of samples [16, 17]. These drawbacks become more pronounced when measurements are temporally sparse or provide little information for updating the system states [18], particularly in biological oscillator data assimilation [19]. To circumvent these challenges, Gaussian mixture Filters (GMFs) have been proposed [20]. They track the posterior density by propagating a mix-ture of Gaussian components with non-zero covariance, unlike PF, which uses Dirac delta components. In the GMF paradigm, determining an appropriate number of Gaussian components and their weights is crucial for achieving both accuracy and computational efficiency [21]. Specifically, more and finer components are required when the posterior density is complex, whereas fewer and coarser components suffice when it resembles a Gaussian distribu-tion. One approach to this issue is to continuously assess non-Gaussianity and dynamically adjust the number and weights of Gaussian components dur-ing filtering [22]. However, most existing methods have been developed only for the measurement-update step, not for the time-update step [23, 24, 25]. Moreover, during the time-update step, the component weights are generally assumed to be fixed [26, 27, 28, 29, 30, 31]. This assumption holds when the covariances of the state variables are sufficiently small, such that the linearization of the system provides a reasonable representation of the dy-namics around the mean. However, it easily becomes problematic for highly nonlinear systems or when measurements are noisy or infrequent. The fixed-weight problem during state propagation has been addressed in only a few studies using optimization-based formulations [18, 32, 33, 34, 35, 36]. For example, Terejanu et al. [18] incorporated an auxiliary online optimization into the time-update step, where the Gaussian mixture approx-imation was constrained to satisfy the Fokker–Planck equation governing the time evolution of the state PDF. However, this approach can only be implemented with a fixed number of Gaussian components. Moreover, the numerical optimization problem must be solved at each infinitesimal time step during state propagation between consecutive measurements, which is computationally expensive. It also requires the computation of spatial partial derivatives and numerical integration, which may lead to stability issues. One possible remedy is to extend adaptive particle split–combine tech-niques developed for uncertainty propagation [37, 38, 39, 40, 41, 42] to fil-tering. Specifically, Wang and Forger [42] recently proposed the asymmetric particle population density method (APPD) to simulate macroscopic behav-iors of biological oscillators. In this framework, individual particles, treated 3as Gaussian components in GMFs, are propagated by solving ordinary dif-ferential equations (ODEs) reformulated from the underlying Fokker–Planck equation. The particles are then adaptively split, combined, and reweighted. Although the method appears to be a reasonable candidate for filtering appli-cations, there remains room for further improvement. Its splitting algorithm is based on eigen-decomposition, which divides a particle along directions with the largest variance. However, this splitting strategy does not guaran-tee that the resulting particles satisfy the local linear approximation along a target direction, which is required for accurate state propagation of individ-ual particles [29, 30, 34, 42, 43, 44, 45]. Furthermore, although the combining algorithm based on the proximity of particle means is computationally effi-cient, it can distort the resulting mixture distribution due to differences in particle covariances [42, 46]. Here, we propose a filtering-oriented split–combine scheme that dynam-ically adjusts the number and weights of particles. Our adaptive scheme theoretically guarantees a halving of the variance along a target direction while avoiding computationally demanding online numerical optimization and matrix inversion. Furthermore, it performs particle combining by as-sessing the distributional discrepancy between a candidate combined particle and the corresponding mixture of particles using a computationally efficient upper bound on the Kullback–Leibler (KL) divergence [46]. Using this split– combine scheme, we developed an adaptive split–combine Gaussian mixture filter (AMF) for state estimation of nonlinear systems with asymmetric and multimodal state distributions. We compared AMF with several baselines, including recently developed Kalman-type filters and GMFs, across bench-mark problems consisting of single and coupled slow–fast Van der Pol oscilla-tors and the Lorenz attractor. AMF consistently outperformed the baselines. Importantly, AMF outperformed the original APPD-based GMF while us-ing fewer particles during filtering. These results indicate that our adaptive split–combine scheme plays a critical role in nonlinear filtering. Lastly, we proposed a parallelized implementation of AMF and showed that, due to its suitability for parallel computation, it dramatically reduces the computa-tional cost of highly nonlinear state-space estimation. The remainder of this paper is organized as follows. Sec. 2 introduces AMF, with the problem formulation in Sec. 2.1 and an overview in Sec. 2.2, followed by a detailed description in Secs. 2.3– 2.6. In Sec. 3, we present numerical analyses that demonstrate improvement of AMF over baselines. Sec. 4 discusses the implications of our findings and future research directions. 42. Methods 
+
+2.1. Problem Formulation 
+
+A continuous–discrete dynamic system consists of two equations: the pro-cess equation and the measurement equation. The process equation describes the continuous-time evolution of the system states in the form of an Itô–type SDE: 
+
+dxt = v(xt)dt + √KdWt (1) where xt denotes the d–dimensional state of the system at time t, v : Rd → Rd
+
+is a drift function, Wt is a d–dimensional standard Wiener process, and K is a d × d positive semi-definite process noise matrix where K = √K√KT . The system states are observed indirectly through noisy measurements at discrete times, and their relationship is modeled by the measurement equation: 
+
+ztk = h(xtk ) + r (2) where ztk is the n–dimensional measurements at discrete time instances tk
+
+for k = 1 , 2, . . . , h : Rd → Rn is the measurement function, and r is assumed to be a zero-mean Gaussian white noise with a covariance matrix R.The purpose of filtering is to compute the posterior density p(xtk |zt1: k ),where zt1: k = {zt1 , · · · , ztk }. This can be calculated recursively in two steps: the time-update step and the measurement-update step. In the time-update step, the predicted state density p(xtk |zt1: k−1 ) is obtained by solving the pro-cess equation (1) with the initial condition p(xtk−1 |zt1: k−1 ), which is the pre-vious posterior density. In the measurement-update step, the propagated density is updated at each measurement instant using Bayes’ theorem with the measurement equation (2): 
+
+p(xtk |zt1: k )
+
+| {z }
+
+> Posterior
+
+= 1
+
+ck
+
+p(xtk |zt1: k−1 )
+
+| {z }
+
+> Prior
+
+p(ztk |xtk )
+
+| {z }
+
+> Likelihood
+
+(3) where ck = p(ztk |zt1: k−1 ) = R 
+
+> Rd
+
+p(xtk |zt1: k−1 )p(ztk |xtk )dxtk .Although a recursive approach for the continuous–discrete filtering prob-lem can be described conceptually as above, exact solutions exist only for a few special cases, such as when the drift function and the measurement func-tion are linear [10]. Except for these restricted cases, approximate solutions must be computed using numerical methods. However, existing numerical 5filters often cannot provide either sufficient accuracy or acceptable computa-tional cost when estimating asymmetric and multimodal state densities over time. To overcome this limitation, we developed AMF that can accurately and efficiently track the non-Gaussian posterior density through an adaptive particle propagation–split–combine scheme in parallel. The next subsection presents an overview of the proposed method. 
+
+2.2. Overview of the Method 
+
+Highly nonlinear systems exhibit non-Gaussian state distributions, and the degree of this non-Gaussianity changes over time. For example, in limit-cycle systems with fast–slow manifolds, state PDFs become elongated and bent along the orbit in the fast manifold, but this non-Gaussianity dimin-ishes when passing through the slow manifold. Therefore, detecting non-Gaussianity during state propagation is essential for nonlinear state-space es-timation. This inspired us to introduce a particle propagation–split–combine scheme in the time-update step of AMF (Fig. 1). This scheme evaluates the validity of the Gaussian assumption (i.e., the local linear approximation) at each infinitesimal time step and adaptively splits or combines Gaussian particles to approximate the non-Gaussian PDF when required. Adaptive split–combine Gaussian Mixture Filter  (AMF) 
+
+> Time-update step
+
+𝑝𝑝 𝐱𝐱𝑡𝑡𝑘𝑘 | 𝐳𝐳𝑡𝑡𝑖𝑖 𝑖𝑖=1 𝑘𝑘  𝑝𝑝 𝐱𝐱𝑡𝑡𝑘𝑘+1 | 𝐳𝐳𝑡𝑡𝑖𝑖 𝑖𝑖=1 𝑘𝑘  𝑝𝑝 𝐱𝐱𝑡𝑡𝑘𝑘+1 | 𝐳𝐳𝑡𝑡𝑖𝑖 𝑖𝑖=1 𝑘𝑘+1 
+
+𝐳𝐳𝑡𝑡𝑘𝑘+1 
+
+> Measurement-update step
+
+# … 
+
+> Cubature-rule-based Bayesian inference of Gaussian particles
+> Particle combining
+> Check KL upper bound
+> Check KL upper bound
+> Particle splitting
+> Tracking the level set of Gaussian particles
+> Check local linearity
+> Particle combining Reweighting
+
+Figure 1: Overview of the adaptive split–combine Gaussian mixture filter. In the time-update step, single-particle propagation is performed by tracking its level set. Particles violating the local linear approximation are split at each infinitesimal time step without auxiliary online numerical optimization, guaranteeing halved variance along the target level-set-point direction. Particles are combined when the combined distribution is sufficiently close to their weighted sum in terms of the Kullback–Leibler divergence. In the measurement-update step, the mean, covariance, and weight of each particle are updated by numerical integration based on the cubature rule. See Secs. 2.3 and 2.4 for details. 
+
+Specifically, AMF approximates a complex-shaped PDF with a mixture of Gaussian particles. The propagation of each particle is determined by solving ODEs along its level set, under a local linear approximation of the 6Fokker–Planck equation [47]. During propagation, the quality of the local lin-ear approximation is continuously evaluated without computing a Laplacian, which helps to avoid numerical stability issues in nonlinear state estimation [42]. If the quality is not satisfactory, the particle is split into three. Notably, the splitting is performed without solving auxiliary numerical optimization problems and guarantees a halving of the variance along the target level-set-point direction. It thereby accelerates satisfaction of the local linear approx-imation assumption for each particle without requiring excessive splitting, which can accumulate numerical errors. Particles are also combined into a single Gaussian by evaluating information loss using an efficiently computable upper bound on the KL divergence [46]. This scheme dramatically reduces the number of particles and thus the computational cost compared with APPD that inspired our approach, while improving accuracy (see below for details). Moreover, when implementing the propagation–split–combine scheme, the weight of each particle is auto-matically updated without any additional computation, unlike existing GMFs [18, 34, 35, 36]. Once the time-update step has been completed, the Gaussian particles and their mixture weights are updated using the latest measurement. First, each particle’s Gaussian density is corrected by propagating cubature points through the measurement function and assimilating them into the latest mea-surement, as in the CD-CKF measurement-update step [10]. Next, each weight is updated by scaling it with the corresponding marginal likelihood approximated using a cubature rule. Finally, the updated particles undergo splitting and combining, as done in the time-update step. To more efficiently implement AMF, we provide its parallel implementa-tion. Note that this is possible because iterative operations, such as particle propagation and splitting, in AMF can be performed independently for each particle. In the following subsections, we provide detailed descriptions of the time-update step (Sec. 2.3), the measurement-update step (Sec. 2.4), and the implementation details including parallel computing (Sec. 2.5). 
+
+2.3. Time-update step 
+
+This section describes the time-update step of AMF, which consists of three parts: propagation of individual particles, splitting, and combining. These parts are presented in Sec. 2.3.1, Sec. 2.3.2, and Sec. 2.3.3, respectively. 72.3.1. Single-particle propagation 
+
+This section presents the algorithm for propagating a single Gaussian par-ticle by solving the process equation (1) under the local linear approximation, as first proposed in [47]. Unlike the CD-CKF, which directly solves the SDE numerically, this method converts it into the corresponding Fokker–Planck equation: 
+
+∂u ∂t = 12∇ · (K∇u) − ∇ · (vu) (4) where u(x, t ) denotes the time evolution of the state PDF. Next, the level-set equation of the Fokker–Planck equation is solved under the local linear approximation: v(x) ≈ Jx where J is the Jacobian matrix. Specifically, consider the level set L(t) of a single particle, initialized with the Gaussian distribution centered at zero without loss of generality: 
+
+L(t) := {x ∈ Rd | F (x, t ) := u(x, t )
+
+u(0, t ) = c}, (5) where 0 < c < 1 is some fixed scalar constant and 
+
+u(x, 0) = 1
+
+p(2 π)d det( Σ) exp 
+
+
+
+−12xT Σ−1x
+
+
+
+. (6) Then, a velocity of the level set for L(0) is defined by a velocity field vL
+
+satisfying the level-set equation: 
+
+dF dt + vL · ∇ F = 0 . (7) The velocity field vL can be explicitly calculated under the local linear ap-proximation (see Lemma 1 in [47] for the detailed proof): 
+
+vL ≈ Jx + 12KΣ −1x. (8) Using the velocity field vL in (8), we trace the evolution of the column vectors of M, where the covariance matrix Σ = MM T , as they lie on the same level set, and tracking this level set is equivalent to tracking the propagation of a Gaussian particle (see section Appendix A and [47]). Specifically, let 
+
+Σ(0) = M(0) M(0) T be the covariance matrix of an initial Gaussian density, and M(0) = x1(0) · · · xd(0) , where xi(0) is the i-th column vector of 8M(0) . Then, xi(0) , representing a point on the level set, evolves according to the velocity field vL in (8), which can be expressed as follows: 
+
+dxi
+
+dt ≈ Jx i + 12KΣ −1xi ≈ v(¯ x + xi) − va(¯ x, M) + 12KM −T ei (9) where ei is the unit vector with all entries equal to 0 except for the i-th entry, 
+
+¯x is the center location of the particle, and 
+
+va(¯ x, M) := 12d
+
+> d
+
+X
+
+> i=1
+
+(v(¯ x + xi) + v(¯ x − xi)) . (10) Note that the approximation in (9) allows us to avoid Jacobian computation. Thus, we adopt this form for simulating particle propagation. The matrix shorthand form of (9) is given by 
+
+dM
+
+dt = v(¯ x + M) − va + 12KM −T , (11) and the averaged velocity of the center is given by 
+
+d¯x
+
+dt = va(¯ x, M) (12) where the matrix-vector additions are defined entrywise. Note that, in order to track the propagation of a single point xi on the level set, the other points 
+
+xj as well as the center location ¯x of the Gaussian particle must also be considered. Hence, all points on the level set must be updated simultaneously by concatenating M and ¯x into a variable of d×(d+1) dimension, and solving it with any ODE solver. The single-particle update algorithm is illustrated in Algorithm 1. Note that individual Gaussian particles can be updated independently, which enables parallel computation and thus dramatically reduces computational time (see Sec. 2.5 for details). 
+
+2.3.2. Particle splitting 
+
+The update of Gaussian particles relies on the local linear approximation of the drift term, as described above. However, this approximation becomes invalid when the size of a Gaussian particle grows as a result of continuous noise accumulation, or when the Gaussian structure is distorted by nonlinear 9Algorithm 1 Single-Particle Propagation 
+
+Require: The center ¯x and the covariance square root M of the Gaussian particle at the previous time step.  
+
+> 1:
+
+Update ¯x and M by passing them as the state variables to an ODE solver with the derivative defined by (11) and (12).  
+
+> 2:
+
+return The updated center and covariance square root dynamics, such as oscillations. To address this issue, we develop a particle splitting method inspired by [42]. Specifically, we define the following relative error for the off-center points: 
+
+ε = 
+
+> 12
+
+(v(¯ x + 2∆ xˆı) − v(¯ x)) − (v(¯ x + ∆ xˆı) − v(¯ x)) 
+
+∥v(¯ x)∥ (13) where ¯x is the center of the particle, and ∆xˆı is the offset of the off-center point in direction ˆı. Using the relative error (13), the soundness of the linear approximation is examined. Once the approximation is no longer valid, we need to reduce the particle covariance to shrink its effective support. This is achieved by splitting the particle into three thinner particles if the error exceeds a threshold ϵthreshold (see below for details). The selection of the threshold introduces a trade-off between computational cost and accuracy. Unless otherwise specified, ϵthreshold is set to 0.05 , following [42]. Note that we use (13) instead of the criterion proposed in [45] to avoid computing the Laplacian, thereby preserving the advantages of Laplacian-free approaches in single-particle propagation. This choice also improves nu-merical stability by eliminating Laplacian and Jacobian computations that may become unstable for near-singular covariance matrices. The numerator in (13) represents the sum of all higher-order ( ≥ 2) terms arising from the Taylor expansion of the drift function v, scaled by a constant factor (see sec-tion Appendix B). When determining whether particle splitting is required, we consider the errors computed by setting ∆xˆı = xi, the i-th column vector of M. This allows us to assess the soundness of the approximation in (9), which deter-mines the numerical errors generated when solving (11) and (12). Once the error exceeds a threshold, we split the particle into three thinner particles, each with half the variance in the direction of xi. Specifically, the covariance matrix Σsplit = NN T of each child particle is computed by subtracting the 10 appropriate orthogonal projections as follows: 
+
+Nj = 1
+
+√2xj, ∥i + xj, ⊥i
+
+= ( xj, ∥i + xj, ⊥i ) −
+
+
+
+1 − 1
+
+√2
+
+
+
+xj, ∥i
+
+= xj −
+
+
+
+1 − 1
+
+√2
+
+ ⟨xi, xj ⟩⟨xi, xi⟩ xi, 1 ≤ j ≤ d (14) where Nj is the j-th column of N, xj, ∥i and xj, ⊥i denote the components of 
+
+xj parallel and perpendicular to xi, respectively, and ⟨· , ·⟩ denotes the inner product. We then assign the central child particle a weight of 1 − 2w, placing it at the same location as the parent particle. The two remaining child particles are assigned weights of w each and are positioned at ±a relative to the center. With this configuration, we aim to find w and a such that the weighted sum of the child particles accurately represents the parent particle by solving the following optimization problem: 
+
+min  
+
+> a,w
+
+max  
+
+> x
+
+|K(x | 0, Σ)
+
+− ((1 − 2w)K(x | 0, Σsplit ) + wK (x | − aui, Σsplit ) + wK (x | aui, Σsplit )) |
+
+(15) where K(x | μ, Σ) denotes the PDF of the d–dimensional Gaussian distribu-tion N (μ, Σ), 0 ∈ Rd is the zero vector, and ui = xi/∥xi∥ is the unit vector in the direction of xi. If xi is aligned with any principal axis (i.e., an eigenvec-tor) of the particle’s covariance matrix, the multi-dimensional optimization problem (15) is reduced to 1–dimensional problem that is independent of the remaining dimensions of the state space: 
+
+min  
+
+> a,w
+
+max  
+
+> x
+
+K(x | 0, σ 2)
+
+−
+
+
+
+(1 − 2w)K(x | 0, σ2
+
+2 ) + wK (x | − a, σ2
+
+2 ) + wK (x | a, σ2
+
+2 )
+
+
+
+(16) where K(x | μ, σ 2) denotes the PDF of the 1–dimensional Gaussian distribu-tion with mean μ and variance σ2. This problem can be solved numerically, yielding the optimal parameter values a = 1 .03332 σ and w = 0 .21921 , as presented in [42]. 11 However, this choice of a and w is typically suboptimal because the tar-get level-set-point direction xi is generally not aligned with any principal axis (i.e., an eigenvector) of the parent particle’s covariance matrix. Due to this challenge, previous work splits the parent particle along a principal axis (rather than directly along xi) and adopts the values of a and w obtained by solving (16), although there is no guarantee that this effectively reduces the linearization error [29, 30, 34, 42, 43, 44, 45]. As a result, it may trigger un-necessary splitting and cause the number of particles to grow rapidly, leading to prohibitive computational costs and highly accumulated numerical errors in the optimization problem. To tackle this limitation, we develop a particle splitting method that guarantees a reduction in variance along a vector h from the particle mean to an arbitrary level-set point, while still using the optimal parameter values derived from (16). The key idea is to transform the Gaussian distribution into a new coordinate system where h is statistically uncorrelated with the other directions, allowing the optimal parameter values in (16) to be applied directly (Fig. 2). After splitting, the resulting child distributions are trans-formed back to the original space. Specifically, without loss of generality, we consider a centered Gaussian distribution x ∼ N (0, Σ) and aim to split it to reduce its variance along the direction d = h 
+
+> || h||
+
+.As a first step, we construct a linear transformation T such that 
+
+T =
+
+dT
+
+B
+
+
+
+(17) where the rows of B form an orthonormal basis for the null space of (Σd )T .Such a matrix T can always be constructed, for example, using the Gram– Schmidt process. Note that T is invertible if the variance along d is nonzero (i.e., dT Σd ̸ = 0 ), because this implies that d and Σd are not orthogonal, and thus dT is linearly independent of the rows of B. Importantly, the con-dition dT Σd ̸ = 0 is satisfied when d is chosen as a level-set-point direction, because the variance along a level-set-point direction cannot be zero. Indeed, the condition is typically satisfied in filtering settings, since process noise is continuously introduced into the system. Hence, T can be considered as invertible. Next, using T, we transform the random vector x into y = Tx :
+
+y =
+
+ y1
+
+y⊥
+
+
+
+=
+
+dT
+
+B
+
+
+
+x =
+
+dT xBx 
+
+
+
+(18) 12 T T−1 Splitting 
+
+Σ TΣ TT = σd2 0T         
+
+> 0Σ⊥ ′Σsplit =σd2/2 00Σ⊥ ′T−1 Σsplit T−1 T
+
+T T−1 Splitting ⃗𝑑𝑑  T−1 [a, 0, … , 0] TFigure 2: Schematic diagram of the particle splitting method. To reduce the variance along a specific direction d, a linear transformation T is first applied to the particle so that the variance of the transformed particle along its principal axis equals the variance of the original particle along d, i.e., σ2 
+
+> d
+
+= dT Σd . The particle is then split into three child particles along the principal axis using the parameter values derived in (16). The child particles are transformed back by applying T−1, yielding particles whose variance along d is halved. Note that the mean and covariance matrix of the child particles can be computed without explicitly computing either T or T−1 (see Sec. 2.3.2 for details). 
+
+The first component, y1 = dT x, is a scalar random variable. Since it is a linear transformation of a Gaussian vector x, y1 itself follows a normal distribution with a mean of E[y1] = dT E[x] = 0 . Its variance σ2 
+
+> d
+
+is given by 
+
+σ2 
+
+> d
+
+= Var (y1) = E[y1yT 
+
+> 1
+
+] = E[dT xx T d] = dT Σd . (19) This demonstrates that the variance of y1 is equal to the variance of x along the direction d, i.e., σ2 
+
+> d
+
+= dT Σd . Then, the covariance matrix of y, Σy =
+
+TΣT T , is computed as 
+
+Σy = TΣT T =
+
+dT
+
+B
+
+
+
+Σ  d BT  =
+
+dT Σd dT ΣB T
+
+BΣd BΣB T
+
+
+
+. (20) Note that, by construction of B, the off-diagonal block BΣd vanishes. Hence, 
+
+Σy is block-diagonal: 
+
+Σy =
+
+σ2 
+
+> d
+
+0T
+
+0 Σy,⊥
+
+
+
+(21) 13 where Σy,⊥ = BΣB T .The transformed random vector y now has a principal axis along which the variance equals that of x along d (i.e., dT Σd ). This enables us to split 
+
+y into three child particles ycenter , yleft , and yright by directly adopting the values derived from (16). The three child particles of y have the covariance matrix where the variance of the first component is halved: 
+
+Σy,split =
+
+σ2
+
+> d
+
+/2 0T
+
+0 Σy,⊥
+
+
+
+(22) Their means are given by 
+
+μy,center = 0 , μy,left = [ −a, 0, . . . , 0] T , μy,right = [ a, 0, . . . , 0] T (23) respectively, where μy,center , μy,left , and μy,right denote the means of the cen-ter, left, and right child particles of y, respectively, and a = 1 .03332 σd is the displacement scalar. Lastly, we apply the inverse transformation to ycenter , yleft , and yright ,obtaining the child particles of x:
+
+xcenter = T−1ycenter ∼ N (0 , Σx,split )
+
+xleft = T−1yleft ∼ N (T−1μy,left , Σx,split )
+
+xright = T−1yright ∼ N (T−1μy,right , Σx,split )
+
+(24) where Σx,split = T−1Σy,split (T−1)T . Note that the T−1μy,left and T−1μy,right 
+
+(i.e., T−1[±a, 0, . . . , 0] T ) can be expressed in a simpler form. Specifically, we have T−1Σy = ΣT T because Σy = TΣT T . This can be written as follows: 
+
+T−1Σy = T−1
+
+σ2 
+
+> d
+
+0T
+
+0 Σy,⊥
+
+
+
+= Σ  d BT  (25) By comparing the first columns on both sides of the second equality, we can observe that the vector obtained by multiplying the first column of T−1 by 
+
+σ2 
+
+> d
+
+is equal to Σd . Therefore, the following relationship holds: 
+
+T−1[a, 0, . . . , 0] T = aΣd
+
+σ2
+
+> d
+
+= 1 .03332 σd
+
+Σd
+
+σ2
+
+> d
+
+= 1.03332 
+
+σd
+
+Σd (26) This shows that it is not necessary to explicitly compute either the trans-formation matrix T or its inverse when calculating the means T−1μy,left and 14 T−1μy,right of the child particles in (24). We will later show that computing either T or T−1 is also unnecessary for evaluating their covariance matrix 
+
+Σx,split .Next, we show that the splitting method strictly reduces the variance of the particle distribution along a given direction d. Specifically, we decompose 
+
+x ∼ N (0, Σ) into two components: x∥ that is parallel to the covariance vector between x and its projection onto direction d, i.e., dT x, and x⊥ that is uncorrelated with dT x. That is, 
+
+x = x∥ + x⊥ where x∥ ∥ Cov (x, dT x) = Σd and Cov (x⊥, dT x) = 0 .
+
+This decomposition can always be constructed by taking 
+
+x∥ := dT xdT Σd Σd , x⊥ := x − x∥, (27) because x∥ is a scalar multiple of Cov( x, dT x) = Σd with scalar dT xdT Σd and 
+
+Cov( x⊥, dT x) = Ex⊥dT x
+
+= E(x − x∥)dT x
+
+= E[xd T x] − E
+
+dT x d T xdT Σd Σd 
+
+
+
+= Σd − dT Σd dT Σd Σd = Σd − Σd = 0. (28) Note that Cov( x∥, dT x) = Σd = Cov( x, dT x):
+
+Cov( x∥, dT x) = Ex∥dT x
+
+= E
+
+dT x d T xdT Σd Σd 
+
+
+
+= dT Σd dT Σd Σd 
+
+= Σd = Cov (x, dT x). (29) This implies that x∥ exactly captures the component of x that is correlated with dT x, while x⊥ represents the residual component that is uncorrelated with dT x. It also follows that x⊥ and dT x are independent from (28) since x
+
+is Gaussian and (x⊥, dT x) are jointly Gaussian. This results in Cov (x⊥, x∥) = 
+
+15 0 because x∥ is a linear function of dT x (27) and Cov (x⊥, dT x) = 0 (28). Therefore, 
+
+Σ = Σ∥ + Σ⊥.
+
+where Σ∥ and Σ⊥ denote Var (x∥) and Var (x⊥), respectively, and 
+
+Σ∥ = Var 
+
+ dT xdT Σd Σd 
+
+
+
+= Var (dT x)(dT Σd )2 (Σd )( Σd )T
+
+= (Σd )( Σd )T
+
+dT Σd . (30) This implies that Σ∥ represents the covariance contributed by the compo-nent of x aligned with Cov (x, dT x) = Σd , i.e., the variability of x explained by its projection onto direction d. This suggests that Σ∥ should be halved, while leaving the orthogonal component unchanged, if the proposed split-ting method in (24) correctly reduces the variability of x explained by its projection onto d. We confirm this in Theorem 2.1. 
+
+Theorem 2.1. The covariance Σx,split of the child particles in (24) is given by 
+
+Σx,split = Σ − 12Σ∥. (31) 
+
+Proof. In the splitting procedure, the variance along the first coordinate of 
+
+y = Tx is reduced by half (22): 
+
+Σy,split = Σy − σ2
+
+> d
+
+2 e1e⊤ 
+
+> 1
+
+, (32) where e1 denotes the first standard basis vector in Rd and σ2 
+
+> d
+
+= dT Σd .Mapping (32) back to the x-space via the inverse transformation, we obtain 
+
+Σx,split = T−1Σy,split (T−1)T
+
+= T−1
+
+
+
+Σy − σ2
+
+> d
+
+2 e1eT
+
+> 1
+
+
+
+(T−1)T
+
+= Σ − σ2
+
+> d
+
+2 (T−1e1)( T−1e1)T . (33) Because T−1e1 = Σd 
+
+> σ2
+> d
+
+(26), we have 16 Σx,split = Σ − σ2
+
+> d
+
+2
+
+Σd 
+
+σ2
+
+> d
+
+  Σd 
+
+σ2
+
+> d
+
+T
+
+= Σ − 12(Σd )( Σd )T
+
+dT Σd 
+
+= Σ − 12Σ∥. (34) Note that the third equality follows from (30). 
+
+Remark 2.1. Theorem 2.1 provides a theoretical justification for the particle splitting method in (24) . In particular, it shows that the method selectively reduces the covariance captured by projecting x onto direction d and recon-structing it optimally as 
+
+Var  E[x | dT x] = (Σ d)(Σ d)T
+
+dT Σd .
+
+Remark 2.2. The means and covariances of the child particles can be com-puted by (26) and (34) without explicitly computing either T or its inverse. Therefore, the splitting procedure remains computationally tractable, despite involving a transformation and its inverse. 
+
+Moreover, we show that the error introduced by particle splitting (24) is identical to the error obtained from the corresponding 1–dimensional particle splitting optimization problem (16) (see section Appendix C). This justifies the use of the parameter values a = 1 .03332 σ and w = 0 .21921 from (16) to determine the displacements and weights of the child particles at every splitting event, without solving an auxiliary numerical optimization problem. Taken together with the above remarks, this demonstrates that the pro-posed method enables well-tuned particle splitting. This is important from the perspectives of both accuracy and computational cost. Specifically, un-necessary splitting increases the number of Gaussian particles beyond what is needed, resulting in the excessive executions of Algorithm 1 and thus in-creasing the computational burden. Moreover, repeatedly solving the opti-mization problem (15) during splitting due to unnecessary splits may lead to a non-negligible accumulation of numerical errors, thereby affecting the filtering results. 17 The particle splitting algorithm is illustrated in Algorithm 2. Note that when particle splitting is applied iteratively, the weights W of some parti-cles can become extremely small, causing them to contribute negligibly to the overall distribution. In such cases, particles with weights below a certain threshold Wthreshold are pruned. This threshold is set to 10 −4 unless otherwise specified. The choice of threshold introduces a trade-off between computa-tional cost and accuracy, as retaining more small-weight particles increases the number of executions of Algorithm 1. 
+
+Algorithm 2 Particle Splitting 
+
+Require: Wthreshold ∈ (0 , 1] , ϵthreshold > 0, a Gaussian particle p = ( W, ¯x, Σ)
+
+where W ∈ (0 , 1] is the weight, ¯x ∈ Rd and Σ = MM T ∈ Rd×d denote the mean and covariance, respectively.  
+
+> 1:
+
+if W < W threshold then  
+
+> 2:
+
+return ∅ 
+
+> 3:
+
+end if  
+
+> 4:
+
+for i = 1 to d do  
+
+> 5:
+
+Calculate ϵi using (13) with ¯x and ∆xˆi = Mi where Mi is i-th column of M 
+
+> 6:
+
+end for  
+
+> 7:
+
+k ← arg max 1≤i≤d ϵi 
+
+> 8:
+
+if ϵk ≤ ϵthreshold then  
+
+> 9:
+
+return {(W, ¯x, Σ)} 
+
+> 10:
+
+end if  
+
+> 11:
+
+dk ← Mk/∥Mk∥ 
+
+> 12:
+
+Compute 
+
+μ = a
+
+dTk Σd k
+
+Σd k, Σ∥,k = (Σd k)( Σd k)T
+
+dTk Σd k
+
+where a = 1 .03332 pdTk Σd k and w = 0 .21921 are the values from (16).  
+
+> 13:
+
+Generate three child particles: center, left, and right, denoted by pcenter ,
+
+pleft , and pright :
+
+pcenter =  (1 − 2w)W, ¯x, Σ − 12 Σ∥,k 
+
+
+
+pleft =  wW, ¯x − μ, Σ − 12 Σ∥,k 
+
+ , pright =  wW, ¯x + μ, Σ − 12 Σ∥,k 
+
+ 
+
+> 14:
+
+return pcenter , p left , p right 
+
+18 2.3.3. Particle combining 
+
+Particle splitting generates new particles. Thus, using only particle split-ting for filtering leads to a geometric increase in the number of particles over time, making the method impractical. To address this issue, particle combining is required. This need has also been recognized in previous work [22, 29, 42, 46, 44]. For example, Wang and Forger [42] recently developed a method to determine which particles should be combined by partitioning the state space into cubic-shaped grid cells and considering the proximity of particle means in the same cell. Specifically, if the mean distance among par-ticles, {xi ∼ N (μi, Σi)}ni=1 , within the same cell is less than a certain radius, they are combined into a single Gaussian particle, xcom ∼ N (μcom , Σcom ):
+
+μcom = 1
+
+wcom 
+
+> n
+
+X
+
+> i=1
+
+wiμi,
+
+Σcom = 1
+
+wcom 
+
+> n
+
+X
+
+> i=1
+
+wiΣi
+
+| {z }
+
+> ΣW
+
++ 1
+
+wcom 
+
+> n
+
+X
+
+> i=1
+
+wi(μi − μcom )( μi − μcom )T
+
+| {z }
+
+> ΣB
+
+(35) where wi is the weight of xi, wcom = Pni=1 wi is the weight of the combined particle, ΣW represents the within-component contribution, and ΣB repre-sents the between-component contribution. Note that the equality of the variances is a direct result of the law of total variance. The method is computationally efficient because it only uses the proximity of particle means as the combining criterion. However, it may make incorrect combining decisions in certain cases. For instance, if particles have similar means but significantly different covariances, the distribution of the com-bined particle can differ substantially from that of their weighted sum (Fig. 3(a)). Furthermore, even when the means are far apart, sufficiently large co-variances can make the distribution of the combined particle similar to that of their weighted sum (Fig. 3(b)). In such cases, incorrect particle-combining decisions based on particle means can lead to non-negligible numerical errors. To prevent this, we focus on the similarity between the distributions. Specifically, let us consider the Gaussian mixture 
+
+x =
+
+> N
+
+X
+
+> i=1
+
+wixi, xi ∼ N (x; μi, Σi),
+
+> N
+
+X
+
+> i=1
+
+wi = 1 . (36) 19 a b
+
+> Combined particle
+> Particle 2
+> Mixture PDF
+> Particle 1
+> Combined particle
+> Particle 2
+> Mixture PDF
+> Particle 1
+
+Figure 3: Particle-combining decisions based solely on particle means can be inaccurate, leading to numerical errors and unnecessary computational cost. (a) When the means of particles 1 (red) and 2 (blue) are close but their variances differ substantially, the PDF of the combined particle (purple) can differ significantly from the weighted mixture PDF (green). Thus, combining particles solely because their means are close can lead to numerical errors. (b) When the means of two particles are far apart but their variances are sufficiently large, the weighted mixture PDF can still be approximated well by the PDF of the combined particle. Thus, relying solely on particle means can result in an unnecessarily large number of particles, increasing computational cost. 
+
+In the mixture, we aim to determine whether two particles, denoted without loss of generality as x1 and x2, should be combined to xcom computed using (35). For this, we first consider the KL divergence between the Gaussian mixtures before and after combining: 
+
+DKL (w1π1 + w2π2 + πres , π com + πres ) = 
+
+Z
+
+> Rd
+
+(w1π1 + w2π2 + πres )( x) log (w1π1 + w2π2 + πres )( x)(πcom + πres )( x) dx. (37) where πi and πres denote the PDFs of xi and the weighted sum of residual particles PNi=3 wixi, respectively. Note that, in (37), πres is included because we focus on the effect of particle combining on the entire mixture x in (36), rather than only on the sub-mixture consisting of x1 and x2. Although the KL divergence (37) provides a principled criterion for combining particles, its computation is intractable during filtering, particularly when a large number of particle pairs must be considered. Thus, we instead utilize the computable upper bound B(x1, x2) on the KL divergence inspired by [46] and [48]: 
+
+DKL (w1π1 + w2π2 + πres , π com + πres ) ≤ B (x1, x2) (38) where 
+
+B(x1, x2) = 12 [( w1 + w2) log det( Σcom ) − w1 log det( Σ1) − w2 log det( Σ2)] .
+
+(39) 20 This upper bound quantifies the information loss caused by replacing two Gaussian particles with a single Gaussian particle in the mixture. Although 
+
+B(xi, xj ) is expressed only in terms of the covariance determinants, it is an upper bound on the KL divergence between the Gaussian mixtures before and after combining, rather than a direct measure of the covariance change itself [46]. The detailed step-by-step derivation of (38) and (39) is provided in section Appendix D for completeness, since our notation and context differ from those in [46]. Note that computing (39) is computationally efficient as it only involves determinant evaluations and avoids expensive procedures such as Monte Carlo sampling for KL divergence estimation. Using (39), we perform particle combining (Fig. 4). Specifically, we first partition the state space into a grid, as done in [42]. Within each grid cell, we compute the minimum value of B(xi, xj ) over all particle pairs. If the minimum value falls below a threshold Cthreshold , the corresponding particle pair is combined, as illustrated in Algorithm 3. Cthreshold is set to 0.05 unless otherwise specified. Note that the combining process is iterated in each grid cell until the minimum value is greater than Cthreshold .Particle 1   
+
+> Particle 2
+> Particle 3
+> KL-based
+> particle combining
+> Combined particle
+> Particle 3
+> Figure 4: Particle combining based on the Kullback–Leibler divergence upper bound. The upper bound in (39) is evaluated for each particle pair. If the minimum value among all pairs is below a threshold, the corresponding pair is combined, as illustrated for particles 1 and 2.
+
+2.4. Measurement-update step 
+
+As a result of the time-update step, we obtain the predicted (i.e., prior) state distribution, represented as a Gaussian mixture: 
+
+p(xtk | zt1: k−1 ) = 
+
+> M
+
+X
+
+> i=1
+
+ˆwi ˆπi(xtk ) (40) 21 Algorithm 3 Particle Combining 
+
+Require: Cthreshold > 0, particle set and corresponding weights {xi, w i}i∈S
+
+in a grid cell ( S: particle indices in the cell) 
+
+1: Compute B(xi, xj ) using (39) for all i, j ∈ S with i < j 
+
+2: Find 
+
+(i⋆, j ⋆) = arg min  
+
+> i,j ∈S, i<j
+
+B(xi, xj )
+
+3: if B(xi⋆ , xj⋆ ) < C threshold then 
+
+4: Compute the combined particle and its weight {xcom , w com } from xi⋆
+
+and xj⋆ using (35): 
+
+5: {xi⋆ , w i⋆ } ← { xcom , w com }
+
+6: Remove j⋆ from S: S ← S \ { j⋆}
+
+7: end if 
+
+8: return Updated particle set and corresponding weights {xi, w i}i∈S
+
+where zt1: k−1 = {zt1 , · · · , ztk−1 }, ˆwi is the predicted weight of the i-th Gaus-sian component, and ˆπi denotes its corresponding PDF with mean ˆμi and covariance matrix ˆΣi. The predicted state distribution (40) is updated using Bayes’ theorem when a new measurement ztk is given: 
+
+p(xtk | zt1: k ) = p(ztk | xtk ) PMi=1 ˆwi ˆπi(xtk )
+
+R p(ztk | xtk ) PMi=1 ˆwi ˆπi(xtk ) dxtk
+
+(41) 
+
+=
+
+PMi=1 ˆwip(ztk | xtk )ˆ πi(xtk )
+
+PMi=1 ˆwi
+
+R p(ztk | xtk )ˆ πi(xtk ) dxtk
+
+(42) 
+
+= 1
+
+ckMX
+
+> i=1
+
+ˆwip(ztk | xtk )ˆ πi(xtk ) (43) where ck = PMi=1 ˆwi
+
+R p(ztk | xtk )ˆ πi(xtk ) dxtk . This expression can be further rewritten as 
+
+p(xtk | zt1: k ) = 
+
+> M
+
+X
+
+> i=1
+
+"
+
+ˆwi
+
+ck
+
+Z 
+
+p(ztk | xtk )ˆ πi(xtk )dxtk
+
+
+
+·
+
+ p(ztk | xtk )ˆ πi(xtk )
+
+R p(ztk | xtk )ˆ πi(xtk )dxtk
+
+#
+
+. (44) 22 This implies that the updated (i.e., posterior) distribution becomes the fol-lowing mixture: 
+
+p(xtk | zt1: k ) = 
+
+> M
+
+X
+
+> i=1
+
+w+ 
+
+> i
+
+π+ 
+
+> i
+
+(xtk ) (45) where 
+
+w+ 
+
+> i
+
+= ˆwi
+
+ck
+
+Z 
+
+p(ztk | xtk )ˆ πi(xtk )dxtk
+
+
+
+, π+ 
+
+> i
+
+(xtk ) = p(ztk | xtk )ˆ πi(xtk )
+
+R p(ztk | xtk )ˆ πi(xtk )dxtk
+
+.
+
+Therefore, the measurement-update step consists of two parts: computing the posterior distribution π+ 
+
+> i
+
+(xtk ) for each particle and computing the corre-sponding weight w+ 
+
+> i
+
+. These parts are presented in Sec. 2.4.1 and Sec. 2.4.2, respectively. 
+
+2.4.1. Single-particle measurement update 
+
+For the single-particle measurement update, we used the measurement-update method from the square-root CD-CKF [10] because it can accommo-date the positive semi-definite matrix calculated during the single-particle propagation step [19, 47]. We restate the method in Algorithm 4 because our notation differs from that in previous studies [10, 19, 47]. Note that this method yields a Gaussian particle, i.e., π+ 
+
+> i
+
+in (45) is Gaussian, because the CD-CKF assumes Gaussianity. This assumption is reasonable in our algo-rithm, since each particle is expected to have a relatively narrow covariance due to both particle splitting and the measurement update. Consequently, the updated distribution (45) becomes a Gaussian mixture, providing a suit-able setting for performing the next time-update step. 
+
+2.4.2. Weight update 
+
+Analytically computing the updated weight w+ 
+
+> i
+
+in (45) is typically in-tractable [10]. We thus compute w+ 
+
+> i
+
+by numerically approximating the inte-gral using the cubature rule [49, 50]: 
+
+Z
+
+p(ztk | xtk )ˆ πi(xtk )dxtk ≈ 12d
+
+> 2d
+
+X
+
+> j=1
+
+πi,j (ztk ) (46) 23 Algorithm 4 Single-Particle Measurement Update 
+
+Require: A predicted Gaussian particle ˆxi ∼ N ( ˆ μi, ˆΣi) where ˆμi ∈ Rd
+
+and ˆΣi = ˆMi ˆMTi , a measurement ztk , a measurement function h, and a measurement noise covariance matrix R 
+
+> 1:
+
+Construct the concatenated matrix of the cubature points: 
+
+N = ˆ μ + √d
+
+ ˆMi | − ˆMi
+
+
+
+. 
+
+> 2:
+
+Compute the predicted measurement: 
+
+¯ztk = 12d
+
+> 2d
+
+X
+
+> j=1
+
+h(N)j ,
+
+where h(N)j is the j-th column of h(N). 
+
+> 3:
+
+Perform the QR-factorization: 
+
+T11 OT21 T22 
+
+
+
+= qr 
+
+h(N) √RN O
+
+
+
+,
+
+where O is a zero matrix.  
+
+> 4:
+
+Compute the updated mean μ+ 
+
+> i
+
+and covariance matrix Σ+ 
+
+> i
+
+:
+
+μ+ 
+
+> i
+
+= ˆ μi + T21 T−111 (ztk − ¯ztk ), Σ+ 
+
+> i
+
+= T22 TT
+
+> 22
+
+. 
+
+> 5:
+
+return x+ 
+
+> i
+
+∼ N (μ+ 
+
+> i
+
+, Σ+ 
+
+> i
+
+) with PDF π+
+
+> i
+
+where πi,j is a Gaussian PDF with mean h( ˆ μi +
+
+p ˆΣiξj ) and covariance matrix R, and the cubature points ξj are given by 
+
+ξj =
+
+(√d ej j = 1 , . . . , d 
+
+−√d ej−d j = d + 1 , . . . , 2d. 
+
+Note that h and R are the measurement function and measurement noise covariance matrix in (2), respectively, and ei is the i-th unit vector in Rd.24 Specifically, applying the cubature-rule-based approximation (46) yields 
+
+w+ 
+
+> i
+
+= ˆ wi
+
+R p(ztk | xtk )ˆ πi(xtk )dxtk
+
+PMl=1 ˆwl
+
+R p(ztk | xtk )ˆ πl(xtk ) dxtk
+
+≈ ˆwi
+
+P2dj=1 πi,j (ztk )
+
+PMl=1 ˆwl
+
+P2dj=1 πl,j (ztk ) ∝ ˆwi
+
+> 2d
+
+X
+
+> j=1
+
+πi,j (ztk ) (47) Based on this proportional relationship in (47) and the normalization con-dition PMi=1 w+ 
+
+> i
+
+= 1 , the weights are updated. The detailed procedure is illustrated in Algorithm 5. 
+
+Algorithm 5 Weight Update 
+
+Require: Predicted weights { ˆwi}Mi=1 , a measurement ztk , a measurement function h, a measurement noise covariance matrix R, and predicted means and covariance matrices { ˆμi, ˆΣi}Mi=1 where ˆμi ∈ Rd 
+
+> 1:
+
+for i = 1 to M do  
+
+> 2:
+
+Update weights: 
+
+w+ 
+
+> i
+
+← ˆwi
+
+> 2d
+
+X
+
+> j=1
+
+πi,j (ztk ) 
+
+> 3:
+
+end for  
+
+> 4:
+
+Normalize weights: 
+
+w+ 
+
+> i
+
+= w+
+
+> i
+
+PMl=1 w+ 
+
+> l
+> 5:
+
+return w+
+
+> i
+> Mi=1
+
+2.5. Implementation details 
+
+In this subsection, we explain how Algorithms 1–5 are used to implement AMF. In the time-update step, individual particles are propagated using Al-gorithm 1. Since the propagations of individual particles are independent, they can be performed in parallel. When particle propagations accumulate errors such that the local linear approximation assumption becomes invalid, the particles are split using Algorithm 2. Splitting is repeatedly applied until all resulting particles satisfy the error criterion. After propagation and split-ting, the increased number of particles is reduced through particle combining 25 described in Algorithm 3. Combining is repeated until no more particle pairs can be combined. In the measurement-update step, individual particles and their weights are updated using Algorithms 4 and 5, respectively. Then, the updated particles are combined using Algorithm 3. The single-particle and weight updates can also be performed in parallel, similar to the single-particle propagations. Including the parallel computations, the overall implementa-tion of AMF is illustrated in Algorithm 6. 
+
+Algorithm 6 AMF with Parallel Computation 
+
+Require: Gaussian particles, time interval ∆t, and measurements {ztk }Kk=1  
+
+> 1:
+
+for k = 1 to K do  
+
+> 2:
+
+Parallel time-update step:  
+
+> 3:
+
+while tk−1 ≤ current time t < t k do  
+
+> 4:
+
+for all particles in parallel do  
+
+> 5:
+
+Propagate particles from t to min {t + ∆ t, t k} using Algorithm 1, while performing particle splitting using Algorithm 2.  
+
+> 6:
+
+end for  
+
+> 7:
+
+Combine the propagated particles by partitioning them into grid cells and applying Algorithm 3 within each cell.  
+
+> 8:
+
+t ← min {t + ∆ t, t k} 
+
+> 9:
+
+end while  
+
+> 10:
+
+Parallel measurement-update step:  
+
+> 11:
+
+for all particles in parallel do  
+
+> 12:
+
+Update particles using Algorithm 4  
+
+> 13:
+
+Update particle weights using Algorithm 5  
+
+> 14:
+
+end for  
+
+> 15:
+
+Combine the updated particles by partitioning them into grid cells and applying Algorithm 3 within each cell.  
+
+> 16:
+
+end for 
+
+2.6. Baseline methods 
+
+In this subsection, we introduce the baselines and explain the rationale for their selection. The first baseline is CD-CKF, which was chosen because it is one of the most widely used and accurate sigma-point filters [10]. In-deed, prior studies have shown its improved numerical stability and superior performance compared with other sigma-point filters, such as the continuous– discrete unscented Kalman filter [9, 10]. The second baseline is LSKF, which 26 was selected because it was developed more recently than CD-CKF and has been shown to achieve improved performance in challenging radar-tracking problems [47]. Furthermore, the LSKF is directly relevant to AMF as it is used for single-particle propagation, illustrated in Algorithm 1. Besides these baselines, we included the Gaussian sum accurate contin-uous–discrete extended cubature Kalman filter (GS-ACD-ECKF) as a third baseline, which estimates the system state using multiple Gaussian particles [51]. This filter was selected because it extends the first baseline, CD-CKF, and has been shown to outperform CD-CKF in radar tracking problems [51]. Because the third baseline employs a fixed number of particles, it is neces-sary to include an additional baseline that adaptively adjusts the number of particles during filtering. Several adaptive strategies based on particle split-ting and combining have been proposed [37, 38, 39, 40, 41, 42, 43]. Among these methods, we adopt APPD [42] because it serves as the primary inspi-ration for AMF. In APPD, a particle is split using an eigen-decomposition approach, while particle combining is performed based on the proximity of particle means. These operations are applied during the time-update step, while the measurement-update step is performed using Algorithms 4 and 5. This APPD-based filter (APPDF) was selected as the fourth baseline because it enables the benefits of our newly proposed particle management strategy to be evaluated in isolation from other algorithmic factors present in other methods [24, 29, 30, 31, 34, 44]. 
+
+3. Results 
+
+In this section, we demonstrate the performance of AMF through four numerical experiments. The first experiment evaluates the accuracy and computational efficiency of the particle propagation–split–combine scheme (Algorithms 1–3) for uncertainty propagation (i.e., the time update) in the Van der Pol oscillator with a slow–fast manifold. Using the same bench-mark, the second experiment evaluates the performance of the full filtering algorithm (Algorithm 6), including the measurement update (Algorithms 4 and 5). Third, we test the scalability of AMF in higher-dimensional sys-tems using coupled Van der Pol oscillators. Finally, we evaluate AMF on the Lorenz attractor, a chaotic system with multimodal state PDFs. The hyper-parameters, such as ϵthreshold , Wthreshold , and Cthreshold , used in the benchmark studies are listed in Supplementary Table 1. 27 3.1. Example 1: Uncertainty propagation in the Van der Pol oscillator 
+
+We demonstrate the performance of the particle propagation–split–combine scheme of AMF by solving the uncertainty propagation problem for the Van der Pol oscillator with asymmetric state PDFs. The system is governed by the following SDE: 
+
+d
+
+yt
+
+zt
+
+
+
+=
+
+ zt
+
+μ(1 − y2 
+
+> t
+
+)zt − yt
+
+
+
+dt + √KdWt (48) where μ is the nonlinearity parameter and Wt denotes a two-dimensional standard Wiener process. The process noise matrix is set to K = 0 .006 I2
+
+where In is the n × n identity matrix. The ground-truth state PDFs were obtained by performing the time-update step of PF via the Euler–Maruyama method with 50,000 particles and a time step of ∆t = 0 .05 , as this configura-tion was sufficient to achieve convergence (Supplementary Fig. 1). The un-certainty propagation method for the time-update step of AMF is compared with those of LSKF [47], CD-CKF [10], GS-ACD-ECKF [51], and APPDF [42]. All simulations were conducted until t = 30 across a range of non-linearity parameters μ ∈ { 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0}. Note that this parameter range covers a significantly nonlinear regime, which is typically not considered in prior studies [52, 53, 54, 55]. Figs. 5(a) and 5(b) show that AMF tracks the mean system state more accurately than the baselines. Supplementary Video 1 further illustrates this improvement by visualizing the mean state trajectories over time. This im-proved performance, quantified by the sum of squared errors (SSE) between the estimated mean trajectories and the PF ground truth, remains consistent across different degrees of nonlinearity (Fig. 5(c)). Importantly, while the SSE of the baselines increases rapidly with increasing nonlinearity ( μ), AMF maintains a consistently low and stable error level, highlighting its robustness in capturing nonlinear dynamics. Beyond mean propagation, the fidelity of PDF propagation was assessed by comparing the marginal PDFs of states y and z. The asymmetric marginal PDFs were captured more accurately by AMF than by APPDF, highlighting the advantages of the particle split–combine scheme proposed in this study (Fig. 5(d) and Supplementary Video 2). The improvement, quantified by the accumulated L 1 error between the estimated PDFs and the PF ground truth over time, was preserved across different degrees of nonlinearity (Fig. 5(e)). Notably, the accumulated L 1 error for the AMF remained nearly invariant to 28 a 4    
+
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 𝑦𝑦
+> 𝑧𝑧
+> PF
+> LSKF
+> CD-CKF
+> GS-ACD-ECKF
+> APPDF
+> AMF
+
+b      
+
+> 0510 15 20 25 30
+> Time
+> 𝑦𝑦
+> 𝑧𝑧
+> 2
+> 0
+> -2
+> 1
+> 2
+> 4
+> 0
+> -4
+> 2
+> -2
+
+c       
+
+> 𝜇𝜇
+> 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0
+> 6
+> 5
+> 4
+> 3
+> 2
+> 1
+> 0
+> Sum of squared errors
+> x10 2
+
+d e     
+
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑧𝑧
+> variable
+> -3 -2 -1 3210
+> 3
+> 2
+> 1
+> 0
+> 1
+> 0.2
+> 0
+> 0.4
+> 0.8
+> 0.6
+> Probability density
+
+f
+
+g                                     
+
+> 𝜇𝜇
+> 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0
+> 30
+> 20
+> 10
+> 0
+> 30
+> 20
+> 10
+> 0
+> L1 error
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑧𝑧 𝜇𝜇
+> 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0
+> Mean particle num.
+> 0
+> x10 2
+> 2
+> 4
+> 6
+> 8
+> Comp. time (sec)
+> APPDF AMF
+> x10 3
+> 0
+> 2
+> 4
+> 6
+> 8
+> 0
+> 1
+> 2
+> 3
+> 4x10 2
+> With
+> parallel
+> comp.
+> Without parallel
+> comp.
+> Mean trajectory
+> -2 -1 043215
+> 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0
+> 0510 15 20 25 30
+> APPDF AMF
+
+Figure 5: Performance of AMF for uncertainty propagation in the Van der Pol oscillator. (a) Mean state trajectories of AMF, the baselines, and the PF ground truth (GT) for μ = 1 .6 over t = 20 –27 . (b) Mean trajectories of states y and z over time for 
+
+μ = 1 .6. (c) SSE between the estimated mean state trajectories and GT for different values of μ. (d) Marginal PDFs of states y and z of AMF, APPDF, and GT for μ = 1 .6
+
+at t = 28 .35 . (e) L1 error between the estimated PDFs and GT. (f ) Mean number of particles during simulation. (g) Computational time in sequential and parallel computing settings for μ = 2 .0 and K = 0 .06 I2. Error bars denote the mean ± standard deviation over five independent runs. 
+
+the increase in μ, whereas the errors for the other methods increased signifi-cantly. This confirms that AMF accurately tracks the temporal evolution of non-Gaussian PDFs even under high nonlinearity. We next compare the mean number of particles during uncertainty propa-gation between AMF and APPDF. AMF performed uncertainty propagation with fewer particles than APPDF while achieving more accurate propagation (Fig. 5(f) and Supplementary Video 3). Moreover, as the system’s nonlinear-ity increases, the mean number of particles dramatically increases in APPDF. However, AMF shows only a slight increase. This indicates that the number of particles is more effectively regulated by the particle split–combine scheme in AMF (Algorithms 2 and 3), as guaranteed by Theorem 2.1 and [46]. Due to tracking the state PDFs with fewer particles, AMF requires less compu-tational time than APPDF (Fig. 5(g), left). The computational cost can be further dramatically reduced through parallel computing (Fig. 5(g), right), indicating that the algorithmic architecture of AMF is well suited for paral-29 lelization. Taken together, these results confirm that AMF offers a practical and high-fidelity solution for state propagation in highly nonlinear systems at a reasonable computational cost. 
+
+3.2. Example 2: Filtering of the Van der Pol oscillator 
+
+We evaluate whether the improved performance of AMF in uncertainty propagation during the time-update step (Fig. 5) is maintained even after measurement updates are performed. The process equation is the same as in Example 1 (48), and we consider μ ∈ { 1.0, 1.25 , 1.5, 1.75 , 2.0}. Measurements are provided at t = 10 and t = 20 , and each measurement value is selected to slightly deviate from the ground-truth limit-cycle trajectory in Example 1 to induce a meaningful state correction during the measurement-update step (Supplementary Fig. 2). The relationship between the state xk = [ yk, z k]T
+
+and the measurement vector zk = [ rk, θ k]T is defined by the following non-linear polar coordinate mapping: 
+
+zk = h(xk) + rk, rk ∼ N (0, R) (49) where the measurement function h(xk) and the noise covariance matrix R
+
+are given by 
+
+h(xk) = 
+
+ py2 
+
+> k
+
++ z2
+
+> k
+
+arctan 2( zk, y k)
+
+
+
+, R =
+
+0.52 00 0.82
+
+
+
+. (50) AMF consistently exhibits improved performance in estimating the fil-tered mean state across all tested levels of nonlinearity (Figs. 6(a)–6(c) and Supplementary Video 4). Furthermore, the evolution of state PDFs was fil-tered more accurately by AMF than by the baselines (Figs. 6(d) and 6(e) and Supplementary Video 5). The improvement becomes more pronounced as the system becomes further nonlinear. In addition to the improvement in accuracy, AMF also shows improved computational efficiency in the full fil-tering problem. Specifically, AMF tracked the evolution of state PDFs with fewer particles than APPDF (Fig. 6(f) and Supplementary Video 6). AMF thus exhibited reduced computational time (Fig. 6(g), left). The compu-tational time can be further reduced through parallel implementation (Fig. 6(g), right). These results confirm that AMF provides a robust, accurate, and computationally efficient filtering framework for data assimilation in highly nonlinear systems. 30 a b c
+
+d e f
+
+g                                             
+
+> 4
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 𝑦𝑦
+> 𝑧𝑧
+> PF
+> LSKF
+> CD-CKF
+> GS-ACD-ECKF
+> APPDF
+> AMF
+> Mean trajectory
+> 0510 15 20 25 30
+> Time
+> 𝑦𝑦
+> 𝑧𝑧
+> 2
+> 0
+> -2
+> 1
+> 2
+> 4
+> 0
+> -4
+> 2
+> -2
+> 0510 15 20 25 30
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑧𝑧
+> variable
+> -3 -2 -1 3210
+> 3
+> 2
+> 1
+> 0
+> 1
+> 0.2
+> 0
+> 0.4
+> 0.8
+> 0.6
+> Probability density
+> -2 -1 043215
+> 𝜇𝜇
+> 1.00 1.25 1.50 1.75 2.00
+> Mean particle num.
+> 0
+> x10 2
+> 2
+> 4
+> 6
+> 8
+> Comp. time (sec)
+> APPDF AMF
+> x10 3
+> 0
+> 2
+> 4
+> 6
+> 8
+> APPDF AMF
+> 0
+> 1
+> 2
+> 3
+> 4x10 2
+> With
+> parallel
+> comp.
+> Without parallel
+> comp.
+> 𝜇𝜇
+> Sum of squared errors
+> 1.0 1.25 1.75 2.0
+> 12
+> 10
+> 8
+> 6
+> 4
+> 2
+> 0
+> x10 2
+> 1.5
+> 30
+> 20
+> 10
+> 0
+> Marginal density of 𝑦𝑦
+> 1.00 1.25 1.50 1.75 2.00
+> 30
+> 20
+> 10
+> 0
+> Marginal density of 𝑧𝑧
+> 1.00 1.25 1.50 1.75 2.00
+> L1 error
+> 𝜇𝜇
+
+Figure 6: Performance of AMF for filtering in the Van der Pol oscillator. (a) 
+
+Mean state trajectories of AMF, the baselines, and the PF ground truth (GT) for μ = 1 .5
+
+over t = 20 –27 . (b) Mean trajectories of states y and z over time for μ = 1 .5. (c) SSE between the estimated mean trajectories and GT for different values of μ. (d) Marginal PDFs of states y and z of AMF, APPDF, and GT for μ = 1 .5 at t = 27 .5. (e) L1
+
+error between the estimated PDFs and GT. AMF maintains a constantly low error across increasing μ. (f ) Mean number of particles during filtering. (g) Computational time in sequential and parallel computing settings for μ = 2 .0 and K = 0 .06 I2. Error bars denote the mean ± standard deviation over five independent runs. 
+
+3.3. Example 3: Filtering of the coupled Van der Pol oscillators 
+
+So far, we have confirmed the performance of AMF using a highly non-linear but 2–dimensional system (Figs. 5 and 6). We next evaluate its performance using higher-dimensional coupled Van der Pol oscillators [56]. The system dynamics are defined by the following 6–dimensional SDE: 
+
+d
+
+
+
+y1t
+
+z1t
+
+y2t
+
+z2t
+
+y3t
+
+z3t
+
+
+
+=
+
+
+
+z1t
+
+μ(1 − y12
+
+t )z1t − y1t + k(y2t + y3t − 2y1t)
+
+z2t
+
+μ(1 − y22
+
+t )z2t − y2t + k(y1t + y3t − 2y2t)
+
+z3t
+
+μ(1 − y32
+
+t )z3t − y3t + k(y1t + y2t − 2y3t)
+
+
+
+dt + √KdWt (51) where μ is the nonlinearity parameter, k is the coupling parameter, and 
+
+Wt denotes a 6–dimensional standard Wiener process. The process noise 31 matrix is set to K = 0 .006 I6. The ground-truth state PDFs were obtained by performing PF with 300,000 particles and a time step of ∆t = 0 .01 , as this setting was sufficient to achieve convergence (Supplementary Fig. 3). We consider μ ∈ { 1.5, 2.0, 2.5} and k ∈ { 0.1, 0.2, 0.3}. The filtering ends at 
+
+t = 10 , and the measurement is provided at t = 5 . Similar to Example 2 (49), the relationship between the state xk = [ y1,k , z 1,k , y 2,k , z 2,k , y 3,k , z 3,k ]T
+
+and the measurement vector zk = [ r1,k , θ 1,k , r 2,k , θ 2,k , r 3,k , θ 3,k ]T is defined by the following nonlinear polar coordinate mapping: 
+
+zk = h(xk) + rk, rk ∼ N (0, R) (52) where the measurement function h(xk) and the noise covariance matrix R
+
+are given by 
+
+h(xk) = 
+
+q
+
+y21,k + z21,k 
+
+arctan 2( z1,k , y 1,k )q
+
+y22,k + z22,k 
+
+arctan 2( z2,k , y 2,k )q
+
+y23,k + z23,k 
+
+arctan 2( z3,k , y 3,k )
+
+
+
+, R = 0 .22I6. (53) Fig. 7(a) and Supplementary Video 7 show that AMF tracks the state of the three coupled oscillators more accurately than LSKF and APPDF, on which AMF was developed, for a representative case ( μ = 2 and k =0.3). This improved performance is preserved across different values of the nonlinearity and coupling parameters (Fig. 7(b)). In particular, the SSE of AMF becomes dramatically smaller than those of the other methods as the nonlinearity increases. Notably, the SSE of APPDF grows rapidly and exceeds that of LSKF as the nonlinearity increases (Fig. 7(b)), although the LSKF estimate appears farther from the ground-truth trajectory (Fig. 7(a)). This is due to a phase difference between the APPDF estimate and the ground-truth trajectory, such that similar state values are attained at different times (Supplementary Video 7). The lower accuracy of APPDF compared with LSKF is counterintuitive because APPDF extends LSKF with a particle split–combine scheme based on eigen-decomposition [42]. We hypothesize that APPDF leads to exces-sive particle splitting, resulting in excessive pruning, and ineffective particle 32 b                            
+
+> 1.5 2.0 2.5
+> 𝜇𝜇
+> Mean trajectory when 𝜇𝜇 = 2.0 ,𝑘𝑘 = 0.3
+> 𝑦𝑦1
+> 𝑧𝑧1
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+> Sum of squared errors
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> x10 2
+> 𝑘𝑘 = 0.1
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> x10 2
+> 6
+> 𝑘𝑘 = 0.2
+> x10 2
+> 𝑘𝑘 = 0.3
+> 𝑦𝑦2
+> 𝑧𝑧2
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+> 𝑦𝑦3
+> 𝑧𝑧3
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+> PF
+> LSKF
+> APPDF
+> AMF
+> 7
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> a
+> 7
+> 688
+> 1.5 2.0 2.5
+> 𝜇𝜇 1.5 2.0 2.5
+> 𝜇𝜇
+
+Figure 7: Accuracy of AMF for filtering in the coupled Van der Pol oscillators (a) Mean state trajectories of AMF, the baselines, and the PF ground truth (GT) for 
+
+μ = 2 .0 and k = 0 .3 over t = 0 .5–10 .0. (b) SSE between the estimated mean trajectories and GT across different combinations of μ and k. Error bars denote the mean ± standard deviation over five independent runs. 
+
+combining, leading to the accumulation of numerical errors, whereas AMF does not. To test this hypothesis, we examined changes in the number of particles due to particle splitting ( ∆Nsplit ), pruning ( ∆Nprune ; i.e., removing particles with small weights), and combining ( ∆Ncombine ) during uncertainty propagation in the coupled Van der Pol oscillators (Fig. 8(a)). Fig. 8(b) shows that the cumulative number of particle splits, P ∆Nsplit ,is smaller in AMF than in APPDF. The excessive particle splitting in AP-PDF generates many small-weight particles, resulting in more particles being pruned than in AMF. AMF thus preserves more information during the prun-ing step. Furthermore, AMF exhibits a larger P ∆Ncombine than APPDF, confirming that it more effectively reduces the number of particles while pre-serving as much information as possible. These results are also observed in the time series of ∆Nsplit , ∆Nprune , and ∆Ncombine (Fig. 8(c)). Therefore, AMF requires a lower mean number of particles and lower computational cost than APPDF (Figs. 8(d) and 8(e)), confirming the hypothesis. Specifi-cally, as μ increases, APPDF performs increasingly excessive particle splitting (Figs. 8(b) and 8(c)). This results in a large number of small-weight parti-cles being generated and subsequently pruned, leading to a reduction in the total number of particles in APPDF (Fig. 8(d)). This reduction results in information loss, which significantly degrades estimation accuracy. In addi-tion, repeated particle splitting accumulates numerical errors. As a result, 33 1.5  2.0  2.5 
+
+𝜇𝜇  
+
+> 0
+> 5
+> 10
+> 15
+> 𝑘𝑘 = 0.2
+> 20
+> 25
+> x10 2
+
+d  
+
+> 1.5 2.0 2.5
+
+𝜇𝜇  
+
+> Mean particle num.
+> 0
+> 5
+> 10
+> 15
+> x10 2
+> 𝑘𝑘 = 0.1
+
+ecomp. time (sec)   
+
+> 1.5 2.0 2.5
+
+𝜇𝜇  
+
+> 0
+> 5
+> 10
+> 15
+> 𝑘𝑘 = 0.1
+> 20
+> 25
+
+b
+
+a             
+
+> Particle num.
+> Algorithm
+> APPDF
+> AMF
+> Particle num.
+> Total ∆𝑁𝑁split
+> when 𝑘𝑘 = 0.2
+> Total ∆𝑁𝑁prune
+> when 𝑘𝑘 = 0.2
+> Total ∆𝑁𝑁combine
+> when 𝑘𝑘 = 0.2
+> x10 4x10 4x10 4
+> 0
+> 5
+> 10
+> 25
+> 15
+> 20
+> 1.5 2.0 2.5
+
+𝜇𝜇  1.5  2.0  2.5 
+
+𝜇𝜇  1.5  2.0  2.5 
+
+𝜇𝜇 
+
+> 0
+> 5
+> 10
+> 25
+> 15
+> 20
+> 0
+> 1
+> 2
+> 5
+> 3
+> 4
+> 6
+
+c                      
+
+> Time 0246810
+> x10 2
+> 0
+> 8
+> 4
+> 0
+> 10
+> 0
+> 20
+> 10
+> 20
+> x10 2
+> x10 2
+> Particle num.
+> ∆𝑁𝑁split when 𝜇𝜇 = 2.5, 𝑘𝑘 = 0.2
+> ∆𝑁𝑁prune when 𝜇𝜇 = 2.5, 𝑘𝑘 = 0.2
+> ∆𝑁𝑁combine when 𝜇𝜇 = 2.5, 𝑘𝑘 = 0.2
+> 1.5 2.0 2.5
+
+𝜇𝜇     
+
+> 0
+> 5
+> 10
+> 15
+> x10 2
+> 𝑘𝑘 = 0.2
+> 0
+> 5
+> 10
+> x10 2
+> 𝑘𝑘 = 0.3
+> 1.5 2.0 2.5
+
+𝜇𝜇   
+
+> x10 2
+> 1.5 2.0 2.5
+
+𝜇𝜇                    
+
+> 0
+> 5
+> 10
+> 15
+> 𝑘𝑘 = 0.3
+> x10 2
+> 0246810
+> 0246810
+> Current step Split & Propagate Prune Combine Next step
+> 𝑁𝑁prop =𝑁𝑁0 +∆𝑁𝑁split 𝑁𝑁0
+
+…            
+
+> ∆𝑁𝑁split ∆𝑁𝑁prune ∆𝑁𝑁combine
+> 𝑁𝑁pruned
+> =𝑁𝑁prop − ∆𝑁𝑁prune
+> 𝑁𝑁combined
+> =𝑁𝑁pruned − ∆𝑁𝑁combine
+> 𝑁𝑁0 =𝑁𝑁combined
+> ∆𝑁𝑁split
+> 30
+> 30
+> 30 30 20
+> 30 30 7
+> 20 20 15
+
+Figure 8: Changes in the number of particles due to particle splitting, prun-ing, and combining. (a) Schematic diagram illustrating the evolution of the particle number during uncertainty propagation using AMF and APPDF. Changes in the particle number due to splitting, pruning, and combining are denoted by ∆Nsplit , ∆Nprune , and 
+
+∆Ncombine , respectively. (b) Cumulative particle-number changes, P ∆Nsplit , P ∆Nprune ,and P ∆Ncombine , for APPDF and AMF across different settings. (c) Time series of 
+
+∆Nsplit , ∆Nprune , and ∆Ncombine . (d) Mean number of particles during simulation. (e) 
+
+Computational time of simulations. Error bars denote the mean ± standard deviation over five independent runs. 
+
+APPDF becomes less accurate than LSKF in highly nonlinear regimes, while AMF avoids these issues (Fig. 7(b)). 
+
+3.4. Example 4: Filtering of the Lorenz attractor 
+
+We further evaluate AMF using the Lorenz attractor, a representative chaotic system. The system dynamics are described by the following SDE: 
+
+d
+
+
+
+xt
+
+yt
+
+zt
+
+ =
+
+
+
+σ(yt − xt)
+
+xt(ρ − zt) − yt
+
+xtyt − βz t
+
+ dt + √KdWt (54) where σ = 3 , ρ = 26 .5, β = 1 , and Wt denotes a three-dimensional stan-dard Wiener process. The process noise matrix is set to K = 0 .4I3. The ground-truth state PDFs were obtained by performing PF with 500,000 par-ticles and a time step of ∆t = 0 .01 , as this setting was sufficient to achieve 34 convergence (Supplementary Fig. 4). The simulation ends at t = 20 , and a single measurement is provided at t = 10 . The measurement equation that maps the state vector xk to the measurement vector zk is given by 
+
+zk = xk + rk, rk ∼ N (0, 0.82I3). (55) Figs. 9(a)–9(d) show heat maps of the state PDFs estimated by PF, LSKF, APPDF, and AMF, respectively, projected onto the xy , yz , and zx 
+
+planes at a representative time point t = 12 . The corresponding marginal PDFs along the x, y, and z dimensions are compared in Fig. 9(e). The results demonstrate that AMF most accurately captures the asymmetric and multi-modal state PDFs. The improved accuracy of AMF is further confirmed by comparing the time evolution of the estimated state PDFs (Supplementary Video 8). For quantitative evaluation, the SSE between the mean trajec-tory estimated by each method and the ground-truth mean trajectory was computed (Fig. 9(f)). In addition, the L 1 error of the marginal PDFs was calculated for each method (Fig. 9(g)). These results further confirm that AMF provides the most accurate estimates of both the mean trajectory and the state distribution. Next, we compare the mean number of particles and the total computa-tional time between APPDF and AMF (Fig. 9(h)). This confirms that the proposed split–combine scheme of AMF dramatically reduces computational cost while improving filtering accuracy, consistent with the results obtained for the Van der Pol oscillator (Figs. 5–8). Taken together, these results demonstrate the potential of AMF to accurately track the state of chaotic systems with asymmetric and multimodal PDFs. 
+
+4. Conclusion 
+
+In this work, we developed AMF for estimating asymmetric and mul-timodal posterior densities of the system state over time (Fig. 1). The core of AMF is an adaptive split–combine scheme that dynamically adjusts the number and weights of Gaussian particles during both time-update and measurement-update steps. In particular, the splitting method guarantees a reduction in variance along a target level-set-point direction of a parti-cle (Theorem 2.1) without any online auxiliary optimization (Algorithm 2). Moreover, the combining method efficiently evaluates the similarity between densities using the upper bound on the KL divergence (Algorithm 3). Taken 35 LSKF  APPDF  
+
+> x10 4
+> 4
+> 3
+> 1
+> 2
+> 0
+> 7
+> 6
+> 5
+> 15
+> 10
+> x10 3
+> 5
+> 0
+> APPDF AMF
+> Mean particle num.
+> Comp. time (sec)
+
+h
+
+> AMF
+> Sum of squared errors
+
+f
+
+e 
+
+> x10 3
+> 3
+> 1
+> 2
+> 0
+> APPDF AMF
+> 5
+> 4
+
+a
+
+g x10                                
+
+> 12
+> 6
+> 0
+> L1 error
+> Marginal density of 𝑥𝑥
+> x10
+> 12
+> 6
+> 0
+> x10
+> 12
+> 6
+> 0
+> LSKF APPDF AMF
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑧𝑧
+> Probability density
+> 020 40
+> 020 40 -20
+> 010 20 -10
+> 0
+> 0.09
+> PF
+> LSKF
+> APPDF
+> AMF 𝑦𝑦
+> -10
+> -20
+> 0
+> 20
+> 40
+> 10 20 0
+> 𝑧𝑧
+> -20
+> -20
+> 0
+> 20
+> 40
+> 20 40 0𝑦𝑦 𝑥𝑥
+> 𝑥𝑥
+> -20
+> -10
+> 0
+> 10
+> 20
+> 20 40 0𝑧𝑧
+> 𝑦𝑦
+> -10
+> -20
+> 0
+> 20
+> 40
+> 10 20 0
+> 𝑧𝑧
+> -20
+> -20
+> 0
+> 20
+> 40
+> 20 40 0𝑦𝑦 𝑥𝑥
+> 𝑥𝑥
+> -20
+> -10
+> 0
+> 10
+> 20
+> 20 40 0𝑧𝑧
+> 𝑦𝑦
+> -10
+> -20
+> 0
+> 20
+> 40
+> 10 20 0
+> 𝑧𝑧
+> -20
+> -20
+> 0
+> 20
+> 40
+> 20 40 0𝑦𝑦 𝑥𝑥
+> 𝑥𝑥
+> -20
+> -10
+> 0
+> 10
+> 20
+> 20 40 0𝑧𝑧
+> 𝑦𝑦
+> -10
+> -20
+> 0
+> 20
+> 40
+> 10 20 0
+> 𝑧𝑧
+> -20
+> -20
+> 0
+> 20
+> 40
+> 20 40 0𝑦𝑦 𝑥𝑥
+> 𝑥𝑥
+> -20
+> -10
+> 0
+> 10
+> 20
+> 20 40 0𝑧𝑧
+
+b
+
+c
+
+d   
+
+> Marginal density of 𝑧𝑧
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑥𝑥
+> 0.18
+> 0
+> 0.08
+> 0.16
+> 0
+> 0.07
+> 0.14
+> variable
+> 6
+> 7
+
+Figure 9: Performance of AMF for filtering in the Lorenz attractor. (a)–(d) Heat maps of the state PDFs projected onto the xy -, yz -, and zx -planes for PF (a), LSKF (b), APPDF (c), and AMF (d), respectively, at t = 12 . (e) Marginal PDFs of states x, y, and 
+
+z at t = 12 . (f ) SSE between the estimated mean trajectories and the PF ground truth (GT). (g) L1 error between the estimated marginal PDFs and GT. (h) Mean number of particles during filtering (left) and computational time (right) for APPDF and AMF. Error bars denote the mean ± standard deviation over five independent runs. 
+
+together, these features lead to improved performance in terms of both ac-curacy and computational efficiency (Figs. 5–9). AMF overcomes several limitations of existing filters and uncertainty propagation methods. Specifically, prior methods perform particle splitting along the eigenvector direction, which only indirectly reduces local nonlinear-ity in the target level-set-point direction [29, 42]. This can result in excessive 36 particle splitting, the accumulation of splitting errors, and consequently re-duced filtering accuracy (Figs. 5–9). In addition, particle combining based solely on mean proximity can introduce numerical errors (Fig. 3). These lim-itations are addressed by AMF (Theorem 2.1 and Algorithms 2–5). Further-more, AMF improves computational efficiency (Figs. 5(g) and 6(g)) through a parallel computing framework (Algorithm 6), exploiting the independence of split-and-propagate operations across particles. AMF outperformed existing methods across challenging benchmarks with asymmetric and multimodal state PDFs (Figs. 5–9). Notably, it achieved improved accuracy with fewer particles, highlighting the effectiveness of the proposed split–combine scheme. We also showed the scalability of AMF to high-dimensional systems by successfully filtering 6–dimensional coupled oscillators using CPU-based parallelization (Fig. 7). This scalability could be further extended to even higher-dimensional complex systems, such as neuronal population dynamics, through a GPU-based implementation [57], representing a promising direction for future research. Despite the progress made in this study, there remains room for improve-ment in filtering methods, including AMF. First, the process equation is assumed to have a constant noise level over time. Relaxing this assump-tion is particularly important for biological systems; for example, the level of biochemical reaction noise depends on both the molecular copy numbers [58]. One potential approach is to employ the Lamperti transform, which reformulates the SDE into an equivalent form with constant diffusion [59]. Second, filtering methods generally require a known governing SDE; how-ever, in many practical applications, the underlying dynamics are not avail-able a priori . To address this, data-driven inference of the latent SDE, using methods such as SDE Matching [60], should precede filtering. Third, mea-surement updates in ultra-high-dimensional systems (e.g., with more than 
+
+10 5 state variables) could become inaccurate because the Gaussian-assumed cubature rule may lose accuracy in such settings. Thus, developing scalable measurement-update methods remains a challenge. One promising avenue is the integration of score-based generative modeling into filtering, as it enables efficient sampling from high-dimensional PDFs [61, 62, 63]. We showed that AMF accurately estimates the time evolution of state PDFs in both the Van der Pol oscillator and the Lorenz system. Indeed, variants of these systems have been widely used to model real-world non-linear phenomena across multiple scales, ranging from neuronal dynamics to atmospheric convection. This suggests that AMF has the potential to 37 address real-world data assimilation problems. For example, it could be ap-plied to estimate endogenous circadian rhythms [19, 64, 65] and use these estimates to assess human health conditions [66, 67]. Furthermore, AMF could be used for weather forecasting [68] and to enhance the spatial and temporal resolution of neural data [69]. Beyond data assimilation, AMF also provides an accurate framework for simulating uncertainty propagation (Figs. 5 and 8). This capability could be leveraged for continuous-time generative modeling, where sample generation is formulated as the evolution of probability densities over time [70, 71, 72]. Taken together, these findings demonstrate that AMF provides a flexible and scalable framework for modeling probability density evolution in nonlinear dynamical systems. 
+
+5. CRediT authorship contribution statement San Kim : Methodology, Software, Validation, Formal analysis, Investi-gation, Writing–original draft, Writing–review & editing, Visualization; Won Chang : Conceptualization, Writing–review & editing, Funding acquisition; 
+
+Daniel B. Forger : Conceptualization, Writing–review & editing, Fund-ing acquisition; Dae Wook Kim : Conceptualization, Methodology, Valida-tion, Formal analysis, Investigation, Writing–original draft, Writing–review & editing, Visualization, Supervision, Project administration, Funding ac-quisition. 
+
+6. Data availability 
+
+All code used to perform the simulations will be made freely available on GitHub upon acceptance of the manuscript. 
+
+7. Declaration of competing interest 
+
+The authors declare that they have no known competing financial inter-ests or personal relationships that could have appeared to influence the work reported in this paper. 38 8. Acknowledgments 
+
+This work was supported by the National Research Foundation of Korea (Grant No. RS-2023-00301976, RS-2025-00523567, RS-2025-00561696, RS-2025-02215354, RS-2026-25512726, and RS-2026-25522728), the Korea Basic Science Institute (Grant No. RS-2026-25500300), the New Faculty Startup Fund from KAIST (Grant No. G04240060), the New Faculty Startup Fund from Seoul National University (Grant No. 326-20240027), the Multidisci-plinary University Research Initiative through the U.S. Army Research Office (Grant No. W911NF-22-1-0223), and the U.S. National Science Foundation (Grant No. DMS-2052499). 
+
+References 
+
+[1] E. N. Lorenz, Deterministic nonperiodic flow 1, in: Universality in Chaos, 2nd edition, Routledge, 2017, pp. 367–378. [2] A. L. Hodgkin, A. F. Huxley, B. Katz, Measurement of current-voltage relations in the membrane of the giant axon of loligo, The Journal of physiology 116 (4) (1952) 424. [3] B. Van Der Pol, J. Van Der Mark, Lxxii. the heartbeat considered as a relaxation oscillation, and an electrical model of the heart, The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science 6 (38) (1928) 763–775. [4] M. E. Jewett, R. E. Kronauer, Refinement of limit cycle oscillator model of the effects of light on the human circadian pacemaker, Journal of Theoretical Biology 192 (4) (1998) 455–465. [5] J. E. Stone, S. Postnova, T. L. Sletten, S. M. Rajaratnam, A. J. Phillips, Computational approaches for individual circadian phase prediction in field settings, Current Opinion in Systems Biology 22 (2020) 39–51. [6] D.-J. Dijk, J. F. Duffy, Novel approaches for assessing circadian rhyth-micity in humans: a review, Journal of biological rhythms 35 (5) (2020) 421–438. [7] D. W. Kim, C. Chang, X. Chen, A. C. Doran, F. Gaudreault, T. Wager, G. J. DeMarco, J. K. Kim, Systems approach reveals photosensitivity 39 and per 2 level as determinants of clock-modulator efficacy, Molecular systems biology 15 (7) (2019) e8838. [8] S. Särkkä, L. Svensson, Bayesian filtering and smoothing, Vol. 17, Cam-bridge university press, 2023. [9] I. Arasaratnam, S. Haykin, Cubature kalman filters, IEEE Transactions on automatic control 54 (6) (2009) 1254–1269. [10] I. Arasaratnam, S. Haykin, T. R. Hurd, Cubature kalman filtering for continuous-discrete systems: theory and simulations, IEEE Transactions on Signal Processing 58 (10) (2010) 4977–4993. [11] N. J. Gordon, D. J. Salmond, A. F. Smith, Novel approach to nonlinear/non-gaussian bayesian state estimation, in: IEE proceedings F (radar and signal processing), Vol. 140, IET, 1993, pp. 107–113. [12] A. Doucet, N. De Freitas, N. Gordon, An introduction to sequential monte carlo methods, in: Sequential Monte Carlo methods in practice, Springer, 2001, pp. 3–14. [13] B. Ristic, S. Arulampalam, N. Gordon, Beyond the Kalman filter: Par-ticle filters for tracking applications, Artech house, 2003. [14] P. Fearnhead, H. R. Künsch, Particle filters and data assimilation, An-nual Review of Statistics and Its Application 5 (2018) 421–449. [15] M. Khodarahmi, V. Maihami, A review on kalman filter models, Archives of Computational Methods in Engineering 30 (1) (2023) 727– 747. [16] F. Daum, J. Huang, Curse of dimensionality and particle filters, in: 2003 IEEE aerospace conference proceedings (Cat. No. 03TH8652), Vol. 4, IEEE, 2003, pp. 4_1979–4_1993. [17] C. Snyder, T. Bengtsson, P. Bickel, J. Anderson, Obstacles to high-dimensional particle filtering, Monthly Weather Review 136 (12) (2008) 4629–4640. [18] G. Terejanu, P. Singla, T. Singh, P. D. Scott, A novel gaussian sum filter method for accurate solution to the nonlinear filtering problem, in: 2008 40 11th International Conference on Information Fusion, IEEE, 2008, pp. 1–8. [19] D. W. Kim, M. P. Lee, D. B. Forger, Wearable data assimilation to estimate the circadian phase, SIAM Journal on Applied Mathematics 84 (3) (2023) S452–S475. [20] H. W. Sorenson, D. L. Alspach, Recursive bayesian estimation using gaussian sums, Automatica 7 (4) (1971) 465–479. [21] W. Shao, Z. Ge, Z. Song, Semisupervised bayesian gaussian mixture models for non-gaussian soft sensor, IEEE Transactions on Cybernetics 51 (7) (2019) 3455–3468. [22] B. Zhang, Y. C. Shin, A gaussian mixture filter with adaptive refinement for nonlinear state estimation, Signal Processing 201 (2022) 108677. [23] P. H. Leong, S. Arulampalam, T. A. Lamahewa, T. D. Abhayapala, A gaussian-sum based cubature kalman filter for bearings-only tracking, IEEE Transactions on Aerospace and Electronic Systems 49 (2) (2013) 1161–1176. [24] K. Tuggle, R. Zanetti, Automated splitting gaussian mixture nonlin-ear measurement update, Journal of Guidance, Control, and Dynamics 41 (3) (2018) 725–734. [25] M. Raitoharju, Á. F. García-Fernández, S. Särkkä, Partitioned update binomial gaussian mixture filter, in: 2019 22th International Conference on Information Fusion (FUSION), IEEE, 2019, pp. 1–8. [26] D. Alspach, H. Sorenson, Nonlinear bayesian estimation using gaussian sum approximations, IEEE transactions on automatic control 17 (4) (2003) 439–448. [27] K. Ito, K. Xiong, Gaussian filters for nonlinear filtering problems, IEEE transactions on automatic control 45 (5) (2002) 910–927. [28] R. Chen, J. S. Liu, Mixture kalman filters, Journal of the Royal Statis-tical Society: Series B (Statistical Methodology) 62 (3) (2000) 493–508. 41 [29] F. Faubel, J. McDonough, D. Klakow, The split and merge unscented gaussian mixture filter, IEEE Signal Processing Letters 16 (9) (2009) 786–789. [30] F. Faubel, D. Klakow, Further improvement of the adaptive level of detail transform: Splitting in direction of the nonlinearity, in: 2010 18th European Signal Processing Conference, 2010, pp. 850–854. [31] V. Leutnant, A. Krueger, R. Haeb-Umbach, A versatile Gaussian split-ting approach to non-linear state estimation and its application to noise-robust ASR, in: Interspeech 2011, 2011, pp. 1641–1644. [32] G. Terejanu, P. Singla, T. Singh, P. D. Scott, Uncertainty propagation for nonlinear dynamic systems using gaussian mixture models, Journal of guidance, control, and dynamics 31 (6) (2008) 1623–1633. [33] P. Singla, T. Singh, A gaussian function network for uncertainty prop-agation through nonlinear dynamical system, in: 18th Annual Space Flight Mechanics Meeting, 2008, pp. 851–864. [34] J. T. Horwood, A. B. Poore, Adaptive gaussian sum filters for space surveillance, IEEE Transactions on Automatic Control 56 (8) (2011) 1777–1790. [35] H. Wang, Y. Wang, C. Li, J. Li, Q. Li, X. Ban, Adaptive weight update algorithm for target tracking of uuv based on improved gaussian mixture cubature kalman filter, Complexity 2020 (2020) 1–12. [36] L. Cun, An efficient adaptive weights update scheme for a gaussian mixture filter, in: 2021 33rd Chinese Control and Decision Conference (CCDC), 2021, pp. 7337–7342. [37] V. Vittaldev, R. P. Russell, R. Linares, Spacecraft uncertainty propaga-tion using gaussian mixture models and polynomial chaos expansions, Journal of Guidance, Control, and Dynamics 39 (12) (2016) 2615–2626. [38] B. A. Jones, Physics-informed domain splitting for orbit uncertainty propagation, in: AIAA SCITECH 2024 Forum, AIAA SciTech Forum, American Institute of Aeronautics and Astronautics, 2024. 42 [39] J. Duník, O. Straka, B. Noack, J. Steinbring, U. D. Hanebeck, Direc-tional splitting of gaussian density in non-linear random variable trans-formation, IET Signal Processing 12 (9) (2018) 1073–1081. [40] J. Gutierrez, K. Hill, E. L. Jenson, D. J. Scheeres, J. C. Bruer, R. D. Coder, Classifying State Uncertainty for Earth-Moon Trajectories, Jour-nal of the Astronautical Sciences 71 (3) (2024) 29. [41] J. Kulik, K. A. LeGrand, Nonlinearity- and uncertainty-informed moment-matching gaussian mixture splitting, IEEE Transactions on Aerospace and Electronic Systems 62 (2026) 1774–1794. [42] N. Wang, D. B. Forger, The asymmetric particle population density method for simulation of coupled noisy oscillators, Journal of Compu-tational Physics 488 (2023) 112157. [43] K. J. DeMars, R. H. Bishop, M. K. Jah, Entropy-based approach for un-certainty propagation of nonlinear dynamical systems, Journal of Guid-ance, Control, and Dynamics 36 (4) (2013) 1047–1057. [44] Y. Liu, K. Dong, H. Wang, J. Liu, Y. He, L. Pan, Adaptive gaussian sum squared-root cubature kalman filter with split-merge scheme for state estimation, Chinese Journal of Aeronautics 27 (5) (2014) 1242– 1250. [45] A. B. Berchet, A. Beaudoin, S. H. Huberson, Adaptive particle method based on moments for simulating the mass transport in natural flows, Computational Particle Mechanics 8 (3) (2021) 525–534. [46] A. R. Runnalls, Kullback-leibler approach to gaussian mixture reduc-tion, IEEE Transactions on Aerospace and Electronic Systems 43 (3) (2007) 989–999. [47] N. Wang, D. Forger, The level set kalman filter for state estimation of continuous-discrete systems, IEEE Transactions on Signal Processing (2021). [48] A. G. Wills, J. Hendriks, C. Renton, B. Ninness, A bayesian filtering algorithm for gaussian mixture models (2023). arXiv:1705.05495 .43 [49] A. H. Stroud, Approximate calculation of multiple integrals, Prentice Hall, 1971. [50] R. Cools, Constructing cubature formulae: the science behind the art, Acta numerica 6 (1997) 1–54. [51] Y. Wang, H. Zhang, Accurate gaussian sum-filter for continuous-discrete nonlinear systems with non-gaussian noise, in: 2018 10th Interna-tional Conference on Communications, Circuits and Systems (ICCCAS), IEEE, 2018, pp. 140–145. [52] R. Kandepu, B. Foss, L. Imsland, Applying the unscented kalman filter for nonlinear state estimation, Journal of Process Control 18 (7) (2008) 753–768. [53] H. Wu, H. Hu, S. Chen, G. Zeng, A gnss interference source tracking method using the continuous-discrete gaussian kernel quadrature kalman filter, GPS Solutions 27 (4) (2023) 182. [54] M. F. Emzir, Z. Zhao, S. Särkkä, Multidimensional projection filters via automatic differentiation and sparse-grid integration, Signal Processing 204 (2023) 108832. [55] M. F. Emzir, Efficient projection filter algorithm for stochastic dynam-ical systems with correlated noises and state-dependent measurement covariance, Signal Processing 218 (2024) 109383. [56] E. Njinkeu Nganso, S. G. Ngueuteu Mbouna, R. Yamapi, G. Filatrella, J. Kurths, White noise induces transitions between dynamical states in a network of nonlocally coupled birhythmic van der pol-type systems, Nonlinear Dynamics 113 (12) (2025) 15377–15391. [57] M. Rodríguez, F. Blesa, R. Barrio, Opencl parallel integration of or-dinary differential equations: Applications in computational dynamics, Computer Physics Communications 192 (2015) 228–236. [58] D. Schnoerr, G. Sanguinetti, R. Grima, Approximation and inference methods for stochastic biochemical kinetics—a tutorial review, Journal of Physics A: Mathematical and Theoretical 50 (9) (2017) 093001. 44 [59] J. K. Møller, H. Madsen, From state dependent diffusion to constant diffusion in stochastic differential equations by the lamperti transform (2010). [60] G. Bartosh, D. Vetrov, C. A. Naesseth, Sde matching: Scalable and simulation-free training of latent stochastic differential equations, arXiv preprint arXiv:2502.02472 (2025). [61] F. Rozet, G. Louppe, Score-based data assimilation, Advances in Neural Information Processing Systems 36 (2023) 40521–40541. [62] F. Bao, Z. Zhang, G. Zhang, A score-based filter for nonlinear data assimilation, Journal of Computational Physics 514 (2024) 113207. [63] E. Yoon, W. Chang, D. Kim, D. W. Kim, Rethinking forward processes for score-based nonlinear data assimilation in high dimensions, arXiv preprint arXiv:2604.02889 (2026). [64] C. Mayer, D. W. Kim, M. Zhang, M. P. Lee, D. B. Forger, H. J. Burgess, C. Moon, Predicting circadian phase in community-dwelling later-life adults using actigraphy data, Journal of sleep research 34 (4) (2025) e14425. [65] Y. Huang, C. Mayer, P. Cheng, A. Siddula, H. J. Burgess, C. Drake, C. Goldstein, O. Walch, D. B. Forger, Predicting circadian phase across populations: a comparison of mathematical models and wearable de-vices, Sleep 44 (10) (2021) zsab126. [66] M. P. Lee, D. W. Kim, Y. Fang, R. Kim, A. S. Bohnert, S. Sen, D. B. Forger, The real-world association between digital markers of circadian disruption and mental health risks, NPJ digital medicine 7 (1) (2024) 355. [67] D. Lim, J. Jeong, Y. M. Song, C.-H. Cho, J. W. Yeom, T. Lee, J.-B. Lee, H.-J. Lee, J. K. Kim, Accurately predicting mood episodes in mood disorder patients using wearable sleep and circadian rhythm features, NPJ Digital Medicine 7 (1) (2024) 324. [68] P. J. Van Leeuwen, Particle filtering in geophysical systems, Monthly Weather Review 137 (12) (2009) 4089–4114. 45 [69] M. W. Woolrich, S. Jbabdi, B. Patenaude, M. Chappell, S. Makni, T. Behrens, C. Beckmann, M. Jenkinson, S. M. Smith, Bayesian analysis of neuroimaging data in fsl, Neuroimage 45 (1) (2009) S173–S186. [70] Y. Song, J. Sohl-Dickstein, D. P. Kingma, A. Kumar, S. Ermon, B. Poole, Score-based generative modeling through stochastic differen-tial equations, arXiv preprint arXiv:2011.13456 (2020). [71] Y. Lipman, R. T. Chen, H. Ben-Hamu, M. Nickel, M. Le, Flow matching for generative modeling, arXiv preprint arXiv:2210.02747 (2022). [72] M. Albergo, N. M. Boffi, E. Vanden-Eijnden, Stochastic interpolants: A unifying framework for flows and diffusions, Journal of Machine Learning Research 26 (209) (2025) 1–80. 46 System ϵthreshold Wthreshold Cthreshold r Grid cell volume Van der Pol oscillator 0.05 10 −4 0.03 0.005 0.04 2
+
+Coupled Van der Pol oscillator 0.05 10 −4 0.05 0.005 16
+
+Lorenz attractor 0.05 10 −5 0.05 0.05 13
+
+Supplementary Table 1: Hyperparameter settings used in the numerical experi-ments. ϵthreshold and Wthreshold are thresholds for particle splitting and pruning, respec-tively, used in both AMF and APPDF. Cthreshold is the combining threshold used in AMF, and r is the combining radius used in APPDF. The grid cell volume used to discretize the effective support of the state space for particle combining in both AMF and APPDF is reported. The value of ϵthreshold is adopted from Wang and Forger (Ref. 42 in the main text), which inspired this study. The value of Wthreshold is chosen such that a particle with weight 1 can be split at least 6 and at most 20 times. In the Lorenz attractor case, 
+
+Wthreshold is set to a smaller value because the effective support of the state space is larger than that of the Van der Pol oscillator (Supplementary Videos 2, 5, and 8). Cthreshold , r,and the grid cell volume are selected according to the size of the effective support in the state space to ensure appropriate particle combining for each system. 
+
+47 d When  𝜇𝜇  = 1.0           
+
+> Compared Particle count (vs 100k)
+> 1k 10k 20k 30k 50k 40k
+> 40
+> 30
+> 10
+> 20
+> 0
+> Sum of squared errors  When 𝜇𝜇 = 2.0
+> Compared Particle count (vs 100k)
+> 1k 10k 20k 30k 50k 40k
+> 40
+> 30
+> 10
+> 20
+> 0
+> Sum of squared errors
+> #1k
+> #10k
+> #20k
+> #30k
+> #50k
+> #100k
+
+a b4            
+
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 𝑦𝑦
+> 𝑧𝑧
+> Mean trajectory
+> when 𝜇𝜇 = 1.0
+> 4
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 𝑦𝑦
+> 𝑧𝑧
+> Mean trajectory
+> when 𝜇𝜇 = 2.0
+
+c#1k     
+
+> #10k
+> #20k
+> #50k
+> #100k
+> #30k
+> Coarse
+> Fine
+> 4
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 𝑦𝑦
+> 𝑧𝑧
+
+Supplementary Figure 1: Convergence of PF for the Van der Pol oscillator. To assess the convergence of PF, we examine how the mean state trajectory depends on the number of particles and the numerical integration time step for the Van der Pol oscillator with μ = 1 .0 and μ = 2 .0. (a,b) Mean state trajectories obtained with 1k, 10k, 20k, 30k, 50k, and 100k particles using dt = 0 .05 , plotted over t = 5 –12 .5, for μ = 1 .0 (a) and μ = 2 .0 (b). (c) Mean state trajectories computed using coarse ( dt = 0 .05 ) and fine (dt = 0 .001 ) integration time steps with 50k particles, plotted over t = 0 –20 . The coarse and fine trajectories nearly overlap, with a sum of squared error (SSE) of 0.924 between the two trajectories. (d) SSE between trajectories obtained with 1k, 10k, 20k, 30k, and 50k particles and the 100k-particle reference trajectory over t = 0 –20 for μ = 1 .0 (left) and 
+
+μ = 2 .0 (right). Error bars denote the mean ± standard deviation over ten independent runs. For both values of μ, the SSE decreases as the number of particles increases and becomes nearly zero from 40k particles onward. Based on these convergence results, we use 50k particles and dt = 0 .05 to implement PF in Examples 1 and 2. 
+
+48 PF (before) 
+
+> LSKF (before)
+> CD-CKF (before)
+> GS-ACD-ECKF (before)
+> APPDF (before)
+> AMF (before)
+> Measurement
+
+a  
+
+> 0-1 -2
+> 4
+> 2
+> 0
+> -2 012
+> 2
+> 0
+> -2
+> -4
+
+𝑧𝑧 
+
+d 0     
+
+> -2
+> -4
+> -2 -1 01210-1 -2
+> 2
+> 0
+> -2
+> -4
+
+𝑦𝑦  𝑦𝑦 
+
+𝑧𝑧     
+
+> 0-1 -2 -3
+> 0
+> -2
+> -4
+> 4
+> 2
+> 0-2 -1 012
+
+b
+
+𝑧𝑧        
+
+> -2 -1 012
+> 0
+> -2
+> -4
+> 2
+> 0
+> -2 -2 -1 0
+
+c
+
+𝑧𝑧 
+
+> PF (after)
+> LSKF (after)
+> CD-CKF (after)
+> GS-ACD-ECKF (after)
+> APPDF (after)
+> AMF (after)
+
+Supplementary Figure 2: Effect of the measurement update on filter trajectories in the Van der Pol oscillator. Filter trajectories are shown for different values of the nonlinearity parameter μ: (a) μ = 1 .25 , (b) μ = 1 .5, (c) μ = 1 .75 , and (d) μ = 2 .0.For each μ, measurements are assimilated at t = 10 and t = 20 . The subplots in the first and second columns show trajectories over t = 9 –11 and t = 19 –21 , respectively. In each subplot, the measurement is marked by a single cross. Along each filter trajectory, the mean states immediately before and after the measurement update are marked by a circle and a triangle, respectively. Dotted lines connect the pre-measurement-update and post-measurement-update states, visualizing the displacement induced by the measure-ment update. This shows that the measurement update leads to a non-negligible state correction. This indicates that the measurement-update step also contributes to the fil-tering performance, in addition to the time-update step, in our experimental settings. 
+
+49 𝑦𝑦1 
+
+> 𝑧𝑧1
+> 𝑦𝑦2
+> 𝑧𝑧2
+> 𝑦𝑦3
+> 𝑧𝑧3
+
+a 4               
+
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> Mean trajectory when 𝜇𝜇 = 2.5 ,𝑘𝑘 = 0.1
+> 4
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+
+b    
+
+> #1k
+> #10k
+> #100k
+> #200k
+> #300k
+> #500k
+> Sum of squared errors
+> 300
+> 200
+> 100
+> 0
+> Compared Particle count (vs 500k)
+> 1k 10k 100k 200k 300k
+
+c             
+
+> 𝑦𝑦1
+> 𝑧𝑧1 𝑧𝑧2
+> 𝑦𝑦2
+> Coarse
+> Fine
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+> 𝑧𝑧3
+> 𝑦𝑦3
+> -2 -1 012
+> 4
+> -4
+> -2
+> 0
+> 2
+
+Supplementary Figure 3: Convergence of PF for the coupled Van der Pol oscilla-tors. To assess the convergence of PF, we examine how the mean state trajectory depends on the number of particles and the numerical integration time step for the coupled Van der Pol oscillators with μ = 2 .5 and k = 0 .1, corresponding to the most nonlinear case considered in Example 3. (a) Mean state trajectories of each oscillator obtained with 1k, 10k, 100k, 200k, 300k, and 500k particles using dt = 0 .01 , plotted over t = 0 .5–10 . (b) 
+
+Mean state trajectories computed using coarse ( dt = 0 .01 ) and fine ( dt = 0 .0005 ) integra-tion time steps with 300k particles, plotted over t = 0 –10 . The coarse and fine trajectories nearly overlap, with a SSE of 1.796. (c) SSE between trajectories obtained with 1k, 10k, 100k, 200k, and 300k particles and the 500k-particle reference trajectory over t = 0 –10 for 
+
+μ = 2 .5 and k = 0 .1. The SSE decreases as the number of particles increases and becomes nearly zero from 100k particles onward. Based on these convergence results, we use 300k particles and dt = 0 .01 to implement PF in Example 3. 
+
+50 a b Fine                                        
+
+> -15 -10 50510 15
+> -20 -10 010 20
+> 010 20 30 40
+> 0.12
+> 0
+> 0.06
+> 0.08
+> 0
+> 0.04
+> 0.10
+> 0
+> 0.05
+> Marginal density of 𝑥𝑥
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑧𝑧
+> #10k
+> #100k
+> #300k
+> #500k
+> #700k
+> #1000k
+> Probability density
+> Probability density
+> 0.15
+> 0
+> 0.05
+> 0.10
+> 0.15
+> 0
+> 0.05
+> 0.10
+> 0.15
+> 0
+> 0.05
+> 0.10
+> 010 20 30 40
+> -20 -10 010 20
+> Marginal density of 𝑧𝑧
+> -15 -10 50510 15
+> Marginal density of 𝑦𝑦
+> Marginal density of 𝑥𝑥 Coarse
+> Compared Particle count (vs 1000k)
+> 10k 100k 300k 500k 700k
+> 3
+> 1
+> 2
+> 0
+
+c    
+
+> Sum of squared errors
+> L1 error
+> Compared Particle count (vs 1000k)
+> 10k 100k 300k 500k 700k
+> 4
+> 1
+> 2
+> 0
+> 3
+> x10 2
+
+Supplementary Figure 4: Convergence of PF for the Lorenz Attractor. To assess the convergence of PF, we examine how the mean state trajectory and marginal densities of x, y, and z depend on the number of particles and the numerical integration time step for the Lorenz attractor. (a) Marginal densities of x, y, and z obtained with 10k, 100k, 300k, 500k, 700k, and 1000k particles using dt = 0 .01 , plotted at t = 15 . (b) 
+
+Marginal densities of x, y, and z computed using coarse ( dt = 0 .01 ) and fine ( dt = 0 .0005 )integration time steps with 500k particles, plotted at t = 15 . The SSE between the coarse and fine mean state trajectories is 10.78, and the sum of L 1 norm between the marginal densities at t = 10 , 11 , . . . , 20 is 0.715, indicating close agreement between the coarse and fine simulations. (c) SSE between mean state trajectories (left) and L 1 errors between the marginal densities of x, y, and z (right), computed using 10k, 100k, 300k, 500k, and 700k particles relative to the 1000k-particle reference result over t = 0 –20 . The L1 error is computed by summing the L 1 differences between the marginal densities at 
+
+t = 10 , 11 , . . . , 20 , as in (b). Both the SSE and the L 1 error converge from 300k particles onward. Based on these convergence results, we use 500k particles and dt = 0 .01 to implement PF in Example 4. 
+
+51 Supplementary Video 1. Temporal evolution of mean state trajectories for uncer-tainty propagation in the Van der Pol oscillator. Mean state trajectories of AMF, the baselines, and the PF ground truth for μ = 1 .6 over t = 0 –30 .Supplementary Video 2. Temporal evolution of joint and marginal PDFs for un-certainty propagation in the Van der Pol oscillator. Joint PDFs of the PF ground truth, APPDF, and AMF are shown in the top-left, top-middle, and top-right panels, respectively. Comparisons of the y- and z-marginal PDF are shown in the bottom-left and bottom-right panels, respectively. Results are shown for μ = 1 .6 over t = 0 –30 .Supplementary Video 3. Temporal evolution of the level sets and the number of particles for uncertainty propagation in the Van der Pol oscillator. Adaptive changes in the level sets of APPDF and AMF are shown in the top-left and bottom-left panels, respectively. Adaptive changes in the particle numbers of APPDF and AMF are shown in the top-right and bottom-right panels, respectively. Results are shown for μ = 1 .6
+
+over t = 0 –30 .Supplementary Video 4. Temporal evolution of mean state trajectories for filter-ing in the Van der Pol oscillator. Mean state trajectories of AMF, the baselines, and the PF ground truth for μ = 1 .5 over t = 0 –30 .Supplementary Video 5. Temporal evolution of joint and marginal PDFs for fil-tering in the Van der Pol oscillator. Joint PDFs of the PF ground truth, APPDF, and AMF are shown in the top-left, top-middle, and top-right panels, respectively. Com-parisons of the y- and z-marginal PDF are shown in the bottom-left and bottom-right panels, respectively. Results are shown for μ = 1 .5 over t = 0 –30 .Supplementary Video 6. Temporal evolution of the level sets and the number of particles for filtering in the Van der Pol oscillator. Adaptive changes in the level sets of APPDF and AMF are shown in the top-left and bottom-left panels, respectively. Adaptive changes in the particle numbers of APPDF and AMF are shown in the top-right and bottom-right panels, respectively. Results are shown for μ = 1 .5 over t = 0 –30 .Supplementary Video 7. Temporal evolution of mean state trajectories for fil-tering in the coupled Van der Pol oscillator. Mean state trajectories of AMF, the baselines, and the PF ground truth for μ = 2 .0 and k = 0 .3 over t = 0 –10 .Supplementary Video 8. Temporal evolution of joint PDFs for filtering in the Lorenz attractor. The xy -, yz -, and zx -joint PDFs are shown for the PF ground truth, LSKF, APPDF, and AMF from top to bottom, respectively, over t = 0 –20 .
+
+52 Appendix A. Gaussian level-set invariance 
+
+Let us assume that the initial probability density function u(x, 0) is Gaussian. The factorization M(0) of the initial covariance matrix Σ(0) is denoted by: 
+
+M(0) = x1(0) · · · xd(0)  . (Appendix A.1) It is straightforward to show that the column vectors xi(0) lie on the same level set: 
+
+xi(0) T Σ(0) −1xi(0) = xi(0) T M(0) −T M(0) −1xi(0) =  M(0) −1xi(0) T  M(0) −1xi(0) 
+
+= eTi ei = 1 ,
+
+where ei is the i-th standard basis vector. We next consider the evolution of these vectors. Under the local linear approximation v(x) ≈ Jx , the velocity field vL is linear with respect to x, as described in Sec. 2.3.1 of the main text. Hence, the flow map from time 0 to t can be represented by a linear transition matrix A(t), such that xi(t) = A(t)xi(0) . The covariance matrix 
+
+Σ(t) then evolves via congruence transformation: 
+
+Σ(t) = M(t)M(t)T = ( A(t)M(0)) ( A(t)M(0)) T = A(t)Σ(0) A(t)T .
+
+(Appendix A.2) By substituting xi(t) and Σ(t) into the quadratic form, we observe that the value is invariant: 
+
+xi(t)T Σ(t)−1xi(t) = ( A(t)xi(0)) T  A(t)Σ(0) A(t)T −1 (A(t)xi(0)) = xi(0) T A(t)T A(t)−T Σ(0) −1A(t)−1A(t)xi(0) = xi(0) T Σ(0) −1xi(0) = 1 .
+
+Therefore, tracking the propagation of a Gaussian particle is equivalent to tracking its level set. 
+
+Appendix B. Interpretation of the numerator in (13) Here, we show that the numerator in (13) represents the sum of all higher-order ( ≥ 2) terms arising from the Taylor expansion of the drift function v,53 scaled by a constant factor. Let v : Rd → Rd be a drift function and let ∆xˆı
+
+be denoted by δ for brevity. The Taylor expansion of v(x + δ) around x can be written as 
+
+v(x + δ) = v(x) + 
+
+> ∞
+
+X
+
+> n=1
+
+1
+
+n!Dnv(x)[ δ, . . . , δ] (Appendix B.1) where Dnv(x) denotes the n-th order derivative, which is an n-linear map 
+
+Dnv(x) : ( Rd)n → Rd,
+
+defined by 
+
+Dnv(x)[ h1, . . . , hn] = 
+
+> d
+
+X
+
+> i1,...,i n=1
+
+∂nv
+
+∂x i1 · · · ∂x in
+
+(x) h1,i 1 · · · hn,i n .
+
+We now perform a Taylor expansion of each term appearing in the numerator of (13). 
+
+1. The first term: Substituting 2δ into (Appendix B.1) yields 
+
+12
+
+ v(x + 2 δ) − v(x) = 12
+
+> ∞
+
+X
+
+> n=1
+
+1
+
+n!Dnv(x)[2 δ, . . . , 2δ] (Appendix B.2) 
+
+=
+
+> ∞
+
+X
+
+> n=1
+
+2 n−1
+
+n! Dnv(x)[ δ, . . . , δ]. (Appendix B.3) 
+
+2. The second term: (Appendix B.1) yields 
+
+v(x + δ) − v(x) = 
+
+> ∞
+
+X
+
+> n=1
+
+1
+
+n!Dnv(x)[ δ, . . . , δ]. (Appendix B.4) Hence, the numerator in (13) is given by: 
+
+12(v(x + 2 δ) − v(x)) 
+
+
+
+− [v(x + δ) − v(x)] (Appendix B.5) 
+
+=
+
+> ∞
+
+X
+
+> n=1
+
+2n−1 − 1
+
+n!
+
+
+
+Dnv(x)[ δ, . . . , δ] . (Appendix B.6) Because 
+
+21−1−11! 
+
+
+
+= 0 , the linear Jacobian term vanishes. Therefore, the numerator contains all nonlinear terms except for the linear term. 54 Appendix C. Invariance of the particle-splitting error 
+
+Here, we show that the error introduced by particle splitting (24) is identical to the error obtained from the corresponding 1-dimensional particle splitting optimization problem (16). Let us consider the random vector y = Tx = y1
+
+y⊥
+
+
+
+∼ N (0, Σy) (18), where y1 ∈ R, y⊥ ∈ Rn−1, and the covariance matrix 
+
+Σy =
+
+σ2 
+
+> d
+
+0T
+
+0 Σy,⊥
+
+
+
+(21). The marginal distributions are Gaussian, with 
+
+y1 ∼ N (0 , σ 2
+
+> d
+
+) and y⊥ ∼ N (0, Σy,⊥). Since y1 and y⊥ are jointly Gaussian and uncorrelated, they are independent. This allows for the factorization of the joint probability density function (PDF): 
+
+K(y; 0, Σy) = K(y1; 0 , σ 2
+
+> d
+
+)K(y⊥; 0, Σy,⊥) (Appendix C.1) Similarly, the PDF of a single split particle in the transformed space is: 
+
+K(y; 0, Σy,split ) = K(y1; 0 , σ 2
+
+> d
+
+/2) K(y⊥; 0, Σy,⊥) (Appendix C.2) The difference between the PDF of the parent particle y and the sum of the PDFs of the three child particles, denoted by fY (y), is: 
+
+fY (y) := K(y; 0, Σy)
+
+− [(1 − 2w)K(y; 0, Σy,split ) + w(K(y; a, Σy,split ) + K(y; −a, Σy,split ))] 
+
+(Appendix C.3) where a is [a, 0, . . . , 0] T , a = 1 .03332 σd, and w = 0 .21921 . Then, the L 1
+
+error, denoted by εy, is given by: 
+
+εy := 
+
+Z
+
+> Rn
+
+|fY (y)|dy (Appendix C.4) Similarly, the L 1 error of the corresponding 1-dimensional optimization prob-lem, denoted by εsingle , is given by: 
+
+εsingle := 
+
+Z
+
+> R
+
+K(x | 0, σ 2
+
+> d
+
+)
+
+−
+
+
+
+(1 − 2w)K(x | 0, σ2
+
+> d
+
+2 ) + wK (x | − a, σ2
+
+> d
+
+2 ) + wK (x | a, σ2
+
+> d
+
+2 )
+
+
+
+dx 
+
+(Appendix C.5) 55 Note that we use the L 1 error here instead of the maximum difference error in (16) because it allows analytical error analysis, and the difference between the errors calculated using the parameter values obtained by solving (16) is negligible (approximately 10 −5). First, we show that εy = εsingle , which implies that the high-dimensional reconstruction error is entirely determined by the corresponding 1-dimensional particle splitting optimization problem. By (Appendix C.1), (Appendix C.2), and Fubini’s theorem, we have: 
+
+εy =
+
+Z
+
+> Rn
+
+|fY (y)|dy
+
+=
+
+Z
+
+> Rn−1
+
+Z
+
+> R
+
+K(y1; 0 , σ 2
+
+> d
+
+) −
+
+
+
+(1 − 2w)K
+
+
+
+y1; 0 , σ2
+
+> d
+
+2
+
+
+
++ w(. . . )
+
+
+
+× | K(y⊥; 0, Σ⊥)| dy 1dy⊥
+
+=
+
+Z
+
+> Rn−1
+
+|K(y⊥; 0, Σ⊥)| dy⊥
+
+×
+
+Z
+
+> R
+
+K(y1; 0 , σ 2
+
+> d
+
+) −
+
+
+
+(1 − 2w)K
+
+
+
+y1; 0 , σ2
+
+> d
+
+2
+
+
+
++ w(. . . )
+
+
+
+dy 1
+
+= 1 × εsingle = εsingle 
+
+(Appendix C.6) Next, we show that εsingle is equal to the L 1 error computed for the ran-dom variable x in the original space, denoted by εx. Because y = Tx , we have dx = | det( T)|−1dy, and the difference between the PDF of the par-ent particle and the sum of the PDFs of the three child particles satisfies 
+
+fX (x) = fY (y)| det( T)|. Therefore, 
+
+εx := 
+
+Z
+
+> Rn
+
+|fX (x)| dx
+
+=
+
+Z
+
+> Rn
+
+(|fY (y)| | det T|)
+
+ 1
+
+|det T|dy
+
+
+
+=
+
+Z
+
+> Rn
+
+|fY (y)| dy
+
+= εy = εsingle (Appendix C.7) This provides a rationale for using the parameters w and a, derived from (16), to split a multivariate Gaussian distribution of x.56 Appendix D. Derivation of the KL divergence upper bound 
+
+Here, we derive (38) and (39), presented in Sec. 2.3.3 of the main text. Let 
+
+wcom = w1 + w2, πcom (x) = wcom N (x; μcom , Σcom )
+
+denote the weighted density of the combined particle, where 
+
+μcom = w1μ1 + w2μ2
+
+wcom 
+
+,
+
+and 
+
+Σcom = w1
+
+wcom 
+
+Σ1 + ( μ1 − μcom )( μ1 − μcom )T 
+
++ w2
+
+wcom 
+
+Σ2 + ( μ2 − μcom )( μ2 − μcom )T  .
+
+(Appendix D.1) Since direct computation of KL divergence (37) is intractable, a computable upper bound is employed instead. The upper bound is derived using the three lemmas. 
+
+Lemma 1. If p1(x), p2(x) and q(x) are any PDFs over d-dimensions, 0 ≤
+
+w ≤ 1 and ¯w = 1 − w, then: 
+
+DKL (wp 1 + ¯ wq, wp 2 + ¯ wq ) ≤ wD KL (p1, p 2) (Appendix D.2) 
+
+Lemma 2. If p(x), q1(x) and q2(x) are any PDFs over d-dimensions, 0 ≤
+
+w ≤ 1 and ¯w = 1 − w, then: 
+
+DKL (wq 1 + ¯ wq 2, p ) ≤ wD KL (q1, p ) + ¯ wD KL (q2, p ) (Appendix D.3) 
+
+DKL (p, wq 1 + ¯ wq 2) ≤ wD KL (p, q 1) + ¯ wD KL (p, q 2) (Appendix D.4) 
+
+Lemma 3. Let g1(x) and g2(x) be the d-dimensional Gaussian PDFs with mean vectors μ1, μ2 and positive-definite covariance matrices Σ1, Σ2, respec-tively. Then: 
+
+2DKL (g1, g 2) = tr( Σ−12 [Σ1 − Σ2 + ( μ1 − μ2)( μ1 − μ2)T ]) + log 
+
+det( Σ2)det( Σ1)
+
+
+
+(Appendix D.5) 57 To apply Lemma 1, we let w = wcom = w1 + w2 and p1 = w1π1+w2π2 
+
+> wcom
+
+. Note that the term ¯wq in equation (Appendix D.2) corresponds to the weighted sum of residual particles πres . Setting p2 to πcom  
+
+> wcom
+
+yields 
+
+DKL (w1π1 + w2π2 + πres , π com + πres ) ≤ wcom DKL 
+
+w1π1 + w2π2
+
+wcom 
+
+, πcom 
+
+wcom 
+
+
+
+.
+
+(Appendix D.6) Next, by substituting w with w1 
+
+> wcom
+
+, q1 with π1, q2 with π2, and p with πcom 
+
+> wcom
+
+into equation (Appendix D.3) of Lemma 2, we obtain 
+
+DKL 
+
+w1π1 + w2π2
+
+wcom 
+
+, πcom 
+
+wcom 
+
+
+
+≤ w1
+
+wcom 
+
+DKL 
+
+
+
+π1, πcom 
+
+wcom 
+
+
+
++ w2
+
+wcom 
+
+DKL 
+
+
+
+π2, πcom 
+
+wcom 
+
+
+
+.
+
+(Appendix D.7) Combining equations (Appendix D.6) and (Appendix D.7) derives the de-sired upper bound for the KL divergence, denoted as B(x1, x2).
+
+DKL (w1π1 + w2π2 + πres , π com + πres )
+
+≤ w1DKL 
+
+
+
+π1, πcom 
+
+wcom 
+
+
+
++ w2DKL 
+
+
+
+π2, πcom 
+
+wcom 
+
+
+
+:= B(x1, x2).
+
+(Appendix D.8) Substituting equation (Appendix D.5) from Lemma 3 into B(x1, x2) results in 
+
+2B(x1, x2) = w1
+
+
+
+tr 
+
+
+
+Σ−1
+
+> com
+
+
+
+Σ1 − Σcom + ( μ1 − μcom )( μ1 − μcom )T
+
+ 
+
++ log 
+
+det( Σcom )det( Σ1)
+
+  
+
++ w2
+
+
+
+tr 
+
+
+
+Σ−1
+
+> com
+
+
+
+Σ2 − Σcom + ( μ2 − μcom )( μ2 − μcom )T
+
+ 
+
++ log 
+
+det( Σcom )det( Σ2)
+
+  
+
+.
+
+(Appendix D.9) Using the linearity of the trace operator, we can consolidate all trace-related terms from (Appendix D.9) into the single expression, which is shown in Claim 1 below to be zero. 58 Claim 1. The following trace term is zero: 
+
+tr Σ−1
+
+> com
+
+"
+
+w1
+
+ (Σ1 − Σcom ) + ( μ1 − μcom )( μ1 − μcom )T 
+
++ w2
+
+ (Σ2 − Σcom ) + ( μ2 − μcom )( μ2 − μcom )T #! 
+
+= 0 .
+
+Proof. Let A denote the matrix term inside the trace term in Claim 1: 
+
+A = w1
+
+(Σ1 − Σcom ) + ( μ1 − μcom )( μ1 − μcom )T 
+
++ w2
+
+(Σ2 − Σcom ) + ( μ2 − μcom )( μ2 − μcom )T  (Appendix D.10) We will show that A = 0, which implies tr( Σ−1
+
+> com
+
+A) = 0 .First, we simplify the mean difference terms. Recall the definition of the combined weight and mean (Appendix D.1): 
+
+wcom = w1 + w2, μcom = w1μ1 + w2μ2
+
+wcom 
+
+Then, we have: 
+
+μ1 − μcom = μ1 − w1μ1 + w2μ2
+
+wcom 
+
+= (w1 + w2)μ1 − w1μ1 − w2μ2
+
+wcom 
+
+= w2(μ1 − μ2)
+
+wcom 
+
+(Appendix D.11) 
+
+μ2 − μcom = μ2 − w1μ1 + w2μ2
+
+wcom 
+
+= (w1 + w2)μ2 − w1μ1 − w2μ2
+
+wcom 
+
+= −w1(μ1 − μ2)
+
+wcom 
+
+(Appendix D.12) Let δ12 = ( μ1 − μ2). Substituting these back into the mean difference terms 59 in equation (Appendix D.10): 
+
+w1(μ1 − μcom )( μ1 − μcom )T = w1
+
+ w2
+
+wcom 
+
+δ12 
+
+  w2
+
+wcom 
+
+δ12 
+
+T
+
+= w1w22
+
+w2
+
+> com
+
+δ12 δT
+
+> 12
+
+(Appendix D.13) 
+
+w2(μ2 − μcom )( μ2 − μcom )T = w2
+
+ −w1
+
+wcom 
+
+δ12 
+
+  −w1
+
+wcom 
+
+δ12 
+
+T
+
+= w2w21
+
+w2
+
+> com
+
+δ12 δT
+
+> 12
+
+(Appendix D.14) Summing these two parts yields: 
+
+w1w22 + w2w21
+
+w2
+
+> com
+
+
+
+δ12 δT 
+
+> 12
+
+= w1w2(w2 + w1)
+
+w2
+
+> com
+
+δ12 δT 
+
+> 12
+
+= w1w2
+
+wcom 
+
+δ12 δT
+
+> 12
+
+(Appendix D.15) Now, we can rewrite the matrix A:
+
+A = ( w1Σ1 + w2Σ2) − wcom Σcom + w1w2
+
+wcom 
+
+δ12 δT 
+
+> 12
+
+(Appendix D.16) Finally, we utilize the definition of the combined covariance Σcom :
+
+Σcom = 1
+
+wcom 
+
+
+
+w1Σ1 + w2Σ2 + w1w2
+
+wcom 
+
+δ12 δT
+
+> 12
+
+
+
+(Appendix D.17) Multiplying both sides by wcom , we get: 
+
+wcom Σcom = w1Σ1 + w2Σ2 + w1w2
+
+wcom 
+
+δ12 δT 
+
+> 12
+
+(Appendix D.18) Substituting (Appendix D.18) into the expression for A:
+
+A =
+
+
+
+w1Σ1 + w2Σ2 + w1w2
+
+wcom 
+
+δ12 δT
+
+> 12
+
+
+
+− wcom Σcom = 0 (Appendix D.19) Since A = 0, it follows immediately that tr( Σ−1
+
+> com
+
+A) = 0 .Therefore, B(x1, x2) simplifies to: 
+
+B(x1, x2) = 12 [( w1 + w2) log det( Σcom ) − w1 log det( Σ1) − w2 log det( Σ2)] .
+
+This proves (39), and together with (Appendix D.8), proves eq. (38). 60

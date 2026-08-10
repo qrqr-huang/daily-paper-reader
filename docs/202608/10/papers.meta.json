@@ -1,0 +1,39 @@
+{
+  "label": "2026-08-10",
+  "date": "2026-08-10",
+  "generated_at": "2026-08-10T21:23:55",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202608/10/2608.06036v1-tracking-performance-of-rls-algorithms-in-wssus-channels",
+      "section": "quick",
+      "title_en": "Tracking performance of RLS algorithms in WSSUS channels",
+      "authors": "Yuriy Zakharov, Lu Shen",
+      "date": "2026-08-06",
+      "pdf": "https://arxiv.org/pdf/2608.06036v1",
+      "score": "7.0",
+      "evidence": "用于时变系统参数估计的RLS自适应算法，可应用于等效电路模型辨识以进行SOC估计。",
+      "tldr": "自适应滤波算法广泛用于估计线性时变通信信道，其追踪性能取决于噪声水平、信道时变特性和算法参数，而优化参数和准确预测性能是关键任务。本研究提出一种分析RLS算法在WSSUS信道中的追踪性能框架，利用信道功率谱密度描述时变。针对指数遗忘RLS和滑动窗RLS，推导出用谱矩表示的均方偏差（MSD）解析式。针对均匀、Jakes和自回归等典型功率谱给出具体形式，并推广至含处理延迟及基于勒让德多项式近似的SRLS-L算法。数值仿真验证了理论公式的正确性，为RLS自适应算法在时变信道中的性能预测和参数优化提供了有效工具。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Adaptive algorithms are widely used for estimation of linear time-varying systems, such as communication channels. Their tracking performance depends on the level of noise, characteristics of time variations, and the algorithm parameters. Optimizing these parameters and predicting the algorithm performance is an important task. In this paper, we present an approach for analysing the tracking performance of recursive least squares (RLS) adaptive algorithms in channels with time variations described as wide-sense stationary uncorrelated scattering (WSSUS) random processes characterised by a power spectral density (PSD). We focus on exponential RLS and sliding-window RLS (SRLS) algorithms, for which general formulas for the mean square deviation (MSD) as a measure of the tracking performance are obtained in terms of spectral moments of the PSD. As examples, they are specified for random processes with uniform, Jakes' and autoregressive PSDs. These results are further generalized to RLS algorithms with delays, e.g. processing delays or delays introduced in non-causal adaptive RLS algorithms, and to the SRLS-L algorithm with approximation of channel time variations using Legendre polynomials. Numerical examples show good match between the analytical MSD and simulation results.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/10/2608.04430v2-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation",
+      "section": "quick",
+      "title_en": "An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation",
+      "authors": "San Kim, Won Chang, Daniel B. Forger, Dae Wook Kim",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.04430v2",
+      "score": "6.0",
+      "evidence": "用于非线性状态估计的自适应高斯混合滤波器，可能适用于电池SOC估计。",
+      "tldr": "非线性系统状态估计中，概率密度函数常呈现非高斯多模态特性，传统Kalman类滤波器失效。本文提出自适应分裂-组合高斯混合滤波器(AMF)，通过无需在线优化的粒子自适应分裂与组合策略，实现非对称多模态PDF的高效传播。实验表明，AMF在Van der Pol振荡器和Lorenz吸引子等多个基准上显著优于基线方法，并支持并行实现以降低计算成本。其分裂方法保证方差减小，提升估计准确性和效率。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Filtering combines model predictions with measurements to estimate the probability density function (PDF) of a system state over time. The PDF often becomes highly asymmetric and even multimodal in nonlinear systems with oscillatory or chaotic dynamics. Such non-Gaussian features violate the single-Gaussian assumption underlying Kalman-type filters. To address this problem, Gaussian mixture filtering has been proposed. However, accurately propagating mixture components and adaptively adjusting their number and weights over time remain open challenges. Here, we develop an adaptive split-combine Gaussian mixture filter (AMF) that estimates the time evolution of asymmetric and multimodal PDFs by adaptively splitting and combining Gaussian particles without auxiliary online numerical optimization. Notably, the proposed splitting method guarantees a reduction in variance along a target level-set-point direction of a Gaussian particle. This enables accurate and efficient propagation of particles. We show that AMF consistently outperforms various baseline filters across diverse benchmarks, including single and coupled slow-fast Van der Pol oscillators and the Lorenz attractor. We also propose a parallel implementation of AMF, allowing high-fidelity PDF estimation with practical computational cost.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
