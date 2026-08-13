@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-13",
+  "date": "2026-08-13",
+  "generated_at": "2026-08-13T21:22:51",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/13/2608.04430v3-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation",
+      "section": "quick",
+      "title_en": "An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation",
+      "authors": "San Kim, Won Chang, Daniel B. Forger, Dae Wook Kim",
+      "date": "2026-08-05",
+      "pdf": "https://arxiv.org/pdf/2608.04430v3",
+      "score": "6.0",
+      "evidence": "自适应状态估计滤波器，适用于非高斯条件下SOC估计",
+      "tldr": "非线性系统（如振荡与混沌）的状态概率密度常高度非对称甚至多模态，单高斯卡尔曼滤波假设失效。本文提出自适应分裂-合并高斯混合滤波（AMF），通过自适应分裂与合并高斯粒子，无需辅助在线数值优化即可估计 PDF。分裂方法保证沿目标水平集点方向降低方差，实现准确高效传播。在单/耦合慢快范德波尔振子和洛伦兹吸引子等基准上一致优于多种基线，并提供并行实现支持高保真估计。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Filtering combines model predictions with measurements to estimate the probability density function (PDF) of a system state over time. The PDF often becomes highly asymmetric and even multimodal in nonlinear systems with oscillatory or chaotic dynamics. Such non-Gaussian features violate the single-Gaussian assumption underlying Kalman-type filters. To address this problem, Gaussian mixture filtering has been proposed. However, accurately propagating mixture components and adaptively adjusting their number and weights over time remain open challenges. Here, we develop an adaptive split-combine Gaussian mixture filter (AMF) that estimates the time evolution of asymmetric and multimodal PDFs by adaptively splitting and combining Gaussian particles without auxiliary online numerical optimization. Notably, the proposed splitting method guarantees a reduction in variance along a target level-set-point direction of a Gaussian particle. This enables accurate and efficient propagation of particles. We show that AMF consistently outperforms various baseline filters across diverse benchmarks, including single and coupled slow-fast Van der Pol oscillators and the Lorenz attractor. We also propose a parallel implementation of AMF, allowing high-fidelity PDF estimation with practical computational cost.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,58 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-13T21:20:14.630598+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.04430v3",
+      "source": "arxiv",
+      "title": "An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation",
+      "abstract": "Filtering combines model predictions with measurements to estimate the probability density function (PDF) of a system state over time. The PDF often becomes highly asymmetric and even multimodal in nonlinear systems with oscillatory or chaotic dynamics. Such non-Gaussian features violate the single-Gaussian assumption underlying Kalman-type filters. To address this problem, Gaussian mixture filtering has been proposed. However, accurately propagating mixture components and adaptively adjusting their number and weights over time remain open challenges. Here, we develop an adaptive split-combine Gaussian mixture filter (AMF) that estimates the time evolution of asymmetric and multimodal PDFs by adaptively splitting and combining Gaussian particles without auxiliary online numerical optimization. Notably, the proposed splitting method guarantees a reduction in variance along a target level-set-point direction of a Gaussian particle. This enables accurate and efficient propagation of particles. We show that AMF consistently outperforms various baseline filters across diverse benchmarks, including single and coupled slow-fast Van der Pol oscillators and the Lorenz attractor. We also propose a parallel implementation of AMF, allowing high-fidelity PDF estimation with practical computational cost.",
+      "authors": [
+        "San Kim",
+        "Won Chang",
+        "Daniel B. Forger",
+        "Dae Wook Kim"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA",
+        "stat.ML"
+      ],
+      "published": "2026-08-05T04:21:22+00:00",
+      "link": "https://arxiv.org/pdf/2608.04430v3",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "adaptive state estimation filter for non-Gaussian conditions applicable to SOC estimation",
+      "llm_evidence_cn": "自适应状态估计滤波器，适用于非高斯条件下SOC估计",
+      "llm_evidence": "自适应状态估计滤波器，适用于非高斯条件下SOC估计",
+      "canonical_evidence": "自适应状态估计滤波器，适用于非高斯条件下SOC估计",
+      "llm_tldr_en": "Addressing non-Gaussian state estimation, this paper proposes an adaptive split-combine Gaussian mixture filter that adjusts mixture components dynamically; it can transfer to SOC estimation under multimodal noise.",
+      "llm_tldr_cn": "本文针对非线性系统状态估计中高斯假设失效、概率密度函数呈现非对称和多模态的难题，提出一种自适应分裂合并高斯混合滤波器（AMF）。该方法通过自适应分裂和合并高斯混合分量，动态调整分量数量和权重，从而准确估计状态概率密度函数的时序演化。实验表明AMF能够处理振荡或混沌动力学下的非高斯特征，验证了其有效性。该通用滤波方法可迁移应用于锂离子电池荷电状态（SOC）估计等非高斯状态感知任务。",
+      "llm_tldr": "本文针对非线性系统状态估计中高斯假设失效、概率密度函数呈现非对称和多模态的难题，提出一种自适应分裂合并高斯混合滤波器（AMF）。该方法通过自适应分裂和合并高斯混合分量，动态调整分量数量和权重，从而准确估计状态概率密度函数的时序演化。实验表明AMF能够处理振荡或混沌动力学下的非高斯特征，验证了其有效性。该通用滤波方法可迁移应用于锂离子电池荷电状态（SOC）估计等非高斯状态感知任务。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

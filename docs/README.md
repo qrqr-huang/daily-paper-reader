@@ -6,29 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-10
-- 运行时间：2026-08-10 21:23:44 UTC
+- 最新运行日期：2026-08-13
+- 运行时间：2026-08-13 21:22:27 UTC
 - 运行状态：成功
-- 本次总论文数：2
+- 本次总论文数：1
 - 精读区：0
-- 速读区：2
+- 速读区：1
 
 ### 今日简报（AI）
-今日速读两篇信号处理论文，聚焦信道跟踪与非线性状态估计。  
-最值得看的方向：RLS算法在时变无线信道下的跟踪性能边界，及自适应高斯混合滤波处理多模态估计的能力。  
-建议进一步关注这类滤波方法在动态系统中的应用，尤其是参数自适应与计算效率的平衡。
-- 详情：[/202608/10/README](/202608/10/README)
+- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
+- 速读：《An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202608/13/README](/202608/13/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Tracking performance of RLS algorithms in WSSUS channels](/202608/10/2608.06036v1-tracking-performance-of-rls-algorithms-in-wssus-channels)  
-   标签：评分：7.0/10、query:lfp-soc
-   evidence：用于时变系统参数估计的RLS自适应算法，可应用于等效电路模型辨识以进行SOC估计。
-2. [An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation](/202608/10/2608.04430v2-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation)  
+1. [An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation](/202608/13/2608.04430v3-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation)  
    标签：评分：6.0/10、query:lfp-soc
-   evidence：用于非线性状态估计的自适应高斯混合滤波器，可能适用于电池SOC估计。
+   evidence：自适应状态估计滤波器，适用于非高斯条件下SOC估计
 
 
 <div class="dpr-home-promo-card">
