@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-15",
+  "date": "2026-08-15",
+  "generated_at": "2026-08-15T20:49:43",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/15/2608.10746v1-koopman-luenberger-observer-design-for-nonlinear-systems-with-application-to-the-monitoring-of-a-latent-thermal-energy-storage",
+      "section": "quick",
+      "title_en": "KOOPMAN-Luenberger Observer Design for Nonlinear Systems with Application to the Monitoring of a Latent Thermal Energy Storage",
+      "authors": "Mustapha Habib, Dario Aguiar, Esther Kieseritzky, Tilman Barz, Qian Wang",
+      "date": "2026-08-11",
+      "pdf": "https://arxiv.org/pdf/2608.10746v1",
+      "score": "6.0",
+      "evidence": "基于Koopman的线性状态观测器，可迁移用于电池SOC估计",
+      "tldr": "针对非线性系统状态估计中测量稀疏、内部状态难以获取的问题，本文提出基于KOOPMAN算子的线性观测器设计框架。通过物理信息基函数将非线性动态提升到高维空间，利用eDMDc识别带控制线性模型，并在提升空间构造离散Luenberger观测器，增益经由对偶LQR优化设计。在潜热储能系统上验证，出口温度重构RMSE低至0.0819°C，内部PCM温度误差一般低于1.0°C，证明了方法在有限传感下的有效性与实用性。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "State estimation for nonlinear dynamical systems remains a fundamental challenge, particularly when measurements are sparse and internal states are inaccessible. This work presents a KOOPMAN-based Linear State Observer (KOOPMAN-LSO) design framework that enables linear observer synthesis for nonlinear systems through KOOPMAN operator theory. The nonlinear dynamics are lifted into a higher-dimensional observable space using physics-informed basis functions, where a linear predictor with control is identified via extended dynamic mode decomposition with control (eDMDc). A discrete-time Luenberger observer is then constructed in the lifted space, and the observer gain is obtained through a dual linear - quadratic regulator (LQR) formulation to ensure stable and tunable estimation error dynamics. The proposed framework combines the representational capability of KOOPMAN lifting with the simplicity and computational efficiency of linear observer design, providing a systematic approach for nonlinear state estimation under limited sensing. Its effectiveness is demonstrated on a latent thermal energy storage (LTES) system based on phase-change materials (PCM), where internal temperature states are not directly measurable. Experimental results under varying operating conditions show accurate reconstruction of unmeasured states from limited output measurements, illustrating the potential of KOOPMAN-LSO design for practical nonlinear systems. The proposed approach achieves high-fidelity reconstruction with an RMSE as low as 0.0819 °C for the LTES outlet temperature and generally below 1.0 °C for observable internal PCM temperatures.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

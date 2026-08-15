@@ -6,26 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-13
-- 运行时间：2026-08-13 21:22:27 UTC
+- 最新运行日期：2026-08-15
+- 运行时间：2026-08-15 20:49:19 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
-- 速读：《An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation》（6.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202608/13/README](/202608/13/README)
+今日速读一篇将 Koopman 算子与 Luenberger 观测器结合、用于潜热储能监测的非线性系统研究（6.0/10）。  
+该文值得关注的方向是利用 Koopman 升维线性化思路设计观测器，实现对非线性储能系统内部状态的估计。  
+建议后续关注该方法在储能或热管理系统中的实际验证与故障监测效果。
+- 详情：[/202608/15/README](/202608/15/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [An adaptive split-combine Gaussian mixture filter for nonlinear and multimodal state estimation](/202608/13/2608.04430v3-an-adaptive-split-combine-gaussian-mixture-filter-for-nonlinear-and-multimodal-state-estimation)  
+1. [KOOPMAN-Luenberger Observer Design for Nonlinear Systems with Application to the Monitoring of a Latent Thermal Energy Storage](/202608/15/2608.10746v1-koopman-luenberger-observer-design-for-nonlinear-systems-with-application-to-the-monitoring-of-a-latent-thermal-energy-storage)  
    标签：评分：6.0/10、query:lfp-soc
-   evidence：自适应状态估计滤波器，适用于非高斯条件下SOC估计
+   evidence：基于Koopman的线性状态观测器，可迁移用于电池SOC估计
 
 
 <div class="dpr-home-promo-card">
