@@ -1,0 +1,610 @@
+Title: 2608.18742v1.pdf
+
+URL Source: https://arxiv.org/pdf/2608.18742v1
+
+Published Time: Thu, 20 Aug 2026 00:41:56 GMT
+
+Number of Pages: 18
+
+Markdown Content:
+Page 1 of 18 
+
+# Regularised Iterative Generalised Least Squares with Optimal Selection of the Hyper-Parameter for Identifying Nonlinear Phenomenological Models 
+
+## M. Cary 1 (Email: m.cary@lboro.ac.uk) 
+
+## Charles Bokor 2 (Email: charlesbokor@outlook.com)  
+
+> 1
+
+Department of Aeronautical and Automotive Engineering, Loughborough University, Loughborough, LE11 3TU, UK  
+
+> 2
+
+School of Engineering, Computing and Mathematics, Oxford Brookes University, Oxford OX33 1HX, UK 
+
+# Abstract 
+
+In some fields currently dominated by empirical approaches, such as state of health (SoH) prediction for lithium-ion batteries, phenomenological models motivated by quasi-physical thinking contain parameters to be estimated from experimental data. Often the structure of such models yields fully or partially confounded parameters, which are difficult or even impossible to estimate reliably. To preserve the desired model formulation and simultaneously improve the numerical conditioning for the problem we introduce a ridge regression scheme. An automated method is provided, based on information theoretic measures of model performance, which optimises the ridge regression hyper-parameter at each iteration. The formulae presented require fixed point iteration to solve for the hyper-parameter. Given a suitable starting value, analysis demonstrates convergence is very rapid. The optimal hyper-parameter selection mechanism is incorporated within an efficient regularised iterative generalised least squares mechanism, capable of fitting both heteroscedastic and serially correlated data as required. Simulation confirms the efficacy of the overall method. 
+
+Keywords: Maximum Likelihood Estimation, Regularisation, Optimal Hyper-Parameter Estimation .
+
+# 1 Preamble 
+
+The operation of Lithium-ion batteries creates ageing and degradation, which needs to be measured or predicted to keep the battery safe. Online state of health  (𝑆𝑜𝐻)  estimation is a key task of practical automotive battery management systems. Essentially  𝑆𝑜𝐻  is a metric to estimate the ageing level of batteries, which includes capacity fade and power degradation. Particularly, it is the key metric to determine when a battery should be replaced. Phenomenological models for  𝑆𝑜𝐻  estimation of Lithium-ion batteries rely heavily on quasi-physical motivations. Often these models are comprised of a power law like term multiplied by gains and Arrhenius-like exponential terms, which act as a form of rate constant [ i, ii , iii ]. Often the multiplicative nature of the model structure calls into question the apparent identifiability of the model. 
+
+License: CC-BY 4.0, see  https://creativecommons.org/licenses/by/4.0/ Page 2 of 18 
+
+A model is identifiable if it is theoretically possible to learn the true values of this model's underlying parameters after obtaining an infinite number of observations from it. To make things concrete let 
+
+𝑃 = {𝑃 𝜃 : 𝜃 ∈ 𝛩}  denote a statistical model, where the parameter space,  𝛩 , is finite-dimensional. The model  𝑃  is identifiable if the mapping  𝜃 → 𝑃 𝜃  is one-to-one; i.e.  𝑃 𝜃 1 = 𝑃 𝜃 2 ⇒ 𝜃 1 = 𝜃 2, ∀𝜃 1, 𝜃 2 ∈ 𝛩 .Identifiability of the model, in the sense of the invertibility of the mapping  𝜃 → 𝑃 𝜃 , is equivalent to being able to discern the true parameter vector if the model can be observed indefinitely. 
+
+Let  𝑃  be the general nonlinear regression model: 
+
+𝑦 = 𝑓(𝑥, 𝜃) + 𝑒  , 𝑒 = 𝓝(0, 𝜎 2𝑣 2(𝑓(𝑥, 𝜃), 𝛿))  (1) 
+
+Note although the error term is assumed Gaussian in nature, it is permitted to take on quite general structures incorporating phenomena such as heteroscedasticity and or serial correlation through the specification of the variance-covariance function  𝑣 2(𝑓(𝑥, 𝜃), 𝛿) . Expanding  𝑓(𝑥, 𝜃)  as a first order Taylor series about the current estimates  𝜃 𝑘 ∈ ℝ 𝑝  and defining  𝑔 = 𝑦 − 𝑓(𝑥, 𝜃 𝑘 ), Equation (1) becomes: 
+
+𝑔 ≈ 𝐽(𝑥, 𝜃 𝑘 )𝛥𝜃 + 𝑒  (2) 
+
+Where  𝐽(𝑥, 𝜃 𝑘 ) ∈ ℝ 𝑁×𝑝  is the model Jacobian matrix defined as  𝐽(𝑥, 𝜃 𝑘 ) = 𝜕𝑓(𝑥, 𝜃 𝑘 ) 𝜕𝜃 ⁄ .Identifiability is closely linked with sensitivity analysis [ iv , v, vi ], and so to the properties of  𝐽(𝑥, 𝜃) .Given that the experimental design is adequate, if the columns of the Jacobian matrix are linearly independent then the parameter estimates can be uniquely estimated. This is equivalent to stating that the matrix (𝐽(𝑥, 𝜃) 𝑇 𝐽(𝑥, 𝜃))  is invertible. 
+
+Vajda et al [vii ] investigated the quantitative identifiability of model parameters for a flow reactor employed to pyrolyze methane at three constant temperatures. Their approach employed principal component analysis [ viii ] to determine the number of ‘‘large’’ eigenvalues of the Fisher Information Matrix. The elements of the corresponding eigenvectors were used to suggest combinations of parameters that could be used to re-parameterize and simplify the model; the number of large eigenvalues corresponding to the number of estimable parameters in the simplified model. Simplifying the model seems at odds with the underlying physical thinking often used to formulate a Lithium-ion battery  𝑆𝑜𝐻  model, where certain parameters may account for known ageing mechanisms. Indeed, obtaining estimates of the associated parameters to rank the relative significance of individual mechanisms may be the primary goal of the study. 
+
+Vajda’s approach was limited to small scale models, with relatively few parameters. Yao et al [iv ]define an approach capable of dealing with larger scale problems. Their example contains up to 50 parameters. The algorithm developed is analogous to calculating the alias matrix in linear regression problems [ ix ] and relies on the fact that the residual vector is orthogonal to the expectation plain. Each column added to the simplified scaled Jacobian is thus orthogonal to any existing columns. Again, the main concern is that the resulting model is simplified, and the original physical formulation altered. Page 3 of 18 
+
+In situations where the columns of  𝐽(𝑥, 𝜃)  are nearly colinear, the conditioning of the Jacobian is very poor, resulting in very imprecise parameter estimates. In addition, the parameter estimates are very sensitive to the peculiarities of the training data, implying that a small perturbation in the data can lead to a large change in the parameter estimates [ x]. One way of converting a problem from ill-posed to well-posed is to introduce a regularisation method. The basic idea is to confine the problem to a restricted set of parameters using a regularisation functional  ℛ(𝜃) . Typically, this is achieved by introducing a constraint of the form  ℛ(𝜃) ≤ 𝑐  to the usual log likelihood function,  𝐿(𝜃) , such that: 
+
+𝑎𝑟𝑔 min  
+
+> 𝜃
+
+(𝐿(𝜃) + 𝜆 2 ℛ(𝜃))  (3) 
+
+This is reminiscent of the method of Langrage multipliers. The regularisation parameter (𝜆) , or hyper-parameter, implicitly defines a structure on the possible models by constraining the model. Roughly speaking, low values of  𝜆  in Equation (3) correspond to high values of  𝑐 ; i.e. a weak constraint. Alternatively, a large value for the hyper-parameter, corresponding to a low value for  𝑐 , implies greater importance to  ℛ(𝜃)  in the minimisation of the cost function. Thus, a large value for  𝜆 
+
+represents a more severe constraint. Hence, we see the regularised cost minimisation problem represents a trade-off between model fidelity, minimising  𝐿(𝜃) , and constraining the model to be a member of a small compact subset,  ℛ(𝜃) . Furthermore, the balance between fitting the data and satisfying the constraint is controlled by the regularisation parameter. 
+
+In practice, minimisation of the regularised cost function is carried out iteratively using a gradient based optimisation method. In this paper we are concerned with optimal selection of the hyper-parameter at each iteration of this process. In this way, the fidelity versus constraint level trade-off can be handled automatically as the iterative parameter search proceeds. This is accomplished by developing a fixed-point iteration scheme to be carried out at each iteration of the optimisation scheme. These are founded on novel re-estimation formulae presented in this paper. 
+
+The paper is organised as follows. In section  2 we introduce the information theoretic model selection measures upon which the optimal hyper-parameter estimation process is founded. Both information theoretic measures are functions of the relevant loglikelihood, and in section  3 we derive the appropriate profiled likelihood necessary for the derivation of the re-estimation formulae for the hyper-parameter. For continuity, section  4 we provide expressions for the derivatives of the profile loglikelihood and model degrees of freedom with respect to the hyper-parameter. These are necessary for the derivation of the re-estimation formulae presented in section  5 and derived in detail in Appendix B. Convergence criterion for the iterative algorithm are also given here. Section  6 details the regularised iterative generalised least squares algorithm utilised for the identification of both the fit and covariance model parameters. An example analysis of simulated data follows in section  7. The application considered is the Martinez-Laserna model for battery state of health estimation. The multiplicative structure of the model yields particularly poor identifiability and regularisation proves essential to obtain reasonable parameter estimates. In section  8, we comment on the convergence rate of the iterative process and its dependency on the initial derivative of the re-estimation function with respect to the hyper-parameter. Finally, in section 9 we state conclusions relating to the efficacy of the procedure. Page 4 of 18 
+
+# 2 Model Selection Measures 
+
+Various measures appear in the literature, which permit comparison among competing statistical models [ xi , xii , xiii , xiv ]. Orr [ xv , xvi ] provides a method for optimally estimating the hyper-parameter in regularised radial basis function network applications. His approach is based on the well-known generalised cross-validation  (𝐺𝐶𝑉)  criterion [ xiv ]. The main justification for  𝐺𝐶𝑉  as a model selection criterion is conveniently summarised in their  𝐺𝐶𝑉  theorem [ xiv , xvii , xviii ]. As discussed by Eubank [xvii ] the GCV theorem can be interpreted as stating that, in certain circumstances, GCV is nearly an unbiased estimator of the prediction risk. 
+
+Essentially, Orr presents a re-estimation method for optimally determining  𝜆  as a new basis function is added to the model. By differentiating the relevant  𝐺𝐶𝑉  criterion with respect to the hyper-parameter, setting the result to zero and solving for  𝜆  he derives an expression for updating the regularisation parameter as each new basis function is added to the network. As  𝜆  appears on both sides of this expression, iteration is required to determine the updated value. 
+
+There are several issues associated with Orr’s approach . Firstly, it relates to ordinary least squares estimation only. Weighted fitting approaches are not accounted for. Secondly, the measure has units which means that models created in transformed scales cannot be compared. Finally , Orr’s parameter 
+
+count for the model neglects the covariance parameter;  𝜎 2 in the least squares case. 
+
+In contrast, we base our approach on two popular information theoretic criteria: Sugiura’s small 
+
+sample Akaike Information Criterion (𝐴𝐼𝐶 𝑐 ) [xiii ] and also Schwarz’s Bayesian Information Criterion 
+
+[xix ] (𝐵𝐼𝐶).  These are defined as: 
+
+𝐴𝐼𝐶 𝑐 = 2𝐿(𝜃) + 2𝛾(𝛾+1) 𝑁−𝛾−1  (4) 
+
+𝐵𝐼𝐶 = 2𝐿(𝜃) + 𝛾𝑙𝑜𝑔(𝑁)  (5) 
+
+Where  𝐿(𝜃)  is the negative loglikelihood,  𝑁  the number of data points and  𝛾  the total number of estimable parameters in the model specification. We derive formulae based on both measures and compare their respective performance in later sections. Notice the full version of both  𝐵𝐼𝐶  and  𝐴𝐼𝐶 𝑐 ,as given in Equations (4) and (5), are based on the negative loglikelihood, which is unitless. Therefore, these measures permit comparisons among models computed in both transformed and natural unit scales. The situation is analogous to the well know Box-Cox method [ xx ] for determining an optimal transformation in linear regression problems. In addition, by employing the full likelihood we can account for heteroscedastic and or serially correlated data. 
+
+For either measure, the estimable parameter count necessarily includes both fit and covariance model parameters. In addition, the term estimable deserves some clarification, particularly for regularised models. Following Burnham and Anderson [ xxi ], by this we imply parameters that are uniquely identifiable from the data. One reason a parameter can be non-estimable is due to inherent confounding in the model. Under these circumstances, two or more parameters cannot be uniquely Page 5 of 18 
+
+identified from the data. This is obvious in multiplicative structures involving products of coefficients. Such formulations are relatively common in phenomenological models for lithium-ion battery  𝑆𝑜𝐻 
+
+estimation. 
+
+# 3 Approximations to the Log-Likelihood and the Ridge Estimator 
+
+We begin by assuming Gaussian distributed errors, at the  𝑘 𝑡ℎ  iteration, according to  𝒆 𝑘 =𝓝(𝟎, 𝜎 2𝑊) . Where the general covariance matrix,  𝜎 2𝑊 , may incorporate heteroscedastic and or serially correlated errors. Further, let  𝜃 ∈ ℝ 𝑝  denote the vector of parameters to be identified and 
+
+𝒇(𝜃)  the model to be fitted. Under these circumstances, the corresponding negative loglikelihood is: 
+
+𝐿 = 𝑁 2 𝑙𝑜𝑔(2𝜋) + 𝑁 2 𝑙𝑜𝑔(𝜎 2) + 12 𝑙𝑜𝑔(‖𝑊‖) + 12𝜎 2 (𝒚 − 𝒇(𝜃)) 𝑇 𝑊 −1 (𝒚 − 𝒇(𝜃))  (6) 
+
+In general, there is no closed form solution for the estimation of  𝜃  and we employ iterative methods. For the  𝑘 𝑡ℎ  iteration, we expand  𝒇(𝜃)  about  𝜃 𝑘  using a first-order Taylor series. Thus: 
+
+𝒇(𝜃)~𝒇(𝜃 𝑘 ) + 𝐽(𝜃 𝑘 )𝛥𝜃  (7) 
+
+Where  𝐽(𝜃 𝑘 ) = 𝜕𝒇(𝜃 𝑘 ) 𝜕 ⁄ 𝜃 𝑘 ∈ ℝ 𝑁×𝑝 . Substituting (7) into (6), dropping the notational dependency on  𝜃 𝑘  and writing  𝒈 = 𝒚 − 𝒇(𝜃) :
+
+𝐿~ 𝑁 2 𝑙𝑜𝑔(2𝜋) + 𝑁 2 𝑙𝑜𝑔(𝜎 2) + 12 𝑙𝑜𝑔(‖𝑊‖) + 12𝜎 2 (𝒈 − 𝐽𝛥𝜃) 𝑇 𝑊 −1 (𝒈 − 𝐽𝛥𝜃)  (8) 
+
+As  𝑊  is real and positive definite, it may be factored as  𝑊 = 𝐶 𝑇 𝐶 , where  𝐶  is upper triangular. Using standard results on matrix inverses [ xxii ], it can be shown that  𝑊 −1 = 𝐶 −1 𝐶 −𝑇 . Further, as  𝐶  is triangular,  𝑙𝑜𝑔(‖𝑊‖) = 2 ∑ 𝑙𝑜𝑔(𝑐 𝑖𝑖 )𝑁 𝑖=1  , where  𝑐 𝑖𝑖  is the  𝑖 𝑡ℎ  term on the leading diagonal of  𝐶 .Applying these results and writing  𝒒 = 𝐶 −𝑇 𝒈  and  𝑍 = 𝐶 −𝑇 𝐽 , yields: 
+
+𝐿~ 𝑁 2 𝑙𝑜𝑔(2𝜋) + 𝑁 2 𝑙𝑜𝑔(𝜎 2) + ∑ 𝑙𝑜𝑔(𝑐 𝑖𝑖 )𝑁 𝑖=1 + 12𝜎 2 (𝒒 − 𝑍𝛥𝜃) 𝑇 (𝒒 − 𝑍𝛥𝜃)  (9) 
+
+We now introduce a ridge regression term into (10) to form: 
+
+𝑅~ 𝑁 2 𝑙𝑜𝑔(2𝜋) + 𝑁 2 𝑙𝑜𝑔(𝜎 2) + ∑ 𝑙𝑜𝑔(𝑐 𝑖𝑖 )𝑁 𝑖=1 + 12𝜎 2 (𝒒 − 𝑍𝛥𝜃) 𝑇 (𝒒 − 𝑍𝛥𝜃) + 𝜆 2𝜎 2 𝛥𝜃 𝑇 𝛥𝜃  (10) 
+
+Differentiating (11) w.r.t.  𝛥𝜃 , setting the result to zero and solving for  𝛥𝜃  yields after some algebra: 
+
+𝛥𝜃 = (𝑍 𝑇 𝑍 + 𝜆𝐼) −1 𝑍 𝑇 𝒒 = 𝐴 −1 𝑍 𝑇 𝒒  (11) Page 6 of 18 
+
+Substituting (12) into (10) and factorising: 
+
+𝐿~ 𝑁 2 𝑙𝑜𝑔(2𝜋) + 𝑁 2 𝑙𝑜𝑔(𝜎 2) + ∑ 𝑙𝑜𝑔(𝑐 𝑖𝑖 )𝑁 𝑖=1 + 12𝜎 2 𝒒 𝑇 (𝐼 − 𝑆(𝜆)) 2𝒒  (12) 
+
+Where,  𝑆 = 𝑍𝐴 −1 𝑍 𝑇  is the so-called smoother matrix. Note  𝑆  is symmetric, so  𝑆 = 𝑆 𝑇 . Additionally, the effective degrees of freedom associated with the model,  𝛾 , is given by  𝛾 = 𝑡𝑟(𝑆)  [xv , xxiii ]. We use (13) as the basis for optimal re-estimation of the hyper-parameter in section  5. In addition, we can exploit the fact that the likelihood is conditionally linear in the variance scale parameter  𝜎 2.Consequently, a closed form solution for the estimate of  𝜎 2 exists, which can be shown to be: 
+
+𝜎 2 = 𝒒 𝑇 (𝐼−𝑆) 2𝒒 𝑁  (13) 
+
+Substituting Equations (14) into (13) yields the corresponding profile likelihood (𝐿 𝑝 ):
+
+𝐿 𝑝 ~ 𝑁 2 𝑙𝑜𝑔(2𝜋) + 𝑁 2 𝑙𝑜𝑔 ( 𝒒 𝑇 (𝐼−𝑆(𝜆)) 2𝒒 𝑁 ) + ∑ 𝑙𝑜𝑔(𝑐 𝑖𝑖 )𝑁 𝑖=1 + 𝑁 2 (14) 
+
+Equation (14) is used as the basis for the covariance model parameters as detailed in section  6 and for optimally selecting the hyper-parameter as described in section  5.
+
+# 4 Derivatives of the Smoother Matrix,  𝛾  and the Profile Loglikelihood w.r.t.  𝜆 
+
+Both information theoretic measures involve the derivative of  𝐿 𝑝  and  𝛾  with respect to  𝜆 . This necessarily involves formulae for the corresponding derivatives of  𝑆 , 𝑡𝑟(𝑆)  and  𝑆 2. These are derived in appendix A, and only the results stated here for continuity. Hence:  
+
+> 𝜕𝑆 𝜕𝜆
+
+= −𝑍𝐴 −2 𝑍 𝑇  (15)  
+
+> 𝜕𝑆 2
+> 𝜕𝜆
+
+= 2𝑆 𝜕𝑆 𝜕𝜆 = −2𝑍𝐴 −2 𝑍 𝑇 + 2𝜆𝑍𝐴 −3 𝑍 𝑇  (16) 
+
+Similarly, recalling  𝛾 = 𝑡𝑟(𝑆) : 
+
+> 𝜕𝛾 𝜕𝜆
+
+= 𝑡𝑟(𝜆𝐴(𝜆) −2 − 𝐴(𝜆) −1 ) (17) Page 7 of 18 
+
+Finally, using these results, it can be shown after some matrix algebra that the derivative of the loglikelihood, Equation (13), is given by:  
+
+> 𝜕𝐿 𝑝
+> 𝜕𝜆
+
+= 𝜆 ( 𝑁 𝜎(𝜆) 2) 𝒒 𝑇 𝑍𝐴(𝜆) −3 𝑍 𝑇 𝒒  (18) 
+
+# 5 Optimal Selection of the Hyper-Parameter Based on  𝐵𝐼𝐶  and  𝐴𝐼𝐶 𝑐 
+
+In appendix B we derive the following fixed-point iteration formulae based on BIC and  𝐴𝐼𝐶 𝑐 :
+
+𝜆 𝐵𝐼𝐶 = 𝜎 2𝑙𝑜𝑔(𝑁)𝑡𝑟(𝐴 −1 −𝜆𝐴 −2 )2𝑁𝒒 𝑇 𝑍𝐴 −3 𝑍 𝑇 𝒒  (19) 
+
+𝜆 𝐴𝐼𝐶 𝑐 = 𝜎 2[ (2𝛾+1) (𝑁−𝛾−1) − 𝛾(𝛾+1) (𝑁−𝛾−1) 2]𝑡𝑟(𝐴 −1 −𝜆𝐴 −2 )𝑁𝒒 𝑇 𝑍𝐴 −3 𝑍 𝑇 𝒒  (20) 
+
+Notice in Equations (19) and (20), for notational compactness, we drop the dependency of  𝜎 , 𝛾  and 
+
+𝐴  on  𝜆 . Regardless,  𝜆  appears on both sides of either expression. Consequently, we must resort to iterative methods to estimate the optimal  𝜆 . Furthermore, we use  ℎ(𝜆)  to denote the righthand side of (19) or (20). These represent a fixed-point iteration scheme [xxiv ], with both equations in the form 
+
+ℎ(𝜆) = 𝜆 . A fixed-point is defined by: 
+
+Definition : If  ℎ(𝜆)  is defined on [𝑎, 𝑏]  and  ℎ(𝜆) = 𝜆  for some  𝜆 ∈ [𝑎, 𝑏] , then the function  ℎ(𝜆)  is said 
+
+to have the fixed-point  𝜆  in [𝑎, 𝑏] .
+
+The following theorem guarantees convergence of the algorithm: 
+
+Theorem : Let  ℎ(𝜆)  be continuous in [𝑎, 𝑏] , and suppose that  ℎ(𝜆) ∈ [𝑎, 𝑏]  for all  𝜆 ∈ [𝑎, 𝑏] . Further 
+
+Let  ℎ′(𝜆)  exist on (𝑎, 𝑏)  with |ℎ′(𝜆)| ≤ 𝑘 < 1 , for all  𝜆 ∈ (𝑎, 𝑏) . If  𝜆 𝑜 ∈ [𝑎, 𝑏] , then the 
+
+sequence defined by  𝜆 𝑟 = ℎ(𝜆 𝑟−1 ) , 𝑟 ≥ 1 , will converge to the unique fixed-point  𝜆  in 
+
+[𝑎, 𝑏] .
+
+The necessary proof can be found in the reference cited. Further it follows that if the theorem is satisfied then a bound for the error involved in using  𝜆 𝑟  to approximate  𝜆  is given by: 
+
+|𝜆 𝑟 − 𝜆| ≤ 𝑘 𝑟 𝑚𝑎𝑥{𝜆 𝑜 − 𝑎, 𝑏 − 𝜆 𝑜 }, ∀𝑟 ≥ 1 . (21) Page 8 of 18 
+
+The theorem requires  ℎ′(𝜆) , which we calculate numerically using the 5-point stencil approximation provided in [ xxv ]. This is accurate to  𝑂(∆𝜆 4). Thus, the fixed-point iteration algorithm is: 
+
+1.  Generate 6 logarithmically spaced values in the interval  𝜆 ∈ [10 −5 10 0] and calculate the corresponding |𝑑ℎ(𝜆 0)/𝑑𝜆| . Select the  𝜆  for which the following conditions are met: 
+
+a.  𝑚𝑖𝑛{|𝑑ℎ(𝜆 0)/𝑑𝜆|} < 1 .
+
+b.  ℎ(𝜆 0) ∈ [10 −5 10 0].
+
+c.  Denote this value by  𝜆 𝑟 . Set  𝑟 = 0 .
+
+2.  Increment  𝑟 = 𝑟 + 1 .
+
+3.  Calculate  𝜆 𝑟+1  using either Equation (19) or (20) as desired. 
+
+4.  If (| 𝜆 𝑟+1 − 𝜆 𝑟 | 𝜆 𝑟 ⁄ ≤ 0.0001) 𝑜𝑟( 𝑖 ≥ 𝑖 𝑚𝑎𝑥 ) → 𝑠𝑡𝑜𝑝 . Else treating  𝜆 𝑟+1  as  𝜆 𝑟  return to step 2. 
+
+Having provided the re-estimation formulae and associated algorithm for optimal hyper-parameter selection, we now detail the full nonlinear regularised iterative generalised least squares  (𝑅𝐼𝐺𝐿𝑆) 
+
+algorithm, with optimal  𝜆  selection at each iteration. 
+
+# 6 A 𝑅𝐼𝐺𝐿𝑆  Algorithm with Optimal Hyper-Parameter Selection 
+
+Davidian and Giltinan [ xxvi ] provide a rationale for preferring iterative generalised least squares over joint maximum likelihood. Their argument is based on the improved robustness to both model misspecification and non-normality. Here, we extend their basic algorithm to the regularised case and for the profiled loglikelihood. The regularised iterative generalised least squares algorithm employed is as follows: 
+
+1.  Obtain the initial estimates,  𝜃 𝑟 , by minimising the following nonlinear functional with respect to  𝜃 . Re-estimate λ at each iteration, by iterating equation (19) or (20) to convergence as required. 
+
+• 𝑎𝑟𝑔 min  
+
+> 𝜃
+
+𝑅 = 12 (𝑦 − 𝑓(𝜃)) 𝑇 (𝑦 − 𝑓(𝜃)) + 𝜆 2 𝜃 𝑇 𝜃 
+
+2.  Using  𝜃 𝑟 , form the residuals,  𝑑 𝑟 = 𝑦 − 𝑓(𝜃 𝑟 ). Using these, minimise the following functional with respect to  𝛿 . Denote these estimates as  𝛿 𝑟+1 .
+
+• 𝑎𝑟𝑔 min  
+
+> 𝛿
+
+(𝐿 𝑝 = 𝑁 2 𝑙𝑜𝑔 ( 𝑑 𝑟 𝑇 𝑊 −1 (𝜃,𝛿)𝑑 𝑟  
+
+> 𝑁
+
+) + 12 𝑙𝑜𝑔‖𝑊(𝜃, 𝛿)‖ + 𝑁 2 )
+
+3.  Using  𝛿 𝑟+1  construct the matrix  𝑊 −1 (𝜃 𝑟 , 𝛿 𝑟+1 ). Update estimates for  𝜃  by minimising the nonlinear function: 
+
+• 𝑎𝑟𝑔 min  
+
+> 𝜃
+
+𝑅 = { 12 (𝑦 − 𝑓(𝜃)) 𝑇 
+
+𝑊 −1 (𝜃 𝑟 , 𝛿 𝑟+1 )(𝑦 − 𝑓(𝜃)) + 𝜆 2 𝜃 𝑇 𝜃} 
+
+• Re-estimate λ at each iteration, by iterating equation (20) or (21) to convergence as required. 
+
+• Denote the values at convergence by  𝜃 𝑟+1 .
+
+4.  Compute  ℶ = 1 − ‖𝜃 𝑟+1 ‖𝑟+1 2 
+
+> ‖𝜃 𝑟 ‖𝑟 2
+
+. If  ℶ > 0.0001 , then treating  𝜃 𝑟+1  as  𝜃 𝑟  return to step 2, else stop. Page 9 of 18 
+
+• Compute  𝜎 2 = 𝑑 𝑟 𝑇 𝑊 −1 (𝜃,𝛿)𝑑 𝑟  
+
+> 𝑁
+
+.
+
+The algorithm has been implemented in MATLAB and utilises the fmincon function from the MATLAB 
+
+optimisation toolbox . To work as intended, it is necessary to supply analytical gradients to the fmincon 
+
+routine, so that the hyper-parameter is calculated only once per iteration, as opposed to  𝑝 -times if finite differences are utilised. Using standard results on matrix derivatives [ xxii ], it is shown in Appendix C that:  
+
+> 𝜕𝑅 𝜕𝜃
+
+= 𝐽 𝑇 (𝜃)𝑊 −1 (𝑓(𝑥, 𝜃) − 𝑦) + 𝜆𝜃  (22) 
+
+Note, as required at step 1,  𝑊 = 𝐼 ∈ ℝ 𝑁×𝑁 . The authors have constructed a MATLAB package to implement the algorithm, which makes use of the strategy and template object oriented behavioural patterns defined by Gamma et al [xxvii ]. 
+
+# 7 Example Analysis 
+
+For example, consider the model proposed by Martinez-Laserna et al [i], which attempts to predict capacity fade,  𝑄 𝑙𝑜𝑠𝑠 :
+
+𝑄 𝑙𝑜𝑠𝑠 = 𝜔. 𝑒𝑥𝑝 ( 𝛽 1 
+
+> 𝑇
+
++ 𝛽 2𝑆𝑂𝐶̅̅̅̅̅̅) 𝐴ℎ 𝑧  (23) 
+
+With  𝐴ℎ  the accumulated charge throughput,  𝑇  the cell absolute thermodynamic temperature and 
+
+𝑆𝑂𝐶̅̅̅̅̅̅  the average state of charge. The parameter vector,  𝜃 = (𝜔, 𝛽 1, 𝛽 2, 𝑧) , is to be estimated from the data. The multiplicative structure is common in such models for this application and results in extremely poor identifiability. The Martinez-Laserna model has been fitted to simulated data representing a cyclic ageing profile for a single cell. The advantage of utilising simulated data is estimates can be compared to the known true values, thus demonstrating the efficacy of the algorithms employed. The true model is: 
+
+𝑄 𝑙𝑜𝑠𝑠 = 100 × 0.4. 𝑒𝑥𝑝 ( 0.09 (𝑇+273.15) + 0.02. 𝑆𝑂𝐶) . 𝐴ℎ 0.5  (24) 
+
+In addition, the simulated data is contaminated with Gaussian heteroscedastic noise of the form 
+
+𝒩(0, 𝜎 2. 𝑄 𝑙𝑜𝑠𝑠 2𝛿 ) with  𝜎 = 0.05  and  𝛿 = 1 . Again, these quantities are to be estimated from the data. Fifty-one equally spaced points were generated for the interval  𝐴ℎ ∈ [0,50] . During fitting, both  𝐴ℎ 
+
+and  𝑄 𝑙𝑜𝑠𝑠  are mapped onto the interval  [0, 1] .
+
+Figure 1 presents the usual diagnostic plots for a regularised ordinary least squares analysis. The hyper-parameter is optimised using the algorithm detailed in section  5 and is based on the  𝐴𝐼𝐶 𝑐 
+
+performance measure. This is equivalent to performing step 1 only of the  𝑅𝐼𝐺𝐿𝑆  algorithm of section Page 10 of 18 
+
+6. We refer to this as the regularised ordinary least squares  (𝑅𝑂𝐿𝑆)  model. The heterogenous nature of the variance is apparent from the residual versus predicted plot, which exhibits a distinct increase in the variance scale with increasing predicted  𝑄 𝑙𝑜𝑠𝑠 . The optimal value of the hyper-parameter at convergence is 0.0074.   
+
+> Figure 1: ROLS analysis for the SoH data. Hyper-parameter optimised using 𝐴𝐼𝐶 𝑐 formula. The residual versus prediction diagnostic plot (top right) illustrates strong evidence for the presence of heterogeneous variance. There is one outlying observation circled in red. Note, both the independent and dependent data have been mapped to the interval [0, 1]. The optimal value of the hyper-parameter is 0.0074.
+
+Figure 2  presents diagnostic plots for the equivalent  𝑅𝐼𝐺𝐿𝑆  fit to the same data. The applied covariance model is of the form  𝜎 2𝑓(𝑥, 𝜃) 2𝛿 . The improvement in the appearance of the weighted residual versus predicted plot is immediately apparent. The estimated value for  𝛿  is 0.973, which is reassuringly close to the true value of unity. Further, the optimal value of the hyper-parameter is 0.0190. This is over 3 times larger than the  𝑅𝑂𝐿𝑆  value. The increased magnitude implies greater bias and yet there is no obvious evidence of this in the diagnostic plots.   
+
+> Figure 2: RIGLS fit to the data. Hyper-parameter optimised using 𝐴𝐼𝐶 𝑐 formula. The appearance of the weighted residual versus prediction plot is much improved via application of the appropriate covariance model. Both the independent and dependent data have been mapped to the interval [0, 1]. The optimal value of the hyper-parameter is 0.019.
+
+Page 11 of 18 
+
+Finally,  Figure 3  presents the diagnostic plots for the  𝑅𝐼𝐺𝐿𝑆  algorithm, but in this instance optimal hyper-parameter selection is based on  𝐵𝐼𝐶 . These are almost identical in appearance to  Figure 2  for the  𝐴𝐼𝐶 𝑐  optimal λ-selection case. Here at convergence  𝜆 = 0.0456 .
+
+> Figure 3: RIGLS fit to the data. Hyper-parameter optimised using the
+
+BIC formula. The appearance of the weighted residual versus prediction plot is much improved via application of the appropriate covariance model Both the independent and dependent data have been mapped to the interval [0, 1]. The optimal value of the hyper-parameter is 0.0456. 
+
+To gain some insight into the impact of the hyper-parameter on the estimates, we calculate the 
+
+condition numbers [xxviii ],  𝜇 0 and  𝜇 1, for the matrices  𝐹 0 = (𝐽 𝑇 𝐽)  and  𝐹 1 = (𝐽 𝑇 𝐽 + 𝜆𝐼)  respectively for all 3 cases. These are presented in  Table 1 . Recall, the inverse of  𝐹 0 and  𝐹 1 are the respective covariance matrices for the  𝑅𝑂𝐿𝑆  or  𝑅𝐼𝐺𝐿𝑆  estimates as appropriate. 
+
+> Table 1: Condition numbers, optimal hyper-parameter value and degrees of freedom for the various estimates. The ideal condition number is unity. Condition numbers approaching infinity indicate rank degeneracy among the columns/rows of the corresponding matrix.
+
+ROLS  RIGLS AICc  RIGLS BIC 
+
+ 0.0060  0.0190  0.0456 
+
+o 3.0853E+19  3.9489E+18  2.9766E+18 
+
+1 2622.6000  119.3400  630.7300 
+
+ 1.9854  1.9906  1.9931 
+
+Regardless of the source, the values of  𝜇 𝑜  are extremely large, indicating that  𝐹 0 is nearly rank degenerate in all cases. This demonstrates the very poor identifiability of the model, and the ill-posed nature of the unregularized fit. In contrast, despite the relatively small magnitude of the corresponding optimal hyper-parameter values, the associated  𝜇 1 numbers are vastly reduced, with Page 12 of 18 
+
+the  𝐴𝐼𝐶 𝑐  based value exhibiting some superiority.  Table 1  also presents the corresponding model degrees of freedom,  𝛾 . In all cases, despite the relatively small associated hyper-parameter values, the degree of freedom reduction is substantial; from 4 to just under 2. 
+
+Table 2  presents parameter estimates and 95% confidence intervals for  𝑅𝐼𝐺𝐿𝑆  estimates. The parameter estimates for the  𝐴𝐼𝐶 𝑐  and  𝐵𝐼𝐶  are reasonably close to the true values, indicating the induced bias from the hyper-parameter is not large. However, it does though have some practical significance. For example, for the  𝐵𝐼𝐶  case, the  𝛽 1 estimate has the wrong sign. In a parametric regression study of this nature, where quasi-physical thinking is used to develop the model formulation, incorrect estimation of the sign of the coefficient may lead to inappropriate conclusions regarding the nature and interpretation of the underlying true ageing mechanisms. 
+
+Also shown in  Table 2  are the 95% confidence intervals for the parameter estimates. Given the inherent poor identifiability of the model structure, the confidence intervals are relatively small, particularly for  𝛽 1. Notice the confidence intervals for  𝜔  and  𝑧  encompass the true estimate, whereas the intervals for  𝛽 1 and  𝛽 2 do not. This may be symptomatic of the inherent bias induced in regularised estimates, despite the relatively small values of the hyper-parameter. Also, it is interesting to note, despite the larger hyper-parameter value associated with the  𝐵𝐼𝐶  𝑅𝐼𝐺𝐿𝑆  estimator, the corresponding confidence intervals are larger. This follows from the larger condition number for the regularised  𝐹 1 matrix, resulting in variance inflation of the estimates, demonstrating that the confidence intervals depend on the parameter estimates as well as the size of the hyper-parameter. 
+
+> Table 2: Comparison among estimators, parameter values and 95% confidence intervals for the RIGLS estimates.
+
+RIGLS AIC c RIGLS BIC 
+
+True Value  LCI  Estimate  UCI  LCI  Estimate  UCI 
+
+ 0.40  0.392  0.403  0.415  0.308  0.410  0.513 
+
+1 0.09  0.017  0.017  0.017  -0.088  -0.088  -0.088 
+
+ 0.02  0.054  0.056  0.058  0.088  0.105  0.123 
+
+𝜗  0.50  0.491  0.507  0.523  0.380  0.536  0.692 
+
+# 8 Convergence Analysis of the Optimal Hyper-Parameter Selection Algorithm 
+
+Figure 4  presents the output from the first iteration of the algorithm of section  5 versus starting value on the left hand axis, and |𝑑ℎ(𝜆 0)/𝑑𝜆|  at the same starting value on the righthand axis. For  𝜆 ≤ 0.001 
+
+it appears the algorithm can return large negative numbers and appear wildly unstable in places. This is supported by the theorem of section 5, which states that convergence to a unique fixed point requires |ℎ′(𝜆)| < 1  in an interval. From the figure, |ℎ′(𝜆)| ≫ 1  for all  𝜆 0 < 0.001 . For  𝜆 ∈ [0.01,10] ,
+
+|ℎ′(𝜆)| ≪ 1  and rapid convergence of the resulting sequence would be expected. In terms of the number of iterations required, using (22), with  𝑘 = 0.20  and  𝜆 0 = 0.15 , for the interval  𝜆 ∈ [0.1,1] ,for an error bound of 0.00001: Page 13 of 18 
+
+𝑟 = 𝑙𝑜𝑔(0.00001)−𝑙𝑜𝑔(𝑚𝑎𝑥{0.05,0.85}) 𝑙𝑜𝑔(0.2) = 7.0524 
+
+Figure 4: Convergence Analysis. This plot demonstrates that convergence of the optimal selection algorithm depends on starting position. The dotted line denotes the value of |𝑑ℎ (𝜆 0)/𝑑𝜆 | below which convergence would be expected. 
+
+Figure 5: Expected number of iterations for convergence of the hyper-parameter value with increasing k. In all cases,  𝜆 ∈ [0.1,1.0]  and  𝜆 𝑜 = 0.15  and |𝜆 𝑟 − 𝜆| = 0.00001 .
+
+Hence around 7-8 iterations are required for convergence to the desired error bound. Consider  Figure 5, which presents the expected number of iterations of the optimal hyper-parameter algorithm for Page 14 of 18 
+
+𝑘 ∈ [0.2,0.9] , again with  𝜆 0 = 0.15  and  𝜆 ∈ [0.1,1] , again for an error bound of 0.00001. As expected, the number of iterations required for convergence grows exponentially with increasing  𝑘 .
+
+# 9 Conclusions 
+
+The optimal hyper-parameter estimation method presented, founded on information theoretic measures, is efficient and converges rapidly given a suitable starting position. Good starting values are any for which |𝑑ℎ(𝜆 0)/𝑑𝜆|  is less than unity. However, the smaller the initial |𝑑ℎ(𝜆 0)/𝑑𝜆| , the more rapid the convergence. The fixed-point iterative formulae presented are suitable for general covariance structures, including heteroscedastic and or serially correlated errors. When implemented as part of a general  𝑅𝐼𝐺𝐿𝑆  algorithm scheme, simulation suggests it is possible to preserve quasi-physically motivated structures and return estimates with low bias. 
+
+For the simulation study presented, the algorithm performs adequately.  𝑅𝐼𝐺𝐿𝑆  employing  𝐴𝐼𝐶 𝑐  as a basis for optimal hyper-parameter estimation marginally outperforms its  𝐵𝐼𝐶  counterpart in the simulation study presented. Confidence intervals for parameters are relatively narrow, demonstrating the improved precision of the estimates. This follows from the vastly superior condition numbers for the relevant information matrices. However, the simulation study demonstrates that not all confidence intervals reported include the true values – an indication of the bias inherent in the regularised approach. 
+
+# Appendix A – Derivatives of the Smoother Matrix and its Trace 
+
+Here, we provide detailed derivations of the key results, equations (16) through (18). All these equations utilise standard results on matrix derivatives [ xxii ]. To begin with, the derivative of  𝑆  with respect to  𝜆  is straightforward: 
+
+We begin by noting: 
+
+𝐴 = 𝑍 𝑇 𝑍 + 𝜆𝐼 
+
+⇒ 𝑍 𝑇 𝑍 = 𝐴 − 𝜆𝐼  (A1) 
+
+⇒ 𝜕𝐴 𝜕𝜆 = 𝐼 
+
+Hence:  
+
+> 𝜕𝑆 𝜕𝜆
+
+= 𝑍 𝜕𝐴 −1  
+
+> 𝜕𝜆
+
+𝑍 𝑇 = −𝑍𝐴 −1 𝜕𝐴 𝜕𝜆 𝐴 −1 𝑍 𝑇 = −𝑍𝐴 −2 𝑍 𝑇  (A2) 
+
+Similarly: Page 15 of 18  
+
+> 𝜕𝑆 2
+> 𝜕𝜆
+
+= 𝜕 𝜕𝜆 [𝑍𝐴 −1 𝑍 𝑇 𝑍𝐴 −1 𝑍 𝑇 ] = 𝜕 𝜕𝜆 [𝑍𝐴 −1 (𝐴 − 𝜆𝐼 )𝐴 −1 𝑍 𝑇 ] = −2𝑍𝐴 −2 𝑍 𝑇 + 2𝜆𝑍𝐴 −3 𝑍 𝑇  (A3) 
+
+Finally,  𝜕𝛾 𝜕𝜆  is derived using:  
+
+> 𝜕𝛾 𝜕𝜆
+
+= 𝜕 𝜕𝜆 𝑡𝑟(𝑍𝐴 −1 𝑍 𝑇 ) = 𝜕 𝜕𝜆 𝑡𝑟(𝐴 −1 𝑍 𝑇 𝑍) = 𝜕 𝜕𝜆 𝑡𝑟(𝐴 −1 (𝐴 − 𝜆𝐼)) = 𝑡𝑟(𝜆𝐴(𝜆) −2 − 𝐴(𝜆) −1 ) (A4) 
+
+# Appendix B – Fixed Point Iteration Formulae for Hyper-Parameter Estimation 
+
+We begin by writing the  𝐵𝐼𝐶  definition in terms of the profile likelihood (13). 
+
+𝐵𝐼𝐶 = 2𝐿 𝑝 + 𝛾𝑙𝑜𝑔(𝑁)  (B1) 
+
+Differentiating this with respect to  𝜆  yields:  
+
+> 𝜕𝐵𝐼𝐶 𝜕𝜆
+
+= 2 𝜕𝐿 𝑝  
+
+> 𝜕𝜆
+
++ 𝑙𝑜𝑔(𝑁) 𝜕𝛾 𝜕𝜆  (B2) 
+
+Substituting (18) and (19) into (B2):  
+
+> 𝜕𝐵𝐼𝐶 𝜕𝜆
+
+= 2𝜆 ( 𝑁 𝜎(𝜆) 2) 𝒒 𝑇 𝑍𝐴(𝜆) −3 𝑍 𝑇 𝒒 + 𝑙𝑜𝑔(𝑁)𝑡𝑟(𝜆𝐴(𝜆) −2 − 𝐴(𝜆) −1 ) (B3) 
+
+Setting (B3) to 0 and solving for  𝜆  gives the desired result: 
+
+𝜆 𝐵𝐼𝐶 = 𝜎 2𝑙𝑜𝑔(𝑁)𝑡𝑟(𝐴 −1 −𝜆𝐴 −2 )2𝑁𝒒 𝑇 𝑍𝐴 −3 𝑍 𝑇 𝒒  (B4) 
+
+Similarly, writing  𝐴𝐼𝐶 𝑐  in terms of the profile likelihood: 
+
+𝐴𝐼𝐶 𝑐 = 2𝐿 𝑝 + 2𝛾(𝛾+1) 𝑁−𝛾−1  (B5) 
+
+Differentiating (B5) with respect to  𝜆  and yields: Page 16 of 18  
+
+> 𝜕𝐴𝐼𝐶 𝑐
+> 𝜕𝜆
+
+= 2 𝜕𝐿 𝑝  
+
+> 𝜕𝜆
+
++ 2 [ (2𝛾+1) (𝑁−𝛾−1) − 𝛾(𝛾+1) (𝑁−𝛾−1) 2] 𝜕𝛾 𝜕𝜆  (B6) 
+
+Again, setting (B6) to 0 and solving for  𝜆  yields the desired result: 
+
+𝜆 𝐴𝐼𝐶 𝑐 = 𝜎 2[ (2𝛾+1) (𝑁−𝛾−1) − 𝛾(𝛾+1) (𝑁−𝛾−1) 2]𝑡𝑟(𝐴 −1 −𝜆𝐴 −2 )𝑁𝒒 𝑇 𝑍𝐴 −3 𝑍 𝑇 𝒒  (B7) 
+
+# Appendix C – Derivative of the Regularised Cost Function 
+
+The appropriate regularised cost function for ridge regression is: 
+
+𝑅 = 12 (𝑦 − 𝑓(𝜃)) 𝑇 
+
+𝑊 −1 (𝜃 𝑟 , 𝛿 𝑟+1 )(𝑦 − 𝑓(𝜃)) + 𝜆 2 𝜃 𝑇 𝜃  (C1) 
+
+Expanding the first term on the righthand side of (C1): 
+
+𝑅 = 12 (𝑦 𝑇 𝑊 −1 𝑦 − 𝑦 𝑇 𝑊 −1 𝑓(𝜃) − 𝑓(𝜃) 𝑇 𝑊 −1 𝑦 + 𝑓(𝜃) 𝑇 𝑊 −1 𝑓(𝜃)) + 𝜆 2 𝜃 𝑇 𝜃  (C2) 
+
+Differentiating (C2) with respect to  𝜃  and collecting terms yields the desired result:  
+
+> 𝜕𝑅 𝜕𝜃
+
+= 𝐽 𝑇 (𝜃)𝑊 −1 (𝑓(𝑥, 𝜃) − 𝑦) + 𝜆𝜃  (C3) 
+
+# References  
+
+> i
+
+E. Martinez-Laserna, V. I. Herrera, I. Gandiaga, A. Milo, E. Sarasketa-Zabala, H. Gaztanaga, Li_ion 
+
+Battery Lifetime Model’s Influence on the Economic Assessment of a Hybrid Electric Bus’s Operation, 
+
+World Electric Vehicle Journal , 2018, 9, 28.  
+
+> ii
+
+G. Suri, S. Onori, (2016), A control-oriented cycle-life model for hybrid electric vehicle lithium-ion batteries, Energy , 96, 644-653.  
+
+> iii
+
+K. Smith, J. Neubauer, E. Wood, M. Jun, A. Pesaran, Models for Battery Reliability and Lifetime, Applications in Design and Health Management, Advanced Vehicles and Fuels Research, NREL/PR-5400-58550, Battery Congress, Ann Arbor, MI, Apr 2013. Page 17 of 18  
+
+> iv
+
+Yao, K. Z., Shaw, B. M., Kou, B., McAuley, K. B., & Bacon, D. W. (2003). Modeling ethylene/butene 
+
+copolymerization with multi‐site catalysts: parameter estimability and experimental design. Polymer Reaction Engineering , 11(3), 563-588.  
+
+> v
+
+Beck, J. V., Arnold, K. J. (1977). Parameter Estimation in Engineering and Science. Toronto, Canada: 
+
+John Wiley & Sons . 
+
+> vi
+
+Walter, E. (1982). Identifiability of State Space Models with Applications to Transformation Systems. New York, USA: Springer-Verlag . 
+
+> vii
+
+Vajda, S., Rabitz, H., Walter, E., Lecourtier, Y. (1989). Qualitative and quantitative identifiability analysis of non-linear chemical kinetic models. Chem. Eng. Commun . 83(2):191 –219.  
+
+> viii
+
+Jolliffe, I. T., Principal Components Analysis, 2002, Springer Series in Statistics: Springer-Verlag  
+
+> ix
+
+Box, G. E. P., Draper, N. R., Empirical Model-Building and Response Surfaces, John Wiley & Sons ,First Edition, 1987.  
+
+> x
+
+Goutte, C., Statistical Learning and Regularisation for Regression – Application to system identification and time series modelling, Ph.D. Thesis , L'Universite' Paris, 1996.  
+
+> xi
+
+Mallows, C., Some Comments on Cp, Technometrics , 1973, Vol. 15, pp. 661 – 675.  
+
+> xii
+
+Allen, D. M., The Prediction Sum of Squares as a Criterion for Selecting Variables, University of Kentucky 
+
+Technical Report No. 23 , 1971.  
+
+> xiii
+
+Sugiura, N., Further analysis of the data by Akaike’s information criterion and the finite corrections, 
+
+Communications in Statistics, Theory and Methods , 1978, A7, 13-26.  
+
+> xiv
+
+Craven, P., Wahba, G., Smoothing noisy data with spline functions: estimating the correct degree of smoothing by the method of generalized cross-validation, Numerische Mathematik , 1979, Vol. 31, pp 377-403.  
+
+> xv
+
+Orr, M. J. L., Regularisation in the Selection of Radial Basis Function Centres, Neural Computation , 1995, Vol. 17, pp. 606-623.  
+
+> xvi
+
+Orr, M. J. L., Introduction to Radial Basis Function Networks, Technical Report , Centre for Cognitive Science, University of Edinburgh, 1996.  
+
+> xvii
+
+Eubank, R. L., Nonparametric Regression and Spline Smoothing, Marcel Dekker , Second Edition, 1999.  
+
+> xviii
+
+Golub, G., Heath, M., Wahba, G., Generalized cross-validation as a method for choosing a good ridge parameter, Technometrics , 1979, Vol. 21, pp 215-223.  
+
+> xix
+
+G. Schwarz, (1978), Estimating the dimension of a model, Annals of Statistics . 6, 461-464.  
+
+> xx
+
+Box G. E. P., Cox, D. R., An Analysis of Transformations, Journal of the Royal Statistical Society , 1964, Vol. B26, pp 211-252.  
+
+> xxi
+
+K. P. Burnham, D. R. Anderson, Model Selection and Multimodel Inference, 2002, 2 nd Edition, Springer-Verlag . 
+
+> xxii
+
+Searle, S. R., Matrix Algebra Useful for Statistics, John Wiley & Sons , First Edition, 1982. Page 18 of 18  
+
+> xxiii
+
+Cary, M., A Model Based Methodology for the Calibration of a Port Fuel Injection, Spark-Ignition Engine, 
+
+PhD Thesis , University of Bradford, 2003.  
+
+> xxiv
+
+Burden, R. L., Faires, J. D., Reynolds, A. C., Numerical Analysis, Wadsworth International Student Edition , Second Edition , 1981.  
+
+> xxv
+
+Abramowitz M, Stegun I, (1972), Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Table, Dover Publications  
+
+> xxvi
+
+Davidian, M., Giltinan, D. M., Nonlinear Models for Repeated Measurement Data, Chapman & Hall , First Edition, 1995.  
+
+> xxvii
+
+Gamma, E., Helm, R., Johnson, R., Vlissides, J., Design Patterns, Elements of Reusable Object-Oriented Software, Addison – Wesley , 1995.  
+
+> xxviii
+
+Gill, P. E., Murray, W., Wright, M. H., Practical Optimization, Academic Press, First Edition, 1981.

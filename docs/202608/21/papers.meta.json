@@ -1,0 +1,54 @@
+{
+  "label": "2026-08-21",
+  "date": "2026-08-21",
+  "generated_at": "2026-08-21T21:05:57",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202608/21/2608.19879v1-a-repeated-measurements-approach-to-soh-battery-modelling-of-cyclic-aged-data-in-a-laboratory-environment",
+      "section": "deep",
+      "title_en": "A Repeated Measurements Approach to $SoH$ Battery Modelling of Cyclic Aged Data in a Laboratory Environment",
+      "authors": "Mark Cary, Charles Bokor",
+      "date": "2026-08-20",
+      "pdf": "https://arxiv.org/pdf/2608.19879v1",
+      "score": "9.0",
+      "evidence": "基于循环老化数据的SoH电池建模，采用重复测量方法",
+      "tldr": "电池健康状态（SoH）建模对电池管理至关重要，但实验室循环老化数据常存在测量噪声与电池间变异。本文提出基于重复测量的分层非线性模型，用幂律拟合单条老化曲线，用单节点三次B样条刻画参数变异，并采用正则化迭代广义最小二乘进行参数识别。在10个电池、25°C恒温数据上，SoH预测精度达到±0.191%。该方法有效分离变异来源，提升了循环老化数据建模的准确性与可解释性。",
+      "tags": "query:soc-soh",
+      "abstract_en": "This document describes the application of a first order linearised nonlinear repeated measurements approach to the analysis of battery cell ageing profiles generated under controlled conditions in a laboratory. The primary advantage of the model is it reflects the obvious structure in the data. Consequently, it is a two-component of variance model: variation within ageing profiles (measurement noise) and variation among ageing profiles (test-to-test or cell-to-cell) variation. Novel regularised iterative generalised least squares parameter identification schemes, with optimal hyper-parameter re-estimation, are used to identify the hierarchical nonlinear model. The training data comprised $SoH$ profiles for 10 cells aged at various constant discharge and charge current cycles at a fixed chamber environmental temperature of 25 [$^\\circ$C]. Each cell $SoH$ profile is modelled using a simple power law expression, whereas the variation in ageing parameters is modelled using a single knot cubic B-spline. $SoH$ is accurately predicted to $\\pm 0.191\\%$ for $SOH \\in [0,20]$.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/21/2608.18742v1-regularised-iterative-generalised-least-squares-with-optimal-selection-of-the-hyper-parameter-for-identifying-nonlinear-phenomenological-models",
+      "section": "deep",
+      "title_en": "Regularised Iterative Generalised Least Squares with Optimal Selection of the Hyper-Parameter for Identifying Nonlinear Phenomenological Models",
+      "authors": "Mark Cary, Charles Bokor",
+      "date": "2026-08-19",
+      "pdf": "https://arxiv.org/pdf/2608.18742v1",
+      "score": "8.0",
+      "evidence": "针对锂离子电池健康状态预测，采用正则化回归进行参数估计",
+      "tldr": "在锂离子电池健康状态预测等依赖经验模型的领域，准物理现象学模型常因参数混杂而难以可靠估计。本文提出一种正则化迭代广义最小二乘方法，引入岭回归改善数值条件，并基于信息论准则在每次迭代自动选择最优超参数，通过不动点迭代快速求解。仿真证实该方法能同时拟合异方差和序列相关数据，有效提升非线性现象学模型的参数辨识能力，为相关应用提供了稳健的估计框架。",
+      "tags": "query:soc-soh",
+      "abstract_en": "In some fields currently dominated by empirical approaches, such as state of health (SoH) prediction for lithium-ion batteries, phenomenological models motivated by quasi-physical thinking contain parameters to be estimated from experimental data. Often the structure of such models yields fully or partially confounded parameters, which are difficult or even impossible to estimate reliably. To preserve the desired model formulation and simultaneously improve the numerical conditioning for the problem we introduce a ridge regression scheme. An automated method is provided, based on information theoretic measures of model performance, which optimises the ridge regression hyper-parameter at each iteration. The formulae presented require fixed point iteration to solve for the hyper-parameter. Given a suitable starting value, analysis demonstrates convergence is very rapid. The optimal hyper-parameter selection mechanism is incorporated within an efficient regularised iterative generalised least squares mechanism, capable of fitting both heteroscedastic and serially correlated data as required. Simulation confirms the efficacy of the overall method.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/21/2608.19895v1-fixed-structure-gaussian-mixture-filtering-with-robust-measurement-updates-under-outliers",
+      "section": "deep",
+      "title_en": "Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers",
+      "authors": "Ondřej Straka, Uwe D. Hanebeck",
+      "date": "2026-08-20",
+      "pdf": "https://arxiv.org/pdf/2608.19895v1",
+      "score": "8.0",
+      "evidence": "非线性系统在异常值下的鲁棒状态估计",
+      "tldr": "针对非线性随机系统测量异常值下的状态估计问题，本文提出一种固定结构高斯混合滤波的鲁棒测量更新方法。该方法通过离线将转移密度分解为轴对齐高斯分量，保持混合结构确定且可调，并将受异常值影响的测量分量建模为Student-t分布，采用变分贝叶斯近似更新。在三维跟踪场景（距离与方位测量，方位含重尾噪声）中的评估表明，所提滤波器能有效抑制异常值影响。该工作为异常值下的非线性滤波提供了结构可控的鲁棒方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Bayesian state estimation for discrete-time nonlinear stochastic systems is considered in the presence of measurement outliers. Building on a fixed-structure Gaussian mixture filtering framework, this paper proposes a robust measurement-update variant in which the predictive density structure is determined by an offline decomposition of the transition density into axis-aligned Gaussian components. This construction maintains the Gaussian mixture structure as deterministic and tunable via the chosen decomposition fidelity. Measurement components affected by outliers are modeled using a Student's-t distribution, and the corresponding update of each Gaussian mixture component is approximated by a variational Bayes procedure. The resulting filter is evaluated in a three-dimensional tracking scenario with range and bearing measurements, where the bearing channel is affected by outliers, modeled as heavy-tailed noise.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

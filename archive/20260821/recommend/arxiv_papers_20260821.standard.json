@@ -1,0 +1,132 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-21T21:00:26.004246+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 3,
+    "deep_cap": 7,
+    "deep_selected": 3,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2608.19879v1",
+      "source": "arxiv",
+      "title": "A Repeated Measurements Approach to $SoH$ Battery Modelling of Cyclic Aged Data in a Laboratory Environment",
+      "abstract": "This document describes the application of a first order linearised nonlinear repeated measurements approach to the analysis of battery cell ageing profiles generated under controlled conditions in a laboratory. The primary advantage of the model is it reflects the obvious structure in the data. Consequently, it is a two-component of variance model: variation within ageing profiles (measurement noise) and variation among ageing profiles (test-to-test or cell-to-cell) variation. Novel regularised iterative generalised least squares parameter identification schemes, with optimal hyper-parameter re-estimation, are used to identify the hierarchical nonlinear model. The training data comprised $SoH$ profiles for 10 cells aged at various constant discharge and charge current cycles at a fixed chamber environmental temperature of 25 [$^\\circ$C]. Each cell $SoH$ profile is modelled using a simple power law expression, whereas the variation in ageing parameters is modelled using a single knot cubic B-spline. $SoH$ is accurately predicted to $\\pm 0.191\\%$ for $SOH \\in [0,20]$.",
+      "authors": [
+        "Mark Cary",
+        "Charles Bokor"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-08-20T10:40:39+00:00",
+      "link": "https://arxiv.org/pdf/2608.19879v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "SoH battery modelling using repeated measurements on cyclic aged data",
+      "llm_evidence_cn": "基于循环老化数据的SoH电池建模，采用重复测量方法",
+      "llm_evidence": "基于循环老化数据的SoH电池建模，采用重复测量方法",
+      "canonical_evidence": "基于循环老化数据的SoH电池建模，采用重复测量方法",
+      "llm_tldr_en": "This paper applies a repeated measurements approach to model battery state of health from cyclic aging data, capturing within-profile noise and between-cell variation using regularised iterative generalised least squares.",
+      "llm_tldr_cn": "本文针对电池循环老化数据的健康状态（SoH）建模问题，提出一种一阶线性化非线性重复测量方法。该方法将老化曲线分解为测量噪声和电池间变异两部分，并采用正则化迭代广义最小二乘法进行参数辨识。实验利用10个电池的SoH曲线训练模型，验证了该统计模型能有效刻画老化数据的层次结构。研究为电池健康状态估计提供了一种稳健的统计工具。",
+      "llm_tldr": "本文针对电池循环老化数据的健康状态（SoH）建模问题，提出一种一阶线性化非线性重复测量方法。该方法将老化曲线分解为测量噪声和电池间变异两部分，并采用正则化迭代广义最小二乘法进行参数辨识。实验利用10个电池的SoH曲线训练模型，验证了该统计模型能有效刻画老化数据的层次结构。研究为电池健康状态估计提供了一种稳健的统计工具。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.19895v1",
+      "source": "arxiv",
+      "title": "Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers",
+      "abstract": "Bayesian state estimation for discrete-time nonlinear stochastic systems is considered in the presence of measurement outliers. Building on a fixed-structure Gaussian mixture filtering framework, this paper proposes a robust measurement-update variant in which the predictive density structure is determined by an offline decomposition of the transition density into axis-aligned Gaussian components. This construction maintains the Gaussian mixture structure as deterministic and tunable via the chosen decomposition fidelity. Measurement components affected by outliers are modeled using a Student's-t distribution, and the corresponding update of each Gaussian mixture component is approximated by a variational Bayes procedure. The resulting filter is evaluated in a three-dimensional tracking scenario with range and bearing measurements, where the bearing channel is affected by outliers, modeled as heavy-tailed noise.",
+      "authors": [
+        "Ondřej Straka",
+        "Uwe D. Hanebeck"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-08-20T11:03:44+00:00",
+      "link": "https://arxiv.org/pdf/2608.19895v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "robust state estimation for nonlinear systems under outliers",
+      "llm_evidence_cn": "非线性系统在异常值下的鲁棒状态估计",
+      "llm_evidence": "非线性系统在异常值下的鲁棒状态估计",
+      "canonical_evidence": "非线性系统在异常值下的鲁棒状态估计",
+      "llm_tldr_en": "Proposes a fixed-structure Gaussian mixture filter with robust measurement updates to handle outliers, applicable to SOC estimation.",
+      "llm_tldr_cn": "针对非线性随机系统在测量异常值下状态估计精度下降的问题，提出一种固定结构高斯混合滤波的鲁棒测量更新方法。通过将预测密度结构离线分解为轴对齐高斯分量，并利用Student-t分布对异常值分量建模，结合变分贝叶斯近似更新每个分量。该方法可提高状态估计鲁棒性，对电池SOC估计等类似问题具有借鉴意义。",
+      "llm_tldr": "针对非线性随机系统在测量异常值下状态估计精度下降的问题，提出一种固定结构高斯混合滤波的鲁棒测量更新方法。通过将预测密度结构离线分解为轴对齐高斯分量，并利用Student-t分布对异常值分量建模，结合变分贝叶斯近似更新每个分量。该方法可提高状态估计鲁棒性，对电池SOC估计等类似问题具有借鉴意义。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.18742v1",
+      "source": "arxiv",
+      "title": "Regularised Iterative Generalised Least Squares with Optimal Selection of the Hyper-Parameter for Identifying Nonlinear Phenomenological Models",
+      "abstract": "In some fields currently dominated by empirical approaches, such as state of health (SoH) prediction for lithium-ion batteries, phenomenological models motivated by quasi-physical thinking contain parameters to be estimated from experimental data. Often the structure of such models yields fully or partially confounded parameters, which are difficult or even impossible to estimate reliably. To preserve the desired model formulation and simultaneously improve the numerical conditioning for the problem we introduce a ridge regression scheme. An automated method is provided, based on information theoretic measures of model performance, which optimises the ridge regression hyper-parameter at each iteration. The formulae presented require fixed point iteration to solve for the hyper-parameter. Given a suitable starting value, analysis demonstrates convergence is very rapid. The optimal hyper-parameter selection mechanism is incorporated within an efficient regularised iterative generalised least squares mechanism, capable of fitting both heteroscedastic and serially correlated data as required. Simulation confirms the efficacy of the overall method.",
+      "authors": [
+        "Mark Cary",
+        "Charles Bokor"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-08-19T09:50:46+00:00",
+      "link": "https://arxiv.org/pdf/2608.18742v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Addresses state of health prediction for lithium-ion batteries via regularised regression for parameter estimation",
+      "llm_evidence_cn": "针对锂离子电池健康状态预测，采用正则化回归进行参数估计",
+      "llm_evidence": "针对锂离子电池健康状态预测，采用正则化回归进行参数估计",
+      "canonical_evidence": "针对锂离子电池健康状态预测，采用正则化回归进行参数估计",
+      "llm_tldr_en": "Proposes a regularised iterative generalised least squares with optimal hyper-parameter selection for identifying nonlinear phenomenological models, applied to SoH prediction for lithium-ion batteries.",
+      "llm_tldr_cn": "针对锂离子电池健康状态预测中现象学模型参数常存在共线性、难以可靠估计的问题，该研究提出一种正则化迭代广义最小二乘法，基于信息论指标自动优化岭回归超参数。该方法改善了数值条件，保留期望模型公式，提高了参数估计可靠性，为电池SoH建模提供了稳健的参数辨识手段，可迁移至SOC及其他状态估计。",
+      "llm_tldr": "针对锂离子电池健康状态预测中现象学模型参数常存在共线性、难以可靠估计的问题，该研究提出一种正则化迭代广义最小二乘法，基于信息论指标自动优化岭回归超参数。该方法改善了数值条件，保留期望模型公式，提高了参数估计可靠性，为电池SoH建模提供了稳健的参数辨识手段，可迁移至SOC及其他状态估计。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

@@ -6,26 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-19
-- 运行时间：2026-08-19 20:54:27 UTC
+- 最新运行日期：2026-08-21
+- 运行时间：2026-08-21 21:05:34 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：2
+- 本次总论文数：3
+- 精读区：3
 - 速读区：0
 
 ### 今日简报（AI）
-今日精读两篇锂电池健康状态估计高分论文，聚焦利用部分放电数据实现实时估算与在线退化预测。  
-最值得关注的是物理信息神经网络驱动的实时 SOH 估计，以及退化对齐自监督学习在标签稀疏场景下的应用。  
-建议继续关注“少标注、部分放电”条件下的电池健康监测方法，尤其物理约束与自监督结合的方向。
-- 详情：[/202608/19/README](/202608/19/README)
+- 今日共生成 3 篇推荐（精读 3 篇，速读 0 篇）
+- 精读：《A Repeated Measurements Approach to $SoH$ Battery Modelling of Cyclic Aged Data in a Laboratory Environment》（9.0/10）, 《Regularised Iterative Generalised Least Squares with Optimal Selection of the Hyper-Parameter for Identifying Nonlinear Phenomenological Models》（8.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202608/21/README](/202608/21/README)
 
 ### 精读区论文标签
-1. [Real-Time State-of-Health Estimation and Online Degradation Prognosis from Partial Battery Discharge Using Physics-Informed Neural Networks](/202608/19/2608.14764v1-real-time-state-of-health-estimation-and-online-degradation-prognosis-from-partial-battery-discharge-using-physics-informed-neural-networks)  
+1. [A Repeated Measurements Approach to $SoH$ Battery Modelling of Cyclic Aged Data in a Laboratory Environment](/202608/21/2608.19879v1-a-repeated-measurements-approach-to-soh-battery-modelling-of-cyclic-aged-data-in-a-laboratory-environment)  
    标签：评分：9.0/10、query:soc-soh
-   evidence：基于物理信息神经网络的锂离子电池部分放电健康状态估计
-2. [Degradation-Aligned Self-Supervised Learning for State of Health Estimation of Lithium-Ion Batteries under Label Sparsity](/202608/19/2608.16612v1-degradation-aligned-self-supervised-learning-for-state-of-health-estimation-of-lithium-ion-batteries-under-label-sparsity)  
-   标签：评分：9.0/10、query:soc-soh
-   evidence：锂离子电池健康状态估计的标签稀疏自监督学习
+   evidence：基于循环老化数据的SoH电池建模，采用重复测量方法
+2. [Regularised Iterative Generalised Least Squares with Optimal Selection of the Hyper-Parameter for Identifying Nonlinear Phenomenological Models](/202608/21/2608.18742v1-regularised-iterative-generalised-least-squares-with-optimal-selection-of-the-hyper-parameter-for-identifying-nonlinear-phenomenological-models)  
+   标签：评分：8.0/10、query:soc-soh
+   evidence：针对锂离子电池健康状态预测，采用正则化回归进行参数估计
+3. [Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers](/202608/21/2608.19895v1-fixed-structure-gaussian-mixture-filtering-with-robust-measurement-updates-under-outliers)  
+   标签：评分：8.0/10、query:lfp-soc
+   evidence：非线性系统在异常值下的鲁棒状态估计
 
 ### 速读区论文标签
 - 本次无速读推荐。

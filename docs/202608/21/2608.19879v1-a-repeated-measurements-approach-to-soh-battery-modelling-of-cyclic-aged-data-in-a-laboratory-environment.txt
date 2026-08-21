@@ -1,0 +1,526 @@
+Title: 2608.19879v1.pdf
+
+URL Source: https://arxiv.org/pdf/2608.19879v1
+
+Published Time: Fri, 21 Aug 2026 00:44:02 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+1
+
+# A Repeated Measurements Approach to  𝑆𝑜𝐻  Battery Modelling of Cyclic Aged Data in a Laboratory Environment 
+
+# M. Cary 1 (Email: m.cary@lboro.ac.uk) 
+
+# Charles Bokor 2 (Email: charlesbokor@outlook.com)  
+
+> 1
+
+Department of Aeronautical and Automotive Engineering, Loughborough University, Loughborough, LE11 3TU, UK  
+
+> 2
+
+School of Engineering, Computing and Mathematics, Oxford Brookes University Oxford OX33 1HX, UK 
+
+## Abstract 
+
+This document describes the application of a first order linearised nonlinear repeated measurements approach to the analysis of battery cell ageing profiles generated under controlled conditions in a laboratory. The primary advantage of the model is it reflects the obvious structure in the data. Consequently, it is a two-component of variance mode l: variation within ageing profiles ( measurement noise ) and variation among ageing profiles ( test-to-test or cell-to-cell ) variation. Novel regularised iterative generalised least squares parameter identification schemes, with optimal hyper-parameter re-estimation, are used to identify the hierarchical nonlinear model. The training data comprised 
+
+𝑆𝑜𝐻  profiles for 10 cells aged at various constant discharge and charge current cycles at a fixed chamber environmental temperature of 25 [ oC]. Each cell  𝑆𝑜𝐻  profile is modelled using a simple power law expression, whereas the variation in ageing parameters is modelled using a single knot cubic B-spline.  𝑆𝑜𝐻  is accurately predicted to  ±0.191 % for  𝑆𝑜𝐻 ∈ [0,20] .
+
+Keywords: Repeated Measurements, Longitudinal Data, Maximum Likelihood Estimation, Regularisation 
+
+# 1 Introduction 
+
+In laboratory studies to assess the cyclic ageing characteristics of battery cells, state of health ( 𝑆𝑜𝐻 )metrics are taken repeatedly at several instances during the life of the cell [refs]. Typically, for each cell, the ageing conditions such as cell temperature, charge and discharge currents etc. are held constant and each cell is subjected to a predefined cyclic stress. The output from these experiments is not a collection of points but rather a collection of ageing profiles. The shape of the profiles will be similar for all cells of the same type but will vary according to the applied cyclic stress. Formally, these measurements constitute longitudinal data [ i]. Longitudinal data is defined as repeated measurements where the observations on a single individual were not (or could not be) randomly assigned to the levels of a treatment of interest .
+
+The presence of repeated observations on an individual requires care in characterising the variation in the experimental data. It is important to explicitly represent two sources of variation: random variation among measurements within a given cell ( intra-individual ) and random variation among cells (inter-individual ). Inferential procedures accommodate these different variance components within the framework of an appropriate hierarchical statistical model. Note, intra-individual variation can be interpreted as measurement noise, whereas inter-individual variation corresponds to cell-to-cell variation [ ii ]. 
+
+License: CC-BY 4.0, see  https://creativecommons.org/licenses/by/4.0/ 2
+
+## 1.1 Model Formulation 
+
+This section describes the hierarchical non-linear model that forms the basis for the inferential procedures applied. Following the presentation by Davidian and Giltinan [ iii ], the model involves two levels. The first stage describes intra-cell variation within cells and the second inter-cell variation among cells. 
+
+## 1.2 Stage 1: Intra-cell Model 
+
+The model for the  𝑖 𝑡ℎ  cell may be written: 
+
+𝒚 𝑖 = 𝑓(𝒙 𝑖 , 𝛽 𝑖 ) + 𝒆 𝑖  (1) 
+
+Where  𝒚 𝑖 ∈ ℝ 𝑛 𝑖  is the corresponding response vector,  𝒙 𝑖 ∈ ℝ 𝑛 𝑖  is a vector of stage-1 covariates (independent or regressor variable),  𝛽 𝑖 ∈ ℝ 𝑝  is the parameter vector for the function  𝑓(𝒙 𝑖 , 𝜃 𝑖 )
+
+describing the systematic ageing behaviour of the  𝑖 𝑡ℎ  cell. The vector  𝒆 𝑖 ∈ ℝ 𝑛 𝑖  represents the intra-cell random error and is assumed to be distributed as  𝒆 𝑖 = 𝒩(𝟎, 𝜎 2𝜮 𝑖 (𝝂)) , with  𝛴 𝑖 ∈ ℝ (𝑛 𝑖 ×𝑛 𝑖 ). Here 
+
+𝜎 2 is an intra-cell variance scale parameter and  𝝂 ∈ ℝ 𝑞  a vector of level-1 covariance model parameters defining heteroscedastic and serial correlation phenomenon. It is assumed  𝜎 2 and  𝝂  are common to all cells. Throughout, we will assume  𝛴 𝑖 = 𝐼 𝑛 𝑖 , implying  𝝂 ∈ 𝜙 .
+
+## 1.3 Stage 2: Inter-Cell variation 
+
+Variation among different cells is accounted for via the following model: 
+
+𝛽 𝑖 = 𝒅(𝒂 𝑖 , 𝜃) + 𝑭𝒃 𝑖  (2) 
+
+The vector valued function  𝒅(𝒂 𝑖 , 𝜃) ∈ ℝ 𝑝  explains the systematic inter-cell variation associated with the level-2 covariates  𝒂 𝑖 , which represent the ageing conditions applied to the  𝑖 𝑡ℎ  cell. In this study, as with most laboratory investigations, the  𝒂 𝑖  are assumed to be held constant while the  𝑖 𝑡ℎ  is aged. The level-2 random effects,  𝒃 𝑖 ∈ ℝ 𝑘 , are assumed to be distributed as  𝒃 𝑖 ~𝒩(0, 𝑫) , where  𝑫 ∈ ℝ𝑘×𝑘 is there level-2 covariance matrix. The matrix  𝑭 ∈ ℝ 𝒑×𝒌  is a fixed design matrix and permits elements of  𝛽 𝑖  to be represented as either mixed or fixed effects. It is also assumed  𝒆 𝑖  and  𝒃 𝑖  are independent. 
+
+## 1.4 Approximation to the Marginal Density of  𝒚 𝑖 
+
+Maximum likelihood estimation for this model is based on the marginal density of  𝒚 𝑖 , i.e. :
+
+𝑝(𝒚 𝑖 ) = ∫ 𝑝(𝒚 𝑖 |𝒃 𝑖 ) 𝑝(𝒃 𝑖 )𝑑𝒃 𝑖  (3) 
+
+Unlike the linear case, this integral does not have a closed-form solution when  𝑓(𝒙 𝑖 , 𝛽 𝑖 ) is nonlinear in  𝒃 𝑖 . Consequently, historically, various approximations have been proposed in the literature to evaluate Equation (3). For example, Pinheiro and Bates [ iv ] consider four different approximations to the log likelihood, comparing their computational and statistical properties. Here the discussion is restricted to methods involving taking a first-order Taylor series expansion of the model function 
+
+𝑓(𝒙 𝑖 , 𝛽 𝑖 ) about the expected value of the random effects [ iii , v, vi , vii , viii ],  𝐸[𝒃 𝑖 ] = 0 , a procedure first proposed in the pharmacokinetics literature by Sheiner, Rosenberg and Melmon [ ix ]. This yields the approximate form: 
+
+𝒚 𝑖 = 𝑓(𝒅(𝒂 𝑖 , 𝜃), 0) + 𝑱 𝑖 (𝜃, 0)𝑭𝒃 𝑖 + 𝜎Σ 𝑛 𝑖  
+
+> 1 2 ⁄
+
+𝒆 𝑖  (4) 3
+
+Where  𝑱 𝑖 (𝜃, 0) ∈ ℝ 𝑛 𝑖 ×𝑝  denotes the matrix of derivatives of  𝑓(𝒙 𝑖 , 𝛽 𝑖 ) with respect to  𝛽 𝑖  evaluated at 
+
+𝛽 𝑖 = 𝒅(𝒂 𝑖 , 𝜃)  and  Σ𝑛 𝑖  
+
+> 1 2 ⁄
+
+is the Cholesky factor for  𝛴 𝑖  [x]. The notation highlights the fact that the expansion is taken about  𝐸[𝒃 𝑖 ] = 0 . Defining the matrices,  𝒁 𝑖 (𝜃, 0) = 𝑱 𝑖 (𝜃, 0)𝑭  and  𝒆 𝑖 ∗ = 𝜎Σ 𝑛 𝑖  
+
+> 1 2 ⁄
+
+𝒆 𝑖 ,Equation (4) can be written in the compact form: 
+
+𝒚 𝑖 = 𝑓(𝒅(𝒂 𝑖 , 𝜃), 0) + 𝒁 𝑖 (𝜃, 0)𝒃 𝑖 + 𝒆 𝑖 ∗ (5) 
+
+Note in (5), as in the linear case, the intra-cell and inter-cell random terms now enter the model in an additive fashion. The immediate consequence of (5) is the marginal mean and covariance of  𝒚 𝑖  are readily specified: 
+
+𝐸[𝒚 𝑖 ] = 𝑓(𝒅(𝒂 𝑖 , 𝜃))  (a) 
+
+(6) 
+
+𝑉[𝒚 𝑖 ] = 𝒁 𝑖 𝑫(𝝎)𝒁 𝑖 𝑇 + 𝜎 2𝛴 𝑖 = 𝑾 𝑖 (𝝎, 𝜎 2) (b) 
+
+Given Equation (6), the marginal negative log likelihood for the full data set comprised of  𝑀  cells is: 
+
+𝐿(𝒚 𝑖 |𝜃, 𝝎, 𝜎 2) = ∑ (𝑛 𝑖  
+
+> 2
+
+𝑙𝑜𝑔(2𝜋) + 12 𝑙𝑜𝑔‖𝑾 𝑖 ‖ + 12 (𝒚 𝑖 − 𝑓(𝒅(𝒂 𝑖 , 𝜃))) 𝑇 
+
+𝑾 𝑖 −1 (𝒚 𝑖 − 𝑓(𝒅(𝒂 𝑖 , 𝜃)))) 𝑀 𝑖=1  (7) 
+
+The parameters are estimated using a novel regularized iterative generalised least squares (R IGLS )procedure specified in [ xi ]. Benefits of regularization are discussed at length in [ xii ]. This is accomplished by introducing a ridge regression term [ ii , xii , xiii ] term of the form  𝜆𝜃 𝑇 𝜃  into (7). When combined with an appropriate information theoretic measure, such as  𝐵𝐼𝐶  [xiv ], the hyper-parameter,  𝜆 , can be optimally determined at each iteration of the optimisation search algorithm using a numerically efficient fixed-point iteration formula derived in [ xi ]. Here we extend the approach to repeated measurements formulations, yielding the following formula, the derivation for which is outlined in Appendix A. 
+
+𝜆 𝐵𝐼𝐶 = 𝜎 2𝑙𝑜𝑔(𝑁)𝑡𝑟𝑎𝑐𝑒(𝜆𝑨 −2 −𝑨 −1 )2𝑁𝒒 𝑇 𝑩𝑨 −3 𝑩 𝑇 𝒒  (8) 
+
+Equation (8) is of the form  𝜆 = ℎ(𝜆) . Consequently,  𝜆  appears on both sides of equation (8) and we must result to fixed-point iteration [xv ] to estimate it. 
+
+Definition : If  ℎ(𝜆)  is defined on [𝑎, 𝑏]  and  ℎ(𝜆) = 𝜆  for some  𝜆 ∈ [𝑎, 𝑏] , then the function  ℎ(𝜆)  is said to have the fixed-point  𝜆  in [𝑎, 𝑏] .
+
+The following theorem guarantees convergence of the algorithm [ xv ]: 
+
+Theorem : Let  ℎ(𝜆)  be continuous in [𝑎, 𝑏] , and suppose that  ℎ(𝜆) ∈ [𝑎, 𝑏]  for all  𝜆 ∈ [𝑎, 𝑏] . Further Let  ℎ′(𝜆)  exist on (𝑎, 𝑏)  with |ℎ′(𝜆)| ≤ 𝑘 < 1 , for all  𝜆 ∈ (𝑎, 𝑏) . If  𝜆 𝑜 ∈ [𝑎, 𝑏] , then the sequence defined by  𝜆 𝑟 = ℎ(𝜆 𝑟−1 ) , 𝑟 ≥ 1 , will converge to the unique fixed-point  𝜆  in [𝑎, 𝑏] .
+
+The necessary proof can be found in the reference cited. Further, if the theorem is satisfied a bound for the error involved in using  𝜆 𝑟  to approximate  𝜆  is given by: 4
+
+|𝜆 𝑟 − 𝜆| ≤ 𝑘 𝑟 𝑚𝑎𝑥{𝜆 𝑜 − 𝑎, 𝑏 − 𝜆 𝑜 }, ∀𝑟 ≥ 1 . (9) 
+
+## 1.5 Formulae for Confidence and Prediction Intervals Using the Delta Method 
+
+Confidence intervals for the predictions are of great importance in the primary application of this work 
+
+i.e., battery end of life prediction. Consequently, for any prediction we desire to provide a corresponding estimate of precision for that estimate. To do this we utilise the well-known delta-method [iii ], which involves expanding the function  𝑓(𝒅(𝒂 𝑖 , 𝜃))  as a first order Taylor series about the estimate  𝜃̂ .
+
+𝑦̂ 𝑖𝑗 |𝜃̂~𝑓 (𝑥 𝑖𝑗 , 𝒅(𝑎 𝑖 , 𝜃̂)) + 𝒉 𝑇 (𝑥 𝑖𝑗 , 𝒅(𝑎 𝑖 , 𝜃̂)) 𝛥𝜃  (10) 
+
+Where  𝒉 𝑇 (𝑥 𝑖𝑗 , 𝒅(𝑎 𝑖 , 𝜃̂)) = 𝜕𝑓(𝑥 𝑖𝑗 , 𝛽 𝑖 ) 𝜕𝛽 𝑖 × 𝜕𝛽 𝑖 (𝒅(𝑎 𝑖 , 𝜃̂)) 𝜕𝜃 ⁄⁄ = 𝑱 𝑖 (𝑥 𝑖𝑗 , 𝜃̂)𝜩 ∈ ℝ 1×𝑞  and  𝜩 = 𝜕𝒅(𝑎 𝑖 , 𝜃̂) 𝜕𝜃 ⁄ . Applying the variance operator to (10) yields: 
+
+𝑉[𝑦̂ 𝑖𝑗 |𝜃̂]~𝒉 𝑇 [𝑉𝛥𝜃̂]𝒉  (11) 
+
+It can be shown: 
+
+𝑉𝛥𝜃̂ = 𝜱 −1 [∑ 𝜩 𝑖 𝑇 𝑱 𝑖 𝑇 𝑾 𝑖 −1 𝑚 𝑖=1 𝑱 𝑖 𝜩 𝑖 ]𝜱 −1  (12) 
+
+With  𝛷 −1 = [∑ 𝜩 𝑖 𝑇 𝑱 𝑖 𝑇 𝑾 𝑖 −1 𝑚 𝑖=1 𝑱 𝑖 𝜩 𝑖 + 𝜆𝑰] −1 . Substituting Equation (12) into Equation (11) yields: 
+
+[𝑦̂ 𝑖𝑗 |𝜗̂]~𝒉 𝑇 𝜱 −1 [∑ 𝜩 𝑖 𝑇 𝑱 𝑖 𝑇 𝑾 𝑖 −1 𝑚 𝑖=1 𝑱 𝑖 𝜩 𝑖 ]𝜱 −1 𝒉  (13) 
+
+A 100 × (1 − 𝛼)%  confidence interval may be constructed by appealing to standard asymptotic theory according to: 
+
+𝜇 𝑖𝑗 ~𝑦̂ 𝑖𝑗 ± √𝜒 𝑞 2(𝛼)𝒉 𝑇 𝜱 −1 [∑ 𝜩 𝑖 𝑇 𝑱 𝑖 𝑇 𝑾 𝑖 −1 𝑚 𝑖=1 𝑱 𝑖 𝜩 𝑖 ]𝜱 −1 𝒉  (14) 
+
+Uncertainty may be regarded as the precision up to which an unknown quantity can be determined from the available observed data. Predicting the value of a future observation is inherently more uncertain because it deals with future unobserved data. Prediction intervals related to predictions of future observations. A prediction interval quantifies the expected range for one or more additional future observations, including uncertainty about model parameter and random measurement variability. Let  𝑧̂ 𝑖,𝑗  denote a future observation. Then a  100 × (1 − 𝛼)%  prediction interval may be constructed using: 
+
+𝜇 𝑖𝑗 ~𝑧̂ 𝑖𝑗 ± √𝜒 𝑞 2(𝛼)(𝒉 𝑇 [𝜱 −1 [∑ 𝜩 𝑖 𝑇 𝑱 𝑖 𝑇 𝑾 𝑖 −1 𝑚 𝑖=1 𝑱 𝑖 𝜩 𝑖 ]𝜱 −1 + 𝑾 𝑖 ]𝒉)  (15) 
+
+# 2 Case Study Description 
+
+The relevant properties of the ten cells tested are summarised in  Table 1 . From beginning of life screening tests conducted on 55 pristine cells, Zülke et al [xvi ] reported the mean nominal capacity of these cells as  4.73 ± 0.025  [Ah]. In Zülke’s study, capacity data was obtained from discharge tests 5
+
+conducted at one third C-rate and 25 [ oC]. These data defined the initial full capacity,  𝑄 0 say, for the cells under test. All test cells were selected randomly from this batch. 
+
+> Table 1: Cell Specification Table
+
+Properties  Specification 
+
+Cathode chemistry  Nickel Cobalt Aluminum (NCA) 
+
+Anode chemistry  Graphite/Silicon 
+
+Typical capacity 
+
+(4.2 V, C/3 discharge) 
+
+4.8 [Ah] 
+
+Typical energy 
+
+(4.2 V, C/3 discharge) 
+
+17.4 [Wh] 
+
+Nominal voltage  3.62 [V] 
+
+Lower voltage limit,  V𝑚𝑖𝑛  2.5 [V] 
+
+Upper voltage limit,  V𝑚𝑎𝑥  4.2 [V] 
+
+Energy density  256 [Wh/kg]; 
+
+717 [Wh/L] 
+
+Standard charging current rate  C/3 
+
+Maximum charging current rate  1 C 
+
+Standard discharging current rate  C/5 
+
+Maximum discharging current rate  2 C 
+
+Peak discharging current rate (30s, 10s) at 50%SOC and BOL 
+
+42 [A]/54[A] 
+
+Cell weight  68 [g] 
+
+Form factor  Cylindrical 
+
+Figure 1  depicts the test protocol applied each of the 10 cells tested. All data were collected at 25 [ oC] and a constant discharge current of 2 [A] was applied throughout. In contrast, the applied charge current during cycling was varied according to the test plan defined by  Table 2 . After every 50 cycles, a check-up test was performed to determine the current cell capacity denoted by  𝑄 𝑘 . Capacity loss, 
+
+𝑄 𝑙𝑜𝑠𝑠  was then calculated according to: 
+
+𝑄 𝑙𝑜𝑠𝑠 = 100 × [ 𝑄 0−𝑄 𝑘 
+
+> 𝑄 0
+
+] (16) 6
+
+> Figure 1: Cycling Ageing Test Protocol. A check-up capacity test is performed every 50 cycles. All cycles were conducted at 25 [oC] and a constant discharge current of 2 [A]. The procedure was repeated until failure.
+> Table 2: Full Cycling Ageing Data Test Plan. The charging current is varied from 1 to 5 [A]. Two cells are tested at each condition.
+
+## 2.1 Detailed Case Study Model Specification 
+
+At level-1 we model the cell capacity loss (𝑄 𝑙𝑜𝑠𝑠 ) versus ageing time (𝑥)  as a power law of the form: 
+
+𝑦 𝑖𝑗 = 𝐵 𝑖 𝑥 𝑖𝑗  
+
+> 1𝐴 𝑖
+
++ 𝑒 𝑖𝑗 , 𝑠. 𝑡. 𝐴 𝑖 > 1, 𝐵 𝑖 > 0  (17) 
+
+Where suffix  𝑖  refers to the cell and  𝑗  the ageing time. It is assumed the random error term,  𝑒 𝑖𝑗 , is normally identically and independently distributed, i.e.,  𝑒 𝑖𝑗 ~𝒩(0, 𝜎 2). Consequently, all data receives the same weight of unity. For this model  𝛽 𝑖 = [𝐴 𝑖 𝐵 𝑖 ]𝑇 . We shall refer to the function  𝑓(𝑥 𝑖𝑗 , 𝛽 𝑖 ) = 𝐵 𝑖 𝑥 𝑖𝑗 1 𝐴 𝑖 ⁄ as the power law model (PLM ).  Figure 2  presents both the raw data for Cell 1 and the corresponding fit afforded by the PLM . These plots are typical for all 10 ten cells tested. Overall, the agreement between the data and the PLM is excellent, although the weighted residual versus predicted capacity fade plot demonstrates some slight systematic variation. 
+
+The level-2 model component  𝒅(𝒂 𝑖 , 𝜃)  is intended to describe the variation in the  𝛽 𝑖  as the charging current is varied.  Figure 3  presents the level-1 fit parameters as a function of charging current,  𝑎 𝑖 .Generally, the variation in the coefficient values for the replicated tests at each  𝑎 𝑖  is relatively small except for observations at  𝑎 𝑖 = 3 [𝐴] . Here, the variation in coefficient values exhibited by the two cells tested is quite large by comparison with the remainder. Upon inspection of the data, cell 5 was 7
+
+deemed to be an outlier and subsequently excluded from the analysis. Regardless, we assume the following level-2 model: 
+
+[𝐴 𝑖 
+
+𝐵 𝑖 
+
+] = [ [𝜙 1(𝑎 𝑖 , 𝑘 𝐴 ) ⋯ 𝜙 5(𝑎 𝑖 , 𝑘 𝐴 )] 00 [𝜙 1(𝑎 𝑖 , 𝑘 𝐵 ) ⋯ 𝜙 5(𝑎 𝑖 , 𝑘 𝐵 )] ] [ 𝜃 𝐴 
+
+𝜃 𝐵 
+
+] + [ 𝑏 𝐴,𝑖 
+
+𝑏 𝐵,𝑖 
+
+] (18) 
+
+Where the {𝜙 𝑞 (𝑎 𝑖 , 𝑘)} 𝑞=1 5 are the B-spline basis functions for a spline of order 4 with a single knot (𝑘) 
+
+[xi , xvii ]. The order of the B-spline,  𝑚 , is given by: 
+
+𝑚 = 𝑑 + 1  (19) 
+
+Where  𝑑  denotes the degree of the interpolating polynomial. Hence, in this case, for the full level-2 model cited  𝜃 𝑇 = [𝑘 𝐴 𝜃 𝐴 𝑇 𝑘 𝐵 𝜃 𝐵 𝑇 ] ∈ ℝ 12 . In (18) we assume that both  𝐴 𝑖  and  𝐵 𝑖  are mixed-effects and therefore  𝑭 = 𝑰 2. When there are several level-2 covariates and  𝒂 𝑖 𝑇 = [𝑎 𝑖,1 ⋯ 𝑎 𝑖,𝑐 ], the corresponding tensor product B-spline basis [xvii ] possess a very large number of terms implying the necessity to collect large amounts of experimental data to estimate  𝜃 . Under these circumstances, we suggest using a more compact basis such as the hybrid b-splines due to Grove et al [ xviii ] or for sparse high dimensional data a fully non-parametric approach such as the radial basis functions [ ii ].     
+
+> Figure 2: Raw capacity loss (𝑄 𝑙𝑜𝑠𝑠 )versus ageing time for cell 1, charge current = 1 [A]. The data is well approximated by the power law function 𝑓(𝑥, 𝜃) = 𝐵𝑥 (1 𝐴 ⁄). The appearance of the regression diagnostic plots could be improved but overall, the PLM is in excellent agreement with the raw data. This is an ordinary least squares fit so all residual weights are unity.
+
+8
+
+> Figure 3: Variation in the level-1 fit coefficients as the charging current is varied. There appears to be an outlying observation at charging current = 3 [A].
+
+## 2.2 Detailed Model Selection and Identification Procedure 
+
+One of the advantages of the linearised analysis approach over alternatives, such as two stage regression [ xix , xx , ii , iii ], is that complete ageing profiles are not required. With two-stage regression it is assumed sufficient cell-specific data exists to fit individual PLM profiles for each cell, that is estimate the  𝛽 𝑖 , ∀𝑖 = 1 … 𝑀 . The advantage of this with respect to model selection and for estimating starting values for  𝜃  is discussed at length in [ ii ]. Essentially, if preliminary values for the  𝛽 𝑖  are available then we can treat these estimates as data and model each element alone as a function of the  𝑎 𝑖 . This is referred to as univariate fitting. The univariate estimates for  𝜃 𝑇 = [𝑘 𝐴 𝜃 𝐴 𝑇 𝑘 𝐵 𝜃 𝐵 𝑇 ]
+
+then provide starting estimates for the full RIGLS procedure. Since here full ageing profile data is available, we also utilise this approach, simplifying the analysis process considerably. 
+
+Figure 4  presents a block diagram describing the full identification process workflow. The process begins by fitting each individual ageing profile for all 10 cells tested. At step 2, the common level-1 variance scale parameter,  𝜎 2, is estimated using a pooled analysis procedure described in [ ii ]. Once estimated,  𝜎̂ 2 is held fixed throughout. Given the  𝛽 𝑖 𝑇 = [𝐴 𝑖 𝐵 𝑖 ] from step 1, at step 3, we initially treat the  𝐴 𝑖  and  𝐵 𝑖  estimates from step 1 as data, and perform regularised nonlinear univariate regressions for each utilising the procedure given in [ xi ]. This step provides preliminary estimates for 
+
+𝜃̂ 𝑇 = [𝑘̂ 𝐴 𝜃̂ 𝐴 𝑇 𝑘̂ 𝐵 𝜃̂ 𝐵 𝑇 ].9
+
+> Figure 4: Block diagram depicting the nonlinear repeated measurements model identification procedure
+
+Using the preliminary estimates for  𝜃̂ 𝑇  from step 3, we form the residual vectors,  𝒓 𝑖 = 𝒚 𝑖 −𝑓 (𝒅 (𝒂 𝑖 , 𝜃 )) , and estimate  𝝎  by minimising (7) for fixed  𝜃̂ 𝑇  and  𝜎̂ 2. For compactness, we denote the collection of  𝑀  residual vectors as  𝑅(𝑘 𝐴 , 𝜃 𝐴 , 𝑘 𝐵 , 𝜃 𝐵 ). In step 4, we first factor it as  𝑫 = 𝑴 2 where 
+
+𝑴(𝝎)  is a real symmetric matrix. As shown in Appendix B this factorisation ensures the positive definiteness of  𝑫 . At step 5, for fixed  𝝎̂  and  𝜎̂ 2, we now form the necessary weight matrices 
+
+𝑾(𝝎̂) 𝑖 −1 and identify improved  𝜃̂ 𝑇  by minimising the regularised form of (7) using the algorithm outlined in Appendix A. Steps 4 and 5 are then repeated until convergence. In our experience convergence occurs after roughly 3-5 iterations. 
+
+## 2.3 Automatic Outlier Detection 
+
+Prior to step 1, to improve robustness of the overall procedure in practice, we conduct a preliminary fit of cell-specific ageing profiles using the nonlinear FAST-LTS (Least Trimmed Squares) procedure developed by Hawkins and Khan [ xxi ]. The FAST-LTS method involves minimising the cost function: 
+
+𝐿 𝐿𝑇𝑆 = ∑ 𝑟 𝑠 2𝑆 𝑠=1  (20) 
+
+Where  𝑆 ∈ [0.5𝑛 𝑖 , 𝑛 𝑖 ]. This is a subset selection method with proportion  1 − (𝑆) 𝑛 𝑖 ⁄ set aside from the fit. Essentially, the  𝐿 𝐿𝑇𝑆  criterion is the sum of the  𝑆  smallest ordered squared residuals. The fit involves iteration rather than closed form explicit solutions and may converge to a local rather that a global minimum. Hawkins and Khan propose a hybrid method involving the concept of element sets .Initially, randomly generated elemental sets are used to provide a fast search for the initial estimate of the  𝛽 𝑖 . The elemental estimate minimising (20) is used subsequently as a starting value for a full nonlinear fit to the data – the so-called concentration step. The  𝛽 𝑖  at convergence of the concentration step is the final estimate. Data points corresponding to  𝑟 𝑠>𝑆 2 are permanently excluded from any subsequent analysis. 
+
+## 2.4 Results & Discussion 
+
+We begin by considering the level-1 fit before moving onto discussing the efficacy of the full nonlinear repeated measurements model.  Figure 5  presents the level-1 PLM fit to the data for cell 8, aged at a charging current of 4 [A]. Again, the fit to the data is excellent although the appearance of the residual diagnostics could be improved. The value of the hyper-parameter at convergence is  𝜆 = 0.00067 
+
+yielding a very slight reduction in the effective number of parameters from 2, for the unregularized fit, to  𝛾 = 1.99 7. This seems sensible given the apparent smoothness of the response. The nonlinear 
+
+FAST-LTS algorithm [ xxi ] was applied to these data to identify outliers prior to finally fitting the model utilising the regularised method [ xi ]. Note, the FAST-LTS analysis identifies the presence of an aberrant observation at  (10.75, 3.80) . From inspection of the plot this seems entirely reasonable. This observation has been set aside for the remainder of the analysis. 10 
+
+Similarly,  Figure 6  presents data for cell 3. Again, the reported values of  λ and  𝛾  at convergence are consistent with the inherent smoothness of the fit function. In this instance, two outlying observations occur. The first, as for cell 8, occurs early in the life of the cell at  (10.75, 4.01) . However, the second occurs at  (490.5, 19.50)  and may indicate the cell is entering into a period of rapid capacity decay which occurs at the end of the life cycle. If so, this observation is not consistent with the PLM 
+
+formulation. Consequently, this observation should be excluded. In addition, if included, an outlying observation of this nature may be unduly influential on the PLM estimates for this cell; a point discussed by Cook et al [xxii ].      
+
+> Figure 5: Cell 8, charging current = 4 [A]. Level-1 PLM fit diagnostics. At convergence (𝐴 𝑖 , 𝐵 𝑖 ) = (1.383, 1.1011), the value of the hyper-parameter is 𝜆 = 0.00067 , yielding 𝛾 = 1.99 7.
+
+The pooled estimate of the level-1 variance scale parameter,  𝜎 2, was  0.0077 2. This reassuringly small value implies the fit quality for the PLM over all 9 cells was highly accurate. 
+
+Figure 7  presents the residuals for the training data for the full nonlinear repeated measurements model. The RIGLS algorithm converged after just 2-iterations. The  𝑅𝑀𝑆𝐸  for the trained model was 
+
+0.191 [%] . Clearly, the appearance of this plot could be improved as the residual pattern suggests the model exhibits small systematic errors. The presence of these systematic errors is not considered practically significant in this application as the model still yields a very high level of accuracy. Validation data was not available to test the predictive capability of the model for previously untried configurations. 11 
+
+Figure 6: Cell 3, charging current = 2 [A]. Level-1 PLM fit diagnostics. At convergence, (𝐴 𝑖 , 𝐵 𝑖 ) = (1.374, 1.1034) 
+
+, the value of the hyper-parameter is  𝜆 = 0.00048 , yielding  𝛾 = 1.998 .
+
+Figure 7: Training residuals for the full nonlinear repeated measurements model with cell number as a parameter. The RMSE for these data is 0.191 [%]. At convergence  𝜆 = 0.0002 . The RIGLS algorithm converged after just two iterations. 
+
+We now factorise the level-2 covariance matrix as: 
+
+𝑫 = 𝑻 1/2 𝑪𝑻 1/2  (21) 
+
+Where  𝑪  is a correlation matrix and  𝑻 1/2  is a diagonal matrix of standard errors. The correlation matrix is: 
+
+𝑪 = [ 1 −0.743 −0.743 1 ] (22) 
+
+The relatively high value of the off leading diagonal term indicates the utility of the regularised maximum likelihood approach to parameter identification. In this case, if the [𝐴 𝑖 𝐵 𝑖 ] were assumed 12 
+
+to be independent, then as explained in [ iii ] the corresponding estimates of  𝜃  would be upwardly biased. Similarly, the standard error matrix is: 
+
+𝑻 1/2 = 𝑑𝑖𝑎𝑔{0.0374 0.0233}  (23) 
+
+Again, given  𝐴, 𝑎𝑛𝑑 𝐵 𝑖  are of unity order this implies the cell-to-cell variation is quite small in practice. This assertion seems quite in keeping with the individual cell estimates presented in  Figure 3 . Figure 8 compares the level-1 PLM (L1 ) and full repeated model ( L2 ) fits to the observed data for cell 2. In addition, 95% confidence and prediction intervals are also plotted. The similarity between the L1 and 
+
+L2 fits is marked, again implying the full hierarchical nonlinear repeated measurements model is a good facsimile for the training data. The 95% confidence interval for the L2 estimates is exceedingly narrow. To emphasise this point, in  Figure 9  we present the same comparisons in the interval 
+
+[200,250]  days. The 95% confidence interval is now clearly visible. 
+
+> Figure 8: Cell - 2, Ageing Current = 1 [A], comparison among fits and interval estimates. L1 denotes the level-1 PLM fit, L2 denotes the repeated measurements model fit, LCI (UCI) denotes the lower (upper) 95% confidence interval and LPI (UPI) denotes the lower (upper) 95% prediction interval.
+
+13  
+
+> Figure 9: Ageing Current = 1 [A], comparison among fits and interval estimates in the interval [200,250] . L1 denotes the level-1 PLM fit, L2 denotes the repeated measurements model fit, LCI (UCI) denotes the lower (upper) 95% confidence interval and LPI (UPI) denotes the lower (upper) 95% prediction interval.
+
+# 3 Conclusions & Future Work 
+
+The nonlinear repeated measurements model presented, based on first order linearisation approximations to the relevant marginal likelihood, accurately reflects the obvious structure in laboratory cyclically aged cell data, accounting for both intra- and inter-cell variation. To our knowledge, this is the first time an analysis of this nature has been attempted for cyclic ageing  𝑆𝑜𝐻 
+
+modelling. The effectiveness, of a novel regularised iterative generalised least squares approach to identification is demonstrated, via a case study, yielding a model with a training  𝑅𝑀𝑆𝐸  of 0.191 [%] for the capacity loss data presented. In addition, the model is fully parametric and so easily interpretable from a scientific perspective. A hierarchical model, with two components of variance, yields realistic confidence and prediction intervals for the capacity loss  𝑆𝑜𝐻  measure considered. 
+
+For the analysis of real-world data, the model structure requires modification. This is because in an electric vehicle (EV) application, for example, the ageing stress applied to the battery pack varies with environmental conditions, charging practices and customer usage. Regardless, in our view, real world data is still repeated measurements. Extensions to time dependent covariate [ iii ] protocols may address the real-world in-service analysis problem. 
+
+# Appendix A – Fixed Point Iteration Scheme Formula 
+
+It is possible to optimally select the hyper-parameter at each iteration of the search designed to determine  𝜃 . We begin by expanding  𝑓(𝒅(𝒂 𝑖 , 𝜃, 𝟎))  as a first order Taylor-series with respect to the current estimate at the  𝑠 𝑡ℎ  iteration,  𝜃 𝑠 :
+
+𝑓(𝒅(𝒂 𝑖 , 𝜃, 𝟎)) ≈ 𝑓(𝒅(𝒂 𝑖 , 𝜃 𝑠 , 𝟎)) + 𝐽 𝑖 (𝜃 𝑠 , 𝟎)𝛺 𝑖 (𝜃 𝑠 , 𝟎)𝛥𝜗 = 𝑓(𝒅(𝒂 𝑖 , 𝜃 𝑠 , 𝟎)) + 𝛹 𝑖 (𝜃 𝑠 , 𝟎)𝛥𝜃  (A1) 
+
+With  𝛺 𝑖 (𝜃 𝑠 , 𝟎) = 𝜕𝛽 𝑖 /𝜕𝜃 𝑠 . We now factorise  𝑫 = 𝜎 2𝑫  which implies  𝑾 𝑖 = 𝜎 2𝑾 𝑖 (𝝎) . Using (A1) and defining  𝛹 =⊕ 𝑖=1 𝑚 𝛹 𝑖 , 𝑾 =⊕ 𝑖=1 𝑚 𝑾 𝑖 (𝝎)  and  𝒈 = 𝑣𝑒𝑐[𝒈 1 … 𝒈 𝑚 ], with  𝒈 𝑖 = 𝒚 𝑖 −𝑓(𝒅(𝒂 𝑖 , 𝜃 𝑠 , 𝟎)) , the appropriate combined likelihood can be written: 14 
+
+𝐿(𝛥𝜃, 𝝎, 𝜎 2) = 12 ∑ {𝑛 𝑖 𝑙𝑜𝑔(2𝜋) + 𝑛 𝑖 𝑙𝑜𝑔(𝜎 2)} + 12 ∑ 𝑙𝑜𝑔‖𝑾 𝑖 (𝝎)‖ 𝑚 𝑖=1 𝑚 𝑖=1 + 12𝜎 2 (𝒈 − 𝛹𝛥𝜃) 𝑇 𝑾 𝑖 (𝝎)(𝒈 − 𝛹𝛥𝜗)  (A2) 
+
+Where  ⊕ is the direct sum operator [ xxiii ]: 
+
+⊕𝑖=1 𝑚 𝐴 𝑖 = [ 𝐴 1 0 00 ⋱ 00 0 𝐴 𝑚 
+
+].
+
+Likewise, the  𝑣𝑒𝑐  operator is defined as [ xxiii ]: 
+
+𝑣𝑒𝑐[𝒂 1 … 𝒂 𝑚 ] = [ 𝒂 1
+
+⋮𝒂 𝑚 
+
+]
+
+By definition,  𝑾  is positive definite and so can be written: 
+
+𝑾 = 𝑼 𝑇 𝑼  (A3) 
+
+Where  𝑼  is upper triangular. Using standard results on matrix inverses [ xxiii ],  𝑾 −1 = 𝑼 −1 𝑼 −𝑇  and inserting this relation into (A2) and defining  𝒒 = 𝑼 −𝑇 𝒈  and  𝑩 = 𝑼 −𝑇 𝛹  yields: 
+
+𝐿(𝛥𝜃, 𝝎, 𝜎 2) = 12 ∑ {𝑛 𝑖 𝑙𝑜𝑔(2𝜋) + 𝑛 𝑖 𝑙𝑜𝑔(𝜎 2)} + 12𝑚 𝑖=1 𝑙𝑜𝑔‖𝑼‖ 2 + 12𝜎 2 (𝒒 − 𝑩𝛥𝜃) 𝑇 (𝒒 − 𝑩𝛥𝜃)  (A4) 
+
+We now add a ridge regression term to (A4) to yield: 
+
+𝑅(𝛥𝜃, 𝝎, 𝜎 2, 𝜆) = 12 ∑ {𝑛 𝑖 𝑙𝑜𝑔(2𝜋) + 𝑛 𝑖 𝑙𝑜𝑔(𝜎 2)} + 12 𝑙𝑜𝑔‖𝑼‖ 2𝑚 𝑖=1 + 12𝜎 2 (𝒒 − 𝑩𝛥𝜃) 𝑇 (𝒒 − 𝑩𝛥𝜃) +  
+
+> 𝜆 2𝜎 2
+
+𝛥𝜃 𝑇 𝛥𝜃  (A5) 
+
+Equation (A5) is linear in  𝛥𝜃 and thus it immediately follows: 
+
+𝛥𝜃 = (𝑩 𝑇 𝑩 + 𝜆𝑰) −1 𝑩 𝑇 𝒒  (A6) 
+
+We now profile the likelihood for  𝜎 2 by first substituting (A6) into (A4), differentiating the result with respect to  𝜎 2, and after some algebra, yield the closed form solution: 
+
+𝜎 2 = 𝒒 𝑇 (𝑰−𝑺(𝜆)) 2𝒒 𝑁  (A7) 
+
+Where  𝑁 = ∑ 𝑛 𝑖 𝑚 𝑖=1  and  𝑺 = 𝑩(𝑩 𝑇 𝑩 + 𝜆𝑰) −1 𝑩 𝑇  is the so-called smoother matrix. Substituting (A7) into (A4) yields the corresponding profile likelihood: 
+
+𝐿 𝑝 (𝝎, 𝜆, 𝜎 2) = 𝑁 2 𝑙𝑜𝑔(2𝜋) + 12 𝑙𝑜𝑔‖𝑼‖ 2 + 𝑁 2 𝑙𝑜𝑔 ( 𝒒 𝑇 (𝐼−𝑺(𝜆)) 2𝒒 𝑁 ) + 12 𝑁  (A8) 
+
+The information theoretic criterion  𝐵𝐼𝐶  [xiv ] is defined as: 
+
+𝐵𝐼𝐶 = 2𝐿 𝑝 (𝝎, 𝜆, 𝜎 2) + 𝛾𝑙𝑜𝑔(𝑁)  (A9) 15 
+
+Where  𝛾 = 𝑡𝑟𝑎𝑐𝑒(𝑺(𝜆))  denotes the effective number of parameters. Differentiating (19) with respect to  𝜆  yields:  
+
+> 𝜕𝐵𝐼𝐶 𝜕𝜆
+
+= 2 𝜕𝐿 𝑝  
+
+> 𝜕𝜆
+
++ 𝑙𝑜𝑔(𝑁) 𝜕𝛾 𝜕𝜆  (A10) 
+
+Using the following results taken from [ xi ], and after some algebra, it can be shown:  
+
+> 𝜕𝑺 𝜕𝜆
+
+= −𝑩𝑨 −2 𝑩 𝑇  (a)  
+
+> 𝜕𝑺 2
+> 𝜕𝜆
+
+= −2𝑩𝑨 −2 𝑩 𝑇 + 2𝜆𝑩𝑨 −3 𝑩 𝑇  (b) 
+
+(A11)  
+
+> 𝜕𝛾 𝜕𝜆
+
+= 𝑡𝑟𝑎𝑐𝑒(𝜆𝑨 −2 − 𝑨 −1 ) (c) 
+
+Where  𝑨 = (𝑩 𝑇 𝑩 + 𝜆𝑰) . Substituting (A11) into (A10):  
+
+> 𝜕𝐵𝐼𝐶 𝜕𝜆
+
+= 2𝜆 ( 𝑁 𝜎(𝜆) 2) 𝒒 𝑇 𝑩𝑨 −3 𝑩 𝑇 𝒒 + 𝑙𝑜𝑔(𝑁)𝑡𝑟𝑎𝑐𝑒(𝜆𝑨 −2 − 𝑨 −1 ) (A12) 
+
+Setting (A12) to 0 and solving for  𝜆  gives the desired result: 
+
+𝜆 𝐵𝐼𝐶 = 𝜎 2𝑙𝑜𝑔(𝑁)𝑡𝑟𝑎𝑐𝑒(𝜆𝑨 −2 −𝑨 −1 )2𝑁𝒒 𝑇 𝑩𝑨 −3 𝑩 𝑇 𝒒  (A13) 
+
+# Appendix B - Ensuring Positive Definite  𝑫 
+
+Let  𝑴(𝝎) ∈ ℝ 𝑘×𝑘  denote a real symmetric square matrix. An eigen decomposition of  𝑴  yields: 
+
+𝑴 = 𝑷 −1 𝚲𝑷  (B1) 
+
+Where  𝑷  is an appropriately dimensioned matrix of eigenvectors and  𝚲 = 𝑑𝑖𝑎𝑔{𝜆 𝑖 }𝑖=1 𝑘  , where the  𝜆 𝑖 
+
+are the eigenvalues of  𝑴 . Now assume: 
+
+𝑫 = 𝑴 2(𝝎)  (B2) 
+
+Applying (B1) to (B2): 
+
+𝑫 = 𝑷 −1 𝚲𝑷𝑷 −1 𝚲𝑷 = 𝑷 −1 𝚲 𝟐 𝑷  (B3) 
+
+Clearly, the eigenvalues of  𝑫  are  𝜆 𝑖 2 and therefore cannot be negative ensuring positive definite  𝑫 .16 
+
+# References 
+
+i M. J. Lindstrom, D. M., Bates, Nonlinear Mixed Effects Models for Repeated Measures Data, 
+
+Biometrics , 1990, Vol. 46, pp 673-687. 
+
+ii Cary, M., A Model Based Methodology for the Calibration of a Port Fuel Injection, Spark-Ignition Engine, PhD Thesis , University of Bradford, 2003. 
+
+iii M. Davidian, D. M. Giltinan, Nonlinear Models for Repeated Measurement Data, 1995, 
+
+Chapman & Hall. 
+
+iv J. C. Pinheiro, J. C, D. M. Bates, Approximations to the Log-likelihood function in Nonlinear Mixed-Effects Models, Journal of Computational and Graphical Statistics , 1995, Vol. 4, No. 1, pp. 12-35. 
+
+v M. Davidian, D. M. Giltinan, Some General Estimation Methods for Nonlinear Mixed-Effects Models, Journal of Biopharmaceutical Statistics , 1993, Vol. 3, part 1, pp 23-55. 
+
+vi M. Davidian, D. M. Giltinan, Analysis of repeated measurement data using the nonlinear mixed effects model, Chemometrics and Intelligent Laboratory Systems , 1993, Vol. 20, pp 1-24. 
+
+vii M. J., Lindstrom, D. M., Bates, Nonlinear Mixed Effects Models for Repeated Measures Data, 
+
+Biometrics , 1990, Vol. 46, pp 673-687. 
+
+viii L. B. Sheiner, S. L., Beal, Evaluation of Methods for Estimating Population Pharmacokinetic Parameters. I. Michaelis-Menton Model: Routine Clinical Pharmacokinetic Data, Journal of Pharmacokinetics and Biopharmaceutics , 1980, Vol 8, pp 553-571.  
+
+> ix
+
+L. B. Sheiner, B., Rosenberg, K. l., Melmon, Modeling of Individual Pharmacokinetics for Computer-Aided Drug Dosing, Computers and Biomedical Research , 1972, Vol. 5, pp 441-459. 
+
+x R. L., Burden, J. D., Faires, A. C. Reynolds, Numerical Analysis , Wadsworth International Student Edition, Second Edition, 1981. 
+
+xi M. Cary, H. Hoster, A. Aragon Zulke, J. Elgie, Regularised Iterative Generalised Least Squares with Optimal Selection of the Hyper-Parameter for Identifying Nonlinear Phenomenological Models, 6th Biennial International Conference on Powertrain Modelling and Control, Testing, Mapping and Calibration , Loughborough University, Sep 2022.  
+
+> xii
+
+C. Goutte, Statistical Learning and Regularisation for Regression – Application to system identification and time series modelling, Ph.D. Thesis , L'Universite' Paris, 1996 
+
+xiii A. E., Hoerl, R. W., Kennard, Ridge Regression: biased estimation for non-orthogonal problems, Technometrics , 1970, Vol. 12, pp 55-67. 
+
+xiv G. Schwarz, (1978), Estimating the dimension of a model, Annals of Statistics . 6, 461-464.   
+
+> xv R. L.
+
+Burden, J. D.., Faires, A. C. Reynolds, Numerical Analysis , Wadsworth International Student Edition, Second Edition, 1981.  
+
+> xvi
+
+A. Zülke et al., Batter. Supercaps, 4, batt.202100046 (2021) 
+
+xvii C. De Boor, A Practical Guide to Splines , Springer-Verlag, First Edition, 1978. 
+
+xviii D. M., Grove, D. C. Woods, S. M. Lewis, Multifactor B-Spline Models in Designed Experiments for the Engine Mapping Problem, Journal of Quality Technology , 2004, 35, pp. 380-391. 
+
+xix T. Holliday, A J. Lawrance, T. P., Davis, Engine-Mapping Experiments: A Two-Stage Regression Approach, Technometrics , 1998, Vol. 40, pp 120-126. 
+
+xx D. W. Rose, M. Cary, R. Sbaschnig, K. M. Ebrahimi, An Engine Mapping Case Study: A 2-Stage Regression Approach, IMECHE International Conference on Statistics and Analytical Methods in Automotive Engineering , London UK, Sept. 24-25, 2002, pp 53 – 80. 17  
+
+> xxi
+
+D. M. Hawkins, D. M. Khan, A procedure for robust fitting in nonlinear regression, Computational Statistics and Data Analysis, 2009, 53, pp 4500-4507. 
+
+xxii R. D. Cook, C. -L. Tsai, B. C. Wei, Bias in nonlinear regression, Biometrika, 1986, 73, pp 615-623. 
+
+xxiii S. R. Searle, Matrix Algebra Useful for Statistics , John Wiley & Sons, First Edition, 1982.
