@@ -1,0 +1,39 @@
+{
+  "label": "2026-08-24",
+  "date": "2026-08-24",
+  "generated_at": "2026-08-24T20:28:48",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202608/24/2608.16212v1-quantifying-the-gap-between-laboratory-battery-test-patterns-and-field-duty-profiles",
+      "section": "quick",
+      "title_en": "Quantifying the Gap Between Laboratory Battery Test Patterns and Field Duty Profiles",
+      "authors": "Chunyang Zhao, Chresten Træholt",
+      "date": "2026-08-17",
+      "pdf": "https://arxiv.org/pdf/2608.16212v1",
+      "score": "6.0",
+      "evidence": "对比动态循环与现场工况模式，与动态条件下SOC估计相关",
+      "tldr": "实验室电池测试模式与电动车实际负载存在显著差异，但缺乏系统量化。本文比较六种证据来源，结合使用频率、使用强度、使用C率及负载结构指数（DSI）进行评估。结果显示现场DSI为0.630，远低于牛津的2.936，80%容量保留循环数从351到6292不等，现场中位SOH为0.889。研究强调电池性能指标高度依赖负载模式，应用导向研究应报告显式负载描述符及化学、容量等指标。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Laboratory battery tests provide the main empirical basis for battery performance and degradation studies, but their operating patterns do not directly represent field duty profiles. This paper quantifies the gap by comparing six accessible evidence sources covering controlled cycling, drive-cycle testing, dynamic cycling, NMC811 laboratory ageing, a real electric-vehicle charging trace, and fleet-scale electric-vehicle state-of-health (SOH) data. The analysis combines usage frequency, usage intensity, usage C-rate, and a duty-structure index (DSI) based on normalized current dispersion and ramping. The representative single-segment DSI ranges from 0.630 for the field source trace and 0.699 for NASA to 2.936 for Oxford and 2.855 for Imperial, while usage C-rate ranges from 0.14-0.40 for Imperial, NASA, Stanford, and Hyundai to 2.00 for Oxford. Long-term ageing also differs: the 80 percent retention region occurs near 351 NASA cycles, 6292 Oxford checkpoints, and 1019 Stanford cycles. In chemistry-aligned NMC/NCM evidence, Imperial retains 0.813 under standard cycling and 0.865 under drive-cycle ageing, while the field source has median SOH 0.889 with visible dispersion. Field operation further shows a median use intensity of 137.2 km/day and 56.9 percent of charges ending at or above 95 percent SOC. These results show that battery performance metrics are conditional on the duty pattern that generated them; application-oriented studies should report explicit duty-profile descriptors together with chemistry, capacity, and ageing metrics.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202608/24/2608.20163v1-incorporating-multiscale-mechanics-in-lithium-ion-battery-models",
+      "section": "quick",
+      "title_en": "Incorporating multiscale mechanics in lithium-ion battery models",
+      "authors": "Andrea Giudici, Andres F. Galvis, Smita Sahu, Robert Timms, Colin Please, Jon Chapman, Jamie M. Foster",
+      "date": "2026-08-20",
+      "pdf": "https://arxiv.org/pdf/2608.20163v1",
+      "score": "6.0",
+      "evidence": "提出了一种包含力学的锂离子电池模型，可用于基于模型的SOC估计",
+      "tldr": "锂离子电池中锂化膨胀会在活性颗粒、非活性基体、电极和电芯尺度产生应力，进而改变化学势、传输、反应动力学和端电压。本文将电极建模为嵌在均质弹性非活性基体中的球形活性颗粒周期阵列，利用基体低刚度与尺度分离，推导出降阶电化学-力学耦合模型。得到对活性颗粒化学势和过电位的有效力学修正，其取决于颗粒膨胀、电极应变以及夹持或外加压力等宏观边界条件，模型复杂度与DFN相当。该修正可直接嵌入DFN、SPMe和SPM框架，为电池级力学效应模拟提供高效路径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Lithiation-induced swelling in lithium-ion batteries generates stresses not only within active particles, but also across the surrounding non-active matrix, electrodes, and cell stack. These stresses can modify the chemical potential of lithium and therefore influence transport, reaction kinetics, and terminal voltage. We derive a reduced-order electro-chemo-mechanical model that captures this multiscale coupling while retaining a complexity comparable to standard Doyle--Fuller--Newman models. The electrode is modelled as a periodic array of spherical active particles embedded in a homogenised elastic non-active matrix. Exploiting the small stiffness of the non-active matrix relative to the active material, together with scale separation between particles, electrodes, and the full cell, we obtain an effective mechanical correction to the active-particle chemical potential and overpotential. This correction depends on particle swelling, electrode-scale strain, and macroscopic boundary conditions such as clamping or applied pressure. The resulting formulation can be incorporated directly into DFN, SPMe, and SPM frameworks, providing a computationally efficient route to include battery-scale mechanical effects in electrochemical simulations.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,4284 @@
+Title: Incorporating multiscale mechanics in lithium-ion battery models
+
+URL Source: https://arxiv.org/pdf/2608.20163v1
+
+Published Time: Fri, 21 Aug 2026 01:14:23 GMT
+
+Number of Pages: 48
+
+Markdown Content:
+# Incorporating multiscale mechanics in lithium-ion battery models 
+
+Andrea Giudici a,b , Andres F. Galvis c, Smita Sahu e,b , Robert Timms d, Colin Please a,b , Jon Chapman a,b ,Jamie M. Foster e,b, ∗
+
+> aMathematical Institute, University of Oxford, Andrew Wiles Building, Woodstock Road, Oxford, OX2 6GG, United Kingdom
+> bThe Faraday Institution, Quad One, Becquerel Avenue, Harwell Campus, Didcot, OX11 0RA, United Kingdom
+> cSchool of Electrical and Mechanical Engineering, University of Portsmouth, Anglesea Building, Anglesea Road, Portsmouth, PO1 3DJ, United Kingdom
+> dIonworks Technologies Inc, 5831 Forward Ave #1276 , Pittsburgh, PA, 15217, USA
+> eSchool of Mathematics and Physics, University of Portsmouth, Lion Gate Building, Lion Terrace, Portsmouth, PO1 3HF , United Kingdom
+
+Abstract 
+
+Lithiation-induced swelling in lithium-ion batteries generates stresses not only within active particles, but also across the surrounding non-active matrix, electrodes, and cell stack. These stresses can modify the chemical potential of lithium and therefore influence transport, reaction kinetics, and terminal voltage. We derive a reduced-order electro-chemo-mechanical model that captures this multiscale coupling while retaining a complexity comparable to standard Doyle–Fuller–Newman models. The electrode is modelled as a periodic array of spherical active particles embedded in a homogenised elastic non-active matrix. Exploiting the small stiffness of the non-active matrix relative to the active material, together with scale separation between particles, electrodes, and the full cell, we obtain an effective mechanical correction to the active-particle chemical potential and overpotential. This correction depends on particle swelling, electrode-scale strain, and macroscopic boundary conditions such as clamping or applied pressure. The resulting formulation can be incorporated directly into DFN, SPMe, and SPM frameworks, providing a computationally efficient route to include battery-scale mechanical effects in electrochemical simulations. 
+
+1. Introduction 
+
+During a charge and discharge cycle, the active materials within a lithium-ion battery expand and shrink. At the microscale (that of individual electrode particles), this expansion builds internal stresses, potentially leading to mechanical degradation of the active particles via fracture (Ai et al., 2020b), accelerated solid-electrolyte interphase (SEI) formation, and capacity loss (Xu et al., 2022). At the meso- and macroscale, that of an individual electrode and pouch/roll cell respectively, particle expansion pushes (or pulls) on the surrounding non-active material, made of binder and additives. Due to the complex and heterogeneous composition of a battery, this expansion generates stresses at the electrode and cell scale (Foster et al., 2025), resulting in global deformation (Giudici et al., 2025; Timms et al., 2023). Such deformation can cause further material degradation and delamination (Foster et al., 2017a,b), buckling of layers (Pfrang et al., 2018), and drive the flow of electrolyte (Solchenbach et al., 2024; Giudici et al., 2026). Mechanical stresses influence not only the mechanical integrity and longevity of a battery but also its electrochemical behaviour. This coupling arises through stress-assisted diffusion, whereby the stress field alters the chemical potential of lithium and thus the rate and direction of transport. Two distinct mechanisms underpin this coupling. First, concentration gradients within an active particle generate swelling and internal stresses, which feed back on lithium diffusion. This mechano-chemical coupling, first described by Zhang et al. (2007), alters the intercalation dynamics and thus the behaviour of the battery. However, it is confined to the particle and independent of its surroundings. For this reason, it is unaffected by the meso- and macroscale stress state of the battery. Second, since the active material is embedded in a composite matrix of binder and conductive additives that transmit forces, the stress state at the electrode scale affects the stress state   
+
+> ∗Corresponding author
+> Email address: jamie.michael.foster@gmail.com (Jamie M. Foster ) arXiv:2608.20163v1 [physics.chem-ph] 20 Aug 2026
+
+of the particle, altering its chemical potential energy. For this reason, the stress-assisted diffusion process in each particle depends not only on its own lithiation state, but also on the lithiation and expansion of nearby particles and on the mechanical state of the entire electrode and battery, thus linking mechanics and electrochemistry across scales. For example, even mild external pressures—of the order of an atmosphere—can alter the capacity and resistance of a cell (Mohtat et al., 2021b). Previous work has modelled the coupling between electrochemistry and mechanics (e.g. Castelli et al. 2021). However, most studies focus solely on the local effect—stresses internal to a particle, neglecting the stresses transmitted through the non-active matrix (Zhang et al., 2007). Figure 1 illustrates how the surrounding non-active matrix affects the electrochemistry in the active particle using PyBaMM simulations. In the isolated-particle calculation, mechanics enters only through stress-assisted diffusion generated by the particle’s own concentration gradients. In the multiscale mechanics calculation, the same stress-assisted diffusion is coupled to the global mechanical response and to the external pressure transmitted through the non-active matrix; this changes the stress and therefore the chemical potential inside the particle, leading to a different concentration profile. In this work, we develop a reduced-order model that captures the multiscale coupling resulting from the mechanical work done by the non-active material, linking stresses at the particle, electrode, and cell scales with electrochemical transport. To include mechanics, we model the electrode as a periodic array of identical cubic unit cells (Figure 1), each containing a spherical active particle embedded in a homogenised region of non-active material composed of a binder–electrolyte matrix. Both materials are assumed linearly elastic and the mechanical influence of the SEI is either (i) assumed negligible or (ii) assumed to be already included as part of the binder-electrolyte effective medium. Lithiation-driven swelling of the particle generates local stresses, which modify the chemical potential and in turn the intra-particle transport and reaction kinetics, thereby coupling mechanics and electrochemistry at the microscale. The particle size is typically an order of magnitude smaller than the electrode thickness, enabling a clear separation of scales and motivating an asymptotic homogenisation approach that links the micro-, meso-, and macroscales, while the thin aspect ratio of electrodes is used to link the meso- and macroscale Giudici et al. (2025). The problem is closed by homogenised equilibrium equations and global boundary conditions provided by the cell housing. We obtain an analytic result estimating the correction to the particle potential, and thus to the voltage and current in the battery. Our formulation has comparable complexity to the Doyle-Fuller-Newman (DFN) model, incorporates mechanical effects, and can readily be used with SPM, SPMe and DFN (Brosa Planella et al., 2022) on simulation software such as PyBaMM showing an alteration of cell potential of several millivolts at full charge. In what follows, we build this multiscale coupling systematically. First, Section 2 introduces the full DFN model and its nondimensionalisation. Sections 3-4 then focus on the mechanics. In Section 3, we note that the homogenised non-active binder-electrolyte medium is much softer than the particle, allowing an expansion in the stiffness ratio. The leading-order solution corresponds to the unconstrained particle of Zhang et al. (2007), while the first-order correction captures the binder’s mechanical feedback. Section 4 links the micro- and mesoscale stresses through multiple-scale homogenisation, deriving the effective cell functions that relate binder stress on the particle surface to mesoscale strain and particle swelling. Section 5 revisits the macroscopic mechanical framework of Giudici et al. (2025) and considers the limit of thin aspect ratio and infinitely stiff current collectors (i.e. layers are wider than they are thick and current collectors are non-deformable) showing that deformation occurs only in the through-cell direction and that macroscopic constraints, such as clamped or stress-free ends, influence the mesoscale strain field. With these results, Section 6 returns to the electrochemical problem and, using the computed stresses in the non-active material matrix, derives an exact first-order correction to the lithium concentration exploiting a surface average. Finally, Section 7 illustrates how this coupling can be accounted for by modifying the OCP entering the intercalation equation, affecting the voltage-current relationship in SPM, SPMe, and DFN-type models. Readers primarily interested in the model formulation and its physical consequences, rather than the mathematical derivations, are encouraged to begin with Section 2 and then proceed directly to Section 7, where the key results and experimental implications are summarized. 2Figure 1: Simulation of battery charging at 0.5C in PyBaMM showing how the non-active matrix and global mechanics modify the behaviour inside an active particle. (a) Schematic comparison between an isolated active particle, for which the mechanical contribution is only via stress-assisted diffusion, and a particle embedded in a deforming non-active matrix, which also transmits stress. (b)–(d) Negative-particle concentration, radial stress, and electro-chemo-mechanical potential μ across the particle radius. For the multiscale mechanics case, the plotted quantities are averaged over the angular coordinates on each sphere, so that only their radial dependence is shown. 
+
+32. The microscale model 
+
+We begin by writing down the equations that govern lithium transport and mechanical deformation in a battery. We write the complete model in the same form as that presented in Brosa Planella et al. (2022), but extend this to include the effects of mechanical stresses in all solid parts of the battery. The non-active material in a battery is typically a porous material with pores filled by liquid electrolyte. Moreover, there is typically a thin SEI layer encasing individual active particles. We do not separate these materials but rather treat them together as a composite poroelastic material, in a manner similar to, for example, Foster et al. (2025) 1. We shall refer to this region as the non-active (homogenised) material. We adopt a similar approach in the separator. There are three spatial regions to consider, namely the positive and negative electrodes and the separators. In the electrodes we need to consider the governing equations in two subregions: (i) the solid active particles, and (ii) the composite poroelastic non-active matrix. In the separator there is only the composite poroelastic separator/electrolyte material. We begin by detailing the equations in the electrodes. Where necessary we distinguish the positive and negative electrodes by the superscript k ∈ { p, n}.
+
+2.1. Mechanics 
+
+Although the liquid phase can affect the stress in the material due to hydrostatic pressures, this is expected to occur only during very fast charging. For sufficiently slow charge rates, the fluid has time to flow out of the pores without a large buildup of pressure, so that the liquid does not substantially affect the stress state of the non-active matrix. Thus, we assume hydrostatic pressure of the electrolyte can be ignored. Note (i) that the fluid pressure may not be negligible in extreme circumstances e.g. during cell impact, see (Foster et al., 2025), and (ii) that fluid flow can also alter the bulk concentration of electrolyte salt during repeated cycling, as discussed in Solchenbach et al. (2024); Giudici et al. (2026), and thus affect the electrochemistry of the battery. Here, we choose to ignore this accumulation effect over several cycles and only focus on the performance change due to mechanics over one single cycle. Electrolyte flow and mechanical effects will be fully coupled in later work. A detailed treatment of the non-active matrix as a porous material arguably requires capturing the non-linear behaviour typical of foams (Rahimidehgolan and Altenhof, 2023), which show a stiff initial response accompanied by a softening due to the buckling of the pores, followed by a second stiffening due to self-contact. Including such nonlinear mechanics in our multiple scale model requires several parameters difficult to estimate and significantly complicates the problem. Here, since we are interested only in a first approxima-tion to the additional stress caused by compression of the non-active matrix, we treat the non-active matrix as a linear elastic solid. We treat the separator as a homogenised elastic material as well. We allow the non-active matrix material in the positive and negative electrodes to differ. We identify them with the superscript ‘na , k ’ where ‘na’ stands for non-active and k ∈ { p, n} identifies the electrode, with Ω na ,k being the non-active matrix domain in the respective electrode. When deformed, the non-active matrix undergoes a displacement U na ,k i in the Xi direction, for each i ∈ { 1, 2, 3}. The resulting strain and stress are 
+
+ϵna ,k ij = 12
+
+( ∂U na ,k j
+
+∂X i
+
++ ∂U na ,k i
+
+∂X j
+
+)
+
+, σna ,k ij = 2 Gna ,k ϵna ,k ij + δij λna ,k ϵna ,k ll in Ωna ,k , (1) respectively, where Gna ,k is the effective shear modulus and λna ,k the effective second Lamé coefficient for the non-active matrix medium in electrode k.2 Note that here and elsewhere we are using the Einstein summation convention, summing over repeated indices, and δij is the Kronecker delta. The active particle in electrode k ∈ { p, n} occupies the domain Ω k. The particle is stiff, undergoes small strains and is thus modelled as a linear elastic material with Lamé coefficients Gk and λk, and an isotropic swelling strain gk due to changes in the state of lithiation. We write the displacement field in the particle as    
+
+> 1Note Foster et al. (2025) take the binder to be viscoelastic. However, here for simplicity we take it to be elastic.
+> 2We use the shear notation, G, and not the first Lamé coefficient μto avoid confusion with the chemical potential later on.
+
+4U ki , with i ∈ { 1, 2, 3}, so that the strain and stress are 
+
+ϵkij = 12
+
+(
+
+∂U ki
+
+∂X j
+
++ ∂U kj
+
+∂X i
+
+)
+
+, σkij = 2 Gk (ϵkij − gkδij 
+
+) + δij λk (ϵkll − gkδll 
+
+) in Ωk, (2) where ϵkij − gkδij is the elastic component of the strain, that is, the total strain in the active particle minus the strain due to the lithiation-induced expansion. The relationship between the linear swelling strain and lithiation is given by 
+
+gk = 13 V kc (ck − ck, ref ) in Ωk, (3) where ck is the molar concentration of Li and ck, ref is a reference Li concentration at which the expansion strain is zero, equal to the Li concentration in the material immediately after synthesis. Thus, typically, 
+
+cn,ref = 0 and cp,ref = cp,max corresponding to electrode manufacture in which the negative electrode is delithiated whereas the positive one is lithiated, see Menye et al. (2025). Note that concentrations have been labelled with the electrode identifier as a superscript, so that tensor indices remain unambiguously as subscripts. The constant V kc is the partial molar volume of Li, so that 13 V kc is the corresponding linear expansion coefficient, and depends on the active-particle material. Elastic equilibrium requires 
+
+∂σ na ,k ij 
+
+∂X j
+
+= 0 in Ωna ,k , ∂σ kij 
+
+∂X j
+
+= 0 in Ωk. (4) We assume that the non-active matrix and particle surfaces remain adhered to one another so that at these interfaces, ∂Ωk, both stresses and displacements are continuous: 
+
+σkij nj = σna ,k ij nj , U ki = U na ,k i on ∂Ωk, (5) where nj is the normal vector (oriented outwards from the particle). 
+
+2.2. Transport in the active particles 
+
+In the solid active particles the intercalated lithium is conserved and is taken to be transported down gradients in the electro-chemo-mechanical potential, μk (units J/mol), so that 
+
+∂c k
+
+∂t + ∂N ki
+
+∂X i
+
+= 0 , N ki = − Dk 
+
+> 0
+
+ck
+
+RT 
+
+(
+
+1 − ck
+
+ck, max 
+
+) ∂μ k
+
+∂X i
+
+in Ωk, (6) where Dk 
+
+> 0
+
+is a constant and ck, max is the maximum possible lithium concentration. Since the trace σkll is three times the hydrostatic stress, 
+
+μk = μ0 − F Ueq ,k (ck) − 13 V kc σkll , (7) where the quantity U eq ,k is the so-called equilibrium over-potential, which, as we shall see shortly, is the potential difference at which the net surface reaction is zero in a stress-free state. Note that we have included the steric effects that decrease the mobility of intercalated lithium at high lattice occupancy, captured by the presence of the factor of 1 − c/c k, max . These effects are appropriate to include here because we are interested in batteries operating over their full range of states of charge, so that the occupancy of insertion material will vary from close to zero, to close to ck, max . Although this is not a complete justification for the form of the right-hand side of (6b) we do note that it has the following appealing properties: (i) the flux is isotropic, and therefore pertains to the insertion material on lengthscales greater than that of individual crystals of anisotropic materials such as LFP and NMC, (ii) it predicts no flux when there are no Li particles to move, or when there are no vacant lattice sites for them to move to, and (iii) it is invariant under the transformation ck → 1 − ck/c k, max . This latter property is inline with the intuition that the hopping rates of Li at high-occupancy should be equal to that of vacancies at low-occupancy. In any case, the form of (6b) that we use is in agreement with, for example Zeng and Bazant (2014), but departs from, for example Zelič and Katrašnik (2019) and Chakraborty et al. (2015) where steric effects are neglected. 5The deintercalation rate at the surface of the solid particle into the non-active matrix medium (more on this below) is taken to be given by the symmetric Butler-Volmer relation (with transfer coefficient equal to 1/2), i.e. 
+
+N ki ni = KkJk sinh 
+
+( F η k
+
+2RT 
+
+)
+
+on ∂Ωk, (8) where 
+
+Jk =
+
+√
+
+ce
+
+ce,0
+
+ck
+
+ck, max 
+
+(
+
+1 − ck
+
+ck, max 
+
+)
+
+(9) where ni is the unit normal pointing into the non-active matrix medium from the active particle, ce is the electrolyte concentration, ce,0 is the initial electrolyte concentration, and Kk is a reaction rate constant. The overpotential ηk is given by (see for example Ai et al. (2020a); Xu and Zhao (2019); Zhang and et al. (2016)) 
+
+ηk = ϕk − ϕe − Ueq ,k (ck) − 
+
+> 13
+
+V kc
+
+F σkll on ∂Ωk, (10) where ϕk and ϕe are the electric potential in the active particle and electrolyte respectively both measured with respect to a Li reference electrode . In order that it is possible to lithiate a fully depleted electrode and similarly to delithiate a fully lithiated electrode, the function U eq ,k must have logarithmic singularities at the extremes; see Richardson et al. (2022). In a stress-free state, the overpotential collapses to the familiar form. Moreover, it aligns with the intuition that deintercalation is encouraged by increases (decreases) in ϕk (ϕe)as well as compressive hydrostatic stresses (intercalated lithium is “squeezed out” of the insertion material). In an effort to connect this with deeper thermodynamic principles, the overpotential ηk, can be decomposed into the electro-chemo-mechanical potentials of the product and the reactants. If we consider the reaction to be Li +,k ⇋ Li +,e (where the superscript labels denote the domain: k for active material in an electrode and e for the electrolyte, i.e. the liquid subphase within the non-active homogenised medium) 3 and recall that 
+
+μLi +,k = μ0 − F Ueq ,k (ck) + F ϕ k − 13 V kc σkll in Ωk, (11) 
+
+μLi +,e = μ0 + F ϕ e in Ωna ,k , (12) where μ0 is a constant reference potential, then it is clear that η = ( μLi +,a − μLi +,e)/F . Thus, (8) obeys the foundational principle that the reaction proceeds in the direction that decreases the overall energy (i.e. according to the thermodynamic driving force/reaction affinity (Bazant, 2013; Zhang et al., 2007)). A common source of confusion is whether, and if so how, concentration dependence should appear in (12). Clarification on this point is given in and around equation (2.60) in Richardson et al. (2022), where it is shown that the presence/lack of the term RT log ae in (12), where ae is the activity of lithium ions in the liquid electrolyte, depends upon whether potentials are “true” potentials (i.e. measured with respect to some genuinely fixed reference, e.g. vacuum-level) or whether they are measured with respect to a Li-metal reference electrode (as is almost always the case in practical experimental work). The basis of the argument presented in Richardson et al. (2022) is that the electrochemical potentials of the reactants and products in the stripping/plating must, to a good approximation, be equal because stripping/plating is “easy” compared to intercalation; in the sense that it requires very little overpotential. This consideration yields a relationship between the true potential and that defined with respect to a Li reference electrode which, it turns out, differ by RT log ae. The upshot is that if one chooses to use “true” potentials then the logarithm of the activity should appear, whereas if potentials are measured with respect to a Li-metal reference it should not. Here we opt to follow the ubiquitous convention in the battery community and work with potentials measured with respect to a Li reference electrode. It is also pertinent to justify why only the volumetric part of the stress appears in (7) and, in turn, in (10). Although many insertion materials expand anisotropically at the scale of a single crystal, e.g. graphite which expands primarily along its c-axis (Boles and Thompson (2015)), the majority of commercial devices contain so-called secondary particles, made up of many very small, and randomly oriented, single-crystal     
+
+> 3An analogous result can be obtained if one instead considers the reaction to be Li a⇋Li +,e+e−,a.
+
+6particles. Due to this disparity in scales and uncorrelated orientations, the secondary particle undergoes 
+
+effective isotropic expansion on Li insertion. The quantity defined in (11) is the energy required to take a mol of Li and remove it from the system to some reference level (in this case to a Li electrode). It follows that the energy required to remove Li is also associated with purely a volumetric stress, and is insensitive to deviatoric stress components which only alter the shape of the host material (Lu et al., 2016; Song et al., 2016). 
+
+2.3. The non-active matrix region 
+
+In the non-active medium we assume no fluid motion and use the conventional dilute approximation model for an ideal salt solution where 
+
+∂(αkce)
+
+∂t + ∂N e,k i
+
+∂X i
+
+= 0 , N e,k i = −B kDe ∂c e
+
+∂X i
+
++ t+
+
+F ie,k i in Ωna ,k (13) 
+
+∂i e,k i
+
+∂X i
+
+= 0 , ie,k i = −B kκe
+
+( ∂ϕ e
+
+∂X i
+
+− 2RT F (1 − t+) 1
+
+ce
+
+∂c e
+
+∂X i
+
+)
+
+in Ωna ,k (14) and αk is the porosity of the non-active material in electrode k and κe is the ionic conductivity of the electrolyte, ce is the lithium ion concentration in the liquid electrolyte, ie,k is the current density, N e,k i is the lithium ion flux in the non-active matrix (which we remind, includes also the electrolyte), t+ is the transference number and Bk is the Bruggeman tortuosity factor. The boundary conditions that supplement (13) and (14) are 
+
+N e,k i ni = −KkJk sinh 
+
+( F η k
+
+2RT 
+
+)
+
+on ∂Ωk, (15) 
+
+ie,k i ni = −F K kJk sinh 
+
+( F η k
+
+2RT 
+
+)
+
+on ∂Ωk, (16) where ηk is defined in (10). For the electron conduction through the homogenised non-active matrix we have a homogenised version of Ohm’s law that reads ∂i ki
+
+∂X i
+
+= 0 , iki = − ˆBkκk ∂ϕ k
+
+∂X i
+
+in Ωna ,k , (17) where κk is the conductivity in the non-active region of electrode k. It is worth emphasizing that in (14) and (17) Bk̸ = ˆBk, as the former is the transport efficiency of the electrolyte network in the non-active matrix whereas the latter is that of the binder. Equations (17) are supplemented by the boundary condition 
+
+iki ni = −F K kJk sinh 
+
+( F η k
+
+2RT 
+
+)
+
+on ∂Ωk. (18) 
+
+2.4. The separator region 
+
+In the separator, only ionic conduction and mechanical deformation take place; there are no insertion particles, no reactions and therefore the equations are a simplified version of those used for the non-active matrix. Considering the homogenised separator/electrolyte material in the domain Ω se . The ionic conduction needs to satisfy 
+
+∂(αsce)
+
+∂t + ∂N e,s
+
+> i
+
+∂X i
+
+= 0 , N e,s 
+
+> i
+
+= −B sDe ∂c e
+
+∂X i
+
++ t+
+
+F ie,s 
+
+> i
+
+in Ωse , (19) 
+
+∂i e,s
+
+> i
+
+∂X i
+
+= 0 , ie,s 
+
+> i
+
+= −B sκe
+
+( ∂ϕ e
+
+∂X i
+
+− 2RT F (1 − t+) 1
+
+ce
+
+∂c e
+
+∂X i
+
+)
+
+in Ωse . (20) The mechanical equations in the separator/electrolyte are 
+
+∂σ se 
+
+> ij
+
+∂X j
+
+= 0 , ϵse  
+
+> ij
+
+= 12
+
+( ∂U se 
+
+> j
+
+∂X i
+
++ ∂U se 
+
+> i
+
+∂X j
+
+)
+
+, σse  
+
+> ij
+
+= 2 Gse ϵse  
+
+> ij
+
++ δij λse ϵse  
+
+> ll
+
+in Ωse . (21) 72.5. Boundary and interface conditions 
+
+We now supply boundary/interface conditions on the mesoscale boundaries. In order to achieve complete problem closure we also need boundary conditions at the macroscale boundaries, i.e. the edges of the pouch cell/roll cell. These shall be specified in Section 5, where we discuss the link between electrode (meso-) and battery (macro-) scale mechanics. We note in passing that the problem requires appropriate initial conditions on all concentrations which, for convenience are usually taken to be those that correspond to a specified state of charge at equilibrium throughout. 
+
+Current collectors/electrode interfaces. At the electrode-current collector interfaces (denoted ∂Ωcc, p and 
+
+∂Ωcc, n), we impose no ionic transport into the current collectors 
+
+N e,k i ni = 0 , ie,k i ni = 0 , (22) where nk is the outward unit normal from the electrode k domain. Each current collector is taken to be an equipotential. We remove the arbitrary degree of freedom in the electronic potentials in the current collectors by setting the negative (anode) current collector potential to zero (i.e. Φ n = 0) and define the cell voltage, V , as the positive (cathode) solid potential (i.e. Φ p = V ) so that 
+
+V ≡ Φp − Φn = Φ p. (23) To enforce the applied current (with the convention that discharge corresponds to I > 0), we constrain the total electronic current fluxes at the current-collector faces such that 
+
+∫ ∫ 
+
+> ∂Ωcc, p
+
+ip 
+
+> i
+
+ni dS = Im ,
+
+∫ ∫ 
+
+> ∂Ωcc, n
+
+in 
+
+> i
+
+ni dS = − Im , (24) where m is the number of anode/cathode electrode pairs, shown in figure 2. 
+
+Electrode/separator interfaces. Here, we require continuity of flux and current: 
+
+[
+
+N e,k i ni
+
+]
+
+=
+
+[
+
+ie,k i ni
+
+]
+
+= 0 , (25) where n is normal to the interface and [ ·] denotes the jump in the enclosed quantity across the interface. We also impose no current 
+
+iki ni = 0 , (26) and continuity of displacement and traction, i.e. [Ui] = [ σij nj ] = 0 , (27) there, where nj are components of n.
+
+2.6. Nondimensionalisation 
+
+To facilitate the asymptotic expansions which follow, we now introduce dimensionless variables. We let 
+
+I∗ be the typical size of the current, L∗ the typical length of a microscale representative element (comparable to a typical particle diameter), H∗ the typical thickness of the electrodes (normal to the current collectors) while W ∗ their typical width, λ∗ is the typical size of the Lamé constant in the active particles (those in the anode and cathode are taken to have comparable stiffnesses), D∗,k a typical value of the diffusivity in the active particles of electrode k, and D∗,e a typical value of the diffusion coefficient in the electrolyte. Since the non-active matrix is much softer than the particles, we rescale the Lamé coefficients in this homogenised region via the typical size λ∗,na , where λ∗,na = Λ λ∗ and Λ ≪ 1 characterises the typical ratio of stiffness between non-active region materials and particles. We identify the characteristic linear particle swelling with 
+
+g∗ = 13 V p 
+
+> c
+
+cp,max , and the magnitude of potentials with ϕ∗ = RT F . The size of parameters in typical batteries is shown in table 4–6, while the natural timescales arising in the problem are listed in table 2. 8Parameter LMO NMC Graphite 
+
+Dimensionless parameters ¯gk = gk
+
+g∗ 1 1 1
+
+Vkc = V kc ck, max 
+
+V p 
+
+> c
+
+cp,max 1 1 1
+
+Ck, ref = ck, ref 
+
+ck, max 0.17 0.2661 0.0279 ¯Gk = Gk
+
+λ∗ 0.6667 0.9231 0.6667 ¯λk = λk
+
+λ∗ 1 1 1¯De = De
+
+D∗,e 1 1 1¯Kk = Kk
+
+N ∗ χk 5.53 × 10 4 2.17 × 10 3 2.60 × 10 6
+
+K∥ = t∗
+
+t∗,c,k 6.50 × 10 4 1.19 × 10 6 3.91 × 10 2
+
+Ke = t∗
+
+t∗,c, e 1.08 × 10 4 3.40 × 10 3 2.67 × 10 3
+
+Dk = t∗
+
+t∗,k 1.6185 7.1762 1.1119 
+
+De = t∗(H∗)2
+
+t∗,e(L∗)2 1.21 × 10 3 1.27 × 10 4 5.96 × 10 3
+
+γ = (V p 
+
+> c
+
+)2 cp,max λ∗
+
+9RT 0.6723 0.1389 0.1316 
+
+Table 1: Dimensionless parameters for the LMO, NMC811 and graphite electrodes, computed from the dimensional values in the appendix (Tables 4, 5 and 6) and the PVDF binder properties given in Appendix 12. Each material uses its own reference scales, so ¯ gk , Vkc , ¯λk and ¯De equal to 1 by construction. 
+
+To summarise, the rescalings we use are 
+
+Xi = L∗ ¯Xi, I = I∗ ¯I, t = t∗ ¯t, ce = ce,0 ¯ce, ϕe = ϕ∗ ¯ϕe, V = ϕ∗ ¯V − μ0
+
+F . (28) In the positive and negative electrode, k ∈ { p, n} we have: 
+
+ck = ck, max ¯ck, N ki = N ∗χk ¯N ki , N e,k i = N ∗χe ¯N e,k i , iki = i∗¯iki , ie,k i = i∗χe¯ie,k i , (29) 
+
+ηk = ϕ∗ ¯ηk, ϕk = ϕ∗ ¯ϕk, μk = μ0 + RT ¯μk, Ueq ,k = ϕ∗ ¯Ueq ,k , U na ,k i = g∗L∗ ¯U na ,k i , (30) 
+
+U ki = g∗L∗ ¯U ki , ϵna ,k ij = g∗ ¯ϵna ,k ij , ϵkij = g∗ ¯ϵkij , σna ,k ij = Λ g∗ λ∗ ¯σna ,k ij , σkij = g∗ λ∗ ¯σkij . (31) where 
+
+i∗ = I∗L∗
+
+m(W ∗)2H∗ , N ∗ = I∗L∗
+
+mF (W ∗)2H∗ , χk = ck, max 
+
+cp,max , χe = ce,0
+
+cp,max .
+
+These factors account for the fact that the natural concentration scale in an active particle in electrode k is 
+
+ck, max , whereas the natural concentration scale in the electrolyte is ce,0. Since the characteristic diffusive flux scales as concentration times L∗/t ∗, the solid and electrolyte fluxes differ in size when measured relative to the common reference flux N ∗ = L∗cp,max /t ∗. This distinction is important at particle/electrolyte interfaces, where the same dimensional reaction flux appears in both the solid and electrolyte boundary conditions but is nondimensionalised using different concentration scales. 9Timescale Symbol Expression Value [s] 
+
+Discharge timescale t∗ F c p,max mH ∗(W ∗)2
+
+I∗ 10 4/C 
+
+Diffusion in the particle t∗,k (L∗)2
+
+Dk
+
+> 0
+
+10 3
+
+Diffusion in the electrolyte t∗,e (H∗)2
+
+D∗,e 10 Conduction in the electrolyte t∗,c, e κeRT 
+
+(F L ∗)2ce,0 10    
+
+> Table 2: Characteristic time scales for discharge and diffusive processes, with k∈ { p,n}.
+
+The scaling in the separator is: 
+
+N e,s 
+
+> i
+
+= N ∗ ¯N e,s 
+
+> i
+
+, ie,s 
+
+> i
+
+= i∗¯ie,s 
+
+> i
+
+, U se  
+
+> i
+
+= g∗L∗ ¯U se  
+
+> i
+
+, ϵse  
+
+> ij
+
+= g∗ ¯ϵse  
+
+> ij
+
+, σse  
+
+> ij
+
+= g∗ λ∗ ¯σse  
+
+> ij
+
+. (32) Scaling in this manner introduces the following dimensionless parameters: ¯gk = gk
+
+g∗ , Vkc = V kc ck, max 
+
+V p 
+
+> c
+
+cp,max , Ck, ref = ck, ref 
+
+ck, max , ¯Gk = Gk
+
+λ∗ , (33) ¯Gna ,k = Gna ,k 
+
+λ∗,na , ¯λk = λk
+
+λ∗ , ¯λna ,k = λna ,k 
+
+λ∗,na , ¯Kk = Kk
+
+N ∗ χk , (34) ¯De = De
+
+D∗,e , ¯Gse = Gse 
+
+λ∗ , ¯λse = λse 
+
+λ∗ , K∥ = t∗
+
+t∗,c,k , (35) 
+
+Ke = t∗
+
+t∗,c, e , Dk = t∗
+
+t∗,k , De = t∗(H∗)2
+
+t∗,e(L∗)2 , γ = (V p 
+
+> c
+
+)2 cp,max λ∗
+
+9RT . (36) The only parameter whose meaning is not self-evident from its definition is γ, which is the ratio of the energy density due to intercalation stress to that of the entropy of mixing. For the purposes of simplifying the notation we shall drop the overbars from hereon and work only with dimensionless quantities. 
+
+2.6.1. Dimensionless mechanics equations 
+
+The dimensionless mechanical equations read 
+
+ϵna ,k ij = 12
+
+( ∂U na ,k j
+
+∂X i
+
++ ∂U na ,k i
+
+∂X j
+
+)
+
+, σna ,k ij = 2 Gna ,k ϵna ,k ij + δij λna ,k ϵna ,k ll in Ωna ,k , (37) 
+
+ϵkij = 12
+
+(
+
+∂U ki
+
+∂X j
+
++ ∂U kj
+
+∂X i
+
+)
+
+, σkij = 2 Gk (ϵkij − δij gk) + δij λk (ϵkll − δll gk) in Ωk, (38) the degree of swelling being given by 
+
+gk = 13 Vkc (ck − C k, ref ) in Ωk, (39) and equilibrium requiring 
+
+∂σ na ,k ij 
+
+∂X j
+
+= 0 in Ωna ,k , ∂σ kij 
+
+∂X j
+
+= 0 in Ωk. (40) The boundary conditions read 
+
+σkij nj = Λ σna ,k ij nj , U ki = U na ,k i on ∂Ωk. (41) Note that the stiffness ratio Λ appears in the boundary condition, with the particle feeling only a weak push from the non-active matrix of order Λ ≪ 1. 10 2.6.2. Dimensionless transport in the particles 
+
+In the solid active particles we have 
+
+∂c k
+
+∂t + ∂N ki
+
+∂X i
+
+= 0 , N ki = −D kck (1 − ck) ∂μ k
+
+∂X i
+
+in Ωk, (42) where 
+
+μk = −Ueq ,k (ck) − γ 13 Vkc σkll . (43) The Butler-Volmer deintercalation rate is 
+
+N ki ni = Jk sinh 
+
+( ηk
+
+2
+
+)
+
+on ∂Ωk, (44) where 
+
+Jk = Kk
+
+√
+
+ceck (1 − ck), (45) and the overpotential ηk is given by 
+
+ηk = ϕk − ϕe − Ueq ,k (ck) − γ 13 Vkc σkll on ∂Ωk. (46) Note that, since we chose to use the degree of expansion in the positive electrode as our scale for swelling, we have Vpc = 1. 
+
+2.6.3. Dimensionless equations in the non-active regions 
+
+In the non-active matrix the equations become 
+
+∂(αkce)
+
+∂t + ∂N e,k i
+
+∂X i
+
+= 0 , N e,k i = −B kDeDe ∂c e
+
+∂X i
+
++ t+ie,k i in Ωna ,k , (47) 
+
+∂i e,k i
+
+∂X i
+
+= 0 , ie,k i = −K eBk
+
+( ∂ϕ e
+
+∂X i
+
+− 2(1 − t+) 1
+
+ce
+
+∂c e
+
+∂X i
+
+)
+
+in Ωna ,k , (48) where De depends on ce. The boundary conditions are 
+
+N e,k i ni = − Jkχk
+
+χe sinh 
+
+( ηk
+
+2
+
+)
+
+on ∂Ωk, (49) 
+
+ie,k i ni = − Jkχk
+
+χe sinh 
+
+( ηk
+
+2
+
+)
+
+on ∂Ωk, (50) where ηk is defined in (46). For the electron conduction through the homogenised non-active medium we have ∂i ki
+
+∂X i
+
+= 0 , iki = −K k ˆBk ∂ϕ k
+
+∂X i
+
+in Ωna ,k , (51) supplemented by the boundary condition 
+
+iki ni = −Jkχk sinh 
+
+( ηk
+
+2
+
+)
+
+on ∂Ωk. (52) 
+
+2.6.4. Dimensionless equations in the separators 
+
+The ionic conduction satisfies 
+
+∂(αsce)
+
+∂t + ∂N e,s
+
+> i
+
+∂X i
+
+= 0 , N e,s 
+
+> i
+
+= −B sDe ∂c e
+
+∂X i
+
++ t+ie,s 
+
+> i
+
+in Ωse , (53) 
+
+∂i e,s
+
+> i
+
+∂X i
+
+= 0 , ie,s 
+
+> i
+
+= −K eBs
+
+( ∂ϕ e
+
+∂X i
+
+− 2(1 − t+) 1
+
+ce
+
+∂c e
+
+∂X i
+
+)
+
+in Ωse . (54) The mechanical equations in the separator are 
+
+∂σ se 
+
+> ij
+
+∂X j
+
+= 0 , ϵse = 12
+
+( ∂U se 
+
+> j
+
+∂X i
+
++ ∂U se 
+
+> i
+
+∂X j
+
+)
+
+, σse = 2 Gse ϵse  
+
+> ij
+
++ δij λse ϵse  
+
+> ll
+
+in Ωse . (55) 11 2.6.5. Dimensionless boundary and interface conditions 
+
+At the interface between the electrode and the current collectors we have 
+
+N e,k i nki = ie,k i nki = 0 . (56) At the interface between the electrodes and separator, 
+
+[
+
+N e,k i ni
+
+]
+
+=
+
+[
+
+ie,k i ni
+
+]
+
+= 0 , (57) 
+
+iki ni = 0 . (58) Finally, we consider specified current operation and therefore impose the constraint 
+
+∫ ∫ 
+
+> ∂Ωcc ,k
+
+iki ni dS = I/ (mH kW2W3), (59) where W2 and W3 and the in-plane width and length of the electrode. The cell potential given by 
+
+V = Φ p − Φn = Φ p. (60) Once again, we defer writing the mechanical boundary conditions on the whole cell to Section 5. Problem closure is achieved by specifying suitable initial conditions on the concentrations. 
+
+2.7. Discussion of asymptotic limits 
+
+We are interested in understanding the solutions to the model in scenarios pertaining to modern lithium-ion batteries. For example, we note that polymer binders that give the non-active matrix its stiffness are significantly more pliable than active materials and thus Λ ≪ 1. Therefore, at leading order in Λ, the particle can expand/shrink without resistance from the surrounding non-active matrix. This is a key simplification that we exploit in the next section. Conversely, the values of the rescaled (dimensionless) shear moduli Gk
+
+and λk are neither large nor small and hence will be taken to be O(1). The value of γ depends upon the electrode material and can be small, as for example in graphite and nickel-manganese-cobalt oxide (NMC), or moderately large, for example in silicon (Si). However, at most, we expect that the stresses may change the overpotential by several thermal voltages. If γ is small, stress effects in the particle become negligible at leading order (in γ), and the transport problem collapses to that of simple Fickian diffusion (provided that the chemical potential is monotone in the concentration), decoupling from the mechanics. Therefore, to capture coupling between stresses and electrochemistry in a manner that is consistent with modern cell design, we look at the distinguished limit in which Λ → 0, γ = O(1). Furthermore, we assume that Dk is 
+
+O(1), thereby retaining intraparticle transport limitations. Finally, we remind the reader that the timescale of conduction and diffusion in the electrolyte are usually small compared to the timescale of discharge. This is equivalent to having Ke and De large and can be used to simplify the DFN model to a single particle model (SPM) and single particle model with electrolyte (SPMe), see Guo et al. (2010); Moura et al. (2016); Prada et al. (2012); Marquis et al. (2019). 
+
+2.8. Discussion of the model objectives 
+
+The model in Section 2 extends the standard Doyle-Fuller-Newman (DFN) framework by coupling elec-trochemistry with mechanics across particle (micro), electrode (meso), and cell (macro) scales. This coupling breaks the usual pseudo-two-dimensional (P2D) separation exploited by DFN, where electrolyte and electronic transport are solved on electrode-scale domains while intercalation is treated as a spherically symmetric, one-dimensional diffusion problem within an isolated particle. With mechanics included, this local P2D reduction of the particle problem is no longer valid in its usual form, for three main reasons: (i) Bidirectional mechano-electrochemical coupling. Lithiation drives particle swelling, while the resulting stress field modifies the lithium chemical potential and interfacial overpotential. The particle concen-tration, stress, and electrochemical reaction kinetics are therefore coupled within a single local problem, rather than through diffusion alone. 12 (ii) Mechanical nonlocality. The stress state of a particle depends on the deformation transmitted through the non-active matrix and current collectors, and therefore on the response of neighbouring particles and the entire cell stack. Each particle’s surface stress is thus determined by the global mechanical field, rather than by local electrochemical conditions alone. (iii) Loss of spherical symmetry. Even in simple periodic electrode architectures, the stresses acting on a particle are generally anisotropic. As a result, the particle problem is not radially symmetric, and higher-order deformation modes arise even under uniform lithiation. Without neglecting the complications (i)–(iii), our objective is to systematically reduce the model to a level of complexity comparable to the original DFN. In doing so, we will prevent the relevant mechanical effects from becoming the computational bottleneck in a battery simulation. First, we exploit the fact that the non-active matrix is much softer than the active material and expand the solution in the small stiffness ratio by taking Λ → 0. This asymptotic approach simplifies the two-way coupling discussed in point (ii). In particular, we find that at leading order the particle expands freely, and the effect of the non-active matrix appears as a first-order correction, albeit one that has a measurable impact on cell voltages in many relevant scenarios (Cannarella and Arnold, 2014; Rieger et al., 2016). This is the focus of Section 3. Second, to find the non-active matrix stress and determine how it affects the first-order corrections for the particle states we examine the intermediate mesoscopic length scale associated with the thickness of the electrode. Here, we use multiple-scale homogenisation to link the microscale mechanics of individual particles to the electrode-scale mechanics. This is the mechanical counterpart of the argument that can be used to formulate the familiar DFN model, in which the electrolyte dynamics is homogenised along the electrode thickness. The details are presented in Sections 4. Owing to the extreme aspect ratio of modern electrodes (they are much slimmer in the dimension per-pendicular to the current collectors than in the direction in-plane with the current collectors) we then show that the macroscopic electrode deformation can be determined only using knowledge of the degree of swelling observed on the macroscopic scale. In particular, in Section 5, we show that the electrodes are strained only in the through-cell direction, since current collectors prevent in-plane deformations, with the strain depending on the mechanical properties of each layer in the stack and the boundary conditions applied on the whole cell, e.g. clamped boundaries or compressive loading. Section 3, 4 and 5 thus allow us to address point (ii) and enable a clean separation between particle-scale mechanics and the macroscopic mechanical field. To address point (iii), in Section 6 we demonstrate that, although the stress field within a particle is not strictly spherically symmetric due to spatial variations in the local non-active matrix stress, only its radial component influences the first-order correction to the electrochemical problem. Thus, by averaging the coupled mechanical and transport equations over the particle surface, we reduce the description to an effective radial problem, which quantifies how non-active matrix-induced stress modifies the exchange current and thereby impacts electrolyte transport. In Section 7, we collect the most pertinent insights from the preceding sections and show that our model can be written in a form similar to the DFN but with the macroscale mechanical effects entering as a correction to the chemical potential in the active particle. The resulting problem is a DFN counterpart which includes mechanical effects across the length scales thereby achieving our aim of systematically including multiscale mechanical effects without significantly increasing computational costs. 
+
+3. Soft non-active matrix expansion 
+
+We now consider the solution to the model presented in Section 2 in the distinguished limit Λ ≪ 1, with all other dimensionless parameters listed in (33)-(36) taken to be O(1). Our aim is to simplify our two-way coupling between electrochemistry and mechanics. To do so, we expand all our variables in powers of Λ, so that a generic field Φ becomes Φi = Φ (0)  
+
+> i
+
++ ΛΦ (1)  
+
+> i
+
++ Λ 2Φ(2)  
+
+> i
+
++ · · · . (61) 
+
+3.1. Leading-order problem: unconstrained particle expansion 
+
+Substituting the expansion (61) in (37)-(59) allows us to obtain the leading-order problem. We avoid writing the problem again, noting that the equations are the same, except all fields (i.e. strains, displacements, 13 stresses, concentrations, fluxes, currents and potentials) pick up a superscript (0), referring to the leading-order term. The only difference lies in (41), the mechanical boundary conditions at the interface of the particle and non-active matrix, where the stiffness difference asserts that 
+
+σ(0)  
+
+> ij
+
+nj = 0 , U (0)  
+
+> i
+
+= U na ,(0)  
+
+> i
+
+. (62) This form of the boundary condition means that a significant simplification occurs: the surface of the particle is, to a good approximation, stress-free, so that the particle and non-active matrix become decoupled at leading order. While, before, the non-active matrix stress was forcing us to consider non-radial deformations, the stress-free condition means we recover a radial problem for concentrations and displacements (just like in DFN). In what follows, we write down the leading-order equations exploiting the radial symmetry. To keep our notation uncluttered, we drop explicit reference to electrode index k and will focus our attention on the equations that pertain to the positive electrode. The solution in the negative electrode is identical in structure, but with the elastic moduli, partial molar volume, reference equilibrium potential and concentration corresponding to the negative electrode. We will discuss these later, in Section 6. We consider the radial coordinate r = ( X21 + X22 + X23 )1/2 for a particle centred at the origin with radius 
+
+r = R, and let U (0)  
+
+> r
+
+be the radial displacement (the only non-zero leading-order component), so in the particle our stress/strain equations (37)-(41), become 
+
+ϵ(0)  
+
+> rr
+
+= ∂U (0) 
+
+> r
+
+∂r , ϵ(0)  
+
+> θθ
+
+= ϵ(0)  
+
+> ϕϕ
+
+= U (0) 
+
+> r
+
+r ,σ(0)  
+
+> rr
+
+= (2 G + λ) ∂U (0) 
+
+> r
+
+∂r + 2 λ U (0) 
+
+> r
+
+r − (2 G + 3 λ) g, σ(0)  
+
+> θθ
+
+= λ ∂U (0) 
+
+> r
+
+∂r + 2( G + λ) U (0) 
+
+> r
+
+r − (2 G + 3 λ) g, σ(0)  
+
+> ϕϕ
+
+= σ(0)  
+
+> θθ
+
+. (63) where 
+
+g = 13 Vc
+
+(ck, (0) − C ref ). (64) Mechanical equilibrium (no body forces) reduces to 
+
+∂σ (0) 
+
+> rr
+
+∂r + 2
+
+r
+
+(σ(0)  
+
+> rr
+
+− σ(0) 
+
+> θθ
+
+) = 0 , (65) with regularity at the centre and a stress-free particle surface at leading order implying 
+
+U (0)  
+
+> r
+
+(0) = 0 , σ(0)  
+
+> rr
+
+(R) = 0 . (66) In the solid active particle the lithium transport equations become 
+
+∂c k, (0) 
+
+∂t + 1
+
+r2
+
+∂(r2N k, (0) )
+
+∂r = 0 , N k, (0) = −D kck, (0) (
+
+1 − ck, (0) ) ∂μ k, (0) 
+
+∂r in Ω. (67) with 
+
+μk, (0) = −Ueq ,k (ck, (0) ) − 13 γVcσ(0)  
+
+> ll
+
+. (68) The equations in the active particles, namely (63)–(68), show a clear two-way coupling between local mechanical stresses and electrochemistry. This model is analogous to the one studied numerically by Zhang et al. (2007). It is also the basis for similar models concerned with mechanical effects on electrochemistry and fracture, where surface stresses are ignored and internal stresses are generated by concentration gradients during charging and discharging Bonkile et al. (2023); Tu et al. (2024). 14 3.1.1. Leading-order equations in the non-active matrix 
+
+We now write down the leading-order transport equations in the non-active matrix and crucially, the mechanical equilibrium condition. The former is important to determine the flux on the leading-order particle problem, the latter determines the surface stress on the particle at the next order, as we shall see. For the electron conduction through the homogenised non-active mixture we have 
+
+∂i k, (0) 
+
+> i
+
+∂X i
+
+= 0 , ik, (0)  
+
+> i
+
+= −K ˆB ∂ϕ (0) 
+
+∂X i
+
+in Ωna , (69) supplemented by the boundary conditions 
+
+ik, (0) · n = −J(0) χ sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
+on ∂Ω. (70) 
+
+N k, (0) · ˆr = J(0) sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
+on ∂Ω, (71) where 
+
+J(0) = K(0) 
+
+√
+
+ce,(0) ck, (0) (1 − ck, (0) ), (72) and the overpotential ηk, (0) is given by 
+
+ηk, (0) = ϕ(0) − ϕe,(0) − Ueq (ck, (0) ) − 13 γVcσ(0)  
+
+> ll
+
+on ∂Ω. (73) The mechanical equations in Ω na are 
+
+ϵna ,(0)  
+
+> ij
+
+= 12
+
+( ∂U na ,(0) 
+
+> j
+
+∂X i
+
++ ∂U na ,(0) 
+
+> i
+
+∂X j
+
+)
+
+, σna ,(0)  
+
+> ij
+
+= 2 Gna ϵna ,(0)  
+
+> ij
+
++ δij λna ϵna ,(0)  
+
+> ll
+
+, ∂σ na ,(0) 
+
+> ij
+
+∂X j
+
+= 0 , (74) with boundary conditions given by 
+
+U na ,(0)  
+
+> i
+
+= U (0)  
+
+> i
+
+on r = R. (75) Note that the solution to the particle problem in (63)-(68) fixes the boundary condition in (75) via the displacement U (0)  
+
+> i
+
+, thus determining the leading-order deformation in the non-active region. The electrolyte transport equations are 
+
+∂(αc e,(0) )
+
+∂t + ∂N e,k, (0) 
+
+> i
+
+∂X i
+
+= 0 , N e,k, (0)  
+
+> i
+
+= −BD eDe ∂c e,(0) 
+
+∂X i
+
++ t+ie,k, (0)  
+
+> i
+
+in Ωna , (76) 
+
+∂i e,k, (0) 
+
+> i
+
+∂X i
+
+= 0 , ie,k, (0)  
+
+> i
+
+= −K eB
+
+( ∂ϕ e,(0) 
+
+∂X i
+
+− 2(1 − t+) 1
+
+ce,(0) 
+
+∂c e,(0) 
+
+∂X i
+
+)
+
+in Ωna , (77) where De depends on ce. The boundary conditions are 
+
+N e,k, (0) · ˆr = −J(0) (χ/χ e) sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
+on ∂Ω, (78) 
+
+ie,k, (0) · ˆr = −J(0) (χ/χ e) sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
+on ∂Ω. (79) At the interface between the electrode and the current collectors we have 
+
+N e,k, (0) · n = ie,k, (0) · n = 0 , (80) with the current satisfying ∫ ∫ 
+
+> ∂Ωcc ,k
+
+ik, (0) · n dS = I/ (mH kW2W3). (81) 15 We also require continuity of ionic current through the separator interface and no electronic current. Since we assume specified current operating conditions, where I is given, this leading order problem determines the leading order voltage V (0) of the cell. The equations in the non-active matrix can, in principle, be solved numerically. However, it is much more common to homogenise the transport equations (76)–(81) to obtain a Doyle–Fuller–Newman (DFN) model. We do not repeat that homogenisation here, since it has already been carried out by Richardson et al. (2012). We will write the full DFN equations, with the inclusion of mechanical corrections, in Section 7. Crucially, we note that at this order, the particle problem is mechanically isolated (due to the free surface boundary condition, (62)), and the particle behaviour is independent of the non-active matrix around it. Thus, at leading order, we do not have a model that is capable of capturing the multiscale mechanical/electrochemical coupling that we seek. We show that the multiscale mechanical coupling is recovered at O(Λ). Before proceeding we observe that although the concentration and stress gradients within the active material must, in general, be determined numerically, we can obtain a closed form solution for the surface displacement and thus for the total expansion of the particle. Due to the linearity of (63), the average strain in the particle is equal to the average swelling strain, and is given by: ¯g ≡ U (0)  
+
+> r
+
+(R)
+
+R = 3
+
+R3
+
+∫ R
+
+> 0
+
+g s 2ds. (82) This result is particularly useful when solving the first-order problem in the non-active matrix. 
+
+3.2. First-order correction: the non-active matrix pushes back on the particle 
+
+Proceeding to the next order, we now uncover how the non-active matrix affects the particle. The stress– strain relation in equation (38) becomes 
+
+ϵ(1)  
+
+> ij
+
+= 12
+
+(
+
+∂U (1) 
+
+> i
+
+∂X j
+
++ ∂U (1) 
+
+> j
+
+∂X i
+
+)
+
+, σ(1)  
+
+> ij
+
+= 2 G
+
+(
+
+ϵ(1)  
+
+> ij
+
+− δij 13 Vcck, (1) )
+
++ δij λ
+
+(
+
+ϵ(1)  
+
+> ll
+
+− δll 13 Vcck, (1) )
+
+in Ω. (83) Equilibrium in (40) requires 
+
+∂σ na ,(1) 
+
+> ij
+
+∂X j
+
+= 0 in Ωna ,k , ∂σ (1) 
+
+> ij
+
+∂X j
+
+= 0 in Ω, (84) while the boundary condition is 
+
+σ(1)  
+
+> ij
+
+nj = σna ,(0)  
+
+> ij
+
+nj , on ∂Ω. (85) The first-order mechanical equilibrium equation (84) shows that the leading-order non-active matrix solution to equations (74) and (75) determines the first-order correction, (85), to the stress on the particle surface. This surface stress will then alter the stress within the particle, affecting the electrochemistry. The coupling between particle and non-active matrix mechanics therefore enters through this boundary term. Determining the resulting stresses and strains in the electrode is non-trivial: the non-active matrix stress depends on the collective deformation and spatial arrangement of neighbouring particles. In order to account for these interactions while making a model that is sufficiently simple, we rely on the fact that (i) electrodes are composed of many particles and (ii) that the typical size of a particle is small compared to the thickness of the electrode. These observations allow us to carry out a multiple-scale homogenisation that links the electrode-scale stress to the local non-active matrix stress surrounding the particle, effectively allowing us to bridge the gap between particle mechanics and electrode mechanics. Once this is done, in Section 6, we return to the problem in (84)–(85) and show that the non-active matrix push on the particle affects the intercalation process. 
+
+4. Leading-order mechanical problem in the non-active matrix 
+
+4.1. Multiple scales expansion 
+
+We now introduce a multiple scale framework to link the particle-scale mechanics to the electrode-scale deformations. The hierarchy of scales used in this reduction is sketched in Figure 2: the right panel shows the 16 Ωn                        
+
+> Ωna,n
+> 𝛿Ω n
+> 𝛿Ω na,n
+> 𝑅
+> 𝐻 +𝐻 −𝐻 n𝐻 p𝐻 s
+> 𝑚 𝐻 Figure 2: Sketch of the multiscale geometry used in the mechanical reduction. The left panel shows the full pouch-cell stack at the macroscale, with through-cell coordinate x1, in-plane coordinates x2and x3.The dimensions are W2,W3, and total stack thickness mH , where mis the number of electrode stacks. The middle panel shows the mesoscale representative stack of thickness H, consisting of negative electrode, separator, positive electrode, and current-collector layers with thicknesses Hn,
+> Hs,Hp,H−and H+. The right panel shows the microscale unit cell of side length L, containing an active particle of radius R
+> in the domain Ω nembedded in the non-active matrix Ω be ,n, with particle boundary ∂Ωn.
+
+microscale particle cell, while the middle panel shows how such cells are repeated across an electrode-scale layer. We focus our attention on homogenisation of the mechanical equations because treatment of the elec-trochemical relationships has been presented elsewhere, see Richardson et al. (2012). Since we have made the modelling choice to restrict ourselves to the small strain setting, the electrochemical homogenisation is largely unchanged from that presented in Richardson et al. (2012). The only alteration is via the stress coupling in the Butler-Volmer reaction rate. However, if one were to consider the more challenging nonlinear strain setting then the homogenisation procedure would be substantially different. Our objective is to determine the effective stress in the non-active matrix, which governs the traction on the particle surface and contributes to the electrode-scale force balance. The description of the effective behaviour of an electrode (porous, wet, viscoelastic with rigid particles) was given in Foster et al. (2025), building on Chapman and Mcburnie (2015). The homogenisation we present here is a simplified version of these previous calculations, and makes use of our assumption that cell-cycling timescales are sufficiently long that the changes in stresses associated with (i) the flow of the electrolyte and (ii) viscoelastic relaxation can be neglected. We idealise the electrode as a periodic composite made of a lattice of geometrically identical representative elements of characteristic size L∗, repeated across a mesoscopic electrode thickness H∗, as indicated by the middle and right panels of Figure 2. This separation of length scales is quantified by the small parameter ∆ = L∗
+
+H∗ ≪ 1, (86) and the homogenised limit corresponds to ∆ → 0. We introduce a mesoscale coordinate xi in addition to the microscale coordinate Xi, related by 
+
+Xi = xi
+
+∆ . (87) We make the ubiquitous assumption of the method of multiple scales and treat xi and Xi as independent variables, so that spatial derivatives split as 
+
+∂∂X j
+
+7 → ∂∂X j
+
++ ∆ ∂∂x j
+
+. (88) Note that, while the microscale coordinates and displacements Xi and Ui are scaled by the typical unit-cell dimension L∗, the mesoscale coordinates and displacements xi and ui are scaled by the typical electrode thickness H∗, giving rise to separation of scales. The O(Λ 0) solution, U (0)  
+
+> r
+
+, obtained by solving (63)–(73), describes a single sphere that expands/shrinks radially, up to rigid-body translation and rotation. These motions differ from one unit cell to another in 17 our periodic array and vary slowly across the electrode, reflecting the mesoscale deformation of the material. Thus, the leading order displacement in a particle can be written as 
+
+U (0)  
+
+> i
+
+= Xi
+
+U (0) 
+
+> r
+
+r + ui + ωl ϵijl Xj , (89) where Xi/r is the unit radial vector, ϵijl is the Levi–Civita tensor, ui is the mesoscale rigid-body displacement, and ωl is the rotation vector. The quantities U (0)  
+
+> r
+
+, ui and ωl are constant for a given particle but vary on the mesoscale. They are determined by enforcing an overall force and torque balance, 
+
+∫
+
+> ∂Ω
+
+σna ,(0)  
+
+> ij
+
+nj dS = 0 ,
+
+∫
+
+> ∂Ω
+
+ϵilm Xm σna ,(0)  
+
+> ij
+
+νj dS = 0 , (90) which depend on the non-active matrix stress field. The solution in the particle, (89), provides the boundary condition on the non-active matrix displacement (75). Hence the boundary condition becomes 
+
+U na ,(0)  
+
+> i
+
+= Xi ¯g(t) + ui + ωl ϵijl Xj , (91) where ¯ g is defined in (82). To solve the mechanical problem in the non-active matrix, we therefore solve the leading-order problem (74) with boundary condition (91). Since we are now going to perform a new expansion in powers of ∆, we remove the superscript (0) (associated with the leading-order problem in Λ). The extra freedom introduced by treating xi and Xi as independent is removed by requiring that all fields are periodic with respect to Xi, so that slow variations across the cell are captured through dependence on the slow variable xi.Some care is needed to write the rigid-body translations and rotations of the unit cells, ui and Θ, in multiple-scales form. These are spatially constant on each unit cell, but may vary from cell to cell, and hence vary on the mesoscale after homogenisation. We therefore impose that ui and Θ have no microscale variation, i.e. 
+
+∂u i
+
+∂X j
+
+= 0 , ∂ω i
+
+∂X j
+
+= 0 in Ω , (92) so that, in multiple-scales form, 
+
+∂u i
+
+∂X j
+
++ ∆ ∂u i
+
+∂x j
+
+= 0 , ∂ω i
+
+∂X j
+
++ ∆ ∂ω i
+
+∂x j
+
+= 0 in Ω . (93) Using (88), equation (74) in Ω na becomes 
+
+∂σ na 
+
+> ij
+
+∂X j
+
++ ∆ ∂σ na 
+
+> ij
+
+∂x j
+
+= 0 , (94a) 
+
+σna  
+
+> ij
+
+= 2 Gna ϵna  
+
+> ij
+
++ δij λna ϵna  
+
+> ll
+
+, (94b) 
+
+ϵna  
+
+> ij
+
+= 12
+
+( ∂U na 
+
+> i
+
+∂X j
+
++ ∂U na 
+
+> j
+
+∂X i
+
+)
+
++ ∆2
+
+( ∂U na 
+
+> i
+
+∂x j
+
++ ∂U na 
+
+> j
+
+∂x i
+
+)
+
+, (94c) with boundary condition (91) on ∂Ω and periodic boundary conditions on the boundary of the unit cell 
+
+∂Ωna . We now expand all dependent variables in powers of ∆. We will allow displacements of order O(∆ −1)to account for accumulation of displacements over the mesoscale—we originally scaled displacements with length of the unit cell L∗ (comparable to the particle diameter), so at leading order u ∼ L∗/∆ ∼ H∗ scales like the mesoscale length. The displacements and strains are expanded as 
+
+U bi = 1∆ U na ,(−1)  
+
+> i
+
++ U na ,(0)  
+
+> i
+
++ ∆ U na ,(1)  
+
+> i
+
++ · · · , ϵna  
+
+> ij
+
+= ϵna ,(0)  
+
+> ij
+
++ ∆ ϵna ,(1)  
+
+> ij
+
++ · · · , (95) with all other fields expanded similarly; note that we are reusing the superscript notation here—superscripts now refer to the ∆ expansion and not to the Λ expansion. 18 Inserting the expansion (95) into (93), (94) and (91) gives the leading-order problem in ∆ of 
+
+∂u (−1) 
+
+> i
+
+∂X j
+
+= 0 , in Ω , (96) 
+
+∂U na ,(−1) 
+
+> i
+
+∂X j
+
++ ∂U na ,(−1) 
+
+> j
+
+∂X i
+
+= 0 in Ω na , (97) 
+
+U (−1)  
+
+> i
+
+= u(−1)  
+
+> i
+
+on ∂Ω, (98) with U na ,(−1)  
+
+> i
+
+periodic in Xi with period 1. The solution is a rigid body motion, which periodicity constrains to be a translation, i.e. 
+
+U (−1)  
+
+> i
+
+(xi, X i) = u(−1)  
+
+> i
+
+(xi). (99) At next order in ∆ we find 
+
+ϵna ,(0)  
+
+> ij
+
+= 12
+
+(
+
+∂U na ,(0) 
+
+> i
+
+∂X j
+
++ ∂U na ,(0) 
+
+> j
+
+∂X i
+
+)
+
++ 12
+
+(
+
+∂u (−1) 
+
+> i
+
+∂x j
+
++ ∂u (−1) 
+
+> j
+
+∂x i
+
+)
+
+in Ω na , (100) 
+
+σna ,(0)  
+
+> ij
+
+= 2 Gna ϵna ,(0)  
+
+> ij
+
++ δij λna ϵna ,(0)  
+
+> ll
+
+, ∂σ na ,(0) 
+
+> ij
+
+∂X j
+
+= 0 in Ω na , (101) 
+
+∂ω (0) 
+
+> l
+
+∂X j
+
+= 0 , ∂u (−1) 
+
+> i
+
+∂x j
+
++ ∂u (0) 
+
+> i
+
+∂X j
+
+= 0 in Ω , (102) with boundary conditions 
+
+U na ,(0)  
+
+> i
+
+= Xi ¯g + u(0)  
+
+> i
+
++ ω(0)  
+
+> k
+
+ϵijk Xj ,
+
+∫
+
+> ∂Ω
+
+σna ,(0)  
+
+> ij
+
+nj dΓ = 0 ,
+
+∫
+
+> ∂Ω
+
+ϵmjk Xmσna ,(0)  
+
+> ij
+
+νj dΓ = 0 , (103) where all variables must be periodic in Xi with period 1. 
+
+4.2. The effective stress in the non-active matrix 
+
+Since (100)-(103) is a linear system for U na ,(0)  
+
+> i
+
+, u(0)  
+
+> i
+
+and Θ (0) , forced by the inhomogeneous terms 12
+
+(
+
+∂u (−1) 
+
+> i
+
+∂x j
+
++ ∂u (−1) 
+
+> j
+
+∂x i
+
+)
+
+, ∂u (−1) 
+
+> i
+
+∂x j
+
+, and Xi ¯g, 
+
+in (100), (102b) and (103) respectively, the solution can be written as 
+
+σna ,(0)  
+
+> ij
+
+= σkl ij 
+
+∂u (−1) 
+
+> k
+
+∂x l
+
+− ¯g(t)σgij , (104) where σkl ij and σgij satisfy the problems stated in Appendix 9 and characterise the system’s response to the two different forms of excitation, namely macroscopic strain and particle swelling, respectively. We shall refer to these two objects as the cell functions. A plot of a typical stress field on the surface of the particle is shown in Figure 4. To get an equation for u(−1)  
+
+> i
+
+and thereby close the problem, we need to proceed to one more order in the expansion. At next order in ∆, equation (94a) yields 
+
+∂σ na ,(1) 
+
+> ij
+
+∂X j
+
++ ∂σ na ,(0) 
+
+> ij
+
+∂x j
+
+= 0 in Ω na . (105) Integrating over Ω na and applying the divergence theorem gives 
+
+−
+
+∫
+
+> ∂Ω
+
+σna ,(1)  
+
+> ij
+
+nj dS +
+
+∫
+
+> ∂Ωna
+
+σna ,(1)  
+
+> ij
+
+nj dS + ∂∂x j
+
+∫
+
+> Ωna
+
+σna ,(0)  
+
+> ij
+
+dV = 0 . (106) 19 (a) (b) (c) (d) Figure 3: Normal traction on the particle surface for the cell functions, with G/λ = 0 .315 and R/L = 0 .45. The top row shows the contribution associated with the macroscopic strain: (a) particle-surface view and (b) spherical-coordinate map of eri σ11  
+
+> ij
+
+erj .The bottom row shows the contribution associated with particle swelling: (c) particle-surface view and (d) spherical-coordinate map of eri σgij erj .
+
+Figure 4: Effective elastic properties Ci: in the upper panels as a function of the particle size for G/λ = 0 .315, and in the bottom panels as a function of the elastic material for R/L = 0 .45. 
+
+20 The integral over ∂Ωna vanishes due to the periodicity of σna ,(1)  
+
+> ij
+
+. It is tempting to conclude that the integral over ∂Ω should vanish also, by equating higher-order terms in (90a). However, care must be taken when handling integral constraints in multiple-scale problems. It is shown in Chapman and Mcburnie (2015) that in fact 
+
+−
+
+∫
+
+> ∂Ω
+
+σna ,(1)  
+
+> ij
+
+nj dS =
+
+∫
+
+> ∂Ω
+
+Xj
+
+∂σ na ,(0) 
+
+> ik
+
+∂x j
+
+nk dS. (107) Thus the macroscale force balance is 
+
+∂σ eff 
+
+> ij
+
+∂x j
+
+= 0 , (108) where we have introduced the effective stress σeff  
+
+> ij
+
+, by defining the averaging operator A, as 
+
+σeff  
+
+> ij
+
+= 1
+
+|Ω + Ω na |
+
+∫
+
+> Ωna
+
+σna ,(0)  
+
+> ij
+
+dV + 1
+
+|Ω + Ω na |
+
+∫
+
+> ∂Ω
+
+Xj σna ,(0)  
+
+> ik
+
+nk dS = A
+
+(
+
+σna ,(0) 
+
+> ij
+
+)
+
+. (109) Applying the averaging operator A to (104) gives 
+
+σeff  
+
+> ij
+
+= Kijkl 
+
+∂u eff 
+
+> k
+
+∂x l
+
+− Mij ¯g(t), (110) where Kijkl = A(σkl ij ), Mij = A(σgij ), and we have written u(−1)  
+
+> i
+
+= ueff  
+
+> i
+
+. Given the symmetry of the unit cell, if we define 
+
+ϵeff  
+
+> ij
+
+= 12
+
+(
+
+∂u eff 
+
+> i
+
+∂x j
+
++ ∂u eff 
+
+> j
+
+∂x i
+
+)
+
+, (111) equation (110) can be concisely written in Voigt notation as 
+
+
+
+σeff 11 
+
+σeff 22 
+
+σeff 33 
+
+σeff 23 
+
+σeff 13 
+
+σeff 12 
+
+
+
+=
+
+
+
+C1 C2 C2 0 0 0
+
+C2 C1 C2 0 0 0
+
+C2 C2 C1 0 0 00 0 0 C3 0 00 0 0 0 C3 00 0 0 0 0 C3
+
+
+
+ϵeff 11 
+
+ϵeff 22 
+
+ϵeff 33 
+
+ϵeff 23 
+
+ϵeff 13 
+
+ϵeff 12 
+
+
+
+−
+
+
+
+C4
+
+C4
+
+C4
+
+000
+
+
+
+¯g(t), (112) where C1, . . . , C 4 are given by 
+
+
+
+C1 0 00 C2 00 0 C2
+
+ = A (σ11 
+
+> ij
+
+) ,
+
+
+
+0 C3 0
+
+C3 0 00 0 0
+
+ = A (σ12 
+
+> ij
+
+) ,
+
+
+
+C4 0 00 C4 00 0 C4
+
+ = A (σgij 
+
+) . (113) The effective mechanical parameters Ci depend on a geometric parameter, the size of the active particle relative to the unit cell, and a material parameter, the ratio of elastic moduli of the non-active matrix, 
+
+Gna ,k /λ na ,k . The variation of the effective mechanical parameters in terms of the geometric and material parameters is shown in Figure 4. Equations (108), (110) describe the mechanics of the electrode on the mesoscopic (electrode) scale. Note that the effective mechanical properties are cubic-symmetric and, in general, anisotropic rather than isotropic. To understand why, it is sufficient to think about the symmetry of the unit cell composing the material. Compression along the X1, X2 or X3 directions is equivalent due to cubic symmetry. However, diagonal compression for example along the (1 , 1, 0) vector direction is different (and softer, as there is a larger proportion of soft non-active matrix). 21 5. Macroscale mechanical problem 
+
+The multiple-scale homogenisation in the previous section allows us to connect the stress in the non-active matrix material surrounding a particle at the microscale with the mesoscale (electrode) stress. The mesoscale stress depends on the active particle swelling through the term Mij g(t) in (110), and also on the boundary conditions imposed on the equilibrium equation (108), which depend on how the entire cell is constrained. Thus, one more step is required to link the mesoscale (electrode) mechanics to the macroscale (whole-cell) mechanics. Fortunately, this work has already been done by Giudici et al. (2025). They exploited the thin aspect ratio of the electrodes (i.e. the typical thickness H∗ is much smaller than the height and width W ∗) and assumed that the current collectors are sufficiently stiff that they do not bend or stretch, so that they move only in the through-cell direction. Of course, more complex macroscale deformations are possible. Under such assumptions there are only through-cell displacements. The magnitude of the strains is determined by the electrode swelling and the boundary conditions, with the stresses distributed among electrodes and separator according to their mechanical properties. In this section, we revisit this result and show how it applies to the material described by (108) and (110). The macroscale stack and the representative layer stack used in the reduction are shown in the left and middle panels of Figure 2, respectively; the boundary conditions below are applied on the outer faces normal to the through-cell direction x1. In the first case the cell is rigidly clamped, with no through-cell displacement so the total thickness N H remains unchanged, while in the second case the cell has an applied load, with a specified through-cell pressure p where the current collectors, which remain flat, are displaced in the through-thickness direction, creating a total displacement U . Both conditions that we will examine have been studied experimentally; see, for example, Schommer et al. (2025) for fixed-displacement measurements and Mohtat et al. (2021a) for applied-load or constant-pressure measurements. In practical settings, such as automotive modules, the mechanical constraint is typically neither perfectly rigid nor perfectly load-controlled. Instead, the surrounding bracing has a finite stiffness: the cell is able to expand, thereby deforming the housing or compression system, which in turn exerts a restoring load on the cell (Wünsch et al., 2019). 
+
+5.1. Macroscale geometry and assumptions 
+
+To avoid superfluous notation we elect not to introduce a distinct macroscale coordinate system and instead retain the mesoscale coordinates, xi. As shown in the left panel of Figure 2, the total thickness of the stack is N H : N being the number of electrodes ( N/ 2 the number of anode-cathode pairs) and H being the average reference thickness of an electrode. Giudici et al. (2025) considered a cell composed of several layers stacked together perpendicular to the x1 direction: positive electrodes (p), positive current collectors (+), negative electrodes (n), negative current collectors ( −), and separators (s), with the representative repeat stack shown in the middle panel of Figure 2. Since separators are typically not adhered to the electrodes, they assumed separators can slide over the electrode, meaning that no shear stresses are transmitted from one electrode to the other. This assumption means only through-cell stresses are transmitted by the separator, and the in-plane stresses in different electrodes pairs decouple. Therefore, it is sensible to divide the cell into two sublayers: a negative electrode pair composed of two negative electrode layers sandwiching their negative current collector (n | − | n), and a positive pair composed of two positive electrodes sandwiching a positive current collector (p | + |p), with half of the separator attached on either side, as represented in the middle panel of Figure 2. The battery is formed by N/ 2 repeating negative and positive pairs separated by separators (n | − | n|s|p| +
+
+|p|s). Assuming these repeating layers all behave the same, and noting the symmetry, we need only consider one sub-cell, containing one negative electrode, one separator, one positive electrode, and half of each current collector. Due to the soft porous nature of the separator, and since it is not attached to either electrode but allowed to slide, we assume it behaves as a Winkler foundation that does not transmit shear stresses. The change in thickness of the separator is ∆us1 = us1
+
+∣∣x1= 12 Hs − us1
+
+∣∣x1=− 12 Hs ,
+
+where we recall that u1 is through cell displacement, with the superscript s denoting the separator. We assume the separator has a general stress-displacement relation given by 
+
+σ11 = S(∆ us1) (114) 22 for some function S which is monotonically increasing and typically has a steep-shallow-steep progression with increasing strain. The shallow region, almost flat, corresponds to the porous matrix collapsing. The typical shape is discussed in detail in Giudici et al. (2025). To distinguish between layers we label the displacement in each layer ueff  
+
+> i
+
+by uki , the stress σeff  
+
+> ij
+
+by σkij 
+
+and the swelling g by gk where k ∈ { n, p, s} (with gs = 0). We also define the width in the x2 and x3
+
+direction as W2 and W3 respectively. We now solve (108) and (110) in each layer subject to (a) stress σ1j
+
+and displacements ui are continuous across the electrode/current collector interface; (b) normal stress and normal displacements σ11 , u 1 are continuous across the electrode/separator interface but σs1j = 0 when j̸ = 1 since separators do not transmit shear stresses; (c) due to symmetry about the mid-plane of each current collector we assume the current collector remains flat and perpendicular to x1; (d) zero stress on the lateral boundaries x2 = 0 , W 2, x3 = 0 , W 3; (e) the macroscale boundary conditions along x1 are either total fixed displacement, U (typically zero), or fixed applied pressure p. If we centre x1 in the middle of the separator and choose 
+
+u1(−Hn − 12 H− − 12 Hs, x 2, x 3) = 0 , u1(Hp + 12 H+ + 12 Hs, x 2, x 3) = ∆ u, (115) then the two possible conditions in (e) can be respectively written as ∆u = Um for prescribed total thickness change, U ; (116) 
+
+∫ ∫ 
+
+σ11 dx2 dx3 = F = pW 2W3 for prescribed applied pressure, p, (117) where F is the externally applied force in the x1 direction. 
+
+5.2. The thin electrode limit 
+
+We can simplify the model of the macroscale stresses by exploiting the fact that the electrodes (the mesoscale) are thin, meaning δ = H/ min( W2, W 3) ≪ 1. The detailed analysis of the problem in the limit 
+
+δ → 0 is given in Giudici et al. (2025), and shows that 
+
+σk 
+
+> 12
+
+= σk 
+
+> 13
+
+= 0 , σk 
+
+> 11
+
+= σ11 (x2, x 3) for k ∈ { n, −, s, p, +}, (118) so that σk 
+
+> 11
+
+is independent of x1 and k. For the in-plane stresses (the x2 and x3 directions), we introduce the tension in each layer, 
+
+T kij =
+
+∫
+
+> Hk
+
+σkij dx1, k ∈ { n, −, p, +}, i, j ∈ { 2, 3}. (119) Using the average stress, at order δ0, the mechanical equilibrium conditions for each electrode pair are 
+
+∂∂x j
+
+(T p 
+
+> ij
+
++ 12 T +
+
+> ij
+
+) = 0 , ∂∂x j
+
+(T n 
+
+> ij
+
++ 12 T −
+
+> ij
+
+) = 0 , i, j ∈ { 2, 3}. (120) The boundary conditions reflecting no shear stresses at the outer edges of the cell require 
+
+(T p 
+
+> ij
+
++ 12 T +
+
+> ij
+
+) nj = 0 , (T n 
+
+> ij
+
++ 12 T −
+
+> ij
+
+) nj = 0 , (121) where nj are the components of the normals to the battery sides, in the x2 and x3 direction. At leading order the in-plane displacements satisfy 
+
+u+ 
+
+> i
+
+= up 
+
+> i
+
+= up 
+
+> i
+
+(x2, x 3), u− 
+
+> i
+
+= un 
+
+> i
+
+= un 
+
+> i
+
+(x2, x 3), i, j ∈ { 2, 3}. (122) Note the displacement in the two electrodes need not necessarily be equal since the displacement need not be continuous across the separator. Combining (118) and (120) with (110), (114) and one of (116) gives a set of 10 equations for the 10 unknowns up1 , u p2 , u p3 , u +1 , u n1 , u n2 , u n3 , u − 
+
+> 1
+
+, ∆us1, σ 11 (x2, x 3). This is an elliptic problem in 
+
+x1, x 2 with Neumann boundary conditions and an algebraic constraint coming from the through-cell stress. Further analytical progress can be made by considering the limit in which the current collectors are stiff compared to the electrodes, meaning they remain planar. 23 5.3. The stiff current collector limit 
+
+When the current collectors are stiff compared to the electrodes they do not deform. Thus, not only do they remain planar, but the in-plane displacements vanish, so that 
+
+uk 
+
+> 2
+
+= uk 
+
+> 3
+
+= 0 in all layers. Then, since only through-cell displacement is allowed, the stresses in the electrodes are 
+
+σ11 = C1 ∂u k
+
+> 1
+
+∂x 1
+
+− C4 ¯gk, σkij =
+
+(
+
+C2 ∂u k
+
+> 1
+
+∂x 1
+
+− C4 ¯gk
+
+)
+
+δij , for k ∈ { n, p}, (123) where δij is the Kronecker δ, and the particle induced expansion ¯ gk = ¯ gk(x1, x 2, x 3, t ) may in general be a function of all coordinates as well as time. Inverting equation (123a) we find 
+
+∂u k
+
+> 1
+
+∂x 1
+
+= σ11 + C4 ¯gk
+
+C1 . (124) It is worth pausing and noting that, since all other displacements are zero and the shear strains vanish at leading order in δ, once we determine σ11 we have all the information we need to determine the microscale stress in the non-active matrix. Integrating (124) over the thickness of each layer, we obtain the total through-cell displacement in each layer as ∆un1 = Hn
+
+C1
+
+(σ11 + C4⟨gn⟩) , ∆up1 = Hp
+
+C1
+
+(σ11 + C4⟨gp⟩) , (125) where we define 
+
+⟨gk⟩ = 1
+
+Hk
+
+∫
+
+> Hk
+
+¯gk dx1. (126) This is the average over the mesoscale thickness of the microscale-averaged expansion gk and introducing it simplifies the later notation. The total change in thickness of the negative electrode, positive electrode and separator is ∆u = ∆ un1 + ∆ up1 + ∆ us1,
+
+(note that ∆ u is independent of x2 and x3, since the two current collectors remain parallel and flat). Using equations (125) and (114) we have ∆u = Hn
+
+C1
+
+(σ11 + C4⟨gn⟩) + Hp
+
+C1
+
+(σ11 + C4⟨gp⟩) + S−1(σ11 ). (127) For a clamped boundary condition, corresponding to fixed ∆ u, we can solve (127) for σ11 and then substitute into (124) to determine ∂u k 
+
+> 1
+
+/∂x 1. In the particular case in which the separator is linear elastic, with S(∆ us1) = K∆us1, we can solve explicitly to find 
+
+σ11 = C1∆u − C4 (Hn⟨gn⟩ + Hp⟨gp⟩)
+
+Hn + Hp + C1
+
+> K
+
+, (128) 
+
+∂u k
+
+> 1
+
+∂x 1
+
+= ∆uHn + Hp + C1
+
+> K
+
++ C4
+
+C1
+
+(
+
+gk − Hn⟨gn⟩ + Hp⟨gp⟩
+
+Hn + Hp + C1
+
+> K
+
+)
+
+, (129) for k ∈ { n, p}. If, instead of clamping the system, we apply a load with average pressure p we find (for the linear elastic separator case) ∆u = Hn
+
+C1
+
+(
+
+p + C4⟨gn⟩
+
+)
+
++ Hp
+
+C1
+
+(
+
+p + C4⟨gp⟩
+
+)
+
++ pK
+
+=
+
+( Hn + Hp
+
+C1 + 1
+
+K
+
+)
+
+p + C4
+
+C1
+
+(
+
+Hn⟨gn⟩ + Hp⟨gp⟩
+
+)
+
+, (130) 24 where 
+
+⟨gk⟩ ≡ 1
+
+HkW2W3
+
+∫
+
+> Hk
+
+∫
+
+> W2
+
+∫
+
+> W3
+
+¯gk dx1 dx2 dx3 ≡ 1
+
+W2W3
+
+∫
+
+> W2
+
+∫
+
+> W3
+
+⟨gk⟩ dx2 dx3,
+
+is the average swelling in layer k over the whole electrode, obtained by taking the mesoscale average of the microscale average expansion g. We can then substitute (130) into (128) to give 
+
+σ11 = −p +
+
+C4
+
+(
+
+Hn(⟨gn⟩ − ⟨ gn⟩) + Hp(⟨gp⟩ − ⟨ gp⟩)
+
+)
+
+Hn + Hp + C1
+
+> K
+
+, (131) 
+
+∂u k
+
+> 1
+
+∂x 1
+
+= − pC1 + C4
+
+C1
+
+(
+
+gk + Hn(⟨gn⟩ − ⟨ gn⟩) + Hp(⟨gp⟩ − ⟨ gp⟩)
+
+Hn + Hp + C1
+
+> K
+
+)
+
+, (132) for k ∈ { n, p}. It is worth observing that in the cases of very slow charging, equipotential current collectors and small resistances, where the current is uniform in the x2 and x3 directions, the swelling and the macroscale stress will also be independent of x2 and x3, because ⟨gk⟩ = ⟨gk⟩.We note that the analysis above can readily be extended to consider a cell housing that deforms and in turn applies a load back on the electrode stack, as may well be the case in practice, but we do not consider this here. 
+
+6. Feedback of the macroscale strain to the microscale mechanics 
+
+In Section 4 we have linked the microscale non-active matrix stress surrounding an active particle with the mesoscale electrode stresses. We have also shown that the stresses in each electrode depend on the interaction among the different battery components (separator, current collectors, electrodes) and the macroscale bound-ary conditions imposed on the whole battery. In Section 5 we have connected the electrode-level (mesoscale) structure with that of the battery (macroscale) structure and boundary conditions, closing the mechanical problem. In particular, we have shown that the cell undergoes only through-cell strains and that, with knowl-edge of the active particle swelling, mechanical and geometric properties of electrodes and separator, and of the imposed cell boundary conditions, we can determine the average electrode stress, given by 
+
+σeff  
+
+> ij
+
+= Kij 11 
+
+∂u eff 1
+
+∂x 1
+
+− Mij g. (133) and, using (104), we also have access to the microscale resolved stress 
+
+σna ,(0)  
+
+> ij
+
+= σ11 
+
+> ij
+
+∂u eff 1
+
+∂x 1
+
+− σgij g, (134) where σ11  
+
+> ij
+
+and σgij are cell functions that can be obtained numerically, both positive so that in the common scenario of both expansive swelling and compressive electrode strains we obtain compression of the non-active matrix as expected. This non-active matrix stress is exactly what is needed in (85) for us to solve for the first-order correction to the electrochemo-mechanical problem in the particle, (84)-(85). Thus, in this section we return to the Λ expansion introduced in Section 3 (arising from the extreme contrast in mechanical properties between the active particles and binder), and examine how the non-active matrix stresses at leading order in Λ affect the particle mechanical and electrochemical behaviour at O(Λ). Our objective is to write a DFN model that includes the effect of non-active matrix mechanics on the electrochemistry. To achieve a DFN model it is important to note that we have homogenised the mechanics of the electrode stack, but we have not homogenised the electrochemical transport in the same way. This is deliberate. For the electrolyte concentration and electronic conduction we adopt the standard volume-averaged porous-electrode description (as in Richardson et al. (2012)): the electrolyte and solid phases are treated as continua on the electrode scale, and the electrochemical reactions do not have to be resolved around each individual particle. Instead, the interfacial reaction appears as a distributed source term in the electrode-scale transport equations, with an intensity equal to the local (DFN) interfacial current density multiplied by the specific surface area of active material, (see equations (3.4)–(3.5) in Richardson et al. (2012)). The overall picture is therefore as follows: 25 1. Mechanics is homogenised up to the cell scale because the deformation is strongly constrained by the battery architecture (current collectors, separator, clamping or applied load). This information is needed to determine the actual stress transmitted by the non-active matrix back onto the particles. 2. Electrochemistry and transport are left in the standard porous-electrode (DFN-style) form because, once homogenised in the classical sense, the reactions already enter as volumetric source terms. There is no practical benefit in resolving the electrolyte at the same geometric level as the mechanics, unless one wishes to capture local electrolyte starvation or short-scale electrochemical gradients around individual particles. 3. The two descriptions remain fully consistent : the mechanical model provides the local surface stress at the particle-non-active matrix interface, which feeds into the particle electrochemo-mechanical problem (via stress-dependent chemical potential and overpotential), while the electrochemical model provides the local interfacial current density, which enters as a source term in the electrode-scale DFN transport equations. Our first task is to demonstrate that, even if the surface stress introduced by the binder is not spatially homogeneous, its effects on the electrochemical problem can be understood by averaging particle transport and mechanical equations over the surface of the sphere, obtaining an effective radial problem. This problem is analogous to the 1D particle problem in DFN, thus achieving an analogous level of complexity. 
+
+6.1. Surface-integrated particle equations 
+
+Although the microscale problem (84)-(85) is posed on a spherical geometry, because of the macroscopic geometry of the battery the boundary condition (85) is not spherically symmetric (i.e. σna ,(0)  
+
+> ij
+
+depends on θ
+
+and ϕ). Thus, unlike the leading-order problem (63)-(81), in general the solution is not simply a function of r and t. However, we recall that in the homogenised electrolyte equations, the source term inherited from particle transport and exchange current is a surface integral of the interfacial exchange current over the particle surface Richardson et al. (2012) weighted by the surface area density. This means that, to write the homogenised equations, we are only interested in this surface average. In Appendix 10 we show that if we integrate all the equations of O(Λ) over θ and ϕ, exploiting the symmetries in the system, then we obtain a radial mechanical and transport problem in the particle that is sufficient to determine the exchange current. This surprising fact means we can find the correction to the chemical potential analytically — a remarkable outcome given the complexity of the original problem. The spherically averaged equations are 
+
+σk, (1)  
+
+> rr
+
+= (2 Gk + λk) ∂U k, (1) 
+
+> r
+
+∂r + 2 λk U k, (1) 
+
+> r
+
+r − (2 Gk + 3 λk) 13 Vkc ck, (1) , (135) 
+
+σk, (1)  
+
+> θθ
+
+= λk ∂U k, (1) 
+
+> r
+
+∂r + 2( Gk + λk) U k, (1) 
+
+> r
+
+r − (2 Gk + 3 λk) 13 Vkc ck, (1) , (136) where 
+
+U k, (1)  
+
+> r
+
+(r, t ), σk, (1)  
+
+> rr
+
+(r, t ), σk, (1)  
+
+> θθ
+
+(r, t ) = σk, (1)  
+
+> ϕϕ
+
+(r, t ), ck, (1) (r, t )denote, respectively, the first-order corrections to the radial displacement, radial and hoop stresses, and lithium concentration, all averaged over the angles as in Appendix 10. Since the problem is spherically symmetric after averaging, mechanical equilibrium reduces to 
+
+∂σ k, (1) 
+
+> rr
+
+∂r + 2
+
+r
+
+(σk, (1)  
+
+> rr
+
+− σk, (1) 
+
+> θθ
+
+) = 0 . (137) The corresponding first-order diffusion equation in the particle becomes 
+
+∂c k, (1) 
+
+∂t + 1
+
+r2
+
+∂∂r 
+
+(
+
+r2N k, (1) 
+
+> r
+
+)
+
+= 0 , 0 < r < R, (138) with radial flux 
+
+N k, (1)  
+
+> r
+
+= − Dk
+
+> 0
+
+[
+
+ck, (0) (1 − ck, (0) ) ∂μ k, (1) 
+
+∂r − 2ck, (0) ck, (1) ∂μ k, (0) 
+
+∂r 
+
+]
+
+. (139) 26 Figure 5: Surface-averaged coefficients Σ 11 , and Σ g : in the upper panels as a function of the particle size for for G/λ = 0 .315, and in the bottom panels as a function of the elastic material for R/L = 0 .45. 
+
+The first-order electro-chemo-mechanical potential is 
+
+μk, (1) = − ∂Ueq ,k 
+
+∂c 
+
+∣∣∣∣c=ck, (0) 
+
+ck, (1) − γ 13 Vkc σk, (1)  
+
+> ll
+
+, σk, (1)  
+
+> ll
+
+= σk, (1)  
+
+> rr
+
++ 2 σk, (1)  
+
+> θθ
+
+. (140) The mechanical boundary conditions on the particle are 
+
+U k, (1)  
+
+> r
+
+(0 , t ) = 0 , σk, (1)  
+
+> rr
+
+(R, t ) = Σ 11 
+
+∂u eff 1
+
+∂x 1
+
+− Σg U k, (0)  
+
+> r
+
+(R, t )
+
+R , (141) where the surface-averaged coefficients Σ11 = 14πR 2
+
+∫ ∫ 
+
+> Γa
+
+eri σ11  
+
+> ij
+
+erj dS, Σg = 14πR 2
+
+∫ ∫ 
+
+> Γa
+
+eri σgij erj dS, (142) are those obtained from the unit-cell (non-active matrix) problems in Appendix 9, and ∂u eff 1 /∂x 1 is the through-cell strain computed in Section 5. The two parameters in (142) represent the average radial stress generated by the non-active matrix on the particle as a result of electrode strains and particle expansion, respectively. For the electrochemical boundary condition at r = R, the flux is exactly the surface average over the sphere, and reads 
+
+N k, (1)  
+
+> r
+
+(R, t ) = Jk, (1) sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
++ Jk, (0) ηk, (1) 
+
+2 cosh 
+
+( ηk, (0) 
+
+2
+
+)
+
+. (143) with the first-order overpotential 
+
+ηk, (1) = ϕk, (1) − ϕe,(1) − ∂Ueq ,k 
+
+∂c 
+
+∣∣∣∣c=ck, (0) 
+
+ck, (1) − γ 13 Vkc σk, (1)  
+
+> ll
+
+on r = R. (144) Finally, we have the initial condition 
+
+c(1) |t=0 = 0 . (145) 27 Substituting (135)-(136) into (137) gives the radial ODE d2U k, (1) 
+
+> r
+
+dr2 + 2
+
+r
+
+dU k, (1) 
+
+> r
+
+dr − 2
+
+r2 U k, (1)  
+
+> r
+
+= (2 Gk + 3 λk)(2 Gk + λk) 
+
+> 13
+
+Vkc
+
+dck, (1) 
+
+dr . (146) The homogeneous solution of (146), which we identify with a hat, is given by ˆU k, (1)  
+
+> r
+
+= Ψ r, 
+
+for some constant Ψ, which produces the (isotropic) stress field ˆσk, (1)  
+
+> rr
+
+= ˆ σk, (1)  
+
+> θθ
+
+= ˆ σk, (1)  
+
+> ϕϕ
+
+= (2 Gk + 3 λk) Ψ . (147) Choosing Ψ = 1(2 Gk + 3 λk)
+
+(
+
+Σ11 
+
+∂u eff 1
+
+∂x 1
+
+− Σg U k, (0)  
+
+> r
+
+(R, t )
+
+R
+
+)
+
+(148) ensures that the boundary condition (141) is satisfied and the first-order stress trace ˆσk, (1)  
+
+> ll
+
+= ˆ σk, (1)  
+
+> rr
+
++ 2ˆ σk, (1)  
+
+> θθ
+
+= 3(2 Gk + 3 λk) Ψ is then spatially uniform. This means that the homogeneous solution has no radial gradients in ck, (1) . This is not surprising: nothing in the homogeneous problem drives the formation of concentration gradients. Hence, we set the homogeneous solution ˆ c(1) ,k ≡ 0 to satisfy also the initial condition. We now focus on the particular solution. We identify the quantities pertaining to the particular problem with a tilde. The mechanical equations for the particular solutions are d2 ˜U k, (1) 
+
+> r
+
+dr2 + 2
+
+r
+
+d ˜U k, (1) 
+
+> r
+
+dr − 2
+
+r2 ˜U k, (1)  
+
+> r
+
+= (2 Gk + 3 λk)(2 Gk + λk) 
+
+> 13
+
+Vkc
+
+d ˜ck, (1) 
+
+dr . (149) With stress free boundary condition, ˜σk, (1)  
+
+> rr
+
+= 0 on ∂Ωk. (150) The transport equations require 
+
+∂ ˜ck, (1) 
+
+∂t + 1
+
+r2
+
+∂∂r 
+
+(
+
+r2 ˜N k, (1) 
+
+> r
+
+)
+
+= 0 , 0 < r < R, (151) with radial flux ˜N k, (1)  
+
+> r
+
+= − Dk
+
+> 0
+
+[
+
+ck, (0) (1 − ck, (0) ) ∂ ˜μk, (1) 
+
+∂r − 2ck, (0) ˜ck, (1) ∂μ k, (0) 
+
+∂r 
+
+]
+
+. (152) where ˜μk, (1) = − ∂Ueq ,k 
+
+∂c 
+
+∣∣∣∣c=ck, (0) 
+
+˜ck, (1) − γ 13 Vkc ˜σk, (1)  
+
+> ll
+
+− γVkc
+
+(
+
+Σ11 
+
+∂u eff 1
+
+∂x 1
+
+− Σg U k, (0)  
+
+> r
+
+(R, t )
+
+R
+
+)
+
+. (153) Note that the factor of 13 in front of the last term is gone since σ(1) ,k ll = 3 σ(1) ,k rr . The homogeneous mechanical stress does not affect the radial flux in the particle, since it is spatially uniform. However, it contributes to the interfacial overpotential. The first-order Butler–Volmer condition is therefore 
+
+˜N k, (1)  
+
+> r
+
+(R, t ) = Jk, (1) sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
++ Jk, (0) 
+
+2 ˜ηk, (1) cosh 
+
+( ηk, (0) 
+
+2
+
+)
+
+. (154) where the first-order correction to the overpotential now reads ˜ηk, (1) = ϕk, (1) − ϕe,(1) − ∂Ueq ,k 
+
+∂c 
+
+∣∣∣∣c=ck, (0) 
+
+˜ck, (1) − γ 13 Vkc σk, (1)  
+
+> ll
+
+− γVkc
+
+(
+
+Σk
+
+> 11
+
+∂u k
+
+> 1
+
+∂x 1
+
+− Σk,g U k, (0)  
+
+> r
+
+(R, t )
+
+R
+
+)
+
+on r = R. 
+
+(155) 28 Crucially, the problem written in (149) - (155) is analogous to the leading order problem in the particle, with stress-assisted diffusion, but no surface stress. In fact, it is exactly the next order in the Λ expansion for a free lithiating spherical particle, but with one added difference: a mechanical correction to the potential and overpotential which depends on the mesoscale coordinate x1. This spatial dependence comes from the particle swelling and the non-active matrix reaction force. This observation is crucial; it suggests that our model can be thought of as a free expanding particle with a correction in the chemical potential and the overpotential inherited from non-active matrix stresses. Thus, up to errors of O(Λ 2), we may write our model directly as a free expanding particle with a spatially varying mechanical correction to the overpotential. 
+
+7. DFN model with multiscale mechanics 
+
+We now write a dimensional DFN model augmented by the leading-order feedback from multiscale me-chanics derived in Section 6. Readers who have arrived here directly from Section 1, skipping the derivation in the interim sections, can readily make use of our results without worrying about the asymptotic problem. The outcome of the previous sections was to show that, for small swelling strains and a small stiffness ratio of the non-active matrix relative to the active particles, the mechanics enters only as a correction to the chemical potential. Our final problem is therefore of similar computational complexity to the standard DFN model with stress-assisted diffusion, but includes electro-chemo-mechanical coupling from the microscale, namely the particle scale, up to the macroscale, namely the battery scale. In the language of the asymptotic derivation presented above: if one were to expand the model below in Λ, the O(1) and O(Λ) equations reduce exactly to those obtained in Section 6. The through-cell coordinate is x1 ∈ [0 , H ], with negative electrode Ω n = [0 , H n], separator Ω se =[Hn, H n + Hse ], and positive electrode Ω p = [ Hn + Hse , H ]. In an electrode k ∈ { n, p} we use the effective transport coefficients from Section 2: 
+
+De,eff ,k = BkDe, κe,eff ,k = Bkκe, κeff ,k = ˆBk κk.
+
+We denote by bk the specific interfacial area, that is, the electrochemically active particle surface per electrode volume. Throughout this section, as in the rest of the paper, the electrode label k ∈ { n, p} is written as a superscript, while subscripts are reserved for spatial directions and tensor indices. This differs only notationally from the common DFN convention in which the electrode label is often written as a subscript. We also retain our convention that Jk denotes the molar interfacial reaction flux, with units mol m −2 s−1.Thus the reaction current density denoted by jk in Brosa Planella et al. (2022) is F J k in the notation used here. 
+
+7.1. Mechanics and transport in the active particles 
+
+In a spherical particle of electrode k, with radius r ∈ (0 , R k), 
+
+∂c k
+
+∂t + 1
+
+r2
+
+∂∂r 
+
+(r2N kr
+
+) = 0 , (156) 
+
+N kr = − Dk(ck) ck
+
+RT 
+
+(
+
+1 − ck
+
+ck, max 
+
+) ∂μ DFN ,k 
+
+∂r . (157) The DFN chemical potential is 
+
+μDFN ,k = μ0 − F Ueq ,k (ck) − 13 V kc σkll − V kc λna ,k 
+
+(
+
+Σk
+
+> 11
+
+∂u k
+
+> 1
+
+∂x 1
+
+− Σk,g U kr (Rk)
+
+Rk
+
+)
+
+. (158) Here Σ k 
+
+> 11
+
+and Σ k,g are dimensionless quantities defined in (142). They depend only on two quantities: amaterial parameter, Gna ,k /λ k, equivalent to a Poisson-ratio dependence, and a geometric parameter, Rk/L .29 The mechanical state inside the particles obeys 
+
+ϵkrr = dU kr
+
+dr , ϵkθθ = ϵkϕϕ = U kr
+
+r , tr ϵk = dU kr
+
+dr + 2 U kr
+
+r ,σkrr = (2 Gk + λk) dU kr
+
+dr + 2 λk U kr
+
+r − (2 Gk + 3 λk) 13 V kc (ck − ck, ref ), (159) 
+
+σkθθ = λk dU kr
+
+dr + 2( Gk + λk) U kr
+
+r − (2 Gk + 3 λk) 13 V kc (ck − ck, ref ), σkϕϕ = σkθθ .
+
+Thus 
+
+σkll = σkrr + 2 σkθθ .
+
+The particle mechanics is supplemented by equilibrium, dσkrr 
+
+dr + 2
+
+r (σkrr − σkθθ ) = 0 ,
+
+regularity at r = 0, and a stress-free surface at leading order: 
+
+U kr (0) = 0 , σkrr (Rk) = 0 .
+
+The surface flux and Butler–Volmer kinetics are 
+
+N kr (Rk, t ) = Jk(x1, t ), (160) 
+
+Jk = Kk
+
+√
+
+ce
+
+ce,0
+
+ck,R 
+
+ck, max 
+
+(
+
+1 − ck,R 
+
+ck, max 
+
+)
+
+sinh 
+
+( F
+
+2RT ηDFN ,k 
+
+)
+
+, (161) where ck,R = ck(Rk, t ) and Jk is positive for deintercalation from the active particle into the electrolyte. The mechanically corrected overpotential is 
+
+ηDFN ,k = ϕk − ϕe − Ueq ,k (ck,R ) − 
+
+> 13
+
+V kc
+
+F σkll (Rk, t ) − λna ,k V kc
+
+F
+
+(
+
+Σk
+
+> 11
+
+∂u k
+
+> 1
+
+∂x 1
+
+− Σk,g U kr (Rk)
+
+Rk
+
+)
+
+. (162) 
+
+7.2. Charge transport in the electrolyte and non-active matrix 
+
+In each electrode k,
+
+∂(αk ce)
+
+∂t = ∂∂x 1
+
+(
+
+De,eff ,k ∂c e
+
+∂x 1
+
+)
+
++ (1 − t+) bk Jk, x1 ∈ Ωk. (163) For the phase currents in the different regions we define 
+
+ie,k = − κe,eff ,k 
+
+( ∂ϕ e
+
+∂x 1
+
+− 2RT F (1 − t+) ∂ ln ce
+
+∂x 1
+
+)
+
+, ik = − κeff ,k ∂ϕ k
+
+∂x 1
+
+. (164) Current conservation can be written in divergence form as 
+
+∂∂x 1
+
+[
+
+κe,eff ,k 
+
+( ∂ϕ e
+
+∂x 1
+
+− 2RT F (1 − t+) ∂ ln ce
+
+∂x 1
+
+)] 
+
+= − F b k Jk, (165) 
+
+∂∂x 1
+
+(
+
+κeff ,k ∂ϕ k
+
+∂x 1
+
+)
+
+= F b k Jk. (166) Equivalently, these equations state that 
+
+∂i e,k 
+
+∂x 1
+
+= F b kJk, ∂i k
+
+∂x 1
+
+= −F b kJk,
+
+so that the total current is conserved. This is precisely where the factor of F enters: Jk is a molar flux, whereas the phase currents ie,k and ik are electrical current densities. 30 In the separator, Ω se ,
+
+∂(αse ce)
+
+∂t = ∂∂x 1
+
+(
+
+De,eff ,se ∂c e
+
+∂x 1
+
+)
+
+, (167) 
+
+∂∂x 1
+
+[
+
+κe,eff ,se 
+
+( ∂ϕ e
+
+∂x 1
+
+− 2RT F (1 − t+) ∂ ln ce
+
+∂x 1
+
+)] 
+
+= 0 , (168) with 
+
+De,eff ,se = Bse De, κe,eff ,se = Bse κe.
+
+7.3. Interfaces, boundaries, and initial data 
+
+At electrode–separator interfaces we impose continuity of ce and of the electrolyte concentration flux 
+
+De,eff ∂c e/∂x 1, continuity of ϕe and ie,k , and zero solid current in the separator. At current collectors, we set 
+
+ϕn = 0 , ϕp = V, 
+
+with galvanostatic current density ¯I(t) = I/ (W2W3) imposed by 
+
+ie = 0 at x1 = 0 , H, in(0 , t ) = ¯I(t), ip(H, t ) = ¯I(t).
+
+The initial data are 
+
+ck(r, 0) = ck, 0(r), ce(x1, 0) = ce,0.
+
+7.4. Mechanical closure at the battery scale 
+
+The mechanical inputs in (158)–(162), namely the through-cell strains ∂u k 
+
+> 1
+
+/∂x 1, are supplied by the reduced mechanics of Section 5. In particular, with layerwise moduli Ck, 1, Ck, 2 and chemo-elastic couplings 
+
+Ck, 4, the through-cell stress satisfies 
+
+∂σ k
+
+> 11
+
+∂x 1
+
+= 0 , σk 
+
+> 11
+
+= Ck, 1 ∂u k
+
+> 1
+
+∂x 1
+
+− Ck, 4 ¯gk(x1, t ).
+
+The displacements uk 
+
+> 1
+
+and stresses σk 
+
+> 11
+
+are continuous across all interfaces. The macroscale boundary condition is either a prescribed total displacement, 
+
+∑
+
+> k∈{ n,se ,p}
+
+∫
+
+> Ωk
+
+∂u k
+
+> 1
+
+∂x 1
+
+dx1 = 0 , (169) or an imposed applied normal load p(t), giving 
+
+σk 
+
+> 11
+
+= −p(t). (170) where we take the convention used in experiments that a positive applied pressure is compressive. Here ¯gk(x1, t ) = U kr (Rk, t )
+
+Rk in the electrodes , ¯gse ≡ 0 in the separator .
+
+Since σk 
+
+> 11
+
+is independent of x1 in each layer and, by stress continuity, is the same in all layers, we denote this common stress by σ11 (t). The local through-cell strain is therefore 
+
+εk
+
+> 11
+
+(x1, t ) = ∂u k
+
+> 1
+
+∂x 1
+
+= σ11 (t) + Ck, 4 ¯gk(x1, t )
+
+Ck, 1 . (171) For a clamped cell, substituting (171) into (169) gives 
+
+σ11 (t) = −
+
+∑
+
+> k∈{ n,p}
+
+Ck, 4
+
+Ck, 1
+
+∫
+
+> Ωk
+
+¯gk(x1, t ) d x1
+
+∑
+
+> k∈{ n,se ,p}
+
+Hk
+
+Ck, 1
+
+. (172) 31 The corresponding strain field is 
+
+εk
+
+> 11
+
+(x1, t ) = Ck, 4
+
+Ck, 1 ¯gk(x1, t ) − 1
+
+Ck, 1
+
+∑
+
+> ℓ∈{ n,p}
+
+Cℓ, 4
+
+Cℓ, 1
+
+∫
+
+> Ωℓ
+
+¯gℓ(x1, t ) d x1
+
+∑
+
+> ℓ∈{ n,se ,p}
+
+Hℓ
+
+Cℓ, 1
+
+. (173) For a cell subject to an imposed normal load p(t), the common stress is instead prescribed, 
+
+σ11 (t) = −p(t),
+
+and hence 
+
+εk
+
+> 11
+
+(x1, t ) = −p(t) + Ck, 4 ¯gk(x1, t )
+
+Ck, 1 . (174) These formulae provide the strain ∂u k 
+
+> 1
+
+/∂x 1 that enters the mechanically corrected chemical potential and overpotential in (158) and (162). This completes the statement of the full DFN-style electro-chemo-mechanically coupled multiscale model. Apart from the mechanical parameters characterising the mechanical response of electrodes and separator, and the partial molar volume of the active particles, two new parameters arise in the model: Σ k 
+
+> 11
+
+and Σ k,g .They identify the magnitude of the stress on the surface of the particle generated by the non-active matrix as a consequence of electrode strain and particle expansion, respectively. They are obtained by solving the cell-function problems (100)–(103) and integrating their radial component over the surface of the sphere, as in (142). 
+
+7.5. Slow-charging single-particle limit: SPM with mechanics 
+
+As is the case with the standard DFN model, it is often useful to consider the single-particle-model reduction, appropriate when the cell is operating relatively slowly. In these conditions, the electrolyte and concentration within the active particles are relatively unpolarised. Thus, we assume that ce(x1, t ) ≈ ce,0,
+
+∂ ln ce/∂x 1 ≈ 0, and ck(r, t ) ≈ ck(t) is uniform in each particle. The layer-average interfacial molar flux is uniform in x1 and, with ik defined positive in the + x1 direction, 
+
+Jn(t) = ¯I(t)
+
+F b nHn , Jp(t) = − ¯I(t)
+
+F b pHp . (175) Thus, under positive discharge current, Jn > 0 in the negative electrode, corresponding to deintercalation, and Jp < 0 in the positive electrode, corresponding to intercalation. Conservation of Li, together with the assumption that the concentration in the particles is uniform, yields dck
+
+dt = − 3
+
+Rk Jk(t), k ∈ { n, p}. (176) Equations (175) and (176) close the concentration ODEs. The interfacial molar flux relates to the overpotential through Butler–Volmer kinetics, evaluated at the uniform states: 
+
+Jk(t) = Kk
+
+√
+
+ck
+
+ck, max 
+
+(
+
+1 − ck
+
+ck, max 
+
+)
+
+sinh 
+
+( F
+
+2RT ηSPM ,k (t)
+
+)
+
+. (177) The SPM overpotential is 
+
+ηSPM ,k (t) = ϕSPM ,k (t) − ϕe(t) − Ueq ,k (ck), (178) 
+
+ϕSPM ,k (t) = ϕk(t) − 
+
+> 13
+
+V kc
+
+F σkll (t) − V kc λna ,k 
+
+F
+
+(Σk 
+
+> 11
+
+εk
+
+> 11
+
+(t) − Σk,g ¯gk(t)) . (179) Here εk
+
+> 11
+
+(t) = ∂u k 
+
+> 1
+
+/∂x 1 is the through-cell strain in layer k, and ¯ gk(t) = U kr (Rk, t )/R k. In the stress-free particle limit of Section 6, the local particle stress contribution satisfies σkll ≡ 0. 32 The mechanics reduces to a uniform through-cell stress σ11 (t) and piecewise-constant strains εk
+
+> 11
+
+(t): 
+
+σ11 (t) = Ck, 1 εk
+
+> 11
+
+(t) − Ck, 4 ¯gk(t), εk
+
+> 11
+
+(t) = σ11 (t) + Ck, 4 ¯gk(t)
+
+Ck, 1 ,
+
+with ¯gk(t) = 
+
+{U kr (Rk, t )/R k, k = n , p,
+
+0, k = se .
+
+The common stress is closed either by the clamped condition 
+
+∑
+
+> k∈{ n,se ,p}
+
+Hk εk
+
+> 11
+
+(t) = 0 ,
+
+or by an imposed normal load 
+
+σ11 (t) = −p(t).
+
+Voltage with mechanical correction. In the slow-charging limit we neglect electrolyte concentration and Ohmic drops, set ϕe constant, and take ϕSPM ,k from (179). The mechanical contribution to the terminal voltage is ∆V (t) = [ϕSPM ,p(t) − ϕSPM ,n(t)] − [ϕp(t) − ϕn(t)]
+
+= − 1
+
+F
+
+[V p 
+
+> k
+
+λna ,p(Σp11 εp11 − Σp,g ¯gp) − V n 
+
+> k
+
+λna ,n(Σn11 εn11 − Σn,g ¯gn)] 
+
+− 1
+
+F
+
+[ 13 V p 
+
+> c
+
+σp 
+
+> ll
+
+− 13 V n 
+
+> c
+
+σn
+
+> ll
+
+] . (180) In the soft binder limit, the stress-free particle has σp 
+
+> ll
+
+= σn 
+
+> ll
+
+= 0, so the final line in (180) vanishes. 
+
+7.6. PyBaMM simulations 
+
+We now illustrate how mechanical effects affect battery operation by implementing the reduced model in PyBaMM. The comparison is shown in Figure 6. We consider three DFN-type simulations. The first is a standard DFN model with no mechanics. The second includes stress-assisted diffusion in isolated active particles Deshpande et al. (2012); Ai et al. (2020a), so that concentration gradients generate internal particle stresses which feed back on the lithium chemical potential, but the particle does not feel the surrounding non-active matrix. The third is the full multiscale-mechanics model derived above, in which the same stress-assisted diffusion is retained and the particle chemical potential is also corrected by the stress transmitted through the non-active matrix and by the macroscale through-cell mechanical state. Figure 6(a) shows that the voltage shift caused by mechanics is small on the scale of the absolute terminal voltage, but systematic. The isolated-particle correction remains close to the standard DFN voltage for most of the charge, whereas the multiscale correction produces a visibly larger voltage increase, especially at high states of charge. This is clearer in Figure 6(b), where the voltage difference relative to the standard DFN model is plotted directly. The isolated-particle stress-assisted-diffusion contribution is only a few millivolts and changes sign over part of the charge. By contrast, the multiscale-mechanics contribution grows almost monotonically and reaches approximately 15 mV at full charge. This confirms that the non-active matrix and the cell-scale mechanical boundary condition can alter the electrochemical response even when the mechanical correction is formally higher order in the stiffness-ratio expansion. Figures 6(c,d) isolate the role of the macroscale mechanical boundary condition. When the cell is subject to a prescribed applied pressure, the through-cell stress is approximately constant during the charge, with larger applied pressure producing a larger compressive stress. The voltage correction, however, changes only weakly between the 0, 200, and 400 kPa load-controlled cases. The clamped cell behaves differently: because the total thickness change is constrained to vanish, swelling generates a compressive through-cell stress whose magnitude grows throughout the charge. Consequently, the clamped case gives the largest voltage correction, reaching about 16 mV at full charge. The simulations therefore show that the dominant mechanical effect is not merely the presence of an externally applied pressure, but the way in which swelling is converted into stress by the global mechanical constraint. All parameters used in the simulations are shown in Table 3. 33 Figure 6: PyBaMM implementation of the mechanically corrected DFN model. (a) Terminal voltage during a 0 .5C charge for the standard DFN model (grey), DFN with stress-assisted diffusion in isolated particle (dashed blue) and full multiscale-mechanics stress-assisted diffusion and cell-scale mechanical coupling (yellow). (b) Mechanical voltage contribution ∆ V , measured relative to the standard DFN voltage, for the isolated-particle and multiscale-mechanics models. (c) Mechanical voltage contribution for the multiscale-mechanics model under different macroscale mechanical boundary conditions, with applied pressures of 0 kPa, 200 kPa and 400 kPa, and a perfectly clamped cell. (d) Corresponding through-cell stress σ11 for the same boundary conditions. Positive applied pressure is plotted as compressive stress, so that σ11 < 0. 
+
+34 Table 3: Parameters used in the PyBaMM simulations shown in Figure 6. Electrochemical and transport parameters not listed explicitly are the default PyBaMM DFN parameters.                                                                                                 
+
+> Quantity Value Units Model DFN with Fickian particle diffusion –Initial state of charge 0–Charge rate 0.5C –Final time 7.20 ×10 3sNumber of output times 301 –Applied current −0.340 ANominal capacity 0.681 A h Temperature 298 KVoltage cut-off 3.11–4 .10 VNegative/separator/positive thickness 1.00 ×10 −4/ 2 .50 ×10 −5/ 1 .00 ×10 −4mNegative/positive particle radius 1.00 ×10 −5/ 1 .00 ×10 −5mInitial negative/positive concentration 4.58 ×10 3/ 4 .92 ×10 4mol m −3
+> Maximum negative/positive concentration 2.50 ×10 4/ 5 .12 ×10 4mol m −3
+> Initial electrolyte concentration 1.00 ×10 3mol m −3
+> Negative/separator/positive porosity 0.300 / 1 .00 / 0 .300 –Negative/positive active volume fraction 0.600 / 0 .500 –Negative/positive Bruggeman coefficient 1.50 / 1 .50 –Negative/positive electronic conductivity 100 / 10 .0S m −1
+> Cation transference number 0.400 –Thermodynamic factor 1.00 –Negative/positive Young’s modulus 15 .0 / 150 GPa Negative/positive Poisson ratio 0.300 / 0 .300 –Negative/positive partial molar volume 6.10 ×10 −6/ 1 .30 ×10 −6m3mol −1
+> Non-active matrix Lamé coefficient 0.500 GPa Negative/separator/positive through-cell modulus 2.00 / 0 .100 / 2 .00 GPa Negative/positive swelling-stress coupling 1.00 / 1 .00 GPa Cell-function strain coefficient −40 .0 / −40 .0–Cell-function swelling coefficient 30 .0 / 30 .0–Applied-load cases 0, 200, 400 kPa Clamped case Zero total through-cell displacement –
+
+8. Summary and conclusion 
+
+In this work we have derived a reduced electro-chemo-mechanical model for lithium-ion batteries that incorporates mechanical coupling across the particle, electrode, and cell scales while retaining a structure close to standard DFN-type models. The central result is that, in the limit where the non-active matrix is much softer than the active particles, the leading-order particle problem is the familiar stress-assisted diffusion problem for a freely expanding spherical particle, while the mechanical influence of the surrounding non-active material enters as an effective correction to the active-particle chemical potential and interfacial overpotential. In the full DFN formulation this correction appears explicitly in (158) and (162); in the slow-charging limit it gives the voltage correction (180). A useful way of interpreting this result is that the lithium chemical potential is not an intrinsically chemical quantity, but a thermodynamic potential that contains chemical, electrical, and mechanical contributions. In other words, the battery also stores mechanical energy. In the usual DFN model the mechanical part is absent, or at most restricted to the local stress generated by concentration gradients within an isolated particle. Here, by contrast, the chemical potential also contains the mechanical work associated with the stress transmitted by the non-active matrix. Thus, the equilibrium potential entering Butler–Volmer kinetics is shifted not only by the local state of lithiation, but also by the mechanical state of the surrounding electrode and cell stack. The multiscale structure of the model allows these quantities to be computed systematically. At the microscale, cell problems determine how the non-active matrix transmits stress to the particle surface. These cell problems define the coefficients Σ k 
+
+> 11
+
+and Σ k,g in (142), which quantify the contributions of electrode-scale strain and particle swelling, respectively. At the electrode and cell scales, homogenised mechanics and thin-cell asymptotics determine the through-cell strain field from the swelling of the electrodes and from the mechanical boundary condition applied to the whole cell. This gives the local strain in (171), with the common stress determined either by the clamped condition (172) or by an imposed load through (174). This is also the point at which the electrodes become mechanically coupled. In standard electrochemical models, the positive and negative electrodes communicate through the electrolyte, the electrical circuit, and the global current constraint. In the present model they also communicate mechanically, albeit weakly, through the common through-cell stress and strain field. Swelling in one electrode contributes to the global 35 mechanical state and therefore changes the strain experienced by the other electrode. This mechanical coupling is small in the stiffness-ratio expansion, but it provides a direct route by which the lithiation state of one electrode can alter the chemical potential, overpotential, and voltage contribution of the other. The resulting formulation can be written as a mechanically corrected DFN model. The standard electro-chemical equations are retained, but the active-particle chemical potential and Butler–Volmer overpotential acquire an additional contribution from the stress transmitted through the non-active matrix. The same correction can also be reduced to an SPM or SPMe setting in the appropriate slow-charging limits, as in (178)–(179). This provides a direct route for incorporating cell-scale mechanics into commonly used battery models without solving the full three-dimensional mechanical problem during every electrochemical simula-tion. We have also shown how the model can be implemented in PyBaMM . The required modifications are relatively modest: one adds a mechanically corrected active-particle chemical potential, retains the local stress-assisted diffusion contribution inside the particle, and couples the electrodes through the macroscale strain field. The resulting simulations show that the multiscale mechanical correction produces a measurable shift in the cell voltage, particularly at high states of charge where swelling stresses are largest. This confirms that stresses transmitted through the non-active matrix can affect electrochemical performance even when the underlying mechanical strains are small. The model deliberately relies on a number of simplifying assumptions. We have treated the active particles as spherical, the non-active matrix and separator as linearly elastic homogenised solids, and the particle– matrix interface as perfectly bonded. We have also neglected fluid pressure in the pores, plasticity, frac-ture, viscoelasticity, evolving porosity, SEI mechanics, and large-deformation effects. These assumptions are appropriate for isolating the leading mechanism by which electrode- and cell-scale mechanics modify the electrochemical potential, but they should not be interpreted as a complete description of all mechanical processes in a working cell. A particularly important limitation concerns microstructure. In this paper the geometry enters through idealised periodic unit cells, and the mechanical correction is summarised by the effective coefficients Σ k 
+
+> 11
+
+and Σk,g . These coefficients depend on the geometry of the particle arrangement, the particle volume fraction, and the elastic properties of the non-active matrix. Consequently, different lattice arrangements, such as simple-cubic, body-centred-cubic, or face-centred-cubic packings, will generally generate different particle surface stresses for the same average swelling and electrode strain. Similarly, explicit particle–particle contact, contact through binder bridges, or loss of contact during cycling could substantially alter the stress transmitted to each particle and hence the electrochemical correction derived here. These geometric and contact effects are therefore a natural next step. In a follow-up paper we will examine how different particle arrangements and contact mechanics modify the effective cell functions and the resulting voltage correction. This will allow us to distinguish the universal part of the multiscale coupling identified here from the microstructure-specific contribution associated with realistic electrode architectures. 
+
+Acknowledgments 
+
+This work was generously supported by the EPSRC Faraday Institution Multi-Scale Modelling project (EP/S003053/1, grant number FIRG059). 
+
+References 
+
+W. Ai, B. Wu, and E. Martínez-Pañeda. A coupled phase field formulation for modelling fatigue cracking in lithium-ion battery electrode particles. J. Power Sources , 544:231805, 2022. Wei Ai, Zhehai Chen, Yincai Guo, Laisuo Zhao, and Billy Wu. A coupled electro-chemo-mechanical model for particulate-based battery electrodes. Journal of The Electrochemical Society , 167(1):013512, 2020a. doi: 10.1149/2.0122001JES. Weilong Ai, Ludwig Kraft, Johannes Sturm, Andreas Jossen, and Billy Wu. Electrochemical thermal-mechanical modelling of stress inhomogeneity in lithium-ion pouch cells. Journal of The Electrochemical Society , 167(1):013512, 2020b. 36 Martin Z Bazant. Theory of chemical kinetics and charge transfer based on nonequilibrium thermodynamics. 
+
+Accounts of Chemical Research , 46(5):1144–1160, 2013. Steven T. Boles and Carl V. Thompson. In situ transmission electron microscopy of the electrochemical lithiation and delithiation of graphite. ACS Nano , 9(4):3707–3715, 2015. doi: 10.1021/nn5067219. Mayur P Bonkile, Yang Jiang, Niall Kirkaldy, Valentin Sulzer, Robert Timms, Huizhi Wang, Gregory Offer, and Billy Wu. Coupled electrochemical-thermal-mechanical stress modelling in composite silicon/graphite lithium-ion battery electrodes. Journal of Energy Storage , 73:108609, 2023. Ferran Brosa Planella, Weilong Ai, Adam M Boyce, Abir Ghosh, Ivan Korotkin, Smita Sahu, Valentin Sulzer, Robert Timms, Thomas G Tranter, Maxim Zyskin, et al. A continuum of physics-based lithium-ion battery models reviewed. Progress in Energy , 4(4):042003, 2022. J. Cannarella and C. B. Arnold. Stress evolution and capacity fade in constrained lithium-ion pouch cells. 
+
+Journal of Power Sources , 245:745–751, 2014. doi: 10.1016/j.jpowsour.2013.06.165. Giuseppe F Castelli, Lars von Kolzenberg, Birger Horstmann, Arnulf Latz, and Willy Dörfler. Efficient simulation of chemical–mechanical coupling in battery active particles. Energy Technology , 9(6):2000835, 2021. Jeevanjyoti Chakraborty, Colin P Please, Alain Goriely, and S Jonathan Chapman. Combining mechanical and chemical effects in the deformation and failure of a cylindrical electrode particle in a li-ion battery. 
+
+International Journal of Solids and Structures , 54:66–81, 2015. K. Parthiv Chandra and P.R. Budarapu. Design and analysis of lithium-ion pouch cell with lmo-nmc blended cathode using coupled thermo-electro-chemical model. Journal of Energy Storage , 78:109958, 2024. ISSN 2352-152X. doi: https://doi.org/10.1016/j.est.2023.109958. URL https://www.sciencedirect.com/ science/article/pii/S2352152X23033571 .SJ Chapman and SE Mcburnie. Integral constraints in multiple-scales problems. European Journal of Applied Mathematics , 26(5):595–614, 2015. C.-H. Chen, F. B. Planella, K. O’Regan, D. Gastol, W. D. Widanage, and E. Kendrick. Development of experimental techniques for parameterization of multi-scale lithium-ion battery models. Journal of The Electrochemical Society , 167(8):080534, 2020. doi: 10.1149/1945-7111/ab9050. Rutooj Deshpande, Mark Verbrugge, Yang-Tse Cheng, John Wang, and Ping Liu. Battery cycle life prediction with coupled chemical degradation and fatigue mechanics. Journal of The Electrochemical Society , 159 (10):A1730–A1738, 2012. doi: 10.1149/2.049210jes. Marc Doyle, John Newman, Antoni S. Gozdz, Caroline N. Schmutz, and Jean-Marie Tarascon. Comparison of modeling predictions with experimental data from plastic lithium ion cells. Journal of The Electrochemical Society , 143(6):1890–1903, 1996. doi: 10.1149/1.1836921. Jamie M Foster, S Jonathan Chapman, Giles Richardson, and Bartosz Protas. A mathematical model for mechanically-induced deterioration of the binder in lithium-ion electrodes. SIAM Journal on Applied Mathematics , 77(6):2172–2198, 2017a. Jamie M Foster, Xiosong Huang, Meng Jiang, Stephen Jon Chapman, Bartosz Protas, and Giles Richardson. Causes of binder damage in porous battery electrodes and strategies to prevent it. Journal of Power Sources , 350:140–151, 2017b. Jamie M Foster, A F Galvis, B Protas, and S Jonathan Chapman. Multiple scales homogenisation of a porous viscoelastic material with rigid inclusions: Application to lithium-ion battery electrodes. Journal of the Mechanics and Physics of Solids , 199:106072, 2025. Andrea Giudici, Jon Chapman, and Colin Please. Mechanical stresses in pouch cells: a reduced order model. 
+
+J. Eng. Math. , 155:3, 2025. 37 Andrea Giudici, Colin P Please, and S Jonathan Chapman. Electrolyte movement-induced salt inhomogeneity in lithium-ion batteries. Journal of Energy Storage , 171:122649, 2026. H. Y. Guney. Elastic properties and mechanical relaxation behaviors of PVDF (poly (vinylidene fluoride)) at temperatures between -20 and -100 ◦c and at 2 MHz ultrasonic frequency. Journal of Polymer Science: Part B: Polymer Physics , 43:2862–2873, 2005. F. J. Günter and N. Wassiliadis. State of the art of lithium-ion pouch cells in automotive applications: Cell teardown and characterization. Journal of The Electrochemical Society , 169(3):030515, 2022. doi: 10.1149/1945-7111/ac4e11. Meng Guo, Godfrey Sikha, and Ralph E White. Single-particle model for a lithium-ion cell: Thermal behavior. 
+
+Journal of The Electrochemical Society , 158(2):A122, 2010. Markus Klinsmann, Daniele Rosato, Marc Kamlah, and Robert M. McMeeking. Modeling crack growth during Li insertion in storage particles using a fracture phase field approach. Journal of the Mechanics and Physics of Solids , 92:313–344, 2016. doi: 10.1016/j.jmps.2016.04.004. S. Lee, J. Yang, and W. Lu. Debonding at the interface between active particles and pvdf binder. J. Electrochem. Soc. , 160(6):A968–A972, 2013. Bo Lu, Yicheng Song, Qinglin Zhang, Jie Pan, Yang-Tse Cheng, and Junqian Zhang. Voltage hysteresis of lithium ion batteries caused by mechanical stress. Physical Chemistry Chemical Physics , 18(6):4721–4727, 2016. Scott G Marquis, Valentin Sulzer, Robert Timms, Colin P Please, and S Jon Chapman. An asymptotic derivation of a single particle model with electrolyte. Journal of The Electrochemical Society , 166:A3693, 2019. Joselyn Stephane Menye, Mamadou-Baïlo Camara, and Brayima Dakyo. Lithium battery degradation and failure mechanisms: A state-of-the-art review. Energies , 18(2):342, 2025. doi: 10.3390/en18020342. URL 
+
+https://doi.org/10.3390/en18020342 .Peyman Mohtat, Suhak Lee, Jason B. Siegel, and Anna G. Stefanopoulou. Reversible and irreversible expansion of lithium-ion batteries under a wide range of stress factors. Journal of The Electrochemical Society , 168(10):100520, 2021a. doi: 10.1149/1945-7111/ac2d3e. Peyman Mohtat, Suhak Lee, Jason B Siegel, and Anna G Stefanopoulou. Reversible and irreversible expansion of lithium-ion batteries under a wide range of stress factors. Journal of The Electrochemical Society , 168 (10):100520, 2021b. Scott J Moura, Federico Bribiesca Argomedo, Reinhardt Klein, Anahita Mirtabatabaei, and Miroslav Krstic. Battery state estimation for a single particle model with electrolyte dynamics. IEEE Transactions on Control Systems Technology , 25(2):453–468, 2016. A. Nyman, M. Behm, and G. Lindbergh. Electrochemical characterisation and modelling of the mass transport phenomena in LiPF 6–EC–EMC electrolyte. Electrochimica Acta , 53(22):6356–6365, 2008. doi: 10.1016/j.electacta.2008.04.023. Andreas Pfrang, Algirdas Kersys, Akos Kriston, Dirk U Sauer, Christiane Rahe, Stefan Käbitz, and Egbert Figgemeier. Long-term cycling induced jelly roll deformation in commercial 18650 cells. Journal of Power Sources , 392:168–175, 2018. Eric Prada, D Di Domenico, Yann Creff, J Bernard, Valérie Sauvant-Moynot, and François Huet. Simplified electrochemical and thermal model of lifepo4-graphite li-ion batteries for fast charge applications. Journal of The Electrochemical Society , 159(9):A1508, 2012. Y. Qi, H. Guo, L. G. Hector, and A. Timmons. Threefold increase in the young’s modulus of graphite negative electrode during lithium intercalation. Journal of The Electrochemical Society , 157(5):A558–A566, 2010. doi: 10.1149/1.3327913. 38 Foad Rahimidehgolan and William Altenhof. Compressive behavior and deformation mechanisms of rigid polymeric foams: A review. Composites Part B: Engineering , 253:110513, 2023. Giles Richardson, G Denuault, and Colin P Please. Multiscale modelling and analysis of lithium-ion battery charge and discharge. Journal of Engineering Mathematics , 72:41–72, 2012. Giles W. Richardson, Jamie M. Foster, Rahifa Ranom, Colin P. Please, and Angel M. Ramos. Charge transport modelling of lithium-ion batteries. European Journal of Applied Mathematics , 33(6):983–1031, 2022. doi: 10.1017/S0956792521000292. B. Rieger, S. Schlueter, S. V. Erhard, and A. Jossen. Multi-scale investigation of thickness changes in a commercial pouch type lithium-ion battery. Journal of Energy Storage , 6:213–221, 2016. doi: 10.1016/j. est.2016.01.006. Adriano Schommer, Miguel Orozco Corzo, Paul Henshall, Denise Morrey, and Gordana Collier. Stack pressure on lithium-ion pouch cells: A comparative study of constant pressure and fixed displacement devices. 
+
+Journal of Power Sources , 629:236019, 2025. doi: 10.1016/j.jpowsour.2024.236019. Sophie Solchenbach, Camilla Tacconis, Aurora Gomez Martin, Verena Peters, Lea Wallisch, Anna Stanke, Johanna Hofer, Diemo Renz, Burkhard Lewerich, Georg Bauer, et al. Electrolyte motion induced salt inhomogeneity–a novel aging mechanism in large-format lithium-ion cells. Energy & Environmental Science ,17(19):7294–7317, 2024. YC Song, AK Soh, and JQ Zhang. On stress-induced voltage hysteresis in lithium ion batteries: impacts of material property, charge rate and particle size. Journal of Materials Science , 51(21):9902–9911, 2016. Sara Taslimi Taleghani, Bernard Marcos, Karim Zaghib, and Gaétan Lantagne. A study on the effect of poros-ity and particles size distribution on li-ion battery performance. Journal of The Electrochemical Society ,164(11):E3179, may 2017. doi: 10.1149/2.0211711jes. URL https://doi.org/10.1149/2.0211711jes .Robert Timms, Steven Psaltis, Colin P Please, and S Jon Chapman. A mechanical model for reinforced, expanding spirally-wound layered materials. Journal of the Mechanics and Physics of Solids , 175:105269, 2023. Yang Tu, Billy Wu, Weilong Ai, and Emilio Martínez-Pañeda. Influence of concentration-dependent material properties on the fracture and debonding of electrode particles with core–shell structure. Journal of Power Sources , 603:234395, 2024. Martin Wünsch, Jörg Kaufman, and Dirk Uwe Sauer. Investigation of the influence of different bracing of automotive pouch cells on cyclic lifetime and impedance spectra. Journal of Energy Storage , 21:149–155, 2019. doi: 10.1016/j.est.2018.11.019. Chao Xu, Ou Mao, Hossein Maleki Kheimeh Sari, Jun Li, and Xueliang Sun. Direct observation of the critical role of particle cracking in the sei formation and capacity fade of li-ion batteries. Nature Com-munications , 13(1):6092, 2022. doi: 10.1038/s41467-022-33749-3. URL https://doi.org/10.1038/ s41467-022-33749-3 .R. Xu, L. S. de Vasconcelos, J. Shi, J. Li, and K. Zhao. Disintegration of meatball electrodes for linimncoo2 cathode materials. Exp. Mech. , 59(3):403–415, 2019. Rong Xu and Kejie Zhao. Mechanical stress induced by lithium transport and its effect on the electrochemical performance of lithium-ion batteries. Journal of Energy Storage , 24:100776, 2019. doi: 10.1016/j.est.2019. 100776. URL https://doi.org/10.1016/j.est.2019.100776 .Klemen Zelič and Tomaž Katrašnik. Thermodynamically consistent and computationally efficient 0D lithium intercalation model of a phase separating cathode particle. Journal of The Electrochemical Society , 166 (14):A3242, 2019. Yi Zeng and Martin Z Bazant. Phase separation dynamics in isotropic ion-intercalation particles. SIAM Journal of Applied Mathematics , 74(4):980–1004, 2014. 39 Xiangchun Zhang, Wei Shyy, and Ann Marie Sastry. Numerical simulation of intercalation-induced stress in li-ion battery electrode particles. Journal of the Electrochemical Society , 154(10):A910, 2007. Xiao Zhang and et al. Voltage hysteresis of lithium ion batteries caused by mechanical stress. Scientific Reports , 6:22621, 2016. doi: 10.1038/srep22621. 
+
+9. Cell functions 
+
+This appendix states the unit-cell problems used in (104), (110), (113), and (142). The sign convention is the one used in the main text: tensile stress is positive, compression is negative, and the unit normal on the particle surface is 
+
+ni = eri = Xi
+
+Rk , (181) pointing out of the active particle and into the non-active matrix. The traction exerted by the non-active matrix on the particle is therefore σna ,(0)  
+
+> ij
+
+nj , consistently with (85). Let Y be the periodic unit cell, let Ω k be the active particle, let Ω na ,k be the non-active matrix region, and let ∂Ωk denote the particle–matrix interface. The outer boundary of the unit cell is denoted by ∂Ωna ,k .All cell functions below are periodic on ∂Ωna ,k , and we fix the arbitrary rigid translation by imposing zero mean displacement over Ω na ,k .The linearity of (100)–(103) allows the leading-order non-active matrix displacement to be written as 
+
+U na ,(0)  
+
+> i
+
+= U kl i
+
+∂u (−1) 
+
+> k
+
+∂x l
+
+− ¯gkU gi . (182) Here U kl i is the displacement cell function generated by a unit component of the mesoscale displacement gradient ∂u (−1)  
+
+> k
+
+/∂x l, while U gi is the displacement cell function generated by a unit contraction of the particle surface. The minus sign in the swelling term is deliberate: positive particle swelling corresponds to minus the unit-contraction solution. The corresponding strain and stress decompositions are 
+
+ϵna ,(0)  
+
+> ij
+
+= ϵkl ij 
+
+∂u (−1) 
+
+> k
+
+∂x l
+
+− ¯gkϵgij , (183) and 
+
+σna ,(0)  
+
+> ij
+
+= σkl ij 
+
+∂u (−1) 
+
+> k
+
+∂x l
+
+− ¯gkσgij . (184) This is the sign convention used in (104). 
+
+9.1. Cell functions forced by electrode-scale strain 
+
+For each ordered pair ( k, l ) of coordinate directions, the displacement cell function U kl i is defined by 
+
+ϵkl ij = 12
+
+(
+
+∂U kl i
+
+∂X j
+
++ ∂U kl j
+
+∂X i
+
+)
+
++ 12 (δik δjl + δjk δil ) , in Ω na ,k , (185) 
+
+σkl ij = 2 Gna ,k ϵkl ij + δij λna ,k ϵkl mm , ∂σ kl ij 
+
+∂X j
+
+= 0 , in Ω na ,k . (186) The additional Kronecker-delta term in (185) is the imposed unit mesoscale displacement gradient. Thus U kl i
+
+is the local correction displacement, not the total affine displacement. On the particle surface the active particle moves as a rigid body at this order. Since the imposed affine displacement gradient has already been included in (185), the correction displacement must cancel it inside the particle. Hence (102) gives 
+
+∂u kl i
+
+∂X j
+
+= −δik δjl , in Ω k. (187) 40 Therefore the displacement imposed on the matrix at ∂Ωk is 
+
+U kl i = akl i − δik Xl + ωkl m ϵijm Xj , on ∂Ωk. (188) Here akl i and ωkl m are unknown rigid-body translation and rotation constants. They are determined by requiring zero resultant force and zero resultant torque on the particle, 
+
+∫
+
+> ∂Ωk
+
+σkl ij nj dS = 0 , (189) 
+
+∫
+
+> ∂Ωk
+
+ϵimn Xmσkl nj nj dS = 0 . (190) The displacement U kl i and the traction σkl ij nj are periodic on ∂Ωna ,k . Since only the symmetric part of the imposed displacement gradient enters the strain, only the six symmetric strain modes need to be solved. For a spherical particle in a cubic unit cell, symmetry further reduces the independent computations to one normal mode, for example ( k, l ) = (1 , 1), and one shear mode, for example ( k, l ) = (1 , 2); the remaining modes are obtained by permuting the coordinate axes. 
+
+9.2. Cell function forced by particle swelling 
+
+The swelling cell function is defined as the response to a unit contraction of the particle surface. It satisfies 
+
+ϵgij = 12
+
+(
+
+∂U gi
+
+∂X j
+
++ ∂U gj
+
+∂X i
+
+)
+
+, in Ω na ,k , (191) 
+
+σgij = 2 Gna ,k ϵgij + δij λna ,k ϵgmm , ∂σ gij 
+
+∂X j
+
+= 0 , in Ω na ,k . (192) The particle displacement is rigid apart from the imposed unit contraction, so 
+
+U gi = −Xi + agi + ωgmϵijm Xj , on ∂Ωk. (193) Here agi and ωgm are determined by requiring zero resultant force and zero resultant torque on the particle, 
+
+∫
+
+> ∂Ωk
+
+σgij nj dS = 0 , (194) 
+
+∫
+
+> ∂Ωk
+
+ϵimn Xmσgnj nj dS = 0 . (195) The displacement U gi and the traction σgij nj are periodic on ∂Ωna ,k . Positive particle swelling corresponds to the stress −¯gkσgij in (184). 
+
+9.3. Effective coefficients and surface-averaged tractions 
+
+The averaging operator used in the electrode-scale stress is 
+
+A(τij ) = 1
+
+|Y |
+
+∫
+
+> Ωna ,k
+
+τij dV + 1
+
+|Y |
+
+∫
+
+> ∂Ωk
+
+Xj τik nk dS. (196) Hence 
+
+Kkij lm = A(σlm ij 
+
+) , M kij = A(σgij 
+
+) , (197) and the homogenised stress in electrode k is 
+
+σeff ,k ij = Kkij lm 
+
+∂u (−1) 
+
+> l
+
+∂x m
+
+− M kij ¯gk. (198) 41 For the cubic unit cell this reduces to the Voigt form stated in (112), with 
+
+A(σ11  
+
+> ij
+
+) = 
+
+
+
+Ck, 1 0 00 Ck, 2 00 0 Ck, 2
+
+ , A(σ12  
+
+> ij
+
+) = 
+
+
+
+0 Ck, 3 0
+
+Ck, 3 0 00 0 0
+
+ , (199) and 
+
+A(σgij ) = 
+
+
+
+Ck, 4 0 00 Ck, 4 00 0 Ck, 4
+
+ . (200) The quantities needed in the first-order particle problem are the surface-averaged radial tractions Σklm = 14π(Rk)2
+
+∫
+
+> ∂Ωk
+
+niσlm ij nj dS, Σk,g = 14π(Rk)2
+
+∫
+
+> ∂Ωk
+
+niσgij nj dS. (201) There is no additional minus sign in (201). The minus sign associated with particle swelling has already been included in the stress decomposition (184). In the thin-cell reduction used in Sections 5–7, only the through-cell strain is retained, so the radial traction applied to the particle is 
+
+σk, (1)  
+
+> rr
+
+(Rk, t ) = Σ k
+
+> 11
+
+∂u (−1) 1
+
+∂x 1
+
+− Σk,g ¯gk. (202) This is the form used in (141). “‘ 
+
+10. First-order correction: reduction to a radial particle problem 
+
+The first-order particle problem is not pointwise spherically symmetric, because the non-active matrix traction on ∂Ωk depends on the angular position. However, the homogenised DFN source term requires only the surface integral of the interfacial flux. We therefore derive the closed problem satisfied by the spherical averages. For any scalar f (r, θ, ϕ ) define 
+
+⟨f ⟩(r) = 14π
+
+∫
+
+> S2
+
+f (r, θ, ϕ ) dΩ , dΩ = sin θ dθ dϕ. (203) For a vector displacement U k, (1)  
+
+> i
+
+and stress σk, (1)  
+
+> ij
+
+, define the averaged radial displacement and averaged radial and hoop stresses by 
+
+U k, (1)  
+
+> r
+
+(r, t ) = 
+
+〈
+
+U k, (1)  
+
+> i
+
+eri
+
+〉
+
+, (204) 
+
+σk, (1)  
+
+> rr
+
+(r, t ) = 
+
+〈
+
+eri σk, (1)  
+
+> ij
+
+erj
+
+〉
+
+, (205) 
+
+σk, (1)  
+
+> θθ
+
+(r, t ) = σk, (1)  
+
+> ϕϕ
+
+(r, t ) = 12
+
+〈
+
+(δij − eri erj )σk, (1) 
+
+> ij
+
+〉
+
+. (206) We also write ck, (1) (r, t ) = ⟨ck, (1) ⟩. Since the constitutive law is linear and the swelling is isotropic, the averaged stresses are 
+
+σk, (1)  
+
+> rr
+
+= (2 Gk + λk) ∂U k, (1) 
+
+> r
+
+∂r + 2 λk U k, (1) 
+
+> r
+
+r − (2 Gk + 3 λk) 13 Vkc ck, (1) , (207) 
+
+σk, (1)  
+
+> θθ
+
+= λk ∂U k, (1) 
+
+> r
+
+∂r + 2( Gk + λk) U k, (1) 
+
+> r
+
+r − (2 Gk + 3 λk) 13 Vkc ck, (1) . (208) 42 Averaging ∂σ k, (1)  
+
+> ij
+
+/∂X j = 0 over the sphere gives the radial equilibrium equation 
+
+∂σ k, (1) 
+
+> rr
+
+∂r + 2
+
+r
+
+(σk, (1)  
+
+> rr
+
+− σk, (1) 
+
+> θθ
+
+) = 0 . (209) The angular-derivative terms vanish because they are surface divergences on the closed sphere. The averaged mechanical boundary conditions are 
+
+U k, (1)  
+
+> r
+
+(0 , t ) = 0 , σk, (1)  
+
+> rr
+
+(Rk, t ) = T k(x1, t ), (210) where 
+
+T k(x1, t ) = Σ k
+
+> 11
+
+∂u k
+
+> 1
+
+∂x 1
+
+− Σk,g ¯gk(x1, t ), ¯gk = U k, (0)  
+
+> r
+
+(Rk, t )
+
+Rk . (211) For the sign convention in Appendix 9, both Σ k 
+
+> 11
+
+and Σ k,g are positive. Thus T k < 0 corresponds to a compressive radial traction on the particle. Substitution of (207)–(208) into (209) gives 
+
+∂2U k, (1) 
+
+> r
+
+∂r 2 + 2
+
+r∂U k, (1) 
+
+> r
+
+∂r − 2
+
+r2 U k, (1)  
+
+> r
+
+= 2Gk + 3 λk
+
+2Gk + λk 
+
+> 13
+
+Vkc
+
+∂c k, (1) 
+
+∂r . (212) It is useful to split the solution into a homogeneous part, which carries the non-active matrix traction, and a particular part, which is traction-free: 
+
+U k, (1)  
+
+> r
+
+=̂ U k, (1)  
+
+> r
+
++ ˜U k, (1)  
+
+> r
+
+, ck, (1) = ˜ck, (1) . (213) The homogeneous solution is ̂
+
+U k, (1)  
+
+> r
+
+= T k
+
+2Gk + 3 λk r, (214) which produces the uniform stress ̂
+
+σ k, (1)  
+
+> rr
+
+=̂σ k, (1)  
+
+> θθ
+
+=̂σ k, (1)  
+
+> ϕϕ
+
+= T k,̂ σ k, (1)  
+
+> ll
+
+= 3 T k. (215) Since this stress is independent of r, it does not contribute to radial diffusion, but it does shift the particle chemical potential and the interfacial overpotential. The averaged first-order transport equation is 
+
+∂˜ck, (1) 
+
+∂t + 1
+
+r2
+
+∂∂r 
+
+(
+
+r2 ˜N k, (1) 
+
+> r
+
+)
+
+= 0 , 0 < r < R k, (216) with the corrected linearised flux 
+
+˜N k, (1)  
+
+> r
+
+= −Dk
+
+[
+
+ck, (0) (1 − ck, (0) ) ∂ ˜μk, (1) 
+
+∂r + (1 − 2ck, (0) )˜ck, (1) ∂μ k, (0) 
+
+∂r 
+
+]
+
+. (217) The factor (1 −2ck, (0) ) comes from the linearisation of the mobility c(1 −c). The averaged first-order chemical potential is 
+
+˜μk, (1) = − ∂Ueq ,k 
+
+∂c 
+
+∣∣∣∣c=ck, (0) 
+
+˜ck, (1) − γ 13 Vkc ˜σk, (1)  
+
+> ll
+
+− γVkc T k, (218) where ˜σk, (1)  
+
+> ll
+
+= ˜σk, (1)  
+
+> rr
+
++ 2 ˜σk, (1)  
+
+> θθ
+
+. The last term is the contribution of the homogeneous stress trace 3 T k.At the particle surface, the first-order Butler–Volmer condition is 
+
+˜N k, (1)  
+
+> r
+
+(Rk, t ) = Jk, (1) sinh 
+
+( ηk, (0) 
+
+2
+
+)
+
++ Jk, (0) ˜ηk, (1) 
+
+2 cosh 
+
+( ηk, (0) 
+
+2
+
+)
+
+, (219) with 
+
+˜ηk, (1) = ϕk, (1) − ϕe,(1) − ∂Ueq ,k 
+
+∂c 
+
+∣∣∣∣c=ck, (0) (Rk ,t )
+
+˜ck, (1) (Rk, t ) − γ 13 Vkc ˜σk, (1)  
+
+> ll
+
+(Rk, t ) − γVkc T k. (220) 43 If the reaction prefactor Kk is independent of Λ, then 
+
+Jk, (1) = Jk, (0) 
+
+2
+
+[ ce,(1) 
+
+ce,(0) + (1 − 2ck, (0) (Rk, t )) ˜ck, (1) (Rk, t )
+
+ck, (0) (Rk, t )(1 − ck, (0) (Rk, t )) 
+
+]
+
+, (221) with the obvious additional term if Kk is also perturbed. The initial condition is 
+
+˜ck, (1) (r, 0) = 0 . (222) Equations (212)–(222) are a radial particle problem of the same type as the leading-order stress-assisted diffusion problem, except for the extra spatially uniform correction −γVkc T k in (218) and (220). This is why the non-active matrix can be incorporated in the DFN model as a correction to the chemical potential and overpotential without solving a non-radial particle problem at every time step. 
+
+11. PyBaMM implementation 
+
+This appendix summarises how the mechanically corrected DFN model in Section 7 can be implemented in PyBaMM. The implementation does not require solving the full three-dimensional cell problem during the electrochemical simulation. The cell problems of Appendix 9 are solved once, offline, to obtain the dimensionless coefficients 
+
+Ck, 1, Ck, 4, Σk
+
+> 11
+
+, Σk,g , k ∈ { n, p}.
+
+During the DFN simulation one computes, for each electrode, ¯gk(x1, t ) = U kr (Rk, x 1, t )
+
+Rk = 3(Rk)3
+
+∫ Rk 
+
+> 013
+
+V kc
+
+(ck(r, x 1, t ) − ck, ref )r2 dr. (223) The one-dimensional mechanical closure is then 
+
+σk 
+
+> 11
+
+= Ck, 1 ∂u k
+
+> 1
+
+∂x 1
+
+− Ck, 4 ¯gk, (224) with continuity of u1 and σ11 across interfaces. For an imposed compressive pressure p(t) > 0 we use the sign convention 
+
+σk 
+
+> 11
+
+= −p(t), ∂u k
+
+> 1
+
+∂x 1
+
+= Ck, 4 ¯gk − p(t)
+
+Ck, 1 . (225) For a clamped cell, the common through-cell stress is instead found from the zero-total-displacement condition 
+
+∑
+
+> k∈{ n,se ,p}
+
+∫
+
+> Ωk
+
+∂u k
+
+> 1
+
+∂x 1
+
+dx1 = 0 , (226) with ¯ gse = 0 in the separator. Equivalently, in each layer 
+
+∂u k
+
+> 1
+
+∂x 1
+
+= σ11 + Ck, 4 ¯gk
+
+Ck, 1 , (227) and (226) determines the common stress σ11 (t). The non-active matrix contribution to the active-particle chemical potential is ∆μk 
+
+> na
+
+= −V kc λna ,k 
+
+(
+
+Σk
+
+> 11
+
+∂u k
+
+> 1
+
+∂x 1
+
+− Σk,g ¯gk
+
+)
+
+. (228) Thus the mechanically corrected particle chemical potential is 
+
+μDFN ,k = μ0 − F Ueq ,k (ck) − 13 V kc σkll + ∆ μk
+
+> na
+
+. (229) 44 The same correction enters the Butler–Volmer overpotential as 
+
+ηDFN ,k = ϕk − ϕe − Ueq ,k (ckR) − 
+
+> 13
+
+V kc
+
+F σkll (Rk, t ) + 1
+
+F ∆μk
+
+> na
+
+, (230) where ckR = ck(Rk, x 1, t ). Since ∆ μk 
+
+> na
+
+depends on x1 and t but not on the particle radial coordinate r, it shifts the interfacial overpotential but does not add a radial gradient to the particle diffusion flux. The only stress term that contributes directly to radial stress-assisted diffusion is therefore the local particle stress 
+
+σkll (r, x 1, t ) generated by non-uniform swelling inside the particle. Equivalently, one may implement the correction by replacing the open-circuit potential in the Butler– Volmer expression by Ueq ,k  
+
+> eff
+
+= U eq ,k + 
+
+> 13
+
+V kc
+
+F σkll (Rk, t ) − 1
+
+F ∆μk
+
+> na
+
+. (231) Equations (223)–(231) are the minimal additions needed to move from a standard stress-assisted DFN im-plementation to the multiscale-mechanics DFN model derived in the main text. 
+
+12. Parameters 
+
+In this section, we present the parameter sets for three electrode materials: LiMn 2O4 (LMO), LiNi 0.8Co 0.1Mn 0.1O2
+
+(NMC811), and graphite (LiC 6). The binder (PVDF) has Young’s modulus E = 4 GPa and Poisson’s ratio 
+
+ν = 0 .38 Guney (2005), giving a shear modulus G = 1 .45 GPa and first Lamé parameter λ = 4 .59 GPa. Because the representative element consists of a single spherical particle inscribed in a cubic cell, the active-material volume fraction cannot exceed the simple-cubic packing limit ϵs = π/ 6 ≈ 0.524; larger values would place the particle outside its own cell ( L∗ < 2Rp). Although the measured LG M50 fractions are higher (0.665 and 0.75 for NMC and graphite), we adopt ϵs = 0 .52 for both, the largest value consistent with the single-particle cubic geometry, as shown in Tables 5 and 6. 
+
+> Figure 7: On the top row are the plots of open-circuit potential for LMO. NMC811 and graphite and on the bottom row are the plots electrolyte diffusivity and conductivity
+
+45 Parameter Symbol Value Unit Dimensional parameters Maximum Li concentration ck,max 22860 Doyle et al. (1996); Chandra and Budarapu (2024) mol /m3
+
+Solid diffusivity Dk 
+
+> 0
+
+1 × 10 −13 Taleghani et al. (2017); Doyle et al. (1996) m2/sElectronic conductivity κk 3.8 Doyle et al. (1996) S/mOpen-circuit potential Ueq ,k Fig. 7 (spinel) Doyle et al. (1996) VParticle radius Rp 8.5 Doyle et al. (1996); Klinsmann et al. (2016) μm Reaction-rate constant Kk 2.0 × 10 −11 Doyle et al. (1996) m5/2 mol −1/2 s−1
+
+Porosity α 0.30 Doyle et al. (1996) —Active-material fraction ϵs 0.297 Doyle et al. (1996) —Bruggeman exponent b 1.5 Doyle et al. (1996) —Electrode thickness H 174 Doyle et al. (1996) μm Electrode width W 9.5 Günter and Wassiliadis (2022) cm Cell Area A 9.5 × 51 Günter and Wassiliadis (2022) cm 2
+
+Number of electrode pairs m 18 † —Cell capacity Q 46 † Ah Current per pair at 1C I 2.53 † AInitial electrolyte conc. c0 
+
+> e
+
+1000 Doyle et al. (1996) mol /m3
+
+Typical electrolyte diffusivity De 1.77 × 10 −10 Nyman et al. (2008) m2/sTypical electrolyte conductivity κe 0.95 Nyman et al. (2008) S/mTransference number t+ 0.363 Doyle et al. (1996) —Length of a representative element L 20.54 † μm Electrolyte diffusivity De 7.5 × 10 −9 Doyle et al. (1996) (10 −9 − 10 −11 ) m2/sElectrolyte conductivity κe 1 Doyle et al. (1996) S/mYoung’s modulus E 93 Klinsmann et al. (2016) GPa Poisson’s ratio ν 0.30 Lee et al. (2013); Klinsmann et al. (2016) —Bulk modulus K 100–200 Lee et al. (2013) GPa Shear modulus G 35.8 ( E=93 , ν =0 .3) † GPa First Lamé parameter λ 53.7 ( E=93 , ν =0 .3) † GPa Partial molar volume of Li Vc +3 .497 × 10 −6 Klinsmann et al. (2016) m3/mol Universal gas constant R 8.314 J/molK Temperature T 298.15 KFaraday constant F 96487 A s /mol 
+
+Table 4: Parameters for LiMn 2O4 (LMO), using Doyle et al. (1996) for the electrochemical, transport and geometric parameters, Klinsmann et al. (2016) for the mechanical parameters, and Günter and Wassiliadis (2022) for the pouch-cell area and capacity.  
+
+> †
+
+computed ( L = Rp(4 π/ 3ϵs)1/3 = 20 .54 μm with ϵs = 0 .297; G, λ from E, ν ). The LMO cell uses the same pouch format as the NMC/graphite cells ( m = 18 pairs); with LMO’s lower ck,max and active fraction the capacity is ∼ 46 Ah, giving a per-pair 1C current of 2 .53 A. 
+
+46 Parameter Symbol Value Unit Dimensional parameters for NMC811 Maximum Li concentration ck,max 63104 Chen et al. (2020) mol /m3
+
+Solid diffusivity Dk 
+
+> 0
+
+1.48 × 10 −15 Chen et al. (2020) m2/sElectronic conductivity κk 0.18 Chen et al. (2020) S/mOpen-circuit potential Ueq ,k Fig. 7 (Eq. 8) Chen et al. (2020) VParticle radius Rp 5.22 Chen et al. (2020) μm Reaction-rate constant Kk 3.42 × 10 −6 Chen et al. (2020) A m −2(m 3 mol −1)1.5
+
+Porosity ϵ 0.335 Chen et al. (2020) —Active-material fraction ϵs 0.5 † —Bruggeman exponent b 1.5 Chen et al. (2020) —Typical electrolyte conc. c0 
+
+> e
+
+1000 Chen et al. (2020) mol /m3
+
+Transference number t+ 0.2594 Chen et al. (2020); Nyman et al. (2008) —Length of a representative element L 10.602 † μm Electrode thickness H 75.6 Chen et al. (2020) μm Electrode width W 9.5 Günter and Wassiliadis (2022) cm Cell area A 9.5 × 51 Günter and Wassiliadis (2022) cm 2
+
+Number of electrode pairs m 18 † —Cell capacity Q 78 Günter and Wassiliadis (2022) Ah Current per pair at 1C I 4.34 † ATypical electrolyte diffusivity De 1.77 × 10 −10 Nyman et al. (2008) m2/sTypical electrolyte conductivity κe 0.95 Nyman et al. (2008) S/mYoung’s modulus E 184 Xu et al. (2019) GPa Poisson’s ratio ν 0.26 Xu et al. (2019) —Shear modulus G 73.0 ( E=184 , ν =0 .26) † GPa First Lamé parameter λ 79.1 ( E=184 , ν =0 .26) † GPa Partial molar volume of Li Vc +7 .88 × 10 −7 Ai et al. (2022) m3/mol Universal gas constant R 8.314 J/molK Temperature T 298.15 KFaraday constant F 96487 A s /mol 
+
+Table 5: Parameters for NMC811, using Chen et al. (2020) for the electrochemical, transport and geometric parameters, Ai et al. (2022) and Xu et al. (2019) for the mechanical parameters, Nyman et al. (2008) for the electrolyte, and Günter and Wassiliadis (2022) for the pouch-cell area and capacity. † computed ( L = Rp(4 π/ 3ϵs)1/3 = 10 .602 μm with ϵs = 0 .5; G, λ from E, ν ). The NMC811 cell uses the same pouch format as the LMO/graphite cells ( m = 18 pairs), giving a capacity of ∼ 78 Ah and a per-pair 1C current of 4 .34 A. 
+
+47 Parameter Symbol Value Unit Dimensional parameters Maximum Li concentration ck,max 33133 Chen et al. (2020) mol /m3
+
+Solid diffusivity Dk 
+
+> 0
+
+3.3 × 10 −14 Chen et al. (2020) m2/sElectronic conductivity κk 215 Chen et al. (2020) S/mOpen-circuit potential Ueq ,k Fig. 7 (Eq. 9) Chen et al. (2020) VParticle radius Rp 5.86 Chen et al. (2020) μm Reaction-rate constant Kk 6.48 × 10 −7 Chen et al. (2020) A m −2(m 3 mol −1)1.5
+
+Porosity ϵ 0.25 Chen et al. (2020) —Active-material fraction ϵs 0.5 † —Bruggeman exponent b 1.5 Chen et al. (2020) —Typical electrolyte conc. c0 
+
+> e
+
+1000 Chen et al. (2020) mol /m3
+
+Transference number t+ 0.2594 Chen et al. (2020); Nyman et al. (2008) —Length of a representative element L 11.902 † μm Electrode thickness H 85.2 Chen et al. (2020) μm Electrode width W 9.5 Günter and Wassiliadis (2022) mCell area A 9.5 × 51 .2 Günter and Wassiliadis (2022) cm 2
+
+Number of electrode pairs m 18 † —Cell capacity Q 78 Günter and Wassiliadis (2022) Ah Current per pair at 1C I 4.34 † ATypical electrolyte diffusivity De 1.77 × 10 −10 Nyman et al. (2008) m2/sTypical electrolyte conductivity κe 0.95 Nyman et al. (2008) S/mYoung’s modulus E 15 Qi et al. (2010) GPa Poisson’s ratio ν 0.30 Qi et al. (2010) —Shear modulus G 5.77 ( E=15 , ν =0 .3) † GPa First Lamé parameter λ 8.65 ( E=15 , ν =0 .3) † GPa Partial molar volume of Li Vc +3 .20 × 10 −6(Ai et al., 2022) m3/mol Universal gas constant R 8.314 J/molK Temperature T 298.15 KFaraday constant F 96487 A s /mol 
+
+Table 6: Parameters for graphite (LiC 6), using Chen et al. (2020) for the electrochemical, transport and geometric parameters, Qi et al. (2010) for the elastic moduli, Nyman et al. (2008) for the electrolyte, and Günter and Wassiliadis (2022) for the pouch-cell area and capacity. † computed ( L = Rp(4 π/ 3ϵs)1/3 = 11 .902 μm with ϵs = 0 .5; G, λ from E, ν ). 
+
+48

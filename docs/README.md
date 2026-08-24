@@ -6,26 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-08-23
-- 运行时间：2026-08-23 20:31:00 UTC
+- 最新运行日期：2026-08-24
+- 运行时间：2026-08-24 20:28:17 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：2
 - 精读区：0
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
-- 速读：《The Zonotopic Mixture Filter》（6.0/10）
+- 今日共生成 2 篇推荐（精读 0 篇，速读 2 篇）
+- 速读：《Quantifying the Gap Between Laboratory Battery Test Patterns and Field Duty Profiles》（6.0/10）, 《Incorporating multiscale mechanics in lithium-ion battery models》（6.0/10）
 - 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202608/23/README](/202608/23/README)
+- 详情：[/202608/24/README](/202608/24/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [The Zonotopic Mixture Filter](/202608/23/2608.17897v1-the-zonotopic-mixture-filter)  
+1. [Quantifying the Gap Between Laboratory Battery Test Patterns and Field Duty Profiles](/202608/24/2608.16212v1-quantifying-the-gap-between-laboratory-battery-test-patterns-and-field-duty-profiles)  
+   标签：评分：6.0/10、query:soc-soh
+   evidence：对比动态循环与现场工况模式，与动态条件下SOC估计相关
+2. [Incorporating multiscale mechanics in lithium-ion battery models](/202608/24/2608.20163v1-incorporating-multiscale-mechanics-in-lithium-ion-battery-models)  
    标签：评分：6.0/10、query:lfp-soc
-   evidence：使用区域体卡尔曼滤波器组的状态估计方法，可应用于SOC估计
+   evidence：提出了一种包含力学的锂离子电池模型，可用于基于模型的SOC估计
 
 
 <div class="dpr-home-promo-card">
