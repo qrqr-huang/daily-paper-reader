@@ -1,0 +1,717 @@
+Title: Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers
+
+URL Source: https://arxiv.org/pdf/2608.19895v2
+
+Published Time: Mon, 24 Aug 2026 00:56:23 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers 
+
+Ondˇ rej Straka 
+
+European Centre of Excellence NTIS, University of West Bohemia in Pilsen, Czech Republic E-mail: straka30@fav.zcu.cz 
+
+Uwe D. Hanebeck 
+
+Intelligent Sensor-Actuator-Systems Laboratory (ISAS), Karlsruhe Institute of Technology Karlsruhe, Germany E-mail: uwe.hanebeck@kit.edu 
+
+Abstract —Bayesian state estimation for discrete-time nonlinear stochastic systems is considered in the presence of measurement outliers. Building on a fixed-structure Gaussian mixture filtering framework, this paper proposes a robust measurement-update variant in which the predictive density structure is determined by an offline decomposition of the transition density into axis-aligned Gaussian components. This construction maintains the Gaussian mixture structure as deterministic and tunable via the chosen decomposition fidelity. Measurement components affected by outliers are modeled using a Student’s-t distribution, and the corresponding update of each Gaussian mixture component is approximated by a variational Bayes procedure. The resulting filter is evaluated in a two-dimensional tracking scenario with a three-dimensional augmented state and range-and-bearing measurements, where the bearing channel is affected by outliers modeled as heavy-tailed noise. 
+
+Index Terms —State estimation; Nonlinear systems; Outliers; Gaussian mixture 
+
+I. I NTRODUCTION 
+
+State estimation is crucial for fields such as tracking, guidance, positioning, navigation, sensor fusion, control, fault detection, and decision-making. Its goal is to estimate the state of a dynamic system from noisy measurements. The Bayesian approach to state estimation involves calculating the posterior probability density function (PDF) of the state con-ditioned on available measurements. For discrete-time prob-lems, it involves alternating between the Bayes equation and Chapman-Kolmogorov equation (CKE), collectively referred to as Bayesian recursive relations (BRRs). BRRs are analyt-ically tractable only for a few special cases, such as linear Gaussian systems, and usually an approximation is required. The approximate solutions to the BRRs yield algorithms of varying complexity. Assuming the joint state and measurement prediction PDF being Gaussian leads to Gaussian-assumed filters (GAFs) (e.g., cubature filter [1] or the stochastic inte-gration filter [2]), which are computationally light. However, this assumption rarely holds, leading to poor Gaussian filter (GF) performance in strongly nonlinear systems. Discrete approximation of the state posterior PDF results in another group of approximate Bayesian algorithms. These include the point-mass filters (PMFs) [3] replacing the con-tinuous support of the posterior by a usually orthogonal and 
+
+The work was partially supported by the Ministry of Education, Youth and Sports of the Czech Republic under the OP JAC project DigiTech no. CZ.02.01.01/00/23 021/0008436. 
+
+equidistant grid of weighted points. While such a grid is flexible in representing the posterior, it leads to computation-ally intensive algorithms. Switching from a deterministically constructed grid to randomly positioned points leads to particle filters (PFs) [4]. They are computationally lighter than the PMF. Still, the estimates are influenced by random effects, which can pose significant challenges in safety-critical appli-cations or even render them inadmissible in certified solutions. The gap between GAFs and PMFs is filled by Gaussian mixture filters (GMFs) [5], [6]. They represent the posterior PDF as a mixture of Gaussian PDFs with continuous support. The support, along with smaller variances of each Gaussian mixture (GM) term compared to a single Gaussian PDF, lead to higher accuracy, even in highly nonlinear problems. Compared to PFs and PMFs, the GMFs are generally less computationally intensive. Many GMFs have been proposed, varying in the way how individual components in the GM are handled. Local 
+
+GMFs [7] process each Gaussian component with its own filter and control the inevitable growth of components by pruning or merging, an approach later refined by [8] using a bank of GAFs with rules for updating component weights after correction. More recent work [9] further refines post-correction weight updates using various linearization strate-gies, while [10] employ more sophisticated component-wise filtering through a bank of Gaussian particle filters. 
+
+Global GMFs process all mixture components jointly, be-ginning with [11] posterior parameters are computed via ordi-nary differential equationss (ODEs) instead of approximating the prior mixture, and more recently, including [12], where a deterministic-sample update by weighting prior samples is performed, extracting higher-order moments, and deriving a posterior GM that minimizes Fisher information. Another line of global methods uses GM approximations of the transition density (e.g., [13]), which generally causes exponential growth of components and hence requires complex mixture reduction, whereas in [14] this was avoided by decomposing the transi-tion density into axis-aligned components, enabling a fixed number of components and closed-form posterior expressions. Recently, [15] proposed an efficient fixed-structure GMFs that avoid local component processing and prevent component explosion by decomposing the transition density offline into axis-aligned Gaussian components. Two decompositions were arXiv:2608.19895v2 [eess.SY] 21 Aug 2026 introduced: the decomposition of the filtered state grid and of the predicted state grid , each offering different trade-offs among offline complexity, the need for an approximation domain, and the use of numerical integration. Both decom-positions maintain a fixed number of posterior components, enabling a tunable balance between online computational load and estimation accuracy. Measurement noise often contains outliers caused by un-modeled anomalies or sensor faults, making Gaussian noise assumptions unreliable and motivating the use of heavy-tailed models, such as the Student’s-t distribution. Existing outlier-robust state estimation methods include PDF-based approaches like Gaussian sum, PMFs, and PFs; robust GAFs that overbound noise covariances (often degrading accuracy); and Student’s-t–based filters [16] that offer solid theoretical grounding with low computational cost. Recent advances in the latter group include variational methods [17], Student’s-t process regression [18], and solutions to BRRs for linear and nonlinear systems with heavy-tailed or skewed Student’s-t noise [19], [20]. This paper builds upon the fixed-structure GMF with predicted-state grid decomposition, which offers easier utiliza-tion in higher-dimensional state spaces and greater flexibility in the denseness of the Gaussian terms and state-space cover-age compared to the filtered-state grid. Here, denseness refers to the spatial concentration of mixture terms in the approxi-mation region, not to a probability density function. A robust 
+
+fixed-structure GMF is proposed to address the Bayesian state estimation problem involving outliers in measurements. The novelty lies in the combination of the predicted state grid fixed structure with robust heavy-tailed update. The paper is structured as follows: Section II specifies the estimation problem to be addressed. The BRRs and the fixed-structure GMF are given in Section III. The robust measurement update of the filter addressing the outliers is presented in Section IV. Performance of the proposed filter is demonstrated using a 3D tracking example in Section V, and concluding remarks are drawn in Section VI. II. P ROBLEM STATEMENT 
+
+Consider a discrete-time stochastic system described by a nonlinear state-space model 
+
+xk+1 = fk(xk) + wk, (1a) 
+
+zk = hk(xk) + vk, (1b) where xk ∈ Rnx and zk ∈ Rnz represent the immeasurable state of the system and the measurement at time instant k =0, 1, . . . , respectively. The functions fk : Rnx 7 → Rnx and 
+
+hk : Rnx 7 → Rnz are assumed known. The process noise 
+
+wk ∈ Rnx and measurement noise vk ∈ Rnz are described by known PDFs p(wk) and p(vk). The initial state x0 is given by known PDF p(x0). Both noises are assumed to be white, mutually independent, and independent of the initial state. This paper assumes that the process noise is Gaussian 1
+
+p(wk) = N { wk; 0nx×1, Q}, (2) while some measurement channels are subject to outliers. Hence, the measurement noise is described by a product of zero-mean Student’s-t (for the channels containing outliers) and Gaussian (for the remaining channels) distributions 
+
+p(vk) = p(vT 
+
+> k
+
+) · p(vG 
+
+> k
+
+), (3) where vk =
+
+h vG
+
+> k
+> vT
+> k
+
+i
+
+, vG 
+
+> k
+
+∈ RnG 
+
+> z
+
+represents the Gaussian distributed elements of the measurement noise with 
+
+p(vG 
+
+> k
+
+) = N { vG 
+
+> k
+
+; 0nG 
+
+> z×1
+
+, RG 
+
+> k
+
+} (4) and vT 
+
+> k
+
+∈ RnT 
+
+> z
+
+represents the Student’s-t distributed elements 
+
+p(vT 
+
+> k
+
+) = T { vT 
+
+> k
+
+; 0nT 
+
+> z×1
+
+, Σk, ν k}. (5) Here T { y; m, Σ, ν } = Γ( ν+2 2 )Γ( ν   
+
+> 2 )(1+ (y−m)⊺
+> Σ−1(y−m)
+> ν)−ν+2 2(νπ )ny / 2|Σ|(1 /2)
+
+,denotes the multivariate Student’s-t density with Γ denoting the Gamma function, m being the location parameter, and Σ
+
+being the scale parameter. For ν> 2 the mean and variance of 
+
+y are E[y]= m and cov[ y] = νν−2 Σ, respectively. Given the noise densities (2) and (3), the transition and measurement PDFs have the form 
+
+p(xk+1 |xk) = N { xk+1 ; fk(xk), Q}, (6) 
+
+p(zk+1 |xk+1 ) = N { zG
+
+> k+1
+
+; hG
+
+> k+1
+
+(xk+1 ), RG
+
+> k+1
+
+}T { zT
+
+> k+1
+
+; hT
+
+> k+1
+
+(xk+1 ), Σk+1 , ν k+1 }, (7) such that zk+1 =
+
+ zG
+
+> k+1
+> zT
+> k+1
+
+
+
+and hk+1 (xk+1 ) = 
+
+ hG
+
+> k+1 (xk+1 )
+> hT
+> k+1 (xk+1 )
+
+
+
+.Assuming the knowledge of the model, the goal of Bayesian state estimation is to infer the posterior PDF p(xk|zk) of the state xk given all the measurements available up to time k,denoted as zk := [ z1
+
+> ⊺
+
+, z2
+
+> ⊺
+
+, · · · , zk
+
+> ⊺
+
+]⊺.III. S TRUCTURED GAUSSIAN MIXTURE FILTER 
+
+The general solution to the problem is provided by the BRRs consisting of the Bayes equation (8a) and the CKE (8b) 
+
+p(xk+1 |zk+1 ) = p(zk+1 |xk+1 )p(xk+1 |zk )  
+
+> p(zk+1 |zk)
+
+, (8a) 
+
+p(xk+1 |zk) = 
+
+Z
+
+p(xk+1 |xk)p(xk|zk)d xk, (8b) where p(zk+1 |zk) is the measurement predictive PDF given by 
+
+p(zk+1 |zk) = R p(zk+1 |xk+1 )p(xk+1 |zk)d xk+1 . The initial condition for the BRRs is p(x0|z0) = p(x0). The calculation of the BRRs thus involves alternating the filtering step (8a) and the prediction step (8b).         
+
+> 1The notation N { y;m,P}denotes a Gaussian distribution of ywith mean
+> mand covariance matrix P.
+
+The fixed-structure GMF [15] follows the BRRs with the transition PDF p(xk+1 |xk) (6) decomposed 2 as follows [21] 
+
+p(xk+1 |xk) = N { xk+1 ; fk(xk), Q}≈
+
+> Mk+1
+
+X
+
+> j=1
+
+ωj γj [xk+1 ; θγ,j k+1 ] ϕj [fk(xk); θϕ,j k ], (9) where Mk+1 is the rank of the (functional) decomposition and functions γj and ϕj are given by a Gaussian PDF 
+
+γj [xk+1 ; θγ,j k+1 ] = N { xk+1 ; mγ,j k+1 , Pγ,j }, (10a) 
+
+ϕj [fk(xk); θϕ,j k ] = N { fk(xk); mϕ,j k ; Pϕ,j }. (10b) The weights {ωj }Mk+1  
+
+> j=1
+
+and the parameters {θγ,j }Mk+1  
+
+> j=1
+
+and 
+
+{θϕ,j }Mk+1  
+
+> j=1
+
+are obtained by an optimization process off-line [21]. The rank Mk+1 depends on the size of the state space 
+
+Rnx , which is to be covered by the decomposition, and on the denseness of the terms, which serves as a parameter for the optimization. The optimized parameters can be precomputed for several prescribed denseness levels, allowing for the de-composition (9) to be readily constructed within a specified region of the state space for xk+1 . The decomposition is computed offline and therefore does not contribute to per-step filtering time. Its offline cost and storage, however, increase with the state-space region to be covered, the requested term denseness, and the state dimension, because these choices determine the decomposition rank M . Online complexity then grows approximately in proportion to the number of retained mixture terms. Consequently, high-dimensional problems may require coarser decompositions, structured construction, or additional pruning; efficient construction for high dimensions remains future work. The fixed-structure GMF involving the decomposition (9) can be described using Algorithm 1. 
+
+Remarks: (R1) The type of PDFs pi(xk|zk) in (11) and (16) depends on the measurement update, in particular on p(zk|xk) and the approximation used in (8a). It has no impact on the structure of the predictive PDF (15) since its structure is fixed through the decomposition, which is a GM. 
+
+(R2) The information from the previous step stored in 
+
+p(xk|zk) (11) is transformed into the weights αjk+1 |k
+
+through (14). The new measurement zk+1 then incurs an update of weights αjk+1 |k, and transformation of the PDF N { xk+1 ; mγ,j k+1 , Pγ,j } to pj (xk+1 |zk+1 ). For 
+
+pj (xk+1 |zk+1 ) being Gaussian, this transformation cor-responds to a change of moments mγ,j k+1 and Pγ,j .
+
+(R3) The only parameter of the decomposition specified during the online run of the algorithm is the region of the state space that is to be covered by the decomposition. An efficient way is to calculate approximate moments of the filtering PDF p(xk+1 |zk+1 ) (e.g., by an unscented 
+
+> 2Note that the decomposition can be computed for other distributions of the transition PDF such as Student’s-t or generalized Gaussian [21].
+
+Algorithm 1 fixed-structure GMF 
+
+Step 1 (initialization): Set k = 0 . Assume a posterior PDF 
+
+p(xk|zk) = 
+
+> Nk|k
+
+X
+
+> i=1
+
+αik|k pi(xk|zk). (11) 
+
+Step 2 (time update): Calculate the CKE (8b) using the transition density decomposition (9) as 
+
+p(xk+1 |zk) = 
+
+Z
+
+p(xk+1 |xk)p(xk|zk)d xk
+
+≈
+
+Z Mk+1 
+
+X
+
+> j=1
+
+ωjk γj [xk+1 ; θγ,j k+1 ] ϕj [fk(xk); θϕ,j k ]
+
+> Nk|k
+
+X
+
+> i=1
+
+αik|k pi(xk|zk)
+
+!
+
+dxk, (12) which can be rewritten as 
+
+p(xk+1 |zk) ≈
+
+> Mk+1
+
+X
+
+> j=1
+
+αjk+1 |k γj [xk+1 ; θγ,j k+1 ], (13) where 
+
+αjk+1 |k = ωjNk|k
+
+X
+
+> i=1
+
+αik|k
+
+Z
+
+ϕj [fk(xk); θϕ,j k ]pi(xk|zk)d xk. (14) As the function γj is of the form of a Gaussian PDF (c.f. (10a)), the predictive PDF p(xk+1 |zk) is a GM 
+
+p(xk+1 |zk) = 
+
+> Nk+1 |k
+
+X
+
+> j=1
+
+αjk+1 |k N { xk+1 ; mγ,j k+1 , Pγ,j }. (15) From the predictive PDF (15), the point estimate ˆxk+1 |k =
+
+E[xk+1 |zk] and the covariance matrix Pk+1 |k = cov[ xk+1 |zk]
+
+can be computed if needed. 
+
+Step 3 (measurement update): Calculate the Bayes equa-tion (8a) using (15) and (7) leading to 
+
+p(xk+1 |zk+1 ) = 
+
+> Nk+1 |k+1
+
+X
+
+> j=1
+
+αjk+1 |k+1 pj (xk+1 |zk+1 ). (16) From the filtering PDF (16), the point estimate ˆxk+1 |k+1 =
+
+E[xk+1 |zk+1 ] and the covariance matrix Pk+1 |k+1 =cov[ xk+1 |zk+1 ] can be computed. Continue with Step 2 .Figure 1. Illustration of the filtering and predictive PDFs of the structured GMF with pruning for nx=3 , xk =[ x1        
+
+> k,x2
+> k,x3
+> k]⊺,with the covariance represented through the ellipsoid sizes and weights represented by color.
+
+Kalman filter (UKF)) and use them to specify the region of the approximation. 
+
+(R4) If the rank of the decomposition Mk+1 , given the calculated region, is too high, the terms with negligible weights αjk+1 |k can be pruned since the terms associated with these weights will have negligible effect on the filtering PDF p(xk+1 |zk+1 ). This pruning is inspired by the fact that the term with a zero weight αjk+1 |k in (13) will have no impact on (16) regardless of zk+1 .The predictive and filtering PDFs of the fixed-structure GMF after pruning of negligible terms are illustrated in 1 for the problem considered in the numerical illustration. IV. R OBUST MEASUREMENT UPDATE 
+
+For convenience, assume all measurement noise elements are Student’s-t distributed, i.e., nz = nT 
+
+> z
+
+and nG 
+
+> z
+
+= 0.The case for combining Gaussian and Student’s-t distributed measurement noise elements will be addressed later. For a Student’s-t distributed noise, the measurement PDF can be expressed using a hierarchical representation as 
+
+p(zk+1 |xk+1 ) = T { zk+1 ; hk+1 (xk+1 ), Σk+1 , ν k+1 }
+
+=
+
+Z ∞
+
+> 0
+
+N { zk+1 ; hk+1 (xk+1 ), Σk+1 /λ k+1 }
+
+| {z }
+
+> p(zk+1 |xk+1 ,λ k+1 )
+
+p(λk+1 ) d λk+1 ,
+
+(17) with parameter λk+1 being Gamma distributed, p(λk+1 ) = 
+
+G{ λk+1 ; νk+1  
+
+> 2
+
+, νk+1  
+
+> 2
+
+}.To compute the term pj (xk+1 |zk+1 ) of the posterior GM (16) from the term N { xk+1 ; mγ,j k+1 , Pγ,j } of the pre-dictive GM, we propose to use the variational Bayes (VB) approach [22]. For convenience, the superscript j and subscript 
+
+k+1 will be dropped in the following derivation. The PDF 
+
+px(x) denotes the j-th term of the predictive PDF and px(x|z)
+
+denotes the j-th term of the posterior (filtering) PDF. The VB approach seeks its approximation of the form 
+
+p(x, λ |z) ≈ px(x)pλ(λ) (18) by minimizing the Kullback-Leibler divergence of the true posterior from the factorized approximation [22] 
+
+p∗
+
+> x
+
+(x) p∗
+
+> λ
+
+(λ) = arg min 
+
+> px,p λ
+
+DKL 
+
+
+
+px(x)pλ(λ)∥p(x, λ |z)
+
+
+
+. (19) The analytic solution to (19) can be obtained by a cyclic iteration of steps 
+
+log px(x) = Epλ [log p(z, x, λ )] + cx (20a) 
+
+log pλ(λ) = Epx [log p(z, x, λ )] + cλ, (20b) where p(z, x, λ ) = p(z|x, λ )p(x)p(λ), cx and cλ are constants w.r.t. x and λ, respectively. This cyclic iteration is the core of the robust update of the proposed robust fixed-structure GMF. The algorithm of the measurement update of a sin-gle term N { xk+1 ; mγ,j k+1 |k, Pγ,j } of the predictive GM, is described in Algorithm 2. The nonlinearity of h is ad-dressed by unscented transform (UT) [23], which is used to compute the predictive measurement mean ˆzk+1 |k =
+
+E[zk+1 |zk] = E[hk+1 (xk+1 )|zk], predictive covariance matrix of hk+1 (xk+1 ) defined as Phh  
+
+> k+1 |k
+
+= var[ hk+1 (xk+1 )|zk], and cross covariance matrix Pxh  
+
+> k+1 |k
+
+= cov[ xk+1 , hk+1 (xk+1 )|zk].
+
+Algorithm 2 Robust measurement update of a j-th GM term 
+
+Require: N { xk+1 ; mγ,j k+1 |k, Pγ,j }, G{ λk+1 ; νk+1  
+
+> 2
+
+, νk+1  
+
+> 2
+
+}, zk+1 
+
+Ensure: N { xk+1 ; mγ,j k+1 |k+1 , Pγ,j k+1 |k+1 }
+
+Use UT to compute ˆzjk+1 |k, Phh ,j k+1 |k, and Pxh ,j k+1 |k.Set ¯λk+1 = Epλk+1 [λk+1 ] = 1 .
+
+repeat 
+
+Update N { xk+1 ; mγ,j k+1 |k+1 , Pγ,j k+1 |k+1 } given pλ(λ) as 
+
+Pzz ,j k+1 |k = Phh ,j k+1 |k + Σk+1 /¯λk+1 
+
+Kjk+1 = Pxh ,j k+1 |k(Pzz ,j k+1 |k)−1
+
+mγ,j k+1 |k+1 = mγ,j k+1 |k + Kjk+1 (zk+1 − ˆzjk+1 |k)
+
+Pγ,j k+1 |k+1 = Pγ,j − Kjk+1 (Pxh ,j k+1 |k)⊺
+
+Update pλ(λ) = G{ λ; νk+1 +nz 
+
+> 2
+
+, νk+1 +Ξk+1  
+
+> 2
+
+}
+
+Ξk+1 = ( zk+1 −ˆzjk+1 |k)⊺(Pzz ,j k+1 |k)−1(zk+1 −ˆzjk+1 |k)¯λk+1 = Epλk+1 [λk+1 ] = νk+1 +nz
+
+> νk+1 +Ξk+1
+
+until converged 
+
+Algorithm for the measurement noise given by a com-bination of Gaussian PDF and Student’s-t PDF (3) : The fixed-structure GMF with robust measurement update pro-posed in this paper is given by the Algorithm 1 with the measurement update step specified as follows: When the measurement noise consists of both Gaussian and Student’s-t distributed elements (3), two measurement update steps must be performed sequentially for each term of the GM. For the exact Bayesian update, the Gaussian and Student’s-t likelihood factors commute. In the proposed implementation, however, each sub-update is approximate (UKF moment approxima-tion and VB factorization), so reversing their order can, in general, lead to a different Gaussian approximation. We use the Gaussian channel first and the robust Student’s-t channel second consistently throughout the experiments. A systematic comparison of the two orders is outside the present scope. 
+
+p(zk+1 |xk+1 ) = N { zG
+
+> k+1
+
+; hG
+
+> k+1
+
+(xk+1 ), RG
+
+> k+1
+
+} (21) followed by the measurement update step for the Student’s-t elements given by Algorithm 2, considering the PDF 
+
+p(zk+1 |xk+1 ) = T { zT
+
+> k+1
+
+; hT
+
+> k+1
+
+(xk+1 ), Σk+1 , ν k+1 }. (22) Application of the above VB-based steps leads to the filtering PDF in the GM form 
+
+p(xk+1 |zk+1 ) = 
+
+> Nk+1 |k+1
+
+X
+
+> j=1
+
+αjk+1 |k+1 
+
+N { xk+1 ; mx,j k+1 |k+1 , Σx,j k+1 |k+1 }. (23) It only remains to specify the measurement update of the weights αjk+1 |k using the observed measurement zk+1 
+
+αjk+1 |k+1 ∝ αjk+1 |k N { zG
+
+> k+1
+
+; ˆ zG
+
+> k+1 |k
+
+, Phh ,j, G 
+
+> k+1 |k
+
++ RG
+
+> k+1
+
+}T { zT
+
+> k+1
+
+; ˆ zT
+
+> k+1 |k
+
+, Σk+1 , ¯λjk+1 }, (24) where the measurement prediction mean ˆzj, G 
+
+> k+1 |k
+
+and covari-ance matrix Phh ,j, G 
+
+> k+1 |k
+
+are obtained by the UT in the measure-ment update for the Gaussian elements and the measurement prediction mean ˆzT 
+
+> k+1 |k
+
+and the mean of the Gamma distribu-tion ¯λjk+1 are produced by Algorithm 2 for the j-th term. V. N UMERICAL ILLUSTRATION 
+
+The performance of the proposed algorithm is illustrated using a numerical example of object tracking. Consider an object moving in a two-dimensional plane with its position at time tk denoted by [xk yk] [ m]. The object’s position is observed by a radar sensor, which provides the range rk [m]
+
+and bearing ρk [rad ]. The range is subject to a zero-mean Gaussian noise, and the bearing is subject to a noise with outliers simulated by a mixture of Gaussian PDF p(ρk) = 0.9 N { ρk; 0 , 2×10 −4}+0 .1 N { ρk; 0 , 77 ×10 −4}. In addition, the bearing measurement is affected by an unknown bias denoted by bk. Thus, the target motion is two-dimensional, whereas the augmented estimation state is three-dimensional due to the additional bearing-bias component. Therefore, the state xk of the object model is defined as xk = [ xk, yk, b k]⊺.Its dynamic equation is of the form: 
+
+h xk+1 
+
+> yk+1
+> bk+1
+
+i| {z } 
+
+> xk+1
+
+=
+
+h 1.1 0 00 1.1 00 0 exp( −1/β )Ts
+
+i| {z }
+
+> F
+
+h xk
+
+> yk
+> bk
+
+i| {z } 
+
+> xk
+
++wk, (25) where the process noise w is white zero-mean Gaussian with a known covariance matrix Q = 10 −1
+
+h 5 0 00 5 00 0 0 .5
+
+i
+
+. The parameter 
+
+β of the bias process is set to β = 100 s, and the sampling period is Ts = 1 s. The measurement equation is given by 
+
+[ rk 
+
+> ρk
+
+]
+
+|{z} 
+
+> zk
+
+=
+
+h √x2   
+
+> k+y2
+> k
+> atan2( yk,xk)+ bk
+
+i| {z } 
+
+> h(xk)
+
++
+
+vrk
+
+vρk
+
+| {z } 
+
+> vk
+
+. (26) The range noise is zero-mean Gaussian, p(vrk) = N { vrk; 0 , R }
+
+with R = 0 .12. The bearing noise is modelled as zero-mean Student’s-t distributed p(vρk ) = T { vρk , 0, Σ, 3}. Two cases of 
+
+Σ are considered, Σa = (1 π 
+
+> 180
+
+)2 and Σb = (2 π 
+
+> 180
+
+)2, where the second case is more challenging compared to the first case since the measurement PDF p(zk|xk) exhibits a ”banana shape”. This shape arises from a small uncertainty in range and a larger one in bearing. Note that the GM used for the 
+
+simulation of the bearing noise with outliers is chosen such that its variance is equal to the variance of the Student’s-t distribution used as a model for the filters (The values correspond to Σa. For Σb, the GM variances are appropriately increased.). The process and measurement noises are mutually independent and independent of the initial condition x0, which is Gaussian with mean [100 , 100 , 1] ⊺ and covariance matrix 
+
+cov[ x0] = 0 .1 · I3.For the comparison, three filters are considered:  
+
+> •
+
+the proposed fixed-structure GMF with robust measure-ment update with pruning of insignificant terms (rfsGMF) with threshold parameter 0.1, maximum nuber of itera-tions 20  
+
+> •
+
+the UKF with the parameter κ = 0  
+
+> •
+
+the bootstrap PF (BPF) with 10 5 samples and multinomial resampling. The UKF represents a GAF providing only the conditional mean E[xk|zk] and covariance matrix cov[ xk|zk]. It operates only with the first two moments of the measurement noise. The BPF can work with arbitrary measurement noise PDF. Note that the Student’s-t filters were not considered, as they assume a Student’s-t distribution of both process and measurement noises, which is not the case in the considered example. The performance of the filters was measured using the root mean-squared error (RMSE) defined as 
+
+RMSE k = 1
+
+> MM
+
+X
+
+> ℓ=1
+
+(˜ xk|k(ℓ)) 2
+
+!1/2
+
+(27) based on M = 10 3 Monte Carlo (MC) simulations with 
+
+˜xk|k(ℓ) := xk(ℓ) − ˆxk|k(ℓ) being the estimate error, xk(ℓ)
+
+being the true state at ℓ-th MC simulation and ˆxk|k(ℓ) being its filtering estimate. To assess higher-order information provided by the filters, the average normalized estimate error squared (ANEES) [24] defined by 
+
+ANEES k = 1
+
+nx
+
+1
+
+M
+
+> M
+
+X
+
+> ℓ=1
+
+˜xk|k(ℓ)⊺ cov[ xk|zk]−1 ˜xk|k(ℓ) (28) is used. ANEES assesses the consistency of the estimator, i.e., alignment of the conditional covariance matrix cov[ xk|zk] and the estimate error ˜xk|k. This value should be close to one. Higher or lower ANEES values mean that the estimator is too optimistic or too pessimistic, respectively. The values of RMSE and ANEES for filtering estimates 
+
+ˆxk|k = E[xk|zk], cov[ xk|zk] averaged over k = 1 , . . . , 30 are given in Table I. 
+
+Table I TIME AVERAGE OF RMSE AND ANEES. 
+
+Σa = (1 π 
+
+> 180
+
+)2 Σb = (2 π 
+
+> 180
+
+)2
+
+UKF BPF rfsGMF UKF BPF rfsGMF RMSE 
+
+x 8.435 6.906 6.321 9.510 10.459 8.514 
+
+y 8.309 6.752 6.271 9.606 10.359 8.615 
+
+b 0.794 0.782 0.794 0.664 0.754 0.661 ANEES 2.584 2.756 1.901 2.308 3.599 2.132 
+
+The table indicates that, in terms of RMSE, the rfsGMF provides the best performance for both cases Σa and Σb. For the less challenging Σa, the worst performance is achieved by UKF assuming a Gaussian posterior PDF, and BPF is slightly worse than rfsGMF. For the more challenging Σb, the performance of BPF worsens significantly and is surpassed by the UKF despite the large number of samples of BPF. The issue is caused by the ”banana shape” of the measurement PDF, leading to many samples having negligible weights and thus not contributing to the state estimate. The ANEES values are above one for all three estimators, indicating that all methods are somewhat optimistic in their covariance assessment. The rfsGMF nevertheless provides the values closest to one in both scenarios. A more detailed investigation of the source of this residual inconsistency is beyond the scope of the present numerical study. VI. C ONCLUSION 
+
+The paper addressed Bayesian state estimation for nonlinear stochastic systems with measurement channels influenced by outliers. A robust measurement-update variant of the fixed-structure GMF was proposed. The fixed structure avoids random sampling effects and uncontrolled mixture growth; its computational benefit depends on the selected decomposition rank and pruning level. Robustness to outliers is achieved by modeling measurement noise with a Student’s-t distribution and employing the variational Bayes method during the mea-surement update of individual Gaussian mixture terms. Numer-ical results demonstrated that the proposed filter consistently outperforms both the Gaussian-assumed unscented Kalman filter and the bootstrap particle filter. Future work will focus on efficiently constructing the fixed Gaussian mixture structure for high-dimensional problems. REFERENCES [1] I. Arasaratnam and S. Haykin, “Cubature Kalman filters,” IEEE Trans-actions on Automatic Control , vol. 54, no. 6, pp. 1254–1269, 2009. [2] J. Dun´ ık, O. Straka, and M. ˇ Simandl, “Stochastic integration filter,” IEEE Transactions on Automatic Control , vol. 58, no. 6, pp. 1561–1566, 2013. [3] M. ˇSimandl, J. Kr´ alovec, and T. S¨ oderstr¨ om, “Advanced point-mass method for nonlinear state estimation,” Automatica , vol. 42, no. 7, pp. 1133–1145, 2006. [4] B. Ristic, S. Arulampalam, and N. Gordon, Beyond the Kalman Filter: Particle Filters for Tracking Applications . Artech House, 2003. [5] H. Sorenson and D. Alspach, “Recursive Bayesian Estimation Using Gaussian Sums,” Automatica , vol. 7, no. 4, pp. 465–479, 1971. [6] O. Straka, J. Dunik, and M. Simandl, “Gaussian sum unscented Kalman filter with adaptive scaling parameters,” in Proceedings of the 14th International Conference on Information Fusion , Chicago, IL., 2011. [7] H. W. Sorenson and D. L. Alspach, “Recursive Bayesian estimation using Gaussian sums,” Automatica , vol. 7, pp. 465–479, 1971. [8] K. Ito and K. Xiong, “Gaussian filters for nonlinear filtering problems,” 
+
+IEEE Trans. on Automatic Control , vol. 45, no. 5, pp. 910–927, 2000. [9] D. Durant, U. D. Hanebeck, and R. Zanetti, “Good things come to those who weight! improving gaussian mixture weights for cislunar debris tracking,” in Proceedings of the AAS/AIAA Space Flight Mechanics Meeting, Kaua’i, Hawaii , no. 25, Kaua’i, Hawaii, January 2025, p. 309. [10] J. Kotecha and P. Djuric, “Gaussian Sum Particle Filtering,” IEEE Transactions on Signal Processing , vol. 51, no. 10, pp. 2602–2612, 2003. [11] U. D. Hanebeck and O. Feiermann, “Progressive Bayesian estimation for nonlinear discrete-time systems: The filter step for scalar measure-ments and multidimensional states,” in Proceedings of the 2003 IEEE Conference on Decision and Control (CDC 2003) , Maui, Hawaii, USA, December 2003, p. 5366–5371. [12] D. Frisch and U. D. Hanebeck, “Gaussian mixture particle filter step based on method of moments,” in Proceedings of the 27th International Conference on Information Fusion , Venice, Italy, July 2024. [13] A. G. Wills, J. Hendriks, C. Renton, and B. Ninness, “A Numerically Robust Bayesian Filtering Algorithm for Gaussian Mixture Models,” in 
+
+IFAC-PapersOnLine , ser. 12th IFAC Symposium on Nonlinear Control Systems NOLCOS 2022, vol. 56, 2023, pp. 67–72. [14] M. Huber, D. Brunn, and U. D. Hanebeck, “Closed-form prediction of nonlinear dynamic systems by means of Gaussian mixture approx-imation of the transition density,” in Proceedings of the 2006 IEEE International Conference on Multisensor Fusion and Integration for Intelligent Systems , Heidelberg, Germany, September 2006, p. 98–103. [15] O. Straka and U. D. Hanebeck, “Efficient Gaussian mixture filters based on transition density approximation,” in 2025 28th International Conference on Information Fusion (FUSION) , 2025, pp. 1–8. [16] O. Straka and J. Dun´ ık, “Stochastic integration Student’s-t filter,” in 2017 20th International Conference on Information Fusion (Fusion) , 2017. [17] G. Agamennoni, J. I. Nieto, and E. M. Nebot, “Approximate inference in state-space models with heavy-tailed noise,” IEEE Transactions on Signal Processing , vol. 60, no. 10, pp. 5024–5037, 2012. [18] A. Solin and S. S¨ arkk¨ a, “State space methods for efficient inference in Student-t process regression,” in Proceedings of the 18th International Conference on Artificial Intelligence and Statistics , ser. JMLR Workshop and Conference Proceedings, vol. 38, 2015, pp. 885–893. [19] M. Roth, E. ¨ Ozkan, and F. Gustafsson, “A Student’s-t filter for heavy tailed process and measurement noise,” in Proceedings of the 2013 IEEE International Conference on Acoustics, Speech and Signal Processing ,Vancouver, Canada, May 2013. [20] F. Tronarp, R. Hostettler, and S. S¨ arkk¨ a, “Sigma-point filtering for nonlinear systems with non-additive heavy-tailed noise,” in 19th Inter-national Conference on Information Fusion , 2016, pp. 1859–1866. [21] P. Tichavsk´ y, O. Straka, and J. Dun´ ık, “Grid-based Bayesian filters with functional decomposition of transient density,” IEEE Transactions on Signal Processing , vol. 71, pp. 92–104, 2023. [22] H. Nurminen, T. Ardeshiri, R. Pich´ e, and F. Gustafsson, “Robust inference for state-space models with skewed measurement noise,” IEEE Signal Processing Letters , vol. 22, no. 11, pp. 1898–1902, Nov 2015. [23] S. J. Julier and J. K. Uhlmann, “Unscented filtering and nonlinear estimation,” IEEE Proceedings , vol. 92, no. 3, pp. 401–421, 2004. [24] X. R. Li and Z. Zhao, “Measuring estimator’s credibility: Noncredibility index,” in Proceedings of 2006 International Conference on Information Fusion , Florence, Italy, 2006.

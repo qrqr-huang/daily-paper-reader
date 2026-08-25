@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-25T20:43:55.986316+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.19895v2",
+      "source": "arxiv",
+      "title": "Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers",
+      "abstract": "Bayesian state estimation for discrete-time nonlinear stochastic systems is considered in the presence of measurement outliers. Building on a fixed-structure Gaussian mixture filtering framework, this paper proposes a robust measurement-update variant in which the predictive density structure is determined by an offline decomposition of the transition density into axis-aligned Gaussian components. This construction maintains the Gaussian mixture structure as deterministic and tunable via the chosen decomposition fidelity. Measurement components affected by outliers are modeled using a Student's-t distribution, and the corresponding update of each Gaussian mixture component is approximated by a variational Bayes procedure. The resulting filter is evaluated in a three-dimensional tracking scenario with range and bearing measurements, where the bearing channel is affected by outliers, modeled as heavy-tailed noise.",
+      "authors": [
+        "Ondřej Straka",
+        "Uwe D. Hanebeck"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-08-20T11:03:44+00:00",
+      "link": "https://arxiv.org/pdf/2608.19895v2",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "robust measurement update for state estimation under outliers",
+      "llm_evidence_cn": "异常值下状态估计的鲁棒测量更新",
+      "llm_evidence": "异常值下状态估计的鲁棒测量更新",
+      "canonical_evidence": "异常值下状态估计的鲁棒测量更新",
+      "llm_tldr_en": "Proposes robust fixed-structure Gaussian mixture filtering for nonlinear state estimation with outliers. Uses Student-t measurement updates via variational Bayes. Maintains deterministic mixture structure, improves outlier robustness, applicable to SOC estimation.",
+      "llm_tldr_cn": "针对非线性随机系统在测量异常值存在时的贝叶斯状态估计问题，本文提出一种固定结构高斯混合滤波的鲁棒测量更新方法。通过离线分解转移密度确定预测密度结构，并用学生t分布建模异常值，采用变分贝叶斯近似更新各分量。实验表明该方法在异常值环境下保持估计精度。该滤波框架可作为电池SOC估计中应对异常值的通用方法。",
+      "llm_tldr": "针对非线性随机系统在测量异常值存在时的贝叶斯状态估计问题，本文提出一种固定结构高斯混合滤波的鲁棒测量更新方法。通过离线分解转移密度确定预测密度结构，并用学生t分布建模异常值，采用变分贝叶斯近似更新各分量。实验表明该方法在异常值环境下保持估计精度。该滤波框架可作为电池SOC估计中应对异常值的通用方法。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-25",
+  "date": "2026-08-25",
+  "generated_at": "2026-08-25T20:44:59",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/25/2608.19895v2-fixed-structure-gaussian-mixture-filtering-with-robust-measurement-updates-under-outliers",
+      "section": "quick",
+      "title_en": "Fixed-structure Gaussian Mixture Filtering with Robust Measurement Updates under Outliers",
+      "authors": "Ondřej Straka, Uwe D. Hanebeck",
+      "date": "2026-08-20",
+      "pdf": "https://arxiv.org/pdf/2608.19895v2",
+      "score": "6.0",
+      "evidence": "异常值下状态估计的鲁棒测量更新",
+      "tldr": "针对存在测量离群值的离散时间非线性随机系统，本文在固定结构高斯混合滤波框架下提出鲁棒测量更新方法。预测密度由转移密度离线分解为轴对齐高斯分量确定，结构确定且可调。受离群值影响的测量分量采用Student-t分布建模，并通过变分贝叶斯近似更新。在三维距离-方位跟踪场景中验证，方位通道重尾噪声下滤波稳健，表明方法能有效提升离群值下的估计性能。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Bayesian state estimation for discrete-time nonlinear stochastic systems is considered in the presence of measurement outliers. Building on a fixed-structure Gaussian mixture filtering framework, this paper proposes a robust measurement-update variant in which the predictive density structure is determined by an offline decomposition of the transition density into axis-aligned Gaussian components. This construction maintains the Gaussian mixture structure as deterministic and tunable via the chosen decomposition fidelity. Measurement components affected by outliers are modeled using a Student's-t distribution, and the corresponding update of each Gaussian mixture component is approximated by a variational Bayes procedure. The resulting filter is evaluated in a three-dimensional tracking scenario with range and bearing measurements, where the bearing channel is affected by outliers, modeled as heavy-tailed noise.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
