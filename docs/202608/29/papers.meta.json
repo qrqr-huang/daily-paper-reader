@@ -1,0 +1,24 @@
+{
+  "label": "2026-08-29",
+  "date": "2026-08-29",
+  "generated_at": "2026-08-29T03:43:21",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202608/29/2608.22023v1-spectral-pre-filtering-for-context-adaptive-sensor-fusion-a-four-role-fft-gdcb-integration-for-high-stakes-decision-systems",
+      "section": "quick",
+      "title_en": "Spectral Pre-Filtering for Context-Adaptive Sensor Fusion: A Four-Role FFT-GDCB Integration for High-Stakes Decision Systems",
+      "authors": "Oleg Miroshnichenko",
+      "date": "2026-08-22",
+      "pdf": "https://arxiv.org/pdf/2608.22023v1",
+      "score": "6.0",
+      "evidence": "针对周期性噪声的上下文自适应卡尔曼滤波器与FFT预滤波，用于传感器融合",
+      "tldr": "上下文自适应卡尔曼滤波器在处理周期性传感器信号时，创新残差易被污染，导致噪声协方差估计失真。本文提出四角色FFT预滤波器，以O(N log N)成本同时完成有色噪声白化、创新清洗、频谱特征生成和特征去季节化。该模块作为GDCB框架的预处理层，单个FFT调用服务四个下游任务，计算占比不足0.1%且无需改动现有组件。在六个领域中均通过预注册协议验证，获得PROVES结论，展示了高效即插即用的周期干扰解决方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Context-adaptive Kalman filters calibrate their noise covariance matrices Q and R from innovation residuals via online regression. When the underlying sensor or signal carries periodic structure -- mechanical LiDAR rotation harmonics, engine vibration, ground multipath, weekly and annual demand cycles, dosing-interval rhythms, weekly media-buying cadence -- the regression input is contaminated and the fitted covariance models structural modes rather than genuine state uncertainty. We introduce a four-role FFT pre-filter that solves this problem at $O(N\\log N)$ cost and serves three additional roles \"for free\": (i) it whitens coloured noise before the Kalman update, restoring the optimality assumption; (ii) it cleans innovations before covariance regression, preventing periodic contamination of $\\hat{R}$ and $\\hat{Q}$; (iii) it generates spectral context features that enrich the downstream bandit's regime-selection state; (iv) it deseasonalises the input feature vector before any supervised regression that produces a sensitivity coefficient (beta, dose offset, bid modifier). We position the algorithm inside the Gated Decoupled Compositional Bandits (GDCB) family, where it acts as a preprocessing layer for the supervised scaler. The single $O(N\\log N)$ FFT call thereby serves four downstream consumers, fits in <0.1% of the sensor-fusion or pricing-pipeline compute budget, and is a drop-in addition with no changes to the Kalman filter, bandit, or runtime composition operator. We summarise empirical validation across six independent domains (rocket descent, autonomous-vehicle tracking, short-term rental pricing, clinical drug dosing, airline fare distribution, and ad-operations bid calibration), all returning a PROVES verdict under a pre-registered evaluation protocol.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

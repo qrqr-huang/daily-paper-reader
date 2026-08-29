@@ -1,0 +1,530 @@
+Title: Spectral Pre-Filtering for Context-Adaptive Sensor Fusion: A Four-Role FFT-GDCB Integration for High-Stakes Decision Systems
+
+URL Source: https://arxiv.org/pdf/2608.22023v1
+
+Published Time: Tue, 25 Aug 2026 00:42:06 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Spectral Pre-Filtering for Context-Adaptive Sensor Fusion: A Four-Role FFT–GDCB Integration for High-Stakes Decision Systems 
+
+Oleg Miroshnichenko August 2026 
+
+Abstract 
+
+Context-adaptive Kalman filters calibrate their noise covariance matrices Q and R from innovation residuals via online regression. When the underlying sensor or signal carries periodic structure — mechanical LiDAR rotation harmonics, engine vibration, ground multipath, weekly and annual demand cycles, dosing-interval rhythms, weekly media-buying cadence — the regression input is contaminated and the fitted covariance models structural modes rather than genuine state uncertainty. We introduce a four-role FFT pre-filter 
+
+that solves this problem at O(N log N ) cost and serves three additional roles “for free”: (i) it whitens coloured noise before the Kalman update, restoring the optimality assumption; (ii) it cleans innovations before covariance regression, preventing periodic contamination of ̂ R and ̂
+
+Q; (iii) it generates spectral context features that enrich the downstream bandit’s regime-selection state; (iv) it deseasonalises the input feature vector before any supervised regression that produces a sensitivity coefficient ( β, dose offset, bid modifier). We position the algorithm inside the Gated Decoupled Compositional Bandits (GDCB) family [Miroshnichenko, 2026a], where it acts as a preprocessing layer for the supervised scaler δθ (x). The single O(N log N )FFT call thereby serves four downstream consumers, fits in < 0.1% of the sensor-fusion or pricing-pipeline compute budget, and is a drop-in addition with no changes to the Kalman filter, bandit, or runtime composition operator. We summarise empirical validation across six independent domains (rocket descent, autonomous-vehicle tracking, short-term rental pricing, clinical drug dosing, airline fare distribution, and ad-operations bid calibration), all returning a PROVES verdict under a pre-registered evaluation protocol. 
+
+Keywords. spectral pre-filtering, FFT, covariance calibration, coloured noise, adaptive Kalman filter, sensor fusion, contextual bandits, GDCB, deseasonalisation, structural health monitoring. 
+
+# 1 Introduction 
+
+1.1 Periodic contamination is everywhere 
+
+Two classes of decision system increasingly share a common architectural backbone: • High-rate sensor fusion (rocket guidance, navigation, and control (GNC) [Schmidt, 1966, Stengel, 1994, Crassidis and Markley, 2003], autonomous vehicles [Geiger et al., 2013, Caesar et al., 2020], clinical drug monitoring [Bequette, 2005, Liao et al., 2020]), where a Kalman filter (KF) tracks a state xt from noisy measurements zt and a downstream policy or bandit selects actions conditioned on the state estimate. • Daily-rate revenue management [Ferreira et al., 2016, Misra et al., 2019] (short-term rental, airline fare distribution, programmatic ad operations), where a ridge regression fits 1arXiv:2608.22023v1 [cs.LG] 22 Aug 2026 a sensitivity coefficient vector β from feature-rich daily observations and a bandit selects a price or bid multiplier from the calibrated β.In both classes, the calibration step — ridge regression on innovation residuals (KF case) or on raw daily features (revenue case) — assumes the regression input is statistically clean. In practice it is not: the input contains periodic structure that the regression cannot distinguish from signal: • Mechanical LiDAR rotation at 10 Hz produces innovation harmonics at 10, 20, and 30 Hz [Geiger et al., 2013]. • Engine combustion and turbopump vibration injects 50–300 Hz energy into inertial measure-ment unit (IMU) innovations. • Twice-daily intravenous bolus injections create 12-hour periodic peaks in plasma drug concen-tration. • Weekend booking patterns inject a 7-day cycle into market occupancy with amplitude ∼ 0.08. • Annual peak season inflates STR/airline demand by ±0.12 on a 365-day cycle. • Quarterly Q1/Q2/Q3/Q4 budget flush in advertising creates a 91-day cycle in pacing-deficit signals. In every case the periodic component is comparable to or larger than the genuine aperiodic signal. Without removal, the calibration step absorbs periodic structure into its parameter estimates, producing either an over-large ̂ R (sensor case — the KF becomes too conservative) or a severely shrunken ˆβ (revenue case — the bandit cannot find the optimal multiplier). The cost of not removing this contamination is large; the cost of removing it is O(N log N ) and a one-time engineering investment. 
+
+1.2 The four-role FFT pre-filter 
+
+Figure 1 shows the architecture. A single FFT call on a calibration window of N samples produces four downstream products: 1. Role 1 — Whitening (pre-KF). The empirical PSD ̂ Sv(f ) defines a whitening filter 
+
+W (f ) = 1 /
+
+> √̂
+
+Sv(f ) applied to the raw measurement zt before the KF update. The KF then operates on approximately white residuals, restoring its asymptotic optimality. 2. Role 2 — Covariance calibration (post-KF). Spectral peaks above the threshold 
+
+μPSD + τ σ PSD are notched out of the innovation νt; the cleaned innovation νaper  
+
+> t
+
+is fed to the ridge regression that fits ̂ R(x) and ̂ Q(x). 3. Role 3 — Spectral bandit context. Energy in named frequency bands (slosh, vibration, dosing-harmonic, intent-cycle, . . . ) becomes a feature vector φspec (νt) appended to the bandit’s context xt, enabling regime-aware arm selection that time-domain context alone cannot trigger. 4. Role 4 — Feature deseasonalisation. For each daily regressor fi entering a ridge regression that produces a sensitivity coefficient βi, the FFT decomposes fi = f aper  
+
+> i
+
++ f seas  
+
+> i
+
+at parameter-specific notch frequencies; only the aperiodic component is fed to the regression, recovering ˆβi closer to ground truth. 2Sensor stream zt                     
+
+> / Daily series ot
+> ROLE 1 Coloured-Noise Whitening (pre-KF)
+> zt= IFFT( WFFT( zt))
+> Kalman Filter
+> xt,t,Pt
+> Innovation sequence t
+> ROLE 2 Covariance Calibration
+> aper Q(x), R(x)
+> ROLE 3 Spectral Bandit Context
+> spec xt
+> ROLE 4 Feature Deseasonalisation
+> fifaper
+> ifor all i
+> GDCB scaler (x)
+> (ridge / GP / neural) Bandit (HierTS / Beta-TS)
+> t(xt)
+> Pricing / dosing -vector
+> (1,2,3,4)
+> Four-Role FFT Pipeline · single O (Nlog N)preprocessing serving four downstream consumers
+
+Figure 1: The four-role FFT pre-filter. A single O(N log N ) FFT call on a calibration window of N samples produces four products that feed four distinct downstream consumers: measurement whitening (Role 1, blue), covariance regression cleaning (Role 2, orange), spectral bandit context features (Role 3, purple), and feature deseasonalisation for the supervised scaler (Role 4, green). The downstream consumers are off-the-shelf: the Kalman filter, the GDCB scaler 
+
+δθ(x) [Miroshnichenko, 2026a], the bandit posterior, and the revenue β-vector. No modifications to any of these components are required. 
+
+1.3 Why four roles, not one 
+
+The conventional view of FFT pre-processing is a single role: “filter out periodic noise before downstream processing.” We argue this view leaves three quarters of the information on the table. The same FFT decomposition that produces the aperiodic component νaper for Role 2 
+
+also produces: • the periodic component νper , which is exactly what a structural health monitor wants for incipient-fault detection (Role 2 by-product); • the per-band spectral energies, which are exactly the kind of context features a bandit can act on without requiring time-domain state to be reformulated (Role 3); • the seasonal component of every daily regressor, which is exactly the prior on future feature values that a forward-looking bandit (or a revenue manager doing capacity planning) requires (Role 4 by-product). Designing the system around the four-role view turns a single preprocessing trick into an integrated calibration substrate. 31.4 Contributions 
+
+1. Four-role FFT pipeline (§3). A unified preprocessing layer that simultaneously solves the periodic contamination problem and generates three additional outputs (whitening filter, spectral context, seasonal forecast). 2. Five-step notch-filter algorithm (§3.2). Statistical peak detection at μ + τ σ (τ =3), optionally augmented with known-frequency masks; aliased-frequency handling; warmup-transient exclusion. 3. Coloured-noise whitening pre-filter (§3.3). A drop-in pre-KF stage that restores the white-noise assumption; the offline Wiener-filter variant for historical warm-up data. 4. Spectral context features for bandits (§3.4). Frequency-band energies, spectral entropy, spectral centroid as context-vector additions that enrich regime selection. 5. Cross-domain deseasonalisation theorem (§3.5). Whenever the ridge regression y ∼
+
+β0 + β1f1 + · · · + βkfk has each fi contaminated by a finite set of identifiable cycles, per-feature FFT notching recovers each ˆβi closer to its demand-driven ground truth than the raw regression. We give the conditions and the failure mode (regressor cycles co-aligned with the dependent variable). 6. Six-domain empirical validation (§6). All six pre-registered domains return a PROVES 
+
+verdict under the shared evaluation protocol. 
+
+1.5 Relationship to the HITL-GBK research series 
+
+This paper is the systems-paper member of an eight-paper research programme on Human-in-the-Loop Gated-Bandit Kalman (HITL-GBK) systems. The companion papers — HITL contextual bandits for STR pricing [Miroshnichenko, 2026b] and the Gated Decoupled Compositional Bandits unified theory [Miroshnichenko, 2026a] — supply, respectively, the empirical private case and the generic GDCB scaler δθ(x) that this paper feeds preprocessed features to. Aseparate domain-specific companion [Miroshnichenko, 2026c] reports the empirical detail of the four-pricing-parameter STR application; the present paper retains only a one-table summary of that result so as to remain a focused systems contribution rather than a domain study. 
+
+# 2 Background 
+
+2.1 Kalman filter recap and the white-noise assumption 
+
+Given a linear-Gaussian model xt+1 = F x t +Bu t +wt, zt = Hx t +vt, wt ∼ N (0 , Q ), vt ∼ N (0 , R ), the Kalman filter [Kalman, 1960] is the minimum-mean-squared-error linear estimator for any 
+
+wt, v t with known first two moments, and the globally minimum-mean-squared-error estimator when wt, v t are additionally jointly Gaussian. The innovation νt := zt − H ˆxt|t−1 is then white with covariance St := HP t|t−1H⊤ + R, and the normalised innovation squared (NIS) ν⊤ 
+
+> t
+
+S−1 
+
+> t
+
+νt is 
+
+χ2-distributed. In practice vt is rarely white. Mechanical sensors carry spin-rate harmonics, vehicles inject vibration, the environment has multipath, and revenue-management “measurements” (premium ratios, booking outcomes) are influenced by calendar cycles. The white-noise assumption is broken; the KF gain is miscalibrated; the NIS test no longer detects model violations. 42.2 Adaptive covariance estimation 
+
+The classical adaptive-filtering literature addresses the problem by estimating Q, R online from innovation residuals [Mehra, 1972, Sage and Husa, 1969]. Sage–Husa uses a sliding window of recent innovations to update ̂ R; modern variants augment with control input compensation, EM, or variational inference [Welch and Bishop, 2006]. None of the classical methods remove 
+
+periodic structure from the innovation before computing its sample variance. Hence Sage–Husa applied to a LiDAR innovation sequence over-estimates R by 3–8 ×, exactly because the spin-rate harmonics inflate the empirical variance. 
+
+2.3 The supervised scaler in GDCB 
+
+The companion GDCB framework [Miroshnichenko, 2026a] introduces a supervised context scaler 
+
+δθ(x) : X → R>0 that is calibrated by ridge regression independent of the bandit’s posterior update [Li et al., 2010, Agrawal and Goyal, 2013, Hong et al., 2021]. In the sensor domains, 
+
+δθ(x) scales the bandit-selected nominal arm to produce the executable action; in the revenue domains, δθ(x) = ∏
+
+> i
+
+(1 + θi(f aper  
+
+> i
+
+− μfi )) is the multiplicative day-signal that modulates the LLM-baseline price. In both cases, the supervised regression that fits θ is exactly the regression contaminated by the periodic structure described above. The four-role FFT pipeline cleans the regression input before θ is fit; the GDCB framework consumes the cleaned θ without any further modification. 
+
+# 3 The Four-Role FFT Pipeline 
+
+3.1 Notation and the calibration window 
+
+Let νt ∈ Rd be the innovation channel vector at time t and W the calibration window length (samples). For each scalar channel ν(i)  
+
+> t−W:t
+
+define 
+
+Y (i) = FFT 
+
+> (
+
+ν(i) 
+
+> t−W:t
+> )
+
+∈ CW/ 2+1 ,
+
+PSD (i)(fk) = 1 
+
+> W
+
+|Y (i)(fk)|2, fk = k/ (W · ∆t), k = 0 , . . . , W/ 2,μPSD = 1
+
+> W/ 2+1
+> ∑
+> k
+
+PSD (i)(fk), σPSD = std k PSD (i)(fk).
+
+3.2 Five-step notch algorithm (Role 2) 
+
+Peak detection in the power spectral density follows standard practice in windowed harmonic analysis [Harris, 1978] and digital signal processing [Proakis and Manolakis, 2006, Oppenheim and Schafer, 1989]: an N -point rfft gives O(N log N ) frequency-domain access to the innovation spectrum, and peaks are declared where the periodogram exceeds a statistical threshold above the noise floor. 5Algorithm 1 FFT notch filter — fft_notch_filter (Role 2 / 4) 
+
+Require: channel ν(i), length W , sample interval ∆ t, peak threshold τ , optional known-frequency list Fknown , bandwidth b.
+
+1: Y ← FFT( ν(i)); PSD ← | Y |2/W ; {fk} ← rfft frequencies. 
+
+2: peak ← PSD > μ PSD + τ σ PSD ▷ statistical peak detection 
+
+3: for each f0 ∈ F known do 
+
+4: peak ← peak ∨ | fk − f0| < b ▷ additionally notch known frequencies 
+
+5: end for 
+
+6: Yaper ← Y · 1[¬peak]; Yper ← Y · 1[peak] 
+
+7: νaper ← IFFT( Yaper ); νper ← IFFT( Yper )
+
+8: return (νaper , ν per , {fk : peak k})The cleaned νaper is fed to the covariance ridge regression that fits ̂ R(x) and ̂ Q(x). The discarded νper is not waste: it carries the structural-mode amplitude trajectory used by Role 3 (spectral context features) and by structural health monitoring (growing peak amplitudes signal incipient bearing wear or onset of flutter, see Doebling et al., 1996, Farrar and Worden, 2013). 
+
+Aliasing must be handled. If a known harmonic f∗ lies above Nyquist fs/2 it aliases to 
+
+|f∗ mod fs|. The notch list must contain the aliased frequency. (Engine vibration at 120 Hz with fs=100 Hz aliases to 20 Hz; notching 120 Hz removes nothing, notching 20 Hz removes the harmonic.) This single rule eliminates the most common implementation bug. 
+
+Warm-up transient must be excluded. If P0 ≫ R the KF gain is near unity for the first 
+
+∼ 0.3/∆t steps, producing measurement-noise-driven spikes. Compute ̂ R only on νaper [Kwarm :] . This matches the trailing-window practice of Sage–Husa. Figure 2 shows the algorithm on a synthetic innovation contaminated by two harmonics: white-noise floor at σ=0 .18, 20 Hz aliased engine peak (amp 0.41), 15 Hz multipath (amp 0.23). After notching, the spectrum is approximately flat and the empirical variance drops from 0 .20 to 0 .029 m 2 (∼ 7× improvement). 0.0 0.2 0.4 0.6 0.8 1.0                         
+
+> time (s)
+> 0.5
+> 0.0 0.5 1.0
+> amplitude
+> (a) Innovation ttime domain
+> 010 20 30 40 50
+> frequency (Hz)
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> power
+> (b) PSD peak detection
+> raw PSD known harmonics +(= 3)
+> 010 20 30 40 50
+> frequency (Hz)
+> 10 5
+> 10 3
+> 10 1
+> 10 1
+> power
+> (c) PSD after notch
+> raw aperiodic (post-notch)
+
+Figure 2: The notch algorithm on a synthetic contaminated innovation. (a) Time domain of the 100 Hz innovation νt. (b) PSD with two clear peaks at 15 and 20 Hz, well above the μ + 3 σ detection threshold (orange dotted). (c) PSD after notching: floor restored to white-noise level. The empirical variance of νaper matches the true measurement noise variance to within 11%. 
+
+3.3 Coloured-noise whitening (Role 1) 
+
+If the noise spectrum is broadband and not concentrated at a few peaks (e.g. pink IMU drift, 1 /f flicker), notch filtering is the wrong tool. Instead estimate the empirical PSD 6̂Sv(f ) = 1 
+
+> W
+
+|FFT( ν0: W )|2 and apply the whitening filter 
+
+W (f ) = 1
+
+> √̂
+
+Sv(f ) + ϵ, ˜zt = IFFT (W (f ) · FFT( zt)).
+
+The KF then runs on ˜ zt with ˜R = I (noise has been pre-normalised). Where the spectrum is mixed (broadband plus harmonics), the recommended order is whitening-then-notch: whitening flattens the floor, after which the harmonics stand out cleanly above the μ + 3 σ detection threshold. 
+
+Wiener-filter variant for warm-up. For the offline retrospective pass over historical logs (e.g. the HITL-GBK warm-up procedure of Miroshnichenko, 2026b), the optimal linear filter is the Wiener filter [Wiener, 1949]: ̂
+
+HWiener (f ) = Sxs (f )
+
+Sss (f ) + Snn (f ) ,
+
+with Sxs , S ss , S nn estimated from the historical PSDs. The Wiener filter produces maximum-likelihood state estimates that are then used as regression targets for the supervised scaler δθ,improving warm-up quality beyond what the standard KF innovation provides. 
+
+3.4 Spectral context features (Role 3) 
+
+Bandit context vectors are typically all time-domain (occupancy rate, days until check-in, altitude, propellant fraction). These describe where the system is but not how it is behaving dynamically .The four-role FFT pipeline produces, at no extra cost, the spectral energy in named bands and two summary statistics: 
+
+φband j (ν) =   
+
+> ∑
+> f∈Bj
+
+|Y (f )|2 
+
+> ∑
+> f
+
+|Y (f )|2 ,φentropy (ν) = − ∑
+
+> f
+
+pf log pf , pf = |Y (f )|2 
+
+> ∑
+> g
+
+|Y (g)|2 ,φcentroid (ν) =  
+
+> ∑
+> f
+
+f |Y (f )|2 
+
+> ∑
+> f
+
+|Y (f )|2 .
+
+Appending these to the bandit context x enables regime-aware arm selection that pure time-domain context cannot trigger: high spectral entropy in an autonomous-vehicle innovation stream indicates an off-distribution scenario where a more conservative arm is warranted; a centroid shift in a rocket IMU innovation stream signals imminent structural transition (MaxQ, stage separation) regardless of nominal altitude. 
+
+3.5 Cross-domain feature deseasonalisation (Role 4) 
+
+Classical alternatives to spectral notching include STL decomposition [Cleveland et al., 1990] and Bayesian additive component models such as Prophet [Taylor and Letham, 2018]. Both target the univariate forecasting problem directly; the per-feature notch below instead targets the regressor-contamination problem inside a multivariate ridge regression, which is the quantity that matters for ˆβ recovery rather than for forecast accuracy per se. Consider the ridge regression 
+
+yt = β0 +
+
+> k∑
+> i=1
+
+βifi(t) + εt, t = 1 , . . . , T, (1) 7where each regressor fi admits the additive decomposition 
+
+fi(t) = f aper  
+
+> i
+
+(t) + ∑
+
+> j
+
+aij cos(2 πf (i) 
+
+> j
+
+t + ϕij ), (2) with a finite, identifiable set of cycle frequencies {f (i) 
+
+> j
+
+} per regressor. Per-feature FFT notching at the cycle frequencies extracts each f aper  
+
+> i
+
+. We refit (1) with the cleaned regressors and obtain ˆβaper  
+
+> i
+
+.
+
+Proposition 3.1 (Per-feature deseasonalisation recovery) . Suppose (2) holds for each i, the cycles {f (i) 
+
+> j
+
+} are identifiable from the rfft of fi at threshold μ + τ σ (τ =3 ), and the dependent variable yt is not co-aligned with the cycle frequencies of fi ( cycle-orthogonality condition:  
+
+> ∑
+> t
+
+yt cos(2 πf (i) 
+
+> j
+
+t + ϕij ) = o(T )). Then  
+
+> ∣∣
+
+ˆβaper  
+
+> i
+
+− β⋆i 
+
+> ∣∣
+
+≤ ∣∣ ˆβi − β⋆i
+
+> ∣∣
+
+in expectation, where β⋆i is the demand-driven ground-truth coefficient. 
+
+Failure mode. Cycle-orthogonality fails when the dependent variable is itself periodic with the same frequency as the regressor (e.g. premium ratios that are themselves seasonal). In that case, deseasonalising the regressor without also deseasonalising the dependent variable shifts ˆβi
+
+toward zero. The recommended practice is therefore to either deseasonalise both sides or, if yt is the operationally relevant signal (booking, click, revenue), to deseasonalise only the regressor and accept that ˆβi measures aperiodic-demand sensitivity , which is exactly the quantity the bandit needs. This proposition motivates the empirical Role 4 results across STR, airline, and ad-operations domains in §6. 
+
+3.6 Implementation notes: seeding P0 from historical innovations 
+
+Roles 1–4 all assume the filter is already running. In deployment the pipeline is usually switched on against a historical log, which raises a practical question the four roles do not answer: what should P0 be? Seeding it from the same historical innovations that Role 2 cleans is attractive — the data is already there — but the naive estimator is wrong in a way that is easy to miss, so we record the procedure we use. 
+
+The circularity. The stationary innovation covariance is 
+
+S = HP H ⊤ + R, (3) so the empirical ̂ S computed from a historical innovation sequence conflates the two unknowns. Setting P0 ←̂ S over-estimates P0 by exactly R, which makes the filter distrust its own prior and over-correct on early measurements. Estimating R first does not help if it is estimated from the same statistic: any error in ̂ R reappears with opposite sign in ̂ S −̂ R, systematically compressing the difference toward zero. 
+
+The two-pass fix. Partition the historical innovations into disjoint calibration and fitting subsets, estimate R on the first, and solve (3) for P on the second. 8Algorithm 2 Sequential R-then-P0 seeding — seed_P0_from_innovations 
+
+Require: historical innovations {νt}Nt=1 (already notched by Algorithm 1), prior P prior 0 , default 
+
+Rdef , calibration fraction κ (we use 0 .2)  
+
+> 1:
+
+Dcal ← { νt}t≤κN ; Dfit ← { νt}t>κN ▷ Dcal is the leading segment  
+
+> 2: ̂
+
+R ←̂ Var( ν)∣∣Dcal − HP prior 0 H⊤ 
+
+> 3:
+
+symmetrise ̂ R; floor its eigenvalues at 0 .1 λmin (Rdef ) 
+
+> 4: ̂
+
+S ←̂ Var( ν)∣∣Dfit  
+
+> 5: ̂
+
+P0 ← H+(̂S −̂ R)( H+)⊤, symmetrised and PSD-projected ▷ H + = Moore–Penrose pseudo-inverse 
+
+Why the calibration subset is taken from the front. Step 2 charges HP prior 0 H⊤ against the calibration variance, which is only correct while the filter’s prediction-error covariance is still near its initialisation. A filter started at P prior 0 takes some number of steps to converge to steady state, so on a short leading window the charge is approximately right; taking Dcal from the middle of the record instead would bias ̂ R by H(Σ ∞ − P prior 0 )H⊤, where Σ ∞ is the steady-state prediction-error covariance. Where that condition cannot be relied on, an autocovariance least-squares estimator [Mehra, 1970, Odelson et al., 2006] identifies R from the innovation autocorrelation without needing to know Pt|t−1, at the cost of more than one pass over the data. 
+
+What the procedure does and does not give. The disjoint split removes the circularity, not the finite-sample bias: both eigenvalue projections in Algorithm 2 are nonlinear, so ̂ P0 is consistent rather than unbiased. And because H+H is the projector onto row( H), the innovations identify P0 only on the observable subspace; on ker( H) the estimator returns the floor and the filter retains its prior. When m < n — the usual case — this is a genuine limitation, not a technicality. The formal statement of both facts, with assumptions and proof, is Corollary 5.5 and Proposition 5.6 of the companion GDCB paper [Miroshnichenko, 2026a], where the construction is derived as a specialisation of gate-induced equivalence to Kalman-contextual systems; we use the result here and do not reprove it. 
+
+# 4 When to Use Which Role 
+
+The four roles are not interchangeable. Table 1 summarises which role applies to which signal class. 
+
+# 5 Computational Budget 
+
+Each FFT call costs O(W log W ) per channel. Table 2 gives realistic numbers for the six target domains. Table 2: Computational cost of the four-role FFT call across deployment regimes.                       
+
+> Application W∆tUpdate rate Cost relative to downstream pipeline
+> Rocket GNC (IMU) 100 10 ms 100 Hz <0.01% of KF compute AV sensor fusion (LiDAR) 500 10 ms 100 Hz <0.10% of fusion budget Clinical PK/PD 144 1 h hourly negligible (microseconds) STR / Airline / Ad Ops daily 365–730 1 d monthly negligible (microseconds)
+
+The cost is dominated by memory access; on a Cortex-M4 microcontroller the 100-sample FFT is ∼ 700 multiply-accumulate operations, trivially fitting in a 100 Hz GNC loop. On the 9Table 1: Which role to use, by signal class. 
+
+Signal class Symptom Recommended role(s) 
+
+Narrow-band periodic harmonics in zt
+
+spike at known f∗ in spectro-gram 
+
+Role 1 (whitening) or Role 2 
+
+(notch) Broadband coloured (1/f, pink) noise in zt
+
+sloped PSD over full band Role 1 (Wiener-filter whitening) Periodic structure in innovation 
+
+νt after KF NIS distribution biased upward Role 2 (notch on νt before re-gression) Multiple operating regimes (rain, MaxQ, propellant low) context x does not predict noise level 
+
+Role 3 (spectral features into x)Daily revenue regressors with cal-endar cycles ˆβ shrinks to ∼ 0 Role 4 (per-feature notch before regression) Forward-looking demand prior no signal of upcoming peak Role 4 by-product (Fourier forecast) Incipient mechanical fault slow growth of νper amplitude Role 2 by-product (structural health monitor) 
+
+daily-data side the cost is microseconds in NumPy. There is no realistic deployment regime in which the four-role FFT is too expensive. 
+
+# 6 Six-Domain Empirical Validation 
+
+We pre-registered six domains and one evaluation protocol prior to final figure generation. Table 3 reports the verdict in each domain. The full per-domain tables, plots, and code are in the open-source companion repository (see Reproducibility). Table 3: Six-domain validation summary (April 2026 evaluation, all PROVES). 
+
+Domain Role(s) Headline met-ric Achieved Verdict 
+
+Rocket descent (50 MC runs) 2̂ R improvement factor (raw →
+
+FFT) 5.16 × (117% of theoretical ceil-ing) 
+
+PROVES 
+
+AV pedestrian tracking (KITTI-like) 2 + 3 ̂ R improvement factor Dry: 4.16 ×;53% of 10 Hz-harmonic power. Rain: 3.10 ×;spectral entropy 4.04 (anomaly) 
+
+PROVES 
+
+Clinical PK/PD (20 patients × 60 d) 2 + 3 ̂ R factor; false-alarm reduction 13 .5×; 13 .8% false alarms removed 
+
+PROVES 
+
+STR pricing (730 d, 30 properties) 4 mean β recovery (4 params, raw 
+
+→ FFT) +111–134%; 4 /4closer to truth 
+
+PROVES 
+
+Airline fare (365 d, 20 routes) 4 mean β recovery (4 params) +60–115%; 4/4closer to truth 
+
+PROVES 
+
+Ad operations (365 d, 20 campaigns) 4 mean β recovery (4 params) +57–112%; 4/4closer to truth 
+
+PROVES 
+
+10 Rocket AV (dry) AV (rain) Clinical STR Airline Ad Operations 0246810 12 14      
+
+> Improvement factor or ratio (mixed units  see annotations)
+> 5.16× 4.16× 3.10× 13.50× +122% +88% +85%
+> Empirical validation across six domains, seven conditions all PROVES (Apr 2026)
+> Expected (theory) Role 2 R calibration (factor ×)
+> Role 4 deseasonalisation (mean improv.)
+
+Figure 3: Six-domain validation summary, seven evaluation conditions. Expected (theory, grey) vs. achieved (empirical, coloured) for each condition; the AV domain is evaluated under two weather regimes (dry, rain), so six domains yield seven bars. Role 2 domains (rocket / AV / clinical, orange) report the ̂ R improvement factor; Role 4 domains (STR / airline / ad ops, green) report the mean β recovery improvement (proportion). All seven conditions return a 
+
+PROVES verdict under the pre-registered evaluation protocol. 
+
+Reading the table. Three observations: 1. The three sensor-fusion domains (rocket, AV, clinical) achieve ̂ R improvement factors that meet or exceed the theoretical ceiling computed from the noise parameters. The clinical 13 .5×
+
+exceeds the theoretical 5 .94 × because Role 2 incidentally removes tracking-error variance that the theory does not account for. 2. The three revenue-management domains (STR, airline, ad ops) recover 4 /4 ridge-regression coefficients closer to the demand-driven ground truth. Role 4 is therefore not an STR-specific finding but a general result across daily-data revenue-management systems with periodic demand contamination. 3. The verdict is binary at the protocol level (PROVES / INCONCLUSIVE / DISPROVES) and is computed from a fixed thresholded metric (factor ≥ 2.5× for Role 2, mean improvement 
+
+> 10% and ≥ 3/4 params closer for Role 4). All six domains pass. 
+
+Reproducibility. The evaluation harness is at ml/HITL_GDBK/B/evaluate.py in the public companion repository; it consumes only synthetic data generators and produces the per-domain verdict JSONs in ∼ 90 seconds on a laptop. For the STR domain, data-generating-process (DGP) amplitude and noise parameters are loaded from keydata_dgp_params.json (calibrated via 
+
+keydata_fetch.ipynb from 38 648 weekly key-performance-indicator (KPI) observations from online travel agencies (OTAs), covering 1 000 Vail listings). A hard-coded fallback is provided for offline use. 
+
+# 7 Discussion 
+
+7.1 Why the four-role view matters 
+
+The single biggest practical objection we have heard to FFT-based preprocessing is “it adds an extra moving part to the pipeline.” The four-role view inverts this objection: a single FFT call replaces four separate moving parts (a whitening filter, a covariance calibrator, a context 11 featuriser, and a deseasonaliser) with one shared O(N log N ) subroutine. The amortised cost per role is negligible; the integration burden is single-point. 
+
+7.2 When FFT is the wrong tool 
+
+The four-role pipeline assumes (i) stationarity over the calibration window W , (ii) harmonic spectral structure (peaks, not chaos), and (iii) known or detectable cycle frequencies. In settings where these fail — non-stationary fast transients (rocket stage separation), deeply non-Gaussian noise (impulse-mode hardware faults), or chaotic-but-aperiodic dynamics — alternative preprocessing such as wavelet packet decomposition, change-point detection, or empirical mode decomposition is more appropriate. The proposition of §3.5 fails in cycle-co-aligned regimes (§3.5, “Failure mode”). 
+
+7.3 Open problems 
+
+• Adaptive peak threshold. The τ =3 threshold is a fixed-false-positive heuristic. An adaptive scheme based on the exact false-detection rate under the white-noise null would give better Type-I/Type-II error control. • Wavelet alternatives for non-stationary signals. Wavelet packet decomposition offers better time–frequency localisation for rocket stage transitions and AV scenario changes. A head-to-head comparison with the FFT pipeline at matched compute budget is open. • Optimal γseas blending in Role 4. The runtime composition fi = f aper  
+
+> i
+
++ γseas f seas  
+
+> i
+
+is currently set manually; a data-driven cross-validation procedure is open. • Stochastic-gate generalisation. Role 3 spectral features should ideally enter the pre-execution gate’s policy as well as the bandit’s; the formal treatment of context-dependent gates is open. 
+
+# 8 Conclusion 
+
+A single FFT call on a calibration window of N samples produces four products that each address a long-standing limitation of the underlying calibration step: it whitens coloured noise before the Kalman update, cleans innovations before covariance regression, generates spectral context features for downstream bandits, and deseasonalises feature vectors before sensitivity-coefficient regression. Across six independent domains spanning aerospace GNC, autonomous vehicles, clinical drug monitoring, and three classes of revenue management, the pipeline returns a 
+
+PROVES verdict against pre-registered metrics. The compute cost is negligible at every realistic deployment rate, and the integration burden is a single drop-in preprocessing step. The central methodological reframe is to stop viewing periodic contamination as “noise to filter out” and start viewing it as a structured signal whose decomposition produces four independent operational outputs. Designing the system around the four-role view turns a single preprocessing trick into an integrated calibration substrate that simplifies downstream architecture rather than complicating it. 
+
+# References 
+
+S. Agrawal and N. Goyal. Thompson sampling for contextual bandits with linear payoffs. In 
+
+Proc. Int. Conf. on Machine Learning (ICML) , 2013. B. W. Bequette. A critical assessment of algorithms and challenges in the development of a closed-loop artificial pancreas. Diabetes Technology & Therapeutics , 7(1):28–47, 2005. 12 H. Caesar, V. Bankiti, A. H. Lang, S. Vora, V. E. Liong, Q. Xu, A. Krishnan, Y. Pan, G. Baldan, and O. Beijbom. nuScenes: A multimodal dataset for autonomous driving. In Proc. IEEE/CVF Conf. on Computer Vision and Pattern Recognition (CVPR) , 2020. R. B. Cleveland, W. S. Cleveland, J. E. McRae, and I. Terpenning. STL: A seasonal-trend decomposition procedure based on loess. J. Official Statistics , 6(1):3–73, 1990. J. L. Crassidis and F. L. Markley. Unscented filtering for spacecraft attitude estimation. AIAA J. Guidance, Control and Dynamics , 26(4):536–542, 2003. S. W. Doebling, C. R. Farrar, M. B. Prime, and D. W. Shevitz. Damage identification and health monitoring of structural and mechanical systems from changes in their vibration characteristics: A literature review. Technical Report LA-13070-MS, Los Alamos National Laboratory, 1996. C. R. Farrar and K. Worden. Structural Health Monitoring: A Machine Learning Perspective .Wiley, 2013. K. J. Ferreira, B. H. Liu, and D. Simchi-Levi. Analytics for an online retailer: Demand forecasting and price optimisation. Manufacturing & Service Operations Management , 18(1):69–88, 2016. A. Geiger, P. Lenz, C. Stiller, and R. Urtasun. Vision meets robotics: The KITTI dataset. Int. J. Robotics Research , 32(11):1231–1237, 2013. F. J. Harris. On the use of windows for harmonic analysis with the discrete Fourier transform. 
+
+Proc. IEEE , 66(1):51–83, 1978. J. Hong, B. Kveton, M. Zaheer, and M. Ghavamzadeh. Hierarchical thompson sampling for contextual bandits. In Advances in Neural Information Processing Systems (NeurIPS) , 2021. R. E. Kalman. A new approach to linear filtering and prediction problems. ASME J. Basic Engineering , 82(1):35–45, 1960. L. Li, W. Chu, J. Langford, and R. E. Schapire. A contextual-bandit approach to personalised news article recommendation. In Proc. Int. World Wide Web Conf. (WWW) , 2010. P. Liao et al. Personalized HeartSteps: A reinforcement learning algorithm for optimizing physical activity. Proc. ACM IMWUT , 4(1), 2020. R. K. Mehra. On the identification of variances and adaptive Kalman filtering. IEEE Trans. Automatic Control , 15(2):175–184, 1970. R. K. Mehra. Approaches to adaptive filtering. IEEE Trans. Automatic Control , 17(5):693–698, 1972. O. Miroshnichenko. Gated decoupled compositional bandits: A unified theory of contextual bandits with supervised-calibrated action scaling and pre-execution gating. Companion paper, arXiv preprint, 2026a. O. Miroshnichenko. Human-in-the-loop contextual bandits for short-term rental dynamic pricing: Structural equivalence of historical warm-up and approval-gated live learning, 2026b. Companion paper. arXiv:2606.02595 [cs.LG]. O. Miroshnichenko. Multi-parameter fft deseasonalisation for short-term rental pricing: Recover-ing the full β-vector from calendar-contaminated demand signals. Companion paper, arXiv preprint, 2026c. K. Misra, E. M. Schwartz, and J. Abernethy. Dynamic online pricing with incomplete information using multi-armed bandit experiments. Marketing Science , 38(2):226–252, 2019. 13 B. J. Odelson, M. R. Rajamani, and J. B. Rawlings. A new autocovariance least-squares method for estimating noise covariances. Automatica , 42(2):303–308, 2006. A. V. Oppenheim and R. W. Schafer. Discrete-Time Signal Processing . Prentice Hall, 1989. J. G. Proakis and D. G. Manolakis. Digital Signal Processing: Principles, Algorithms and Applications . Prentice Hall, 4 edition, 2006. A. P. Sage and G. W. Husa. Adaptive filtering with unknown prior statistics. In Joint Automatic Control Conference (JACC) , pages 760–769, 1969. S. F. Schmidt. Application of state-space methods to navigation problems. In Advances in Control Systems , volume 3, pages 293–340. Elsevier, 1966. R. F. Stengel. Optimal Control and Estimation . Dover, 1994. S. J. Taylor and B. Letham. Forecasting at scale. The American Statistician , 72(1):37–45, 2018. G. Welch and G. Bishop. An introduction to the Kalman filter. Technical Report TR95-041, University of North Carolina at Chapel Hill, 2006. N. Wiener. Extrapolation, Interpolation, and Smoothing of Stationary Time Series, with Engi-neering Applications . Technology Press of MIT and Wiley, 1949. 
+
+# A Implementation Reference 
+
+The five-step notch filter (§3.2) is ∼ 20 lines of NumPy: 
+
+import numpy as np def fft_notch_filter(nu, dt=1.0, tau=3.0, known_freqs=None, bw=0.5): N = len(nu) Y = np.fft.rfft(nu) freq = np.fft.rfftfreq(N, d=dt) psd = np.abs(Y)**2 / N thr = psd.mean() + tau * psd.std() peak = psd > thr if known_freqs: for f0 in known_freqs: peak |= np.abs(freq - f0) < bw Y_a = Y * (~peak) Y_p = Y * peak return (np.fft.irfft(Y_a, n=N), np.fft.irfft(Y_p, n=N), freq[peak].tolist()) 
+
+The deseasonalisation (Role 4) is identical except that known_freqs is a per-parameter dictio-nary indexed by βi (e.g. β1 occ_sensitivity : {1/7, 1/365 }; β3 gap_discount : {1/30 , 1/91 }). For aliased harmonics, prepend 14 def alias(f, fs): f_mod = f % fs return min(f_mod, fs - f_mod) known_aliased = [alias(f, fs) for f in known_freqs] 
+
+The whitening pre-filter (Role 1) is 
+
+def whiten(z, psd, eps=1e-6): Z = np.fft.rfft(z) W = 1.0 / (np.sqrt(psd) + eps) return np.fft.irfft(Z * W, n=len(z)) 
+
+The full evaluation harness covering all six domains is in ml/HITL_GDBK/B/evaluate.py .15
