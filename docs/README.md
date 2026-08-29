@@ -7,25 +7,21 @@
 
 ## 每次日报
 - 最新运行日期：2026-08-29
-- 运行时间：2026-08-29 03:42:50 UTC
+- 运行时间：2026-08-29 22:48:28 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：0
 - 精读区：0
-- 速读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
-- 速读：《Spectral Pre-Filtering for Context-Adaptive Sensor Fusion: A Four-Role FFT-GDCB Integration for High-Stakes Decision Systems》（6.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+> 今日无新推荐，系统未产出可展示论文。
 - 详情：[/202608/29/README](/202608/29/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Spectral Pre-Filtering for Context-Adaptive Sensor Fusion: A Four-Role FFT-GDCB Integration for High-Stakes Decision Systems](/202608/29/2608.22023v1-spectral-pre-filtering-for-context-adaptive-sensor-fusion-a-four-role-fft-gdcb-integration-for-high-stakes-decision-systems)  
-   标签：评分：6.0/10、query:lfp-soc
-   evidence：针对周期性噪声的上下文自适应卡尔曼滤波器与FFT预滤波，用于传感器融合
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
