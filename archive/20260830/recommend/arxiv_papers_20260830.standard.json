@@ -1,0 +1,93 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-30T22:52:14.237837+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.22023v1",
+      "source": "arxiv",
+      "title": "Spectral Pre-Filtering for Context-Adaptive Sensor Fusion: A Four-Role FFT-GDCB Integration for High-Stakes Decision Systems",
+      "abstract": "Context-adaptive Kalman filters calibrate their noise covariance matrices Q and R from innovation residuals via online regression. When the underlying sensor or signal carries periodic structure -- mechanical LiDAR rotation harmonics, engine vibration, ground multipath, weekly and annual demand cycles, dosing-interval rhythms, weekly media-buying cadence -- the regression input is contaminated and the fitted covariance models structural modes rather than genuine state uncertainty. We introduce a four-role FFT pre-filter that solves this problem at $O(N\\log N)$ cost and serves three additional roles \"for free\": (i) it whitens coloured noise before the Kalman update, restoring the optimality assumption; (ii) it cleans innovations before covariance regression, preventing periodic contamination of $\\hat{R}$ and $\\hat{Q}$; (iii) it generates spectral context features that enrich the downstream bandit's regime-selection state; (iv) it deseasonalises the input feature vector before any supervised regression that produces a sensitivity coefficient (beta, dose offset, bid modifier). We position the algorithm inside the Gated Decoupled Compositional Bandits (GDCB) family, where it acts as a preprocessing layer for the supervised scaler. The single $O(N\\log N)$ FFT call thereby serves four downstream consumers, fits in <0.1% of the sensor-fusion or pricing-pipeline compute budget, and is a drop-in addition with no changes to the Kalman filter, bandit, or runtime composition operator. We summarise empirical validation across six independent domains (rocket descent, autonomous-vehicle tracking, short-term rental pricing, clinical drug dosing, airline fare distribution, and ad-operations bid calibration), all returning a PROVES verdict under a pre-registered evaluation protocol.",
+      "authors": [
+        "Oleg Miroshnichenko"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-22T15:57:25+00:00",
+      "link": "https://arxiv.org/pdf/2608.22023v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "FFT pre-filter improves context-adaptive Kalman filter noise covariance calibration, transferable to adaptive SOC estimation.",
+      "llm_evidence_cn": "FFT预滤波改善上下文自适应卡尔曼滤波器的噪声协方差标定，可迁移至自适应SOC估计。",
+      "llm_evidence": "FFT预滤波改善上下文自适应卡尔曼滤波器的噪声协方差标定，可迁移至自适应SOC估计。",
+      "canonical_evidence": "FFT预滤波改善上下文自适应卡尔曼滤波器的噪声协方差标定，可迁移至自适应SOC估计。",
+      "llm_tldr_en": "Addresses periodic contamination in context-adaptive Kalman filter covariance calibration; introduces a four-role FFT pre-filter that whitens colored noise and restores optimality; improves robustness in sensor fusion, transferable to adaptive battery SOC estimation.",
+      "llm_tldr_cn": "上下文自适应卡尔曼滤波器从创新残差在线标定噪声协方差时，周期信号会污染回归输入，导致协方差建模失真。本文提出四角色FFT预滤波器，以O(N log N)成本在卡尔曼更新前白化有色噪声并恢复最优性假设。实验表明该方法在高风险决策系统的传感器融合中有效抑制周期干扰、改善协方差标定。该通用预处理方法可迁移至电池SOC等自适应卡尔曼滤波场景，提升估计鲁棒性。",
+      "llm_tldr": "上下文自适应卡尔曼滤波器从创新残差在线标定噪声协方差时，周期信号会污染回归输入，导致协方差建模失真。本文提出四角色FFT预滤波器，以O(N log N)成本在卡尔曼更新前白化有色噪声并恢复最优性假设。实验表明该方法在高风险决策系统的传感器融合中有效抑制周期干扰、改善协方差标定。该通用预处理方法可迁移至电池SOC等自适应卡尔曼滤波场景，提升估计鲁棒性。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.24404v1",
+      "source": "arxiv",
+      "title": "EM-KalmanNet: Learned Expectation-Maximization for Adaptive Tracking in Partially Known, Block-Wise Time-Varying State-Space Models",
+      "abstract": "State estimation in partially known state space (SS) models is challenging when the dynamics or observation model varies across short data blocks. Classical model-based approaches, such as the expectation-maximization (EM) Kalman filter, jointly recover the latent states and the unknown model parameters, but rely on linear-Gaussian assumptions that should accurately describe the system and require numerous forward-backward passes. Consequently, their performance and computational efficiency may deteriorate under complex and non-stationary real-world conditions. On the other hand, learned Kalman smoothers are robust to model mismatch yet cannot adapt at inference to unseen model variations without labeled data. In this work, we propose EM-KalmanNet, an AI-aided tracking algorithm for adaptive smoothing in blockwise time-varying SS models. The method unfolds a fixed, small number of EM-like iterations into a trainable architecture: a parameter-aware RTSNet implements a learned E-step conditioned on the current model-parameter estimate, while a lightweight M-Net implements a learned M-step that updates the state-transition or the observation matrix using empirical moments, residuals, and gradient-related statistics. The two modules are shared across the unfolded iterations and are trained offline via a dedicated three-stage procedure. During deployment, the per-block parameter estimate is propagated between consecutive blocks, enabling observation-driven adaptation without labeled online data or knowledge of the noise statistics. Experiments involving linear and nonlinear models, Gaussian and non-Gaussian noise, Lorenz attractor tracking, and acoustic source localization demonstrate that EM-KalmanNet consistently outperforms model-based and data-driven benchmarks while substantially reducing inference latency relative to the EM-KF.",
+      "authors": [
+        "Ori Cohen",
+        "Nir Shlezinger",
+        "Tirza Routtenberg"
+      ],
+      "primary_category": "eess.SP",
+      "categories": [
+        "eess.SP"
+      ],
+      "published": "2026-08-25T11:06:54+00:00",
+      "link": "https://arxiv.org/pdf/2608.24404v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Adaptive state estimation using learned EM-KalmanNet for time-varying state-space models",
+      "llm_evidence_cn": "使用时序变化状态空间模型的EM-KalmanNet进行自适应状态估计",
+      "llm_evidence": "使用时序变化状态空间模型的EM-KalmanNet进行自适应状态估计",
+      "canonical_evidence": "使用时序变化状态空间模型的EM-KalmanNet进行自适应状态估计",
+      "llm_tldr_en": "Proposes EM-KalmanNet, a learned expectation-maximization Kalman filter that adapts to block-wise time-varying models, potentially applicable to SOC estimation under dynamic battery conditions.",
+      "llm_tldr_cn": "该论文针对部分已知、分块时变状态空间模型中的状态估计难题，提出EM-KalmanNet方法，将期望最大化与学习型卡尔曼平滑器结合，以在推理时适应未见过的模型变化。该方法可迁移应用于电池荷电状态估计，特别是在模型参数变化的动态工况下。虽然论文未直接涉及电池，但为自适应SOC估计提供了新的技术途径。",
+      "llm_tldr": "该论文针对部分已知、分块时变状态空间模型中的状态估计难题，提出EM-KalmanNet方法，将期望最大化与学习型卡尔曼平滑器结合，以在推理时适应未见过的模型变化。该方法可迁移应用于电池荷电状态估计，特别是在模型参数变化的动态工况下。虽然论文未直接涉及电池，但为自适应SOC估计提供了新的技术途径。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
