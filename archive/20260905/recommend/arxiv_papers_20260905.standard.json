@@ -1,0 +1,139 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-05T22:16:59.165280+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2608.27978v1",
+      "source": "arxiv",
+      "title": "PhyMamba: Physics-Modulated Mamba for Robust Battery Health Prognostics",
+      "abstract": "Battery health prognostics is a core function in battery management systems (BMSs), yet long-horizon health forecasting from BMS signals remains challenging due to operating-condition dependency and sensor noise. In this paper, we propose PhyMamba, a two-stage physics-modulated Mamba framework that integrates electrochemical aging into sequence modelling. PhyMamba does not require explicit identification of internal aging parameters, which often relies on intrusive measurements. In stage-1, a lightweight Mamba encoder first processes BMS signals and produces a latent representation that is transformed via an aging parameterization module, into physics-informed aging features. In stage-2, a customized Mamba forecasting backbone performs multi-cycle prediction, where physics is tightly integrated to regulate the model's internal temporal updates toward degradation-consistent evolution. Experiments on three public datasets under multiple forecast horizons show that PhyMamba achieves the best aggregated performance, with an overall mean error reduction of 31.8% compared with a diverse range of baselines. PhyMamba also offers an optimized accuracy-efficiency trade-off, which supports practical deployment for robust battery health prognostics.",
+      "authors": [
+        "Sara Sameer",
+        "Yunyi Zhao",
+        "Wei Zhang",
+        "Minggang Zeng",
+        "Wenqing Li",
+        "Man-Fai Ng",
+        "Yonggang Wen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-08-28T06:47:03+00:00",
+      "link": "https://arxiv.org/pdf/2608.27978v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Battery health prognostics from BMS signals using physics-informed sequence model",
+      "llm_evidence_cn": "利用BMS信号和物理信息序列模型进行电池健康预测",
+      "llm_evidence": "利用BMS信号和物理信息序列模型进行电池健康预测",
+      "canonical_evidence": "利用BMS信号和物理信息序列模型进行电池健康预测",
+      "llm_tldr_en": "Addressing challenges in long-horizon battery health forecasting from BMS signals due to noise and operating conditions, PhyMamba integrates physics-modulated Mamba sequence modeling with electrochemical aging, avoiding explicit aging parameter identification, enabling robust multi-cycle health prognostics.",
+      "llm_tldr_cn": "电池管理系统信号下的长时程健康预测面临工况依赖和传感器噪声挑战。本文提出PhyMamba，一种两阶段物理调制的Mamba框架，将电化学老化集成到序列建模中，无需显式识别内部老化参数。该方法利用BMS信号提取物理信息老化特征，并用于多周期健康预测，提升了鲁棒性。",
+      "llm_tldr": "电池管理系统信号下的长时程健康预测面临工况依赖和传感器噪声挑战。本文提出PhyMamba，一种两阶段物理调制的Mamba框架，将电化学老化集成到序列建模中，无需显式识别内部老化参数。该方法利用BMS信号提取物理信息老化特征，并用于多周期健康预测，提升了鲁棒性。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.30593v1",
+      "source": "arxiv",
+      "title": "State of Health Estimation using Convolutional and Bidirectional LSTM Neural Networks tuned by Bayesian Optimization",
+      "abstract": "In this research, a novel framework is proposed for the SOH estimation, which employs a hybrid deep learning architecture of a concatenation of a Convolution Neural Network (CNN) and a Bidirectional Long Short-Term Memory (BiLSTM) Neural Network (NN) with the integration of Bayesian Optimization-based hyperparameter tuning for the network. Three different deep learning architectures are being evaluated: standalone recurrent models, CNN-RNN architectures and CNN-RNN combinations enhanced with intermediate Fully Connected (FC) layers. Among the three, the model with the intermediate FC layers demonstrated the highest predictive accuracy. A comprehensive feature engineering approach combines capacity (Q), voltage (V), Incremental Capacity Analysis (ICA), and Differential Voltage Analysis (DVA), with systematic evaluation of multiple combinations to identify the optimal input representation. To validate the proposed method, three publicly available datasets were utilized, ensuring reproducibility of the results, two from external sources and one developed by the author of this study using a unique experimental setup. The comparison study was performed using the Mean Absolute Error (MAE), the Root Mean Squared Error (RMSE) and the FLoating-point OPerations (FLOPs) as evaluation metrics.",
+      "authors": [
+        "Panagiotis Eleftheriadis",
+        "Foivos Georgios Kyrgios",
+        "Sonia Leva"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-31T11:08:33+00:00",
+      "link": "https://arxiv.org/pdf/2608.30593v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "State of health estimation using deep learning",
+      "llm_evidence_cn": "使用深度学习方法进行健康状态估计",
+      "llm_evidence": "使用深度学习方法进行健康状态估计",
+      "canonical_evidence": "使用深度学习方法进行健康状态估计",
+      "llm_tldr_en": "This paper proposes a hybrid CNN-BiLSTM framework with Bayesian optimization for battery state of health estimation, achieving higher accuracy by incorporating intermediate fully connected layers and comprehensive feature engineering.",
+      "llm_tldr_cn": "该研究针对电池健康状态(SOH)估计精度受限的问题，提出了一种结合卷积神经网络(CNN)和双向长短期记忆网络(BiLSTM)的混合深度学习框架，并引入贝叶斯优化进行超参数调优。通过容量、电压等多维特征工程，对比了三种架构，发现带有中间全连接层的CNN-BiLSTM模型预测精度最高。该成果为电池管理系统中的SOH在线估计提供了高精度、可扩展的深度学习方案，有助于电池全寿命周期管理。",
+      "llm_tldr": "该研究针对电池健康状态(SOH)估计精度受限的问题，提出了一种结合卷积神经网络(CNN)和双向长短期记忆网络(BiLSTM)的混合深度学习框架，并引入贝叶斯优化进行超参数调优。通过容量、电压等多维特征工程，对比了三种架构，发现带有中间全连接层的CNN-BiLSTM模型预测精度最高。该成果为电池管理系统中的SOH在线估计提供了高精度、可扩展的深度学习方案，有助于电池全寿命周期管理。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.02332v1",
+      "source": "arxiv",
+      "title": "A simple derivation of the Kalman filter",
+      "abstract": "In this lecture note, we present a concise and self-contained derivation of the discrete-time Kalman filter equations that requires only a basic understanding of least squares estimation. The treatment is designed to minimize mathematical overhead while preserving both rigor and generality.",
+      "authors": [
+        "Marco Chiani",
+        "Giovanni Petris",
+        "Moe Z. Win"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC",
+        "eess.SP",
+        "eess.SY",
+        "math.ST",
+        "stat.ME"
+      ],
+      "published": "2026-09-02T09:09:12+00:00",
+      "link": "https://arxiv.org/pdf/2609.02332v1",
+      "tags": [
+        "keyword:lfp-soc"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Provides derivation of discrete-time Kalman filter, a core component of SOC estimation algorithms",
+      "llm_evidence_cn": "推导离散时间卡尔曼滤波器，这是SOC估计算法的核心组成部分",
+      "llm_evidence": "推导离散时间卡尔曼滤波器，这是SOC估计算法的核心组成部分",
+      "canonical_evidence": "推导离散时间卡尔曼滤波器，这是SOC估计算法的核心组成部分",
+      "llm_tldr_en": "This lecture note presents a concise derivation of the discrete-time Kalman filter equations, providing a foundational understanding for least-squares-based state estimation methods used in battery SOC estimation.",
+      "llm_tldr_cn": "这篇讲义简明地推导了离散时间卡尔曼滤波方程，为基于最小二乘的状态估计方法提供了基础理解，这些方法广泛应用于电池荷电状态（SOC）估计中。文章以最小化数学开销为目标，同时保持严谨性和通用性，对理解自适应卡尔曼滤波等高级技术具有重要参考价值。",
+      "llm_tldr": "这篇讲义简明地推导了离散时间卡尔曼滤波方程，为基于最小二乘的状态估计方法提供了基础理解，这些方法广泛应用于电池荷电状态（SOC）估计中。文章以最小化数学开销为目标，同时保持严谨性和通用性，对理解自适应卡尔曼滤波等高级技术具有重要参考价值。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

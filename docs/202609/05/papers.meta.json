@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-05",
+  "date": "2026-09-05",
+  "generated_at": "2026-09-05T22:23:49",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/05/2608.27978v1-phymamba-physics-modulated-mamba-for-robust-battery-health-prognostics",
+      "section": "deep",
+      "title_en": "PhyMamba: Physics-Modulated Mamba for Robust Battery Health Prognostics",
+      "authors": "Sara Sameer, Yunyi Zhao, Wei Zhang, Minggang Zeng, Wenqing Li, Man-Fai Ng, Yonggang Wen",
+      "date": "2026-08-28",
+      "pdf": "https://arxiv.org/pdf/2608.27978v1",
+      "score": "8.0",
+      "evidence": "利用BMS信号和物理信息序列模型进行电池健康预测",
+      "tldr": "电池健康预测是电池管理系统的核心功能，但长期健康预测受运行条件依赖和传感器噪声影响，极具挑战。为此，本文提出PhyMamba，一种两阶段物理调制Mamba框架：先由轻量Mamba编码器提取BMS信号潜在表示并转换为物理信息老化特征，再由定制预测主干进行多周期预测，并通过物理约束调节内部时序演化。在三个公开数据集上，PhyMamba取得最佳聚合性能，总体平均误差较多种基线降低31.8%，同时优化精度与效率，支持实际部署。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Battery health prognostics is a core function in battery management systems (BMSs), yet long-horizon health forecasting from BMS signals remains challenging due to operating-condition dependency and sensor noise. In this paper, we propose PhyMamba, a two-stage physics-modulated Mamba framework that integrates electrochemical aging into sequence modelling. PhyMamba does not require explicit identification of internal aging parameters, which often relies on intrusive measurements. In stage-1, a lightweight Mamba encoder first processes BMS signals and produces a latent representation that is transformed via an aging parameterization module, into physics-informed aging features. In stage-2, a customized Mamba forecasting backbone performs multi-cycle prediction, where physics is tightly integrated to regulate the model's internal temporal updates toward degradation-consistent evolution. Experiments on three public datasets under multiple forecast horizons show that PhyMamba achieves the best aggregated performance, with an overall mean error reduction of 31.8% compared with a diverse range of baselines. PhyMamba also offers an optimized accuracy-efficiency trade-off, which supports practical deployment for robust battery health prognostics.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/05/2608.30593v1-state-of-health-estimation-using-convolutional-and-bidirectional-lstm-neural-networks-tuned-by-bayesian-optimization",
+      "section": "deep",
+      "title_en": "State of Health Estimation using Convolutional and Bidirectional LSTM Neural Networks tuned by Bayesian Optimization",
+      "authors": "Panagiotis Eleftheriadis, Foivos Georgios Kyrgios, Sonia Leva",
+      "date": "2026-08-31",
+      "pdf": "https://arxiv.org/pdf/2608.30593v1",
+      "score": "8.0",
+      "evidence": "使用深度学习方法进行健康状态估计",
+      "tldr": "针对电池健康状态（SOH）估计精度与可复现性不足，提出融合卷积神经网络与双向长短期记忆网络的混合深度学习框架，并采用贝叶斯优化自动调参。在CNN-RNN基础上增加中间全连接层显著提升预测精度。通过容量、电压、增量容量分析和差分电压分析等多特征组合筛选最优输入表示。在三个公开数据集上验证，以MAE、RMSE和FLOPs等指标评估，证明方法高精度且计算开销合理。",
+      "tags": "query:soc-soh",
+      "abstract_en": "In this research, a novel framework is proposed for the SOH estimation, which employs a hybrid deep learning architecture of a concatenation of a Convolution Neural Network (CNN) and a Bidirectional Long Short-Term Memory (BiLSTM) Neural Network (NN) with the integration of Bayesian Optimization-based hyperparameter tuning for the network. Three different deep learning architectures are being evaluated: standalone recurrent models, CNN-RNN architectures and CNN-RNN combinations enhanced with intermediate Fully Connected (FC) layers. Among the three, the model with the intermediate FC layers demonstrated the highest predictive accuracy. A comprehensive feature engineering approach combines capacity (Q), voltage (V), Incremental Capacity Analysis (ICA), and Differential Voltage Analysis (DVA), with systematic evaluation of multiple combinations to identify the optimal input representation. To validate the proposed method, three publicly available datasets were utilized, ensuring reproducibility of the results, two from external sources and one developed by the author of this study using a unique experimental setup. The comparison study was performed using the Mean Absolute Error (MAE), the Root Mean Squared Error (RMSE) and the FLoating-point OPerations (FLOPs) as evaluation metrics.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/05/2609.02332v1-a-simple-derivation-of-the-kalman-filter",
+      "section": "quick",
+      "title_en": "A simple derivation of the Kalman filter",
+      "authors": "Marco Chiani, Giovanni Petris, Moe Z. Win",
+      "date": "2026-09-02",
+      "pdf": "https://arxiv.org/pdf/2609.02332v1",
+      "score": "6.0",
+      "evidence": "推导离散时间卡尔曼滤波器，这是SOC估计算法的核心组成部分",
+      "tldr": "卡尔曼滤波是线性动态系统状态估计的核心算法，但其标准推导常依赖概率论与随机过程，入门门槛较高。本文以最小二乘估计为唯一预备知识，采用简洁自包含的方式推导离散时间卡尔曼滤波方程。推导过程完整呈现预测与更新两个递推步骤，并证明其最优性。该方法在显著降低数学复杂度的同时，保留了严谨性与通用性，适合教学和快速工程参考。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "In this lecture note, we present a concise and self-contained derivation of the discrete-time Kalman filter equations that requires only a basic understanding of least squares estimation. The treatment is designed to minimize mathematical overhead while preserving both rigor and generality.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
