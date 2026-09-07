@@ -1,0 +1,100 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-07T23:26:45.824419+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.04487v1",
+      "source": "arxiv",
+      "title": "Estimating the Health and State of Charge of Each Cell in a Second-Life Battery System from Field Data",
+      "abstract": "Effective use of battery storage depends on reliable estimation of its state of health (SOH) and state of charge (SOC). Model-based state estimation requires the open-circuit voltage (OCV) curve, which is typically unknown for second-life batteries. We present a framework that jointly estimates the states and parameters of an equivalent circuit model solely from field operation data, using Gaussian process regression to reconstruct the OCV curve. Applied to a real second-life battery system of 27 modules and 324 cells, it reveals SOH heterogeneity, a systematic SOC imbalance, and two faulty cells, all validated against a reference measurement. We aggregate the cell SOH and SOC to module level and benchmark them against a lumped-module model fitted without the individual cell voltages. The lumped-module model follows the average behavior and cannot capture the limiting cells, overestimating SOH by up to 31% and SOC by up to 23%.",
+      "authors": [
+        "Martin Cornejo",
+        "Julian Meyer-Schwickerath",
+        "Juan Victor Sandalinas",
+        "Andreas Jossen"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-09-03T21:17:05+00:00",
+      "link": "https://arxiv.org/pdf/2609.04487v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Jointly estimates SOC and SOH using equivalent circuit model and Gaussian process regression on field data",
+      "llm_evidence_cn": "利用等效电路模型和高斯过程回归从现场数据联合估计SOC和SOH",
+      "llm_evidence": "利用等效电路模型和高斯过程回归从现场数据联合估计SOC和SOH",
+      "canonical_evidence": "利用等效电路模型和高斯过程回归从现场数据联合估计SOC和SOH",
+      "llm_tldr_en": "Presents a framework for joint SOC/SOH estimation in second-life battery systems from field data, using equivalent circuit model and GP regression to reconstruct OCV curve, validated on real system of 324 cells.",
+      "llm_tldr_cn": "针对退役电池系统开路电压曲线未知的问题，提出基于等效电路模型和高斯过程回归的联合SOC/SOH估计框架，仅利用现场运行数据。在包含27个模组、324个电芯的真实退役电池系统上验证，揭示了SOH不一致性、系统性SOC失衡和两个故障电芯，并通过参考测量验证。该方法为大规模储能系统的电池状态监测提供了可靠且可扩展的方案。",
+      "llm_tldr": "针对退役电池系统开路电压曲线未知的问题，提出基于等效电路模型和高斯过程回归的联合SOC/SOH估计框架，仅利用现场运行数据。在包含27个模组、324个电芯的真实退役电池系统上验证，揭示了SOH不一致性、系统性SOC失衡和两个故障电芯，并通过参考测量验证。该方法为大规模储能系统的电池状态监测提供了可靠且可扩展的方案。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "joint estimation of state of charge and state of health",
+      "matched_requirement_id": "req-15",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.02968v1",
+      "source": "arxiv",
+      "title": "Battery open-circuit voltage is not purely chemical",
+      "abstract": "Open-circuit-voltage (OCV) curves are commonly treated as intrinsic chemical properties of electrode materials. However, this view is incomplete. In ion-insertion batteries, OCV also depends on mechanical state and microstructure. Using finite-element simulations and asymptotic analysis, we show that particle swelling and external loads promote particle--particle contact that generates compressive stresses, shifting the inserted-ion chemical potential. The OCV correction is nonlinear, follows Hertzian contact scaling, and depends on particle arrangement. Identical materials can therefore exhibit different OCV curves in different electrode microstructures. Furthermore, in full cells, electrodes are mechanically coupled through the common stack stress. Thus, cell OCV is a chemo-mechanical property of the entire battery architecture, not chemistry alone.",
+      "authors": [
+        "Andrea Giudici",
+        "Christoph Pohl",
+        "Alberto Salvadori",
+        "Colin Please",
+        "Manuel Landstorfer",
+        "Jon Chapman"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "physics.app-ph"
+      ],
+      "published": "2026-09-02T08:42:39+00:00",
+      "link": "https://arxiv.org/pdf/2609.02968v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "OCV curves are key to equivalent circuit models for SOC estimation; paper shows they depend on mechanics",
+      "llm_evidence_cn": "开路电压曲线是等效电路模型SOC估计的关键；该文表明其受力学影响",
+      "llm_evidence": "开路电压曲线是等效电路模型SOC估计的关键；该文表明其受力学影响",
+      "canonical_evidence": "开路电压曲线是等效电路模型SOC估计的关键；该文表明其受力学影响",
+      "llm_tldr_en": "Shows that battery open-circuit voltage depends on mechanical state and microstructure, not just chemistry; this affects OCV-SOC relationships used in SOC estimation.",
+      "llm_tldr_cn": "该文针对电池开路电压通常被视为纯化学性质这一假设，指出在离子嵌入电池中OCV还受力学状态和微结构影响。通过有限元模拟和渐近分析，发现颗粒膨胀和外部载荷产生压缩应力，改变嵌入离子化学势，导致OCV非线性修正。结果表明相同材料在不同电极微结构下可能呈现不同OCV曲线。该发现对建立准确的OCV-SOC关系、改进等效电路模型SOC估计具有重要意义。",
+      "llm_tldr": "该文针对电池开路电压通常被视为纯化学性质这一假设，指出在离子嵌入电池中OCV还受力学状态和微结构影响。通过有限元模拟和渐近分析，发现颗粒膨胀和外部载荷产生压缩应力，改变嵌入离子化学势，导致OCV非线性修正。结果表明相同材料在不同电极微结构下可能呈现不同OCV曲线。该发现对建立准确的OCV-SOC关系、改进等效电路模型SOC估计具有重要意义。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
