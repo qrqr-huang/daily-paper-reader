@@ -1,0 +1,53 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-09T21:31:24.525008+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.08008v1",
+      "source": "arxiv",
+      "title": "Koopman-Based Model Predictive Control for Simultaneous State of Charge and Temperature Balancing of Lithium-Ion Cells",
+      "abstract": "Cell-to-cell electrical and thermal variations produce nonuniform state of charge (SoC) and temperature distributions in lithium-ion battery packs. This paper proposes a Koopman-operator-based framework for simultaneous SoC and temperature balancing of series-connected cells. Cell-specific Koopman predictors identified using extended dynamic mode decomposition are assembled into neighboring-cell error dynamics that retain heterogeneity and thermal-disturbance effects. A Tikhonov-regularized feedforward controller provides numerically robust compensation without excessive current amplification, while constrained Koopman-based model predictive control (KMPC) regulates the residual errors through a convex quadratic program. Three-cell simulations validate the controller under two consecutive Urban Dynamometer Driving Schedule cycles. KMPC achieves balancing performance comparable to nonlinear model predictive control (NMPC). Relative to the uncontrolled case, KMPC reduces the RMSEs of the neighboring-cell SoC and core temperature differences by 66-81% and 57-76%, respectively, while reducing the computation time per optimization from 0.0259s for NMPC to 0.0028s for KMPC.",
+      "authors": [
+        "Jihoon Moon"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-09-07T21:44:42+00:00",
+      "link": "https://arxiv.org/pdf/2609.08008v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Koopman-based MPC for simultaneous SoC and temperature balancing of lithium-ion cells",
+      "llm_evidence_cn": "基于Koopman的MPC实现锂离子电池SoC与温度平衡",
+      "llm_evidence": "基于Koopman的MPC实现锂离子电池SoC与温度平衡",
+      "canonical_evidence": "基于Koopman的MPC实现锂离子电池SoC与温度平衡",
+      "llm_tldr_en": "Addresses nonuniform SoC and temperature in lithium-ion packs; proposes Koopman-based MPC with Tikhonov-regularized feedforward to balance series-connected cells; demonstrates effective balancing.",
+      "llm_tldr_cn": "针对锂离子电池组内电池间电气与热差异导致的荷电状态（SoC）和温度分布不均问题，本文提出一种基于Koopman算子的控制框架。该方法利用扩展动态模式分解为每个电池单元辨识Koopman预测模型，并构建相邻单元误差动态模型，结合Tikhonov正则化前馈控制和约束Koopman模型预测控制实现SoC与温度的同时平衡。结果表明所提方法能有效抑制不一致性，避免过流放大，提升电池组一致性。该工作为电池管理系统中多状态协调控制提供了新思路。",
+      "llm_tldr": "针对锂离子电池组内电池间电气与热差异导致的荷电状态（SoC）和温度分布不均问题，本文提出一种基于Koopman算子的控制框架。该方法利用扩展动态模式分解为每个电池单元辨识Koopman预测模型，并构建相邻单元误差动态模型，结合Tikhonov正则化前馈控制和约束Koopman模型预测控制实现SoC与温度的同时平衡。结果表明所提方法能有效抑制不一致性，避免过流放大，提升电池组一致性。该工作为电池管理系统中多状态协调控制提供了新思路。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}

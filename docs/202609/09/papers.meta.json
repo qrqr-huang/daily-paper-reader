@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-09",
+  "date": "2026-09-09",
+  "generated_at": "2026-09-09T21:34:26",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/09/2609.08008v1-koopman-based-model-predictive-control-for-simultaneous-state-of-charge-and-temperature-balancing-of-lithium-ion-cells",
+      "section": "deep",
+      "title_en": "Koopman-Based Model Predictive Control for Simultaneous State of Charge and Temperature Balancing of Lithium-Ion Cells",
+      "authors": "Jihoon Moon",
+      "date": "2026-09-07",
+      "pdf": "https://arxiv.org/pdf/2609.08008v1",
+      "score": "8.0",
+      "evidence": "基于Koopman的MPC实现锂离子电池SoC与温度平衡",
+      "tldr": "锂离子电池组单体间电热差异导致荷电状态与温度分布不均。本文提出基于Koopman算子的模型预测控制框架，利用扩展动态模式分解建立单体预测器并组装相邻误差动态。Tikhonov正则化前馈抑制电流放大，约束Koopman模型预测控制通过凸二次规划调节残差。三电池仿真在双UDDS工况下，KMPC将相邻SoC差异RMSE降低66-81%、核心温度差异降低57-76%，计算时间由NMPC的0.0259秒缩短至0.0028秒。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Cell-to-cell electrical and thermal variations produce nonuniform state of charge (SoC) and temperature distributions in lithium-ion battery packs. This paper proposes a Koopman-operator-based framework for simultaneous SoC and temperature balancing of series-connected cells. Cell-specific Koopman predictors identified using extended dynamic mode decomposition are assembled into neighboring-cell error dynamics that retain heterogeneity and thermal-disturbance effects. A Tikhonov-regularized feedforward controller provides numerically robust compensation without excessive current amplification, while constrained Koopman-based model predictive control (KMPC) regulates the residual errors through a convex quadratic program. Three-cell simulations validate the controller under two consecutive Urban Dynamometer Driving Schedule cycles. KMPC achieves balancing performance comparable to nonlinear model predictive control (NMPC). Relative to the uncontrolled case, KMPC reduces the RMSEs of the neighboring-cell SoC and core temperature differences by 66-81% and 57-76%, respectively, while reducing the computation time per optimization from 0.0259s for NMPC to 0.0028s for KMPC.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

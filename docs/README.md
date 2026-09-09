@@ -6,19 +6,23 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-08
-- 运行时间：2026-09-08 22:51:35 UTC
+- 最新运行日期：2026-09-09
+- 运行时间：2026-09-09 21:34:06 UTC
 - 运行状态：成功
-- 本次总论文数：0
-- 精读区：0
+- 本次总论文数：1
+- 精读区：1
 - 速读区：0
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-- 详情：[/202609/08/README](/202609/08/README)
+- 今日共生成 1 篇推荐（精读 1 篇，速读 0 篇）
+- 精读：《Koopman-Based Model Predictive Control for Simultaneous State of Charge and Temperature Balancing of Lithium-Ion Cells》（8.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202609/09/README](/202609/09/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Koopman-Based Model Predictive Control for Simultaneous State of Charge and Temperature Balancing of Lithium-Ion Cells](/202609/09/2609.08008v1-koopman-based-model-predictive-control-for-simultaneous-state-of-charge-and-temperature-balancing-of-lithium-ion-cells)  
+   标签：评分：8.0/10、query:lfp-soc
+   evidence：基于Koopman的MPC实现锂离子电池SoC与温度平衡
 
 ### 速读区论文标签
 - 本次无速读推荐。
