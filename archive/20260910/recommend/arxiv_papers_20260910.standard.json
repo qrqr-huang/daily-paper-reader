@@ -1,0 +1,94 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-10T21:29:03.638256+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.09665v1",
+      "source": "arxiv",
+      "title": "Koopman Spectral Reduced-Order Modeling of Spherical Diffusion in Lithium-Ion Batteries",
+      "abstract": "Physics-based battery models provide internal electrochemical states for estimation and control, but solving the partial differential equations governing solid diffusion can be computationally expensive. This paper therefore develops an analytical Koopman spectral reduced-order model for the single particle model. The Koopman eigenfunctionals and eigenvalues are derived directly from the eigenfunctions of the self-adjoint zero-flux diffusion operator. The zero mode represents the volume average concentration, the nonzero modes describe decaying radial gradients, and projection of the current dependent surface flux yields a linear state-space model that reconstructs the average, surface, and full radial concentrations. Unlike data-driven Koopman models, the proposed formulation requires neither training data nor empirical lifting functions. Compared with a 400 control volume finite volume model (FVM) during a constant 1C discharge, the 80 Koopman mode model achieves negative and positive surface concentration RMSE values of $1.26\\times10^{-5}\\,\\mathrm{mol/m^{3}}$ and $4.10\\times10^{-6}\\,\\mathrm{mol/m^{3}}$, a terminal voltage RMSE of $8.42\\times10^{-4}\\,\\mathrm{V}$. The models with 5 and 80 Koopman modes were approximately 225 and 31 times faster than the FVM model, respectively. These results demonstrate a physically interpretable and computationally efficient representation of battery diffusion dynamics.",
+      "authors": [
+        "Jihoon Moon"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-09-09T03:31:52+00:00",
+      "link": "https://arxiv.org/pdf/2609.09665v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "reduced-order state-space model reconstructs concentration states in Li-ion battery single particle model",
+      "llm_evidence_cn": "锂离子电池单粒子模型的降阶状态空间模型重建浓度状态",
+      "llm_evidence": "锂离子电池单粒子模型的降阶状态空间模型重建浓度状态",
+      "canonical_evidence": "锂离子电池单粒子模型的降阶状态空间模型重建浓度状态",
+      "llm_tldr_en": "Develops an analytical Koopman spectral reduced-order model for Li-ion battery solid diffusion, yielding a linear state-space model for concentration states to enable efficient estimation and control.",
+      "llm_tldr_cn": "针对锂离子电池物理模型中固相扩散偏微分方程求解计算成本高的问题，本文提出基于Koopman谱分析的解析降阶建模方法。从零通量扩散算子的特征函数导出Koopman特征泛函与特征值，建立线性状态空间模型，可重建平均、表面及全径向浓度。该方法保留物理可解释性，同时大幅降低计算复杂度，为电池内部状态估计与控制提供高效模型基础。",
+      "llm_tldr": "针对锂离子电池物理模型中固相扩散偏微分方程求解计算成本高的问题，本文提出基于Koopman谱分析的解析降阶建模方法。从零通量扩散算子的特征函数导出Koopman特征泛函与特征值，建立线性状态空间模型，可重建平均、表面及全径向浓度。该方法保留物理可解释性，同时大幅降低计算复杂度，为电池内部状态估计与控制提供高效模型基础。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.10185v1",
+      "source": "arxiv",
+      "title": "From Laboratory Aging Studies to Field Predictions: Quantifying Uncertainty in Battery Storage Lifetime Predictions",
+      "abstract": "Predicting how long a battery energy storage system will last is critical for warranty design, maintenance planning and investment decisions, yet degradation models are mostly deterministic and rarely validated against real field data. We apply an open-source probabilistic degradation framework, combined with a cell-to-system approximation, to bridge the gap between cell-level laboratory aging models and system-level field predictions for residential battery energy storage systems with quantified uncertainty. The framework predicts cell-level state-of-health to within 0.4 % mean absolute error, roughly half the error of prior models for this dataset. When applied to field operation data, the framework's predictions are consistent with all three available system-level capacity measurements - a benchmark rarely available for open probabilistic degradation models. Cell-level heterogeneity is approximated by two bounding stress scenarios differing only slightly (a 5 % spread in temperature and a 9 % spread in current). The mean degradation trajectories of the two scenarios reach end-of-life 10 months apart, while the full predicted end-of-life range across both scenarios spans approximately three years, about a third of the expected system lifetime. We link this uncertainty to two drivers. One is a systematic mismatch between laboratory test conditions and field-representative operating stress. The other is variability in the training data itself. These insights translate into concrete, resource-efficient recommendations for future aging study design, supporting more confident predictions of battery lifetime under real-world conditions.",
+      "authors": [
+        "Melina Graner",
+        "Jan Figgener",
+        "Andreas Jossen",
+        "Holger Hesse"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-09-09T13:53:28+00:00",
+      "link": "https://arxiv.org/pdf/2609.10185v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Probabilistic battery degradation framework predicts state-of-health with field data",
+      "llm_evidence_cn": "概率性电池退化框架用现场数据预测健康状态",
+      "llm_evidence": "概率性电池退化框架用现场数据预测健康状态",
+      "canonical_evidence": "概率性电池退化框架用现场数据预测健康状态",
+      "llm_tldr_en": "Applies an open-source probabilistic degradation framework to predict battery storage lifetime from lab aging studies to field systems, achieving cell-level SOH error within 0.4%.",
+      "llm_tldr_cn": "针对电池储能系统寿命预测中确定性模型缺乏现场验证的问题，该文应用开源概率退化框架结合电池到系统近似，将实验室老化模型与住宅储能现场预测衔接并量化不确定性。该框架对电池级健康状态的预测平均绝对误差为0.4%，约为先前模型误差的一半。研究结果为保修设计、维护规划和投资决策提供了更可靠的寿命预测依据。",
+      "llm_tldr": "针对电池储能系统寿命预测中确定性模型缺乏现场验证的问题，该文应用开源概率退化框架结合电池到系统近似，将实验室老化模型与住宅储能现场预测衔接并量化不确定性。该框架对电池级健康状态的预测平均绝对误差为0.4%，约为先前模型误差的一半。研究结果为保修设计、维护规划和投资决策提供了更可靠的寿命预测依据。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

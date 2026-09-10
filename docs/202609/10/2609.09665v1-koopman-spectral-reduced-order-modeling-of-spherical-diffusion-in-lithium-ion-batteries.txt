@@ -1,0 +1,607 @@
+Title: Koopman Spectral Reduced-Order Modeling of Spherical Diffusion in Lithium-Ion Batteries
+
+URL Source: https://arxiv.org/pdf/2609.09665v1
+
+Published Time: Thu, 10 Sep 2026 00:30:56 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# KOOPMAN SPECTRAL REDUCED -O RDER MODELING OF 
+
+# SPHERICAL DIFFUSION IN LITHIUM -I ON BATTERIES 
+
+Jihoon Moon 
+
+Department of Mechanical Engineering The Pennsylvania State University University Park, PA 16802 
+
+jihoonmoon@psu.edu 
+
+September 10, 2026 
+
+ABSTRACT 
+
+Physics-based battery models provide internal electrochemical states for estimation and control, but solving the partial differential equations governing solid diffusion can be computationally expensive. This paper therefore develops an analytical Koopman spectral reduced-order model for the single particle model. The Koopman eigenfunctionals and eigenvalues are derived directly from the eigenfunctions of the self-adjoint zero-flux diffusion operator. The zero mode represents the volume average concentration, the nonzero modes describe decaying radial gradients, and projection of the current dependent surface flux yields a linear state-space model that reconstructs the average, surface, and full radial concentrations. Unlike data-driven Koopman models, the proposed formulation requires neither training data nor empirical lifting functions. Compared with a 400 control volume finite volume model (FVM) during a constant 1C discharge, the 80 Koopman mode model achieves negative and positive surface concentration RMSE values of 1.26 × 10 −5 mol /m3 and 4.10 × 10 −6 mol /m3,a terminal voltage RMSE of 8.42 × 10 −4 V. The models with 5 and 80 Koopman modes were approximately 225 and 31 times faster than the FVM model, respectively. These results demonstrate a physically interpretable and computationally efficient representation of battery diffusion dynamics. 
+
+1 Introduction 
+
+Lithium-ion batteries are widely used in electrified transportation, grid energy storage, and portable systems because of their high energy density and efficiency. Their safe and efficient operation relies on battery management systems (BMSs) that require models capable of predicting measurable outputs and internal electrochemical states. Equivalent circuit models (ECMs) are attractive for real-time applications because of their low computational cost and have been widely used for state estimation, health monitoring, and fault diagnosis [1, 2, 3, 4, 5, 6]. However, their parameters are largely empirical and provide limited information about internal concentration dynamics. Physics-based electrochemical models instead describe lithium transport and reaction mechanisms through conservation laws and constitutive relations, but their governing PDEs and differential-algebraic equations can require substantial computational effort. This tradeoff has motivated the development of reduced-order electrochemical models for real-time battery applications [7, 8, 9]. The single particle model (SPM) is a widely used physics-based simplification that represents each porous electrode by a representative spherical particle and describes solid-phase lithium transport using spherical diffusion. The SPM retains physically meaningful quantities, including volume average and surface concentrations, while substantially reducing the complexity of higher-order electrochemical models. Nevertheless, direct spatial discretization of the diffusion PDE introduces multiple states per particle, and higher spatial resolution is required to accurately capture surface concentration dynamics. Several reduced-order approaches have therefore been proposed. Tanim et al. developed low-order electrolyte enhanced SPM formulations in explicit transfer function form [7, 8], while Docimo et al. derived a second-order physics-based battery model with an equivalent circuit interpretation [10]. Pade approximations have also been widely applied to spherical diffusion transfer functions to obtain low-order state-space models [11], and optimization-based reduced-order formulations have been developed and compared with Pade-based models, arXiv:2609.09665v1 [eess.SY] 9 Sep 2026 A PREPRINT - S EPTEMBER 10, 2026 including extensions incorporating degradation effects [9]. These approaches demonstrate that substantial model order reduction is possible while retaining electrochemical structure. However, most existing SPM reductions rely on rational approximation, spatial discretization, moment approximation, or parameter fitting rather than directly exploiting the analytical spectral structure of the spherical diffusion operator. Koopman operator theory provides an alternative spectral framework in which dynamical systems are represented through the evolution of observable functions. Koopman-based reduced representations and control formulations have been developed for PDEs [12, 13, 14]. In particular, Nakao and Mezi’c showed that, for linear diffusion PDEs, Koopman eigenfunctionals can be constructed as linear functionals of the field variable associated with eigenfunctions of the spatial operator [15]. This establishes a direct connection between classical diffusion eigenfunction expansions and Koopman spectral coordinates. Koopman methods have recently been explored for lithium-ion battery modeling and estimation. Choi et al. developed a data-driven Koopman surrogate of an SPM using learned encoder and decoder mappings [16], while Gupta et al. combined physics-based features with streamed battery data in a physics-informed Koopman framework for state-of-charge estimation [17]. These approaches primarily identify the lifted coordinates and operators from data. In contrast, the spherical solid diffusion PDE of the SPM admits an analytical construction of Koopman eigenfunctionals directly from the governing diffusion operator and boundary conditions. This work develops a physics-based Koopman spectral reduced-order model in which the reduced coordinates, eigenvalues, and spatial modes are obtained analytically. The resulting representation is compact, physically interpretable, and suitable for real-time battery estimation and control. This work develops a Koopman spectral reduced-order model of SPM with four principal contributions. First, the Koopman eigenfunctionals are derived analytically from the eigenfunctions of the self-adjoint diffusion operator. Second, the resulting coordinates are physically interpretable: the zero eigenfunctional recovers the volume average concentration, while the nonzero eigenfunctionals represent radial diffusion modes with analytical decay rates. Third, the autonomous and controlled dynamics are treated separately. The eigenfunctionals and eigenvalues are obtained from the zero-flux diffusion generator, and the current-dependent boundary flux is subsequently projected into these coordinates to form the controlled state-space model. Finally, the proposed model is compared with a high-order finite volume reference to assess concentration and voltage accuracy, and computational efficiency. This framework provides an analytical and interpretable alternative to learned Koopman embeddings and conventional rational approximations for control-oriented battery diffusion modeling. 
+
+2 Methodology 
+
+This section derives the Koopman spectral reduced-order model for solid-phase diffusion in the SPM. First, the spherical diffusion equations, boundary conditions, and modeling assumptions are presented. The eigenfunctions of the self-adjoint zero-flux diffusion operator are then used to define the Koopman eigenfunctionals and modal coordinates [15]. Next, the surface-flux input is projected onto these coordinates to obtain the boundary-controlled state-space model, followed by its exact discrete-time formulation. Finally, the numerical procedure used to compare the Koopman model with the finite-volume reference is described. 
+
+2.1 Single-Particle Solid Diffusion Model 
+
+The SPM represents each porous electrode by a single spherical active-material particle. The particles within an electrode are assumed to have identical radii and to experience a spatially uniform reaction rate. Electrolyte concentration gradients are neglected in the present solid-diffusion reduction. For electrode i ∈ { neg, pos }, where neg and pos denote the negative and positive electrodes, respectively, conservation of lithium in the solid particle is governed by Fick’s law of diffusion, 
+
+∂c i(r, t )
+
+∂t = Di
+
+r2
+
+∂∂r 
+
+
+
+r2 ∂c i(r, t )
+
+∂r 
+
+
+
+, 0 ≤ r ≤ Ri, (1) where ci is the solid-phase lithium concentration, Di is the solid-phase diffusion coefficient, and Ri is the particle radius. Spherical symmetry gives the center boundary condition and the electrochemical reaction at the particle surface as ∂c i
+
+∂r r=0 
+
+= 0 , −Di
+
+∂c i
+
+∂r r=Ri
+
+= Ji(t) (2) where Ji is the molar flux at the particle surface. Positive cell current is defined as discharge in this work. The electrode fluxes are written as 
+
+Jneg (t) = I(t)
+
+F A neg aneg Lneg 
+
+, J pos (t) = − I(t)
+
+F A pos apos Lpos 
+
+, (3) 2A PREPRINT - S EPTEMBER 10, 2026 where F is Faraday’s constant, Ai is the electrode area, Li is the electrode thickness, ai = 3εi 
+
+> Ri
+
+is the specific interfacial area, and εi is the active-material volume fraction. The sign difference in (3) reflects lithium leaving the negative particle and entering the positive particle during discharge. Two quantities of particular interest are the volume-average concentration and the surface concentration, 
+
+¯ci(t) = 3
+
+R3
+
+> i
+
+Z Ri
+
+> 0
+
+ci(r, t )r2 dr, (4) 
+
+cs,i (t) = ci(Ri, t ). (5) The average concentration is directly related to the lithium inventory and electrode state of charge, and the surface concentration enters the overpotential and open circuit potential of the SPM. The overpotential and terminal voltage are presented as 
+
+ηi = 2RuTF sinh −1
+
+ Ji(t)2aiki
+
+
+
+cecs,i (cmax,i − cs,i )0.5 ,V (t) = Uref,pos (cs,pos ) − Uref,neg (cs,neg ) + ηpos − ηneg 
+
+−
+
+ Rf ilm,pos 
+
+Apos Lpos apos 
+
+
+
++
+
+ Rf ilm,neg 
+
+Aneg Lneg aneg 
+
+
+
++ Rc
+
+
+
+I(t)
+
+(6) See [9] for values of model parameters and open circuit potential equations. 
+
+2.2 Koopman Formulation of the Spherical Diffusion Dynamics 
+
+The Koopman spectral representation developed in this work is constructed from the spatial eigenfunctions of the spherical diffusion operator. To determine these eigenfunctions, the autonomous diffusion dynamics are considered first by imposing the homogeneous surface condition Ji(t) = 0 . Let Sti denote the evolution operator generated by (1)–(2) with a homogeneous surface boundary condition. For an observable functional g[c], the Koopman operator is defined by 
+
+(Kti g)[ c0] = g[Sti c0], (7) where c0(r) is an initial concentration profile. The associated infinitesimal generator is 
+
+Lig = lim 
+
+> t→0
+
+Kti g − gt . (8) A Koopman eigenfunctional ψi,n satisfies 
+
+Kti ψi,n = eλi,n tψi,n , (9) or equivalently Liψi,n = λi,n ψi,n . Thus, if the lifted coordinate is defined as zi,n (t) = ψi,n [cs,i (·, t )] , its zero-input dynamics are 
+
+˙zi,n (t) = λi,n zi,n (t). (10) 
+
+2.2.1 Spherical Diffusion Eigenfunctions 
+
+The spatial eigenfunctions are obtained from the autonomous diffusion dynamics by setting the surface flux to zero, 
+
+Ji(t) = 0 . Assuming a separated solution, 
+
+ci(r, t ) = ϕi(r)Ti(t), (11) and substituting (11) into (1) gives 
+
+1
+
+DiTi
+
+dT i
+
+dt = 1
+
+ϕir2
+
+ddr 
+
+
+
+r2 dϕ i
+
+dr 
+
+
+
+. (12) Since the left- and right-hand sides depend only on t and r, respectively, both are set equal to the separation constant 
+
+−μ2. The spatial eigenvalue problem is therefore 
+
+1
+
+r2
+
+ddr 
+
+
+
+r2 dϕ dr 
+
+
+
+= −μ2ϕ, (13) subject to 
+
+ϕ′(0) = 0 , ϕ′(Ri) = 0 . (14) The corresponding temporal component satisfies Ti(t) = Ti(0) e−Diμ2t, showing that the nonuniform diffusion modes decay exponentially. 3A PREPRINT - S EPTEMBER 10, 2026 Expanding (13) gives 
+
+ϕ′′ + 2
+
+r ϕ′ + μ2ϕ = 0 . (15) Using the transformation y = rϕ reduces this equation to y′′ + μ2y = 0 , with solution y = A sin( μr ) + B cos( μr ).Requiring the concentration to remain finite at the particle center gives B = 0 . Choosing A = 1 /μ normalizes the eigenfunction such that ϕ(0) = 1 , yielding 
+
+ϕi,n (r) = sin( μi,n r)
+
+μi,n r , n ≥ 1. (16) Applying the surface condition ϕ′
+
+> i,n
+
+(Ri) = 0 gives 
+
+μi,n Ri cos( μi,n Ri) − sin( μi,n Ri) = 0 . (17) Defining ζn = μi,n Ri gives tan ζn = ζn. The same dimensionless roots ζn therefore apply to both electrodes. For 
+
+μ = 0 , the eigenvalue problem admits the constant mode ϕi, 0(r) = 1 . The functions {ϕi,n }∞ 
+
+> n=0
+
+define the intrinsic spatial modes of the autonomous spherical diffusion dynamics. 
+
+2.2.2 Koopman Eigenfunctionals and Modal Coordinates 
+
+The connection between the spatial diffusion modes and the Koopman eigenfunctionals follows from the spectral properties of the spherical diffusion operator. Define 
+
+Dif = 1
+
+r2
+
+ddr 
+
+
+
+r2 df dr 
+
+
+
+, (18) with the spherical weighted inner product 
+
+⟨f, g ⟩i =
+
+Z Ri
+
+> 0
+
+f (r)g(r)r2 dr. (19) The factor r2 originates from the spherical volume element dV = 4 πr 2dr .An operator is self-adjoint when ⟨f, Dig⟩i = ⟨D if, g ⟩i. For functions satisfying the homogeneous Neumann boundary conditions, integration by parts gives 
+
+⟨f, Dig⟩i = f r 2g′Ri 
+
+> 0
+
+−
+
+Z Ri
+
+> 0
+
+r2f ′g′ dr = −
+
+Z Ri
+
+> 0
+
+r2f ′g′ dr = ⟨D if, g ⟩i.
+
+The boundary term vanishes because g′(Ri) = 0 at the particle surface and r2 = 0 at the center. Hence, Di is self-adjoint under (19). Self-adjointness is important for the Koopman construction in two ways. First, eigenfunctions corresponding to distinct eigenvalues are orthogonal. Using Diϕi,n = −μ2
+
+> i,n
+
+ϕi,n , together with self-adjointness gives 
+
+ μ2 
+
+> i,m
+
+− μ2
+
+> i,n
+
+ ⟨ϕi,m , ϕ i,n ⟩i = 0 . (20) Therefore, for m̸ = n, ⟨ϕi,m , ϕ i,n ⟩i = 0 . Together with the completeness of this eigenfunction set, the concentration field can be expanded as 
+
+ci(r, t ) = 
+
+> ∞
+
+X
+
+> n=0
+
+zi,n (t)ϕi,n (r). (21) The modal coefficient is obtained by projecting (21) onto ϕi,n . Defining 
+
+Ni,n = ⟨ϕi,n , ϕ i,n ⟩i =
+
+Z Ri
+
+> 0
+
+ϕ2
+
+> i,n
+
+(r)r2 dr, (22) orthogonality gives 
+
+zi,n (t) = 1
+
+Ni,n 
+
+Z Ri
+
+> 0
+
+ci(r, t )ϕi,n (r)r2 dr. (23) For the zero mode, 
+
+Ni, 0 = R3
+
+> i
+
+3 , zi, 0(t) = ¯ ci(t), (24) 4A PREPRINT - S EPTEMBER 10, 2026 so the zero modal coordinate is exactly the volume-average concentration. For n ≥ 1, substitution of (16) into (22), together with tan ζn = ζn, gives 
+
+Ni,n = R3
+
+> i
+
+2(1 + ζ2
+
+> n
+
+) . (25) The second role of self-adjointness is to establish the Koopman eigenfunctionals. For a general linear PDE, Koopman eigenfunctionals are constructed from eigenfunctions of the adjoint spatial operator [15]. Since Di is self-adjoint, its adjoint eigenfunctions coincide with ϕi,n . Accordingly, define 
+
+ψi,n [c] = 1
+
+Ni,n 
+
+⟨c, ϕ i,n ⟩i. (26) Along the autonomous zero-flux diffusion dynamics, 
+
+ddt ψi,n [ci] = Di
+
+Ni,n 
+
+⟨D ici, ϕ i,n ⟩i = Di
+
+Ni,n 
+
+⟨ci, Diϕi,n ⟩i = −Diμ2
+
+> i,n
+
+ψi,n [ci].
+
+Thus, the Koopman eigenvalues are 
+
+λi, 0 = 0 , λi,n = −Di
+
+ ζn
+
+Ri
+
+2
+
+, n ≥ 1, (27) and 
+
+Kti ψi,n = eλi,n tψi,n . (28) Hence, ψi,n is a Koopman eigenfunctional and zi,n (t) = ψi,n [ci(·, t )] is its corresponding Koopman coordinate. Here, 
+
+ϕi,n (r) specifies the spatial shape of the nth diffusion mode, while zi,n (t) specifies its time-dependent amplitude. The eigenfunctionals and eigenvalues above characterize the autonomous zero-flux diffusion generator. The current-dependent nonhomogeneous surface flux is subsequently projected onto these Koopman coordinates to obtain the boundary-controlled reduced-order model. 
+
+2.3 Boundary-Controlled Koopman Reduced-Order Model 
+
+The eigenfunctions above are obtained from the homogeneous diffusion operator, while battery current enters through the nonhomogeneous surface-flux condition (2). The effect of the boundary input on each Koopman coordinate is obtained by projecting the full PDE onto ϕi,n . Multiplying (1) by ϕi,n r2 and integrating gives 
+
+Ni,n ˙zi,n = Ds,i 
+
+Z Ri
+
+> 0
+
+ϕi,n 
+
+ddr 
+
+ r2ci,r 
+
+ dr, (29) where ci,r = ∂c s,i  
+
+> ∂r
+
+. Integration by parts gives 
+
+Ni,n ˙zi,n =Di
+
+ϕi,n r2ci,r 
+
+Ri 
+
+> 0
+
+− Di
+
+Z Ri
+
+> 0
+
+ϕ′
+
+> i,n
+
+r2ci,r dr = DiR2 
+
+> i
+
+ϕi,n (Ri)ci,r (Ri, t ) + Di
+
+Z Ri
+
+> 0
+
+ci
+
+ddr 
+
+ r2ϕ′
+
+> i,n
+
+ dr. 
+
+(30) The boundary term generated by the second integration by parts vanishes because r2 = 0 at the center and ϕ′
+
+> i,n
+
+(Ri) = 0 
+
+at the surface. Using the eigenvalue equation and boundary condition at the particle surface in (2), (30) becomes 
+
+Ni,n ˙zi,n = −Diμ2
+
+> i,n
+
+Ni,n zi,n − R2 
+
+> i
+
+ϕi,n (Ri)Ji(t). (31) Therefore, 
+
+˙zi,n = λi,n zi,n + bi,n Ji(t), (32) where 
+
+bi,n = − R2 
+
+> i
+
+ϕi,n (Ri)
+
+Ni,n 
+
+. (33) For the zero mode, 
+
+bi, 0 = − 3
+
+Ri
+
+, ˙¯ci = − 3
+
+Ri
+
+Ji, (34) For n ≥ 1, the root condition gives ϕi,n (Ri) = cos ζn, and (33) can be written as 
+
+bi,n = − 2(1 + ζ2
+
+> n
+
+) cos ζn
+
+Ri
+
+. (35) 5A PREPRINT - S EPTEMBER 10, 2026 Retaining NK nonzero modes for electrode i gives the finite-dimensional state 
+
+zi = [ zi, 0 zi, 1 · · · zi,N K ]T , (36) and the continuous-time reduced model 
+
+˙zi = Aizi + BJ,i Ji, (37) with Ai = diag ( λi, 0, λ i, 1, . . . , λ i,N K ) ,
+
+BJ,i = [ bi, 0 bi, 1 · · · bi,N K ]T . (38) The full radial concentration profile is reconstructed from 
+
+ˆci(r, t ) = Φi(r)zi(t),
+
+Φi(r) = [ ϕi, 0(r) ϕi, 1(r) · · · ϕi,N K (r)] . (39) The average and surface concentrations are linear outputs, 
+
+¯ci = Cavg ,i zi, cs,i = Cs,i zi, (40) where Cavg ,i = [1 0 · · · 0] ,
+
+Cs,i = [1 cos ζ1 · · · cos ζNK ] . (41) For the complete SPM diffusion dynamics, define 
+
+z = zTneg zTpos 
+
+T . (42) Using (3), the current-driven model is 
+
+˙z = Az + BI I, (43) where 
+
+A = blkdiag( Aneg , Apos ), BI =
+
+γneg BJ,neg 
+
+γpos BJ,pos 
+
+
+
+, (44) with 
+
+γneg = 1
+
+F A neg aneg Lneg 
+
+, γ pos = − 1
+
+F A pos apos Lpos 
+
+. (45) 
+
+3 Results and Discussion 
+
+3.1 Numerical Comparison Procedure 
+
+A finite volume method (FVM) with NFVM = 400 control volumes is used as the high-order numerical reference. The FVM and Koopman models solve the same spherical diffusion problem with identical parameters, initial conditions, and surface-flux inputs; details of the FVM discretization are provided in [18]. The number of nonzero Koopman modes is varied as NK ∈ { 5, 10 , 20 , 40 , 80 } for both electrodes. The surface concentrations obtained from (40) are used to calculate the terminal voltage in (6). Model performance is evaluated over a constant 1C discharge from 100% to 0% state of charge (SOC). Accuracy is evaluated for the surface concentration and terminal voltage time histories and for the radial concentration profiles. For a sampled output y(t), the time-domain root mean square error (RMSE) is 
+
+RMSE t(y) = 
+
+vuut 1
+
+NtNtX
+
+> k=1
+
+[yK(tk) − yFVM (tk)] 2, (46) where Nt = 3600 is the number of temporal samples. At a specified time t, the radial profile error for electrode i is 
+
+RMSE r,i (t) = 
+
+vuut 1
+
+NFVM 
+
+> NFVM
+
+X
+
+> j=1
+
+ˆcK 
+
+> i
+
+(rj , t ) − cFVM  
+
+> i
+
+(rj , t )2, (47) where rj denotes the center of the jth FVM control volume. Simulation runtime is also recorded to quantify computa-tional cost. Together, these metrics assess temporal accuracy, spatial reconstruction, and the tradeoff between modal order and computational efficiency. 6A PREPRINT - S EPTEMBER 10, 2026 0 500 1000 1500 2000 2500 3000 3500 00.005 0.01 0.015 0.02 0.025 FVM, N fvm =400 Koopman, N K=5 Koopman, N K=10 Koopman, N K=20 Koopman, N K=40 Koopman, N K=80 0 500 1000 1500 2000 2500 3000 3500 00.005 0.01 0.015 0.02 0 500 1000 1500 2000 2500 3000 3500 2.6 2.8 33.2 3.4 
+
+> 𝑐 !,#  [𝑚𝑜𝑙/𝑚 $]𝑐 !,%  [𝑚𝑜𝑙/𝑚 $]
+> Time [s]
+> 𝑉𝑜𝑙𝑡𝑎𝑔𝑒  [𝑉]
+> (a) (b) (c)
+
+Figure 1: Surface concentration and terminal voltage responses predicted by the FVM and Koopman reduced-order models during a constant 1C discharge: (a) negative electrode surface concentration, (b) positive electrode surface concentration, and (c) terminal voltage. 
+
+3.2 Comparison Results 
+
+Figure 1 compares the negative and positive electrode surface concentrations and terminal voltage predicted by the FVM and Koopman models during the 1C discharge from 100% to 0% SoC. Every modal order captures the overall concentration and voltage trends. The enlarged plots make the remaining differences easier to observe. The low-order models show their largest surface concentration errors immediately after the discharge begins. A visible voltage error also develops near the end of discharge. These differences decrease as NK increases because the additional modes capture the faster diffusion dynamics. For NK = 80 , the Koopman and FVM curves are nearly indistinguishable. The corresponding time-domain RMSE values ( RMSE t) for the negative electrode surface concentration, positive electrode surface concentration, and terminal voltage are 1.26 × 10 −5 mol m −3, 4.10 × 10 −6 mol m −3, and 8.42 × 10 −4 V,respectively. Thus, the analytically derived Koopman coordinates accurately predict the surface concentration and the terminal voltage. Figure 2 compares the radial concentration profiles at t = 1200 , 2400 , and 3600 s . The top and bottom rows show the negative and positive electrodes, respectively, and the profiles are obtained directly from the Koopman coordinates using (39). At all three snapshots, the largest deviations for NK = 5 and NK = 10 occur near the particle centers; increasing the modal order progressively removes these localized errors. The annotated negative-electrode radial RMSE ( RMSE r)decreases from 8.18 × 10 −5 mol /m3 for NK = 5 and 3.31 × 10 −5 mol /m3 for NK = 10 to 0.16 × 10 −5 mol /m3 for 
+
+NK = 80 . For the positive electrode, the corresponding values decrease from 2.67 × 10 −5 and 1.08 × 10 −5 mol /m3
+
+to 0.05 × 10 −5 mol /m3. The RMSE decreases consistently as NK increases. This trend shows that model accuracy can be improved systematically by increasing the modal order. Moreover, unlike Pade approximation approach, the proposed spectral representation reconstructs the complete internal concentration field directly from the same physically interpretable coordinates. The FVM requires 0.27 s to simulate the full discharge, whereas the Koopman models require 0.0088 s for NK = 80 and 
+
+0.0012 s for NK = 5 . These values correspond to speedups of approximately 31 and 225 , respectively. Because the high-7A PREPRINT - S EPTEMBER 10, 2026 0 0.2 0.4 0.6 0.8 10.016 0.0165 0.017 0.0175 0.018 0.0185 0.019 0 0.2 0.4 0.6 0.8 188.5 99.5 10 10.5 11 11.5 #10 -3 0 0.2 0.4 0.6 0.8 10.5 11.5 22.5 33.5 #10 -3 0 0.2 0.4 0.6 0.8 15.2 5.4 5.6 5.8 66.2 6.4 #10 -3 0 0.2 0.4 0.6 0.8 10.0105 0.011 0.0115 0 0.2 0.4 0.6 0.8 10.0156 0.0158 0.016 0.0162 0.0164 0.0166 0.0168 FVM, N fvm =400 Koopman, N K=5 Koopman, N K=10 Koopman, N K=20 Koopman, N K=40 Koopman, N K=80 
+
+> 𝑐 !,#  [𝑚𝑜𝑙/𝑚 $]𝑐 !,%  [𝑚𝑜𝑙/𝑚 $]
+
+T=1200  
+
+> Normalized radius 𝑟/𝑅 &
+
+T=2400 T=3600                                  
+
+> Normalized radius 𝑟/𝑅 &Normalized radius 𝑟/𝑅 &
+> 𝑅𝑀𝑆𝐸 '!() = 8.18×10 *)
+> 𝑅𝑀𝑆𝐸 '!(+, = 3.31×10 *)
+> 𝑅𝑀𝑆𝐸 '!(-, = 1.25×10 *)
+> 𝑅𝑀𝑆𝐸 '!(., = 0.46×10 *)
+> 𝑅𝑀𝑆𝐸 '!(/, = 0.16×10 *)
+> 𝑅𝑀𝑆𝐸 '!() = 8.18×10 *)
+> 𝑅𝑀𝑆𝐸 '!(+, = 3.31×10 *)
+> 𝑅𝑀𝑆𝐸 '!(-, = 1.25×10 *)
+> 𝑅𝑀𝑆𝐸 '!(., = 0.46×10 *)
+> 𝑅𝑀𝑆𝐸 '!(/, = 0.16×10 *)
+> 𝑅𝑀𝑆𝐸 '!() = 8.18×10 *)
+> 𝑅𝑀𝑆𝐸 '!(+, = 3.31×10 *)
+> 𝑅𝑀𝑆𝐸 '!(-, = 1.25×10 *)
+> 𝑅𝑀𝑆𝐸 '!(., = 0.46×10 *)
+> 𝑅𝑀𝑆𝐸 '!(/, = 0.16×10 *)
+> 𝑅𝑀𝑆𝐸 '!() = 2.67×10 *)
+> 𝑅𝑀𝑆𝐸 '!(+, = 1.08×10 *)
+> 𝑅𝑀𝑆𝐸 '!(-, = 0.41×10 *)
+> 𝑅𝑀𝑆𝐸 '!(., = 0.15×10 *)
+> 𝑅𝑀𝑆𝐸 '!(/, = 0.05×10 *)
+> 𝑅𝑀𝑆𝐸 '!() = 2.67×10 *)
+> 𝑅𝑀𝑆𝐸 '!(+, = 1.08×10 *)
+> 𝑅𝑀𝑆𝐸 '!(-, = 0.41×10 *)
+> 𝑅𝑀𝑆𝐸 '!(., = 0.15×10 *)
+> 𝑅𝑀𝑆𝐸 '!(/, = 0.05×10 *)
+> 𝑅𝑀𝑆𝐸 '!() = 2.67×10 *)
+> 𝑅𝑀𝑆𝐸 '!(+, = 1.08×10 *)
+> 𝑅𝑀𝑆𝐸 '!(-, = 0.41×10 *)
+> 𝑅𝑀𝑆𝐸 '!(., = 0.15×10 *)
+> 𝑅𝑀𝑆𝐸 '!(/, = 0.05×10 *)
+
+Figure 2: Radial concentration profiles predicted by the FVM and Koopman reduced-order models during a constant 1C discharge at t = 1200 , 2400 , and 3600 s : negative electrode (top row) and positive electrode (bottom row). order Koopman model is nearly indistinguishable from the FVM and the low-order models retain small concentration errors, the modal order can be selected according to the required balance between accuracy and computational cost. The combination of analytical construction, full field reconstruction, systematic modal convergence, and reduced runtime demonstrates the principal advantage of the proposed model for real-time battery estimation and control. 
+
+4 Conclusion 
+
+This work developed an analytical Koopman spectral reduced-order model for spherical solid-phase diffusion in the lithium-ion battery SPM. Eigenfunctionals, eigenvalues, and spatial modes were derived directly from the self-adjoint diffusion operator, with the zero coordinate representing the volume-average concentration and the nonzero coordinates describing radial gradients. Projecting the current dependent surface flux onto these coordinates produced a linear state-space model that reconstructs the average, surface, and full radial concentrations. Comparison with a 400 control volume FVM showed systematic convergence with increasing modal order, and the 80 Koopman mode model achieved surface concentration RMSE values of 1.26 × 10 −5 mol m −3 and 4.10 × 10 −6 mol m −3 for the negative and positive electrodes, respectively, with a terminal-voltage RMSE of 8.42 × 10 −4 V. The 80 and 5 Koopman mode models were approximately 31 and 225 times faster than the FVM, demonstrating an explicit accuracy-complexity tradeoff. These results establish the proposed model as a physically interpretable and computationally efficient framework for real-time battery estimation and control. Future work will address nonlinear transport properties, experimental validation under dynamic current profiles, and integration with estimator and controller frameworks. 
+
+References 
+
+[1] N. Ahuja, J. Moon, K. Bhaskar, and C. D. Rahn, “Lithium-ion battery state of health estimation based solely on temperature sensing,” Journal of Power Sources , vol. 666, p. 239068, 2026. [2] J. Moon, K. Bhaskar, and C. D. Rahn, “Short circuit estimation in lithium-ion batteries using moving horizon estimation,” ASME Letters in Dynamic Systems and Control , vol. 4, no. 4, p. 041004, 2024. 8A PREPRINT - S EPTEMBER 10, 2026 [3] J. Moon, G. Vennam, M. G. Shirk, T. R. Tanim, and C. D. Rahn, “Detecting short circuits: Post accident electric vehicle battery safety check,” Journal of Dynamic Systems, Measurement, and Control , vol. 148, no. 3, p. 031005, 2026. [4] J. Moon, K. Bhaskar, and C. D. Rahn, “Safe discharging of a lithium-ion battery using observer-based control lyapunov function and barrier function via quadratic programming,” IFAC-PapersOnLine , vol. 59, no. 30, pp. 761–766, 2025. [5] K. Bhaskar, J. Moon, and C. D. Rahn, “Post-damage short circuit detection in lithium-ion batteries,” in 2024 American Control Conference (ACC) . IEEE, 2024, pp. 3486–3491. [6] J. Moon, G. Vennam, T. R. Tanvir, and C. D. Rahn, “State of safety assessment in electric vehicle battery packs,” in 2024 IEEE Vehicle Power and Propulsion Conference (VPPC) . IEEE, 2024, pp. 1–5. [7] T. R. Tanim, C. D. Rahn, and C.-Y. Wang, “A reduced order electrolyte enhanced single particle lithium ion cell model for hybrid vehicle applications,” in 2014 American Control Conference . IEEE, 2014, pp. 141–146. [8] ——, “A temperature dependent, single particle, lithium ion cell model including electrolyte diffusion,” Journal of Dynamic Systems, Measurement, and Control , vol. 137, no. 1, p. 011005, 2015. [9] J. Moon and D. J. Docimo, “Reduction of lithium-ion battery models with degradation dynamics: A comparison of techniques,” IFAC-PapersOnLine , vol. 55, no. 37, pp. 718–725, 2022. [10] D. Docimo, M. Ghanaatpishe, and H. K. Fathy, “Development and experimental parameterization of a physics-based second-order lithium-ion battery model,” in Dynamic Systems and Control Conference , vol. 46186. Ameri-can Society of Mechanical Engineers, 2014, p. V001T19A003. [11] J. C. Forman, S. Bashash, J. L. Stein, and H. K. Fathy, “Reduction of an electrochemistry-based li-ion battery model via quasi-linearization and pade approximation,” Journal of the Electrochemical Society , vol. 158, no. 2, pp. A93–A101, 2011. [12] J. Nathan Kutz, J. L. Proctor, and S. L. Brunton, “Applied koopman theory for partial differential equations and data-driven modeling of spatio-temporal systems,” Complexity , vol. 2018, no. 1, p. 6010634, 2018. [13] S. Peitz and S. Klus, “Koopman operator-based model reduction for switched-system control of pdes,” Automatica ,vol. 106, pp. 184–191, 2019. [14] M. Korda and I. Mezi´ c, “Linear predictors for nonlinear dynamical systems: Koopman operator meets model predictive control,” Automatica , vol. 93, pp. 149–160, 2018. [15] H. Nakao and I. Mezi´ c, “Spectral analysis of the koopman operator for partial differential equations,” Chaos: An Interdisciplinary Journal of Nonlinear Science , vol. 30, no. 11, 2020. [16] H. Choi, V. De Angelis, and Y. Preger, “Data-driven battery modeling based on koopman operator approximation using neural network,” in 2023 IEEE Power & Energy Society General Meeting (PESGM) . IEEE, 2023, pp. 1–5. [17] S. Gupta, B. Hegde, I. Haskara, S.-Y. Shieh, and I. Chang, “Data-driven physics informed koopman (dpik) battery state of charge estimation using connectivity-enabled streamed data,” IFAC-PapersOnLine , vol. 59, no. 30, pp. 1060–1065, 2025. [18] L. Xu, S. Fasolato, and S. Onori, “Finite-volume method and observability analysis for core-shell enhanced single particle model for lithium iron phosphate batteries,” in 2024 IEEE 63rd Conference on Decision and Control (CDC) . IEEE, 2024, pp. 8034–8039. 9
