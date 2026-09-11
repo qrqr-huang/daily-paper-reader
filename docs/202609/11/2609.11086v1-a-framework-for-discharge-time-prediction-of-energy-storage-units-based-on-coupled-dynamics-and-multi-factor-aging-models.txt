@@ -1,0 +1,448 @@
+Title: Paper Title (use style: paper title)
+
+URL Source: https://arxiv.org/pdf/2609.11086v1
+
+Published Time: Fri, 11 Sep 2026 00:33:07 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+© 2026 IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works. 
+
+# A Framework for Discharge Time Prediction of Energy Storage Units Based on Coupled Dynamics and Multi-Factor Aging Models 
+
+Jiaye Yang †, *
+
+Panjin Campus of Dalian University of Technology 
+
+Panjin, China 
+
+yangjiaye11@icloud.com 
+
+Hansheng Su †
+
+Panjin Campus of Dalian University of Technology 
+
+Panjin, China 
+
+suhs2005@126.com 
+
+Wangzi Zhu †
+
+Panjin Campus of Dalian University of Technology 
+
+Panjin, China 
+
+z828427125@126.com 
+
+† These authors also contributed equally to this work 
+
+Abstract —This paper presents a physically interpretable framework for predicting time to empty (TTE) in portable embedded systems. The framework couples usage-driven load-power decomposition, electrical power–voltage–current closure, a semi-empirical aging model, and SOC–temperature dynamics. Smartphone telemetry is mapped to battery current through an interpretable load model and conversion-efficiency correction. Battery capacity loss is modeled by combining Arrhenius temperature dependence, SEI diffusion behavior, and cycle-related power-law degradation. The coupled dynamic model then predicts TTE under different initial SOC values, ambient temperatures, and usage profiles. Chronological hold-out evaluation on a 6.9-h smartphone discharge session yielded a current RMSE of 0.0095 ± 0.0006 A, a temperature RMSE of 2.93 ± 0.24 ∘C, and a TTE MAPE of 4.81 ± 0.61%. Evaluation on NASA cell B0005 produced a capacity-loss RMSE of 0.031 Ah. Baseline, ablation, and counterfactual analyses further illustrate the contributions of thermal and aging corrections and the relative influence of load features. The results demonstrate the feasibility and interpretability of the proposed framework, while broader validation across devices and batteries remains necessary. 
+
+Keywords—energy storage unit, coupled dynamics model, multi-factor aging model, least squares regression, counterfactual analysis 
+
+I. INTRODUCTION 
+
+Energy efficiency modeling and remaining runtime prediction for energy storage units represent important research directions in portable embedded computing systems [1]. As a typical portable smart device, smartphones are constrained by limited battery endurance and aging-induced degradation, which directly affect user experience and system reliability [2]. Existing studies have investigated hardware power consumption decomposition and the relationships among state of charge (SOC), state of health (SOH), and battery degradation [3]. Equivalent-circuit models combined with filtering-based estimators have also been widely used for battery-state estimation because of their computational efficiency and physical interpretability [4]. Meanwhile, battery thermal behavior can be described using energy-balance or lumped thermal models [5], and diffusion-controlled SEI growth provides a physical basis for the time-dependent capacity-loss behavior commonly observed in lithium-ion batteries [6]. Smartphone power studies have 
+
+*Corresponding author. 
+
+further shown that total device power can be decomposed into contributions from the CPU, display, wireless interfaces, GPS, and background activities [7]. 
+
+However, existing methods still have limitations in jointly representing load-driven power consumption, electrical behavior, thermal dynamics, aging-adjusted capacity, and remaining discharge time. Some data-driven methods rely strongly on the training distribution and provide limited physical interpretation, whereas models focusing separately on electrical, thermal, or aging behavior may not fully characterize their interactions during discharge. To address this gap, this paper proposes a mechanism-driven continuous-time modeling framework. It constructs an algebraically closed power–voltage–current system to map device-side load power to battery current, and integrates a semi-empirical aging model considering time, temperature, and charge–discharge cycles [8]. A coupled SOC–temperature dynamic model is then developed to predict time to empty under different initial SOC values, ambient temperatures, and usage profiles [9][10]. Using a smartphone discharge session and NASA B0005 aging data as case studies, the framework is evaluated through chronological hold-out testing, baseline comparison, and ablation analysis. The contribution of this study lies in integrating existing physical and empirical components into a unified and interpretable TTE prediction framework, while broader cross-device and cross-battery validation remains necessary. 
+
+II. RESEARCH ON MOBILE PHONE BATTERY DEGRADATION 
+
+Limited battery life in smartphones remains a persistent issue. As summarized in Fig. 1, the proposed framework links device-side activity, battery electrical behavior, thermal dynamics, and aging-adjusted capacity within a unified TTE prediction process. 
+
+Existing research has confirmed that smartphone power consumption can be decomposed into contributions from individual components, with CPU and wireless RF energy consumption exhibiting significant state dependency, while background activities substantially impact daily power usage. Concurrently, battery temperature and aging reduce available energy through capacity degradation and increased internal resistance, leading relevant studies to focus on SOH and battery degradation as core research areas. Fig. 1. Power loss correlation chart 
+
+Against this backdrop, battery lifespan modeling must couple load-driven power consumption with dynamic SOC/SOH variations. Furthermore, modeling results require validation using reproducible device telemetry data and aging benchmarks—a core starting point for this research. 
+
+III. BATTERY 𝑆𝑆𝑆𝑆𝑆𝑆 (𝑡𝑡 ) CONTINUOUS TIME MECHANISM ANALYSIS 
+
+To satisfy the requirement of a continuous-time, mechanism-driven, and falsifiable battery model, this study enforces a closed loop: 
+
+Observable behaviors/scenarios → 𝑃𝑃 load (𝑡𝑡 ) → 𝑃𝑃 batt (𝑡𝑡 ) →
+
+{𝐼𝐼 (𝑡𝑡 ), 𝑉𝑉 term (𝑡𝑡 )} → 𝑠𝑠 ˙(𝑡𝑡 ) → 𝑇𝑇𝑇𝑇𝑇𝑇 .
+
+A. Power-Voltage-Current Closure 
+
+This study first closes the mapping from usage-driven load demand to battery current. The device-side load power 
+
+𝑃𝑃 load (𝑡𝑡 ) is inferred from telemetry features and is clipped to be nonnegative. 
+
+Smartphone telemetry was collected from an Android smartphone at a sampling interval of 𝛥𝛥 𝑡𝑡  = 1 𝑠𝑠 . The recorded variables included SOC, battery voltage, current, temperature, CPU utilization, screen state, network activity, GPS state, and background activity. Samples with charging current, missing essential variables, or nonmonotonic SOC caused by system reporting were excluded. The remaining variables were time-aligned, and continuous load features were standardized using statistics calculated from the training interval only. 
+
+This study approximates conversion loss by a constant efficiency 𝜂𝜂 . Only discharge operation within the normal smartphone load range is considered, over which the variation in DC/DC conversion efficiency is small relative to the variation in load power. Therefore, a constant efficiency provides a compact approximation for the present TTE analysis. 
+
+𝑃𝑃 batt (𝑡𝑡 ) = 𝑃𝑃 load (𝑡𝑡 ) 
+
+> 𝜂𝜂
+
+, 0 < 𝜂𝜂 ≤ 1 (1) 
+
+Using the discharge-positive convention, the battery-port power satisfies: 
+
+𝑃𝑃 batt (𝑡𝑡 ) = 𝑉𝑉 term (𝑡𝑡 )𝐼𝐼 (𝑡𝑡 ) (2) 
+
+For a single discharge episode, the data support a first-order Thevenin relation without an explicit polarization state: 
+
+𝑉𝑉term (𝑡𝑡 ) = 𝑉𝑉 oc (𝑠𝑠 (𝑡𝑡 )) − 𝐼𝐼 (𝑡𝑡 )𝑅𝑅 (𝑇𝑇 (𝑡𝑡 )) (3) 
+
+The open-circuit voltage is approximated by  𝑉𝑉 oc (𝑠𝑠 ) = 
+
+𝑎𝑎0 + 𝑎𝑎1𝑠𝑠 . Over the SOC range covered by the present smartphone data, this first-order relation provides an adequate approximation of the measured voltage variation. Compared with a higher-order polynomial representation, the linear form reduces parameter correlation and improves identifiability under noisy telemetry, which is important for equivalent-circuit parameter estimation [11]. 
+
+Substituting (3) into (2) yields a quadratic closure: 
+
+𝑅𝑅 (𝑇𝑇 )𝐼𝐼 2 − 𝑉𝑉 oc (𝑠𝑠 )𝐼𝐼 + 𝑃𝑃batt = 0 (4) 
+
+The physically relevant discharge root (continuous at 
+
+𝑃𝑃 batt → 0 ) is: 
+
+𝐼𝐼 (𝑡𝑡 ) = 𝑉𝑉oc (𝑠𝑠 )−�𝑉𝑉oc (𝑠𝑠 )2−4𝑅𝑅 (𝑇𝑇 )𝑃𝑃batt 2𝑅𝑅 (𝑇𝑇 ) (5) 
+
+The discriminant must be nonnegative; if telemetry implies an infeasible demand, this study conservatively caps the power: 
+
+𝑃𝑃batt (𝑡𝑡 ) ← min �𝑃𝑃batt (𝑡𝑡 ), 𝑉𝑉oc (𝑠𝑠 (𝑡𝑡 )) 24𝑅𝑅 (𝑇𝑇 (𝑡𝑡 )) � (6) 
+
+B. Usage-Driven Load Power Decomposition 
+
+This study treats 𝑃𝑃 load (𝑡𝑡 ) as the device-side forcing term and maps it to 𝑃𝑃 batt (𝑡𝑡 ) via 𝜂𝜂 .
+
+The model requires a forcing term 𝑃𝑃 load (𝑡𝑡 ) that translates usage into device-side power demand. Because public telemetry is sparse and heterogeneous across Android devices, this study adopts an interpretable decomposition that matches the available signals and avoids over-parameterization: 
+
+𝑃𝑃 load (𝑡𝑡 ) = 𝑃𝑃 fix + ∑𝑖𝑖∈ℬ 𝑝𝑝𝑖𝑖𝑥𝑥𝑖𝑖 (𝑡𝑡 ) + ∑𝑗𝑗∈𝒞𝒞 𝛾𝛾𝑗𝑗𝑧𝑧𝑗𝑗 (𝑡𝑡 ), 
+
+𝑃𝑃 load (𝑡𝑡 ) ← max( 𝑃𝑃 load (𝑡𝑡 ),0) (7) 
+
+Here ℬ contains binary on/off components (e.g., screen state, GPS activity) and 𝒞𝒞 contains continuous-intensity signals (e.g., brightness level, CPU utilization, network throughput, background process count). This linear form is sufficient for fitting on short sessions and supports ablation and counterfactual analysis. When direct battery telemetry provides 𝑃𝑃 obs (𝑡𝑡 ) = 
+
+𝑉𝑉 obs (𝑡𝑡 )𝐼𝐼 obs (𝑡𝑡 ) on discharge samples, this study estimates ( 𝑃𝑃 fix , 𝑝𝑝𝑖𝑖 , 𝛾𝛾𝑗𝑗 ) by constrained least squares with nonnegativity constraints on baseline and component costs. When only partial proxies are available, this study fits the load model on aligned segments and propagates the resulting 𝑃𝑃 load (𝑡𝑡 ) into the model. 
+
+C. Impact of Aging on Battery Capacity 
+
+The state of health (SOH) of a battery is defined as the ratio of its current usable capacity to its initial capacity: 
+
+𝑆𝑆𝑆𝑆𝑆𝑆 = 𝑄𝑄0 𝑄𝑄 init 
+
+= 1 − 𝑄𝑄 loss 
+
+> 𝑄𝑄 init
+
+(8) 
+
+Where: 𝑄𝑄0 : current effective capacity; 𝑄𝑄 init : initial rated capacity; 𝑄𝑄 loss : cumulative capacity loss. Therefore, the key challenge lies in quantitatively determining 𝑄𝑄 loss .
+
+1) Effect of Temperature on Aging 
+
+Experimental studies have shown that capacity degradation is jointly affected by storage time, temperature, SOC, and charge–discharge cycling conditions [12]. 
+
+The reaction rate constant follows the Arrhenius relationship: 
+
+𝑘𝑘 (𝑇𝑇 ) = 𝑘𝑘0 exp �− 𝐸𝐸𝑎𝑎 𝑅𝑅 𝑇𝑇 � (9) 
+
+Where  𝑇𝑇 𝑎𝑎 is the activation energy and 𝑅𝑅 is the universal gas constant. The temperature dependence of the capacity loss rate is given by:  
+
+> 𝑑𝑑𝑄𝑄 loss
+> 𝑑𝑑 𝑡𝑡
+
+∝ exp �− 𝐸𝐸𝑎𝑎 𝑅𝑅 𝑇𝑇 � (10) 
+
+2) Time-Dependent Aging: SEI Diffusion-Controlled Model 
+
+The relationship between SEI thickness 𝛿𝛿 and capacity loss can be written as:  
+
+> 𝑑𝑑𝑑𝑑 𝑑𝑑 𝑡𝑡
+
+∝ 𝑗𝑗𝑠𝑠𝑠𝑠 𝑖𝑖  ∝ 𝑑𝑑𝑄𝑄𝑙𝑙𝑙𝑙𝑙𝑙𝑙𝑙 𝑑𝑑 𝑡𝑡  (11) 
+
+Where 𝑗𝑗𝑠𝑠𝑠𝑠 𝑖𝑖  denotes the side-reaction current density. Under diffusion-controlled conditions, the side-reaction flux obeys Fick's first law: 
+
+𝐽𝐽 = −𝐷𝐷 𝑑𝑑𝑑𝑑 𝑑𝑑𝑑𝑑  (12) 
+
+Where 𝐷𝐷 is the diffusion coefficient and 𝑐𝑐 is the concentration field. Using a finite-difference approximation yields: 
+
+𝐽𝐽 = −𝐷𝐷 Δ𝑑𝑑  
+
+> 𝑑𝑑
+
+(13) 
+
+The relationship between current density and flux is given by: 
+
+𝑗𝑗𝑠𝑠𝑠𝑠 𝑖𝑖  = 𝑛𝑛𝑛𝑛 𝐽𝐽  (14) 
+
+Where 𝑛𝑛 is the number of electrons transferred and  𝑛𝑛  is Faraday's constant. Consequently, the SEI growth equation becomes:  
+
+> 𝑑𝑑𝑑𝑑 𝑑𝑑 𝑡𝑡
+
+∝ 1 
+
+> 𝑑𝑑
+
+(15) 
+
+Integrating this expression yields: 
+
+𝛿𝛿 ∝ √𝑡𝑡  (16) 
+
+Since 𝑑𝑑𝑄𝑄 loss  
+
+> 𝑑𝑑 𝑡𝑡
+
+∝ 1/ 𝛿𝛿 , this study obtains:  
+
+> 𝑑𝑑𝑄𝑄𝑙𝑙𝑙𝑙𝑙𝑙𝑙𝑙 𝑑𝑑 𝑡𝑡
+
+∝ 𝑡𝑡 −1 /2 (17) 
+
+Combining the temperature effect, the final capacity loss rate model is:  
+
+> 𝑑𝑑𝑄𝑄𝑙𝑙𝑙𝑙𝑙𝑙𝑙𝑙 𝑑𝑑 𝑡𝑡
+
+∝ 𝑡𝑡 −1 /2exp �− 𝐸𝐸𝑎𝑎 𝑅𝑅 𝑇𝑇 � (18) 
+
+Its integral form is: 
+
+𝑄𝑄 loss (𝑡𝑡 ) ∝ ∫ 𝑡𝑡 0 𝜏𝜏 −1 /2exp �− 𝐸𝐸𝑎𝑎 𝑅𝑅 𝑇𝑇 (𝜏𝜏 )� 𝑑𝑑 𝜏𝜏  (19) 
+
+3) Effect of Charge-Discharge Cycling 
+
+Cycling-induced aging primarily affects capacity loss through SEI thickening. Two limiting cases are considered: 
+
+(1) Linear growth assumption 
+
+If SEI grows uniformly with cycle number, then:  
+
+> 𝑑𝑑𝑄𝑄𝑙𝑙𝑙𝑙𝑙𝑙𝑙𝑙 𝑑𝑑𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸
+
+= 𝑆𝑆  (20) 
+
+Which leads to: 
+
+𝑄𝑄 loss ∝ 𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸  (21) 
+
+(2) Self-inhibiting growth assumption 
+
+If SEI thickening suppresses further side reactions, then: 
+
+> 𝑑𝑑𝑄𝑄 loss
+> 𝑑𝑑𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸
+
+∝ 1𝑄𝑄 loss 
+
+(22) 
+
+Resulting in: 
+
+𝑄𝑄𝑙𝑙𝑙𝑙 𝑠𝑠𝑠𝑠  ∝ �𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸  (23) 
+
+(3) Generalized power-law model 
+
+Considering multiple degradation mechanisms, a unified power-law expression is adopted: 
+
+𝑄𝑄𝑙𝑙𝑙𝑙 𝑠𝑠𝑠𝑠  ∝ 𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸 𝑏𝑏  (24) 
+
+Where 𝑏𝑏 is a mechanism-dependent empirical parameter typically satisfying: 
+
+0.5 < 𝑏𝑏 < 1  (25) 
+
+The exponent 𝑏𝑏 provides a compact empirical representation of mixed degradation behavior. More detailed physics-based studies have shown that interacting mechanisms, such as SEI growth and lithium plating, may produce transitions from approximately linear to nonlinear aging [13]. 4) Final Aging Model and Parameter Identification 
+
+Integrating the effects of time, temperature, and cycling, as commonly considered in holistic battery-aging models [14], the final capacity-loss model is expressed as: 
+
+𝑄𝑄𝑙𝑙𝑙𝑙 𝑠𝑠𝑠𝑠  (𝑡𝑡 , 𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸 ) = 𝑘𝑘𝑁𝑁𝐸𝐸𝐸𝐸𝐸𝐸 𝑏𝑏 ∫𝑡𝑡 0 𝜏𝜏 −1 /2exp �− 𝐸𝐸𝑎𝑎 𝑅𝑅 𝑇𝑇 (𝜏𝜏 )� 𝑑𝑑 𝜏𝜏  (26) 
+
+The aging-model parameters were identified using the B0005 lithium-ion cell from the NASA Ames Prognostics Center of Excellence battery-aging dataset [15]. The cell has a rated capacity of 2 Ah and contains 168 available discharge cycles. Following the chronological order, cycles 1–118 were used for parameter identification, cycles 119–143 for model selection, and cycles 144–168 as an independent test set. No test-cycle data were used during parameter fitting. The measured discharge capacity and battery temperature were used to calculate capacity loss and estimate  𝑇𝑇 𝑎𝑎 , 𝑏𝑏 , and  𝑘𝑘 by nonlinear least squares, yielding: 
+
+𝑇𝑇 𝑎𝑎 = 177.35 J/mol 
+
+𝑏𝑏 = 0.8218 
+
+𝑘𝑘 = 6.8884 × 10 −7 
+
+(27) 
+
+Fig. 2 shows consistency between the predicted and measured capacity-loss trends of cell B0005. For the independent test cycles 144–168, the capacity-loss RMSE and MAE were 0.031 Ah and 0.026 Ah, respectively.          
+
+> Fig. 2. Predicted and measured capacity loss of NASA cell B0005. Different markers denote the training, validation, and independent test cycles.
+
+IV. TIME-TO-EMPTY PREDICTION AND MODEL EVALUATION ACROSS MULTIPLE SCENARIOS 
+
+This section constructs a mechanism-based prediction model for the time to empty (TTE) during a single discharge event, which must be applicable under varying initial conditions and environmental factors. This study defines: 
+
+TTE ≜ inf{ 𝑡𝑡 ≥ 0: 𝑠𝑠 (𝑡𝑡 ) ≤ 𝑠𝑠min }, 𝑠𝑠min = 0.005  (28) 
+
+Where 𝑠𝑠 (𝑡𝑡 ) ∈ [0,1] is SOC. Our predictor is not a black-box regressor on TTE; instead, it simulates the coupled SOC-temperature dynamics driven by a scenario power trace 
+
+𝑃𝑃 load (𝑡𝑡 ).
+
+A. Coupled SOC–Temperature Dynamics and Event-Based TTE 
+
+During a single discharge event, SOH is treated as constant and no charging is considered. Battery temperature is represented by a single lumped thermal node, which assumes a spatially uniform cell temperature. This approximation is suitable for the relatively low-rate smartphone discharge data and the available telemetry resolution, but it does not resolve internal temperature gradients under rapid pulse loads or extreme thermal conditions. 
+
+Practical simplifications from measurements. In our measurements, explicitly modeling the transient polarization state 𝑣𝑣𝑝𝑝 (𝑡𝑡 ) does not provide a stable accuracy gain for the discharge-current reconstruction used in TTE simulation; hence this study ignores it in the final closed-loop simulator (i.e., set 𝑣𝑣𝑝𝑝 (𝑡𝑡 ) ≈ 0 in the algebraic closure). Moreover, a one-dimensional linear OCV-SOC relation already achieves good fit and improves identifiability under noisy smartphone telemetry; therefore, this study adopts the 1-D approximation 
+
+𝑉𝑉 oc (𝑠𝑠 ) = 𝑎𝑎0 + 𝑎𝑎1𝑠𝑠 .
+
+SOC dynamics follow from charge conservation. Temperature effects are represented through temperature-dependent internal resistance and effective capacity. The adopted Arrhenius-like forms provide compact monotonic approximations of the observed increase in resistance and reduction in available capacity at low temperature. The corresponding parameters were estimated from the training interval using the parameter-identification procedure described below: 
+
+𝑅𝑅 (𝑇𝑇 ) = 𝐾𝐾𝑅𝑅 exp �𝛽𝛽𝑅𝑅 𝑇𝑇 � , 𝑄𝑄eff (𝑇𝑇 ) = 𝐾𝐾𝑄𝑄 exp �− 𝛽𝛽𝑄𝑄 𝑇𝑇 � (29) 
+
+The SOC ODE is: 
+
+𝑠𝑠 ˙(𝑡𝑡 ) = − 𝐼𝐼 (𝑡𝑡 ) 
+
+> 𝑄𝑄eff (𝑇𝑇 (𝑡𝑡 ))
+
+(30) 
+
+With 𝐼𝐼 (𝑡𝑡 ) obtained from the electrical closure (power balance). This study uses a lumped thermal balance to capture feedback between load, ohmic heating, and cooling: 
+
+𝑇𝑇 ˙ (𝑡𝑡 ) = 𝐼𝐼 (𝑡𝑡 )2𝑅𝑅 (𝑇𝑇 (𝑡𝑡 )) +𝛼𝛼sys𝑃𝑃load (𝑡𝑡 )−ℎ𝐴𝐴 (𝑇𝑇 (𝑡𝑡 )−𝑇𝑇amb (𝑡𝑡 )) 
+
+> 𝐸𝐸 th
+
+(31) 
+
+If 𝑇𝑇 amb (𝑡𝑡 ) is unavailable, a constant ambient temperature of 24 ∘C is used, and deviations from this assumption are treated as a source of model uncertainty. 
+
+This study defines: 
+
+TTE ≜ inf{ 𝑡𝑡 ≥ 0: 𝑠𝑠 (𝑡𝑡 ) ≤ 𝑠𝑠min }, 𝑠𝑠min = 0.005  (32) 
+
+This definition is robust to OS-level SOC smoothing and avoids relying on a device-specific shutdown-voltage heuristic. 
+
+This study integrates forward with Δ𝑡𝑡 = 1 s (dataset sampling) and stops at 𝑠𝑠 ≤ 𝑠𝑠 min . To keep the predictor compact and data-grounded, this study instantiates the temperature effects and approximates the open-circuit voltage by: 
+
+𝑉𝑉 oc (𝑠𝑠 ) = 𝑎𝑎0 + 𝑎𝑎1𝑠𝑠  (33) 
+
+With 𝑃𝑃 batt (𝑡𝑡 ) = 𝑃𝑃 load (𝑡𝑡 )/ 𝜂𝜂 and the Thevenin power balance: 𝑃𝑃batt (𝑡𝑡 ) = 𝑉𝑉 oc (𝑠𝑠 (𝑡𝑡 )) 𝐼𝐼 (𝑡𝑡 ) − 𝑅𝑅 (𝑇𝑇 (𝑡𝑡 )) 𝐼𝐼 (𝑡𝑡 )2 (34) 
+
+The physically relevant discharge root is: 
+
+𝐼𝐼 (𝑡𝑡 ) = 𝑉𝑉oc (𝑠𝑠 (𝑡𝑡 )) −�𝑉𝑉oc (𝑠𝑠 (𝑡𝑡 )) 2−4𝑅𝑅 (𝑇𝑇 (𝑡𝑡 )) 𝑃𝑃batt (𝑡𝑡 ) 
+
+> 2𝑅𝑅 (𝑇𝑇 (𝑡𝑡 ))
+
+(35) 
+
+This study then updates ( 𝑠𝑠 , 𝑇𝑇 ) until the event 𝑠𝑠 (𝑡𝑡 ) ≤ 𝑠𝑠 min triggers the TTE stop. These simplifications are intended for normal smartphone discharge conditions. Rapid pulse loads, strong internal temperature gradients, extreme temperatures, or highly nonlinear OCV regions may require higher-order electrical and thermal models. 
+
+A continuous smartphone discharge session of approximately 6.9 h with monotonically decreasing SOC was divided chronologically. The first 2.4 h were used for electrical and thermal parameter estimation, the subsequent 0.6 h for model selection, and the remaining 3.9 h as an independent test set. All model parameters were fixed before testing, and no test data were used during parameter estimation. The independent test interval was further divided into five non-overlapping temporal blocks. Across these blocks, the current RMSE was 0.0095 ± 0.0006 A and the temperature RMSE was 2.93 ± 0.24 ∘C. TTE was evaluated at five temporally separated points, yielding an MAE of 0.10 ± 0.05 h and a MAPE of 4.81 ± 0.61%. Three representative 1-h load windows were additionally extracted and repeated until depletion to construct Light, Typical, and Heavy scenarios. These repeated-load cases were used for controlled scenario simulation rather than independent experimental validation. 
+
+B. TTE Grid Output, Evaluation Metrics, And Uncertainty 
+
+Ambient temperature and scenario dependence. Table 1 reports TTE starting from 𝑠𝑠0 = 1 with 𝑇𝑇 (0) = 𝑇𝑇 amb for 
+
+𝑇𝑇 amb ∈ {−10,0,24,35} ∘C. These values show a pronounced cold penalty because low 𝑇𝑇 both increases 𝑅𝑅 (𝑇𝑇 ) and decreases 𝑄𝑄 eff (𝑇𝑇 ).                 
+
+> TABLE I. PREDICTED TIME-TO-EMPTY (HOURS) FOR THREE USAGE PATTERNS UNDER DIFFERENT AMBIENT TEMPERATURES (1-HOUR WINDOWS REPEATED UNTIL DEPLETION)
+> Scenario −𝟏𝟏𝟏𝟏 ∘𝐂𝐂 𝟏𝟏 ∘𝐂𝐂 𝟐𝟐𝟐𝟐 ∘𝐂𝐂 𝟑𝟑𝟑𝟑 ∘𝐂𝐂
+> Heavy 6.17 7.36 10.54 12.13
+> Typical 7.36 8.72 12.45 14.34
+> Light 8.68 10.27 14.62 16.82
+
+Initial SOC dependence. Because the simulator is nonlinear (via the algebraic current root and temperature feedback), runtime does not scale perfectly linearly with 𝑠𝑠0 .Table 2 shows TTE for the Typical profile at three 𝑠𝑠0 values and three ambient temperatures.               
+
+> TABLE II. SENSITIVITY OF TIME-TO-EMPTY (HOURS) TO INITIAL SOC FOR THE TYPICAL USAGE PATTERN
+> Initial SOC 𝒔𝒔 𝟏𝟏 −𝟏𝟏𝟏𝟏 ∘𝐂𝐂 𝟏𝟏 ∘𝐂𝐂 𝟐𝟐𝟐𝟐 ∘𝐂𝐂
+> 0.20 1.14 1.35 1.95
+> 0.50 3.18 3.78 5.41
+> 1.00 7.36 8.72 12.45
+
+The trajectories are separated by both usage intensity and ambient temperature. Heavy usage accelerates SOC decline, whereas low ambient temperature shortens TTE by increasing 
+
+𝑅𝑅 (𝑇𝑇 ) and reducing 𝑄𝑄 eff (𝑇𝑇 ). The predicted TTE is defined as the first time at which the SOC trajectory reaches 𝑠𝑠 min =0.005. 
+
+For deployment, this study quantifies uncertainty by propagating (i) parameter variability (e.g., refits/bootstraps or multiplicative lognormal perturbations) and (ii) residual variability of the electrical and thermal fits. For each grid point 
+
+(𝑠𝑠0 , 𝑧𝑧 ) (scenario 𝑧𝑧 ) , we run 𝑀𝑀 simulations with sampled parameters Θ(𝑚𝑚 ) and perturbations 𝜀𝜀 (𝑚𝑚 )(𝑡𝑡 ) to obtain an empirical distribution �TTE (𝑚𝑚 )(𝑠𝑠0 , 𝑧𝑧 )�𝑚𝑚=1 𝑀𝑀 ; this study reports the median and a 95% interval via the 2.5% and 97.5% 
+
+quantiles. 
+
+The proposed model was compared with two conventional baselines and two ablated variants on the same independent test interval. The average-power method estimates TTE from the remaining energy and mean load power, whereas the Coulomb-counting method updates SOC from the measured current without thermal or aging correction. The no-temperature variant removes the temperature-dependent resistance and effective-capacity terms, while the no-aging variant uses the uncorrected nominal capacity. As shown in Table 3, the proposed model achieved the lowest TTE error, reducing the MAPE from 12.40% for the average-power baseline to 4.81%.                                
+
+> TABLE III. BASELINE COMPARISON AND ABLATION RESULTS ON THE INDEPENDENT TEST INTERVAL
+> Model Dynamic load
+> Thermal correction
+> Aging correction
+> Current RMSE/A
+> TTE MAE/h
+> TTE MAPE/%
+> Average-power No No No —0.42 12.40
+> Coulomb counting Yes No No —0.27 9.16
+> No temperature correction
+> Yes No Yes 0.0130 0.19 7.80
+> No aging correction Yes Yes No 0.0110 0.15 6.30
+> Proposed model Yes Yes Yes 0.0095 0.10 4.81
+
+Among the two evaluated ablations, removing the temperature correction caused a larger increase in TTE error than removing the aging correction. This result indicates that the temperature-dependent terms made a larger contribution under the present smartphone discharge session, while the aging correction provided an additional improvement by adjusting the available capacity at the beginning of discharge. 
+
+C. Drivers of Rapid Drain Based on Counterfactual TTE Analysis 
+
+To connect 𝑃𝑃 load (𝑡𝑡 ) back to actionable user/system behaviors, this study fits a regularized ridge-regression model from usage proxies (CPU, screen/brightness, Wi-Fi/mobile traffic, GPS, background activity, saving mode) to battery power on the same discharge session. The standardized coefficients are visualized below.  
+
+> Fig. 3. Standardized ridge-regression coefficients for smartphone load-power predictors fitted on the training interval
+
+Fig. 3 reports the standardized coefficients of the ridge load-power model. Continuous features were standardized using the training-set mean and standard deviation; therefore, coefficient magnitudes indicate the relative association of each feature with battery power within the present discharge session. These coefficients should not be interpreted as causal effects. 
+
+Given a fitted mapping 𝑃𝑃 �load (𝑡𝑡 ) = 𝑓𝑓 (𝑥𝑥 (𝑡𝑡 )) , this study quantifies the counterfactual TTE impact of a feature group 𝑔𝑔 
+
+(e.g., CPU, radios, display) by scaling it down by a factor 𝜅𝜅 ∈ 
+
+[0,1] and re-simulating: 
+
+Δ𝑔𝑔 (𝜅𝜅 ) ≜ TTE( 𝑥𝑥 (𝑡𝑡 )) − TTE �𝑥𝑥∖𝑔𝑔 (𝑡𝑡 ), 𝜅𝜅𝑥𝑥𝑔𝑔 (𝑡𝑡 )� (36) 
+
+Large Δ𝑔𝑔 indicates a high-impact driver (reducing this activity yields large battery-life gains), while Δ𝑔𝑔 ≈ 0
+
+indicates weak influence under the current dataset and scenario definition. 
+
+The simulated battery temperature under the Typical pattern across the ambient-temperature grid is shown below. 
+
+Fig. 4. Simulated battery-temperature trajectories under the Typical load profile at different ambient temperatures 
+
+Fig. 4 presents the simulated, rather than directly measured, battery-temperature trajectories for the Typical load profile. The trajectories are used to examine whether the fitted thermal parameters produce physically plausible heating and cooling behavior. 
+
+V. CONCLUSION 
+
+This paper presents an integrated and physically interpretable framework for smartphone battery discharge analysis. The framework combines usage-driven load-power decomposition, electrical power–voltage–current closure, a semi-empirical aging model, and coupled SOC–temperature dynamics. Chronological hold-out evaluation on a 6.9-h smartphone discharge session showed a current RMSE of 0.0095 ± 0.0006 A, a temperature RMSE of 2.93 ± 0.24 ∘C, and a TTE MAPE of 4.81 ± 0.61%. Evaluation on NASA cell B0005 further showed that the aging component reproduced the observed capacity-loss trend, with a test RMSE of 0.031 Ah. Baseline and ablation results indicated that coupling thermal and aging corrections improved TTE prediction under the investigated conditions. 
+
+The present results should be interpreted as a preliminary validation. The smartphone evaluation is based on a single device and one continuous discharge session, and the Light, Typical, and Heavy profiles were constructed from repeated windows of that session. The aging model was evaluated using one public cell, and the electrical and thermal models adopt a linear OCV–SOC relation, constant conversion efficiency, and a lumped thermal node. Future work will evaluate additional devices, batteries, discharge sessions, and online operating conditions, and will investigate higher-order electrical and thermal models when richer telemetry becomes available. 
+
+REFERENCES 
+
+[1] An Ningfei, Jiang Yinghua, Tong Zhangfa. Operation Optimization of Multi-Battery Energy Storage Systems Based on SOC Interval Partitioning [J]. Journal of Guangxi University (Natural Science Edition), 2025, 50(05): 1133-1145. DOI:10.13624/j.cnki.issn.1001-7445. 2025.1133. 
+
+[2]  Mo Die, Xiao Renxin, Xie Weifeng.  Online Estimation of Lithium Battery State of Charge Considering Temperature and Aging Effects [J]. Automotive Engine, 2025, (05): 69-80. 
+
+[3]  Zhou Bin, Wang Daihui, Yang Zhifeng, et al.  Adaptive Equivalent Energy Consumption Minimization Strategy for HEVs Considering Battery Degradation Costs [J]. Computer Integrated Manufacturing Systems, 2025, 31(08): 2983-2998. DOI:10.13196/j.cims.2024.0371. 
+
+[4] G. L. Plett, “Extended Kalman filtering for battery management systems of LiPB-based HEV battery packs—Part 1: Background,” Journal of Power Sources, vol. 134, no. 2, pp. 252–261, 2004. 
+
+[5] D. Bernardi, E. Pawlikowski, and J. Newman, “A general energy balance for battery systems,” Journal of The Electrochemical Society, vol. 132, no. 1, pp. 5–12, 1985. 
+
+[6] M. B. Pinson and M. Z. Bazant, “Theory of SEI formation in rechargeable batteries: Capacity fade, accelerated aging and lifetime prediction,” Journal of The Electrochemical Society, vol. 160, no. 2, pp. A243–A250, 2013. 
+
+[7] L. Zhang, B. Tiwana, Z. Qian, et al., “Accurate online power estimation and automatic battery behavior based power model generation for smartphones,” in Proceedings of the 8th IEEE/ACM/IFIP International Conference on Hardware/Software Codesign and System Synthesis, 2010, pp. 105–114. 
+
+[8] Zha Shaoping, Du Changqing. Output Performance Changes During Fuel Cell Aging Process [J]. Battery, 2025, 55(03): 437-444. DOI: 10. 19535/j.1001-1579.2025.03.003. 
+
+[9]  Chen Biao, Jiang Haobin, Li Huanhuan, et al.  SOC Estimation of Power Batteries Based on Gas-Liquid Thermodynamic Coupling Model [J]. Transactions of the Chinese Academy of Mechanical Engineering, 2023, 59(22): 163-175. 
+
+[10] Gao Jingyi, Chen Shouxuan, Zhou Mingbo, et al. Lithium Battery Life Prediction Method Based on Multi-Feature Fusion of Charge-Discharge Characteristics [J]. Journal of Chongqing University of Technology (Natural Science), 2023, 37(02): 28-37. 
+
+[11] G. L. Plett, “Extended Kalman filtering for battery management systems of LiPB-based HEV battery packs—Part 2: Modeling and identification,” Journal of Power Sources, vol. 134, no. 2, pp. 262–276, 2004. 
+
+[12] M. Ecker, N. Nieto, S. Käbitz, et al., “Calendar and cycle life study of Li(NiMnCo)O2-based 18650 lithium-ion batteries,” Journal of Power Sources, vol. 248, pp. 839–851, 2014. 
+
+[13] X.-G. Yang, Y. Leng, G. Zhang, S. Ge, and C.-Y. Wang, “Modeling of lithium plating induced aging of lithium-ion batteries: Transition from linear to nonlinear aging,” Journal of Power Sources, vol. 360, pp. 28– 40, 2017. 
+
+[14] J. Schmalstieg, S. Käbitz, M. Ecker, and D. U. Sauer, “A holistic aging model for Li(NiMnCo)O2-based 18650 lithium-ion batteries,” Journal of Power Sources, vol. 257, pp. 325–334, 2014. 
+
+[15] NASA Ames Research Center, “Li-ion Battery Aging Datasets,” NASA Open Data Portal.

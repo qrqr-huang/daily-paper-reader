@@ -1,0 +1,97 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-11T21:48:18.677062+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 12,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.10341v1",
+      "source": "arxiv",
+      "title": "Surrogate-accelerated parameterisation of physics-based Li-ion battery models",
+      "abstract": "Physics-based lithium-ion battery models provide access to physically meaningful internal electrochemical states and processes, but cell-specific parameter inference from terminal current-voltage data is computationally expensive and limited by identifiability. We present a surrogate-accelerated inverse framework based on a single-particle model with electrolyte dynamics (SPMe). Its forward map uses our Artiphy surrogate framework for rapid, differentiable evaluation of voltage and selected internal states. After rescaling to remove exact structural redundancies, we infer non-redundant transport, kinetic and capacity parameter groups, including concentration-dependent solid and electrolyte diffusivities. Synthetic voltage data from a Doyle-Fuller-Newman (DFN) model under a WLTP-like current protocol provide a benchmark with known reference parameters and controlled model discrepancy. The inferred SPMe reproduces the benchmark voltage with an error of order 1 mV and recovers electrode capacities well. Positive-electrode diffusivity is recovered accurately over much of the probed stoichiometric range. Local sensitivity and Fisher-information analysis identifies correlated kinetic-Ohmic and electrolyte-transport directions, and shows how localised information and the global diffusivity parameterisation can yield narrow Fisher-curvature envelopes despite weak voltage sensitivity to negative-electrode diffusion over much of the drive cycle. These results represent a step towards rapid physics-based in-silico parameterisation and reduced reliance on destructive cell characterisation.",
+      "authors": [
+        "A. Emir Gumrukcuoglu",
+        "Josh Pearson",
+        "Jamie M. Foster",
+        "James Burridge"
+      ],
+      "primary_category": "physics.app-ph",
+      "categories": [
+        "physics.app-ph",
+        "physics.data-an"
+      ],
+      "published": "2026-09-09T15:37:09+00:00",
+      "link": "https://arxiv.org/pdf/2609.10341v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "physics-based Li-ion battery model parameterization from terminal data, enabling model-based SOC estimation",
+      "llm_evidence_cn": "基于端部数据的物理锂离子电池模型参数化，为基于模型的SOC估计提供支持",
+      "llm_evidence": "基于端部数据的物理锂离子电池模型参数化，为基于模型的SOC估计提供支持",
+      "canonical_evidence": "基于端部数据的物理锂离子电池模型参数化，为基于模型的SOC估计提供支持",
+      "llm_tldr_en": "Physics-based Li-ion battery models offer internal states but parameter inference is expensive and poorly identifiable. The paper proposes a surrogate-accelerated inverse framework using SPMe and Artiphy surrogate for fast differentiable voltage/state evaluation. After rescaling to remove structural redundancies, it infers transport, kinetic, and capacity parameters from synthetic Doyle-Fuller data. This enables efficient model parameterization for SOC estimation in battery management systems.",
+      "llm_tldr_cn": "针对物理锂离子电池模型参数推断计算昂贵且可辨识性受限的问题，本文提出基于代理加速的逆框架，采用带电解液动力学的单粒子模型，并利用Artiphy代理框架快速可微地评估端电压和内部状态。在对参数进行缩放以消除结构冗余后，从合成Doyle-Fuller电压数据中辨识出非冗余的传输、动力学和容量参数组。该方法大幅提高了物理电池模型参数化的效率，为电池管理系统中的模型基荷电状态估计提供了可行的模型参数获取途径。",
+      "llm_tldr": "针对物理锂离子电池模型参数推断计算昂贵且可辨识性受限的问题，本文提出基于代理加速的逆框架，采用带电解液动力学的单粒子模型，并利用Artiphy代理框架快速可微地评估端电压和内部状态。在对参数进行缩放以消除结构冗余后，从合成Doyle-Fuller电压数据中辨识出非冗余的传输、动力学和容量参数组。该方法大幅提高了物理电池模型参数化的效率，为电池管理系统中的模型基荷电状态估计提供了可行的模型参数获取途径。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.11086v1",
+      "source": "arxiv",
+      "title": "A Framework for Discharge Time Prediction of Energy Storage Units Based on Coupled Dynamics and Multi-Factor Aging Models",
+      "abstract": "This paper presents a physically interpretable framework for predicting time to empty (TTE) in portable embedded systems. The framework couples usage-driven load-power decomposition, electrical power-voltage-current closure, a semi-empirical aging model, and SOC-temperature dynamics. Smartphone telemetry is mapped to battery current through an interpretable load model and conversion-efficiency correction. Battery capacity loss is modeled by combining Arrhenius temperature dependence, SEI diffusion behavior, and cycle-related power-law degradation. The coupled dynamic model then predicts TTE under different initial SOC values, ambient temperatures, and usage profiles. Chronological hold-out evaluation on a 6.9-h smartphone discharge session yielded a current RMSE of 0.0095 $\\pm$ 0.0006 A, a temperature RMSE of 2.93 $\\pm$ 0.24$^\\circ$C, and a TTE MAPE of 4.81 $\\pm$ 0.61%. Evaluation on NASA cell B0005 produced a capacity-loss RMSE of 0.031 Ah. Baseline, ablation, and counterfactual analyses further illustrate the contributions of thermal and aging corrections and the relative influence of load features. The results demonstrate the feasibility and interpretability of the proposed framework, while broader validation across devices and batteries remains necessary.",
+      "authors": [
+        "Jiaye Yang",
+        "Hansheng Su",
+        "Wangzi Zhu"
+      ],
+      "primary_category": "cs.CE",
+      "categories": [
+        "cs.CE"
+      ],
+      "published": "2026-09-10T04:51:09+00:00",
+      "link": "https://arxiv.org/pdf/2609.11086v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Coupled SOC-temperature dynamics and aging models predict time to empty",
+      "llm_evidence_cn": "耦合SOC-温度动态和老化模型预测放电时间",
+      "llm_evidence": "耦合SOC-温度动态和老化模型预测放电时间",
+      "canonical_evidence": "耦合SOC-温度动态和老化模型预测放电时间",
+      "llm_tldr_en": "The paper presents a framework for predicting time to empty in portable systems by coupling load-power decomposition, battery current, aging models, and SOC-temperature dynamics, evaluated on smartphone telemetry.",
+      "llm_tldr_cn": "本文针对便携式嵌入式系统中放电时间预测问题，提出耦合使用负载功率分解、电池电流、半经验老化模型以及SOC-温度动态的物理可解释框架。智能手机遥测数据映射到电池电流，容量损失通过Arrhenius温度依赖性、SEI扩散和循环相关功率退化建模。耦合动态模型在不同初始SOC、环境温度和使用模式下预测放电时间，并通过时间顺序留出评估验证性能。该方法为电池管理中的剩余使用时间预测提供了实用工具。",
+      "llm_tldr": "本文针对便携式嵌入式系统中放电时间预测问题，提出耦合使用负载功率分解、电池电流、半经验老化模型以及SOC-温度动态的物理可解释框架。智能手机遥测数据映射到电池电流，容量损失通过Arrhenius温度依赖性、SEI扩散和循环相关功率退化建模。耦合动态模型在不同初始SOC、环境温度和使用模式下预测放电时间，并通过时间顺序留出评估验证性能。该方法为电池管理中的剩余使用时间预测提供了实用工具。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "state of charge estimation for lithium ion batteries",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

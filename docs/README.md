@@ -6,8 +6,8 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-10
-- 运行时间：2026-09-10 21:32:06 UTC
+- 最新运行日期：2026-09-11
+- 运行时间：2026-09-11 21:50:12 UTC
 - 运行状态：成功
 - 本次总论文数：2
 - 精读区：0
@@ -15,20 +15,20 @@
 
 ### 今日简报（AI）
 - 今日共生成 2 篇推荐（精读 0 篇，速读 2 篇）
-- 速读：《Koopman Spectral Reduced-Order Modeling of Spherical Diffusion in Lithium-Ion Batteries》（7.0/10）, 《From Laboratory Aging Studies to Field Predictions: Quantifying Uncertainty in Battery Storage Lifetime Predictions》（6.0/10）
+- 速读：《Surrogate-accelerated parameterisation of physics-based Li-ion battery models》（7.0/10）, 《A Framework for Discharge Time Prediction of Energy Storage Units Based on Coupled Dynamics and Multi-Factor Aging Models》（7.0/10）
 - 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202609/10/README](/202609/10/README)
+- 详情：[/202609/11/README](/202609/11/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Koopman Spectral Reduced-Order Modeling of Spherical Diffusion in Lithium-Ion Batteries](/202609/10/2609.09665v1-koopman-spectral-reduced-order-modeling-of-spherical-diffusion-in-lithium-ion-batteries)  
+1. [Surrogate-accelerated parameterisation of physics-based Li-ion battery models](/202609/11/2609.10341v1-surrogate-accelerated-parameterisation-of-physics-based-li-ion-battery-models)  
    标签：评分：7.0/10、query:lfp-soc
-   evidence：锂离子电池单粒子模型的降阶状态空间模型重建浓度状态
-2. [From Laboratory Aging Studies to Field Predictions: Quantifying Uncertainty in Battery Storage Lifetime Predictions](/202609/10/2609.10185v1-from-laboratory-aging-studies-to-field-predictions-quantifying-uncertainty-in-battery-storage-lifetime-predictions)  
-   标签：评分：6.0/10、query:soc-soh
-   evidence：概率性电池退化框架用现场数据预测健康状态
+   evidence：基于端部数据的物理锂离子电池模型参数化，为基于模型的SOC估计提供支持
+2. [A Framework for Discharge Time Prediction of Energy Storage Units Based on Coupled Dynamics and Multi-Factor Aging Models](/202609/11/2609.11086v1-a-framework-for-discharge-time-prediction-of-energy-storage-units-based-on-coupled-dynamics-and-multi-factor-aging-models)  
+   标签：评分：7.0/10、query:lfp-soc
+   evidence：耦合SOC-温度动态和老化模型预测放电时间
 
 
 <div class="dpr-home-promo-card">

@@ -1,0 +1,1996 @@
+Title: Surrogate-accelerated parameterisation of physics-based Li-ion battery models
+
+URL Source: https://arxiv.org/pdf/2609.10341v1
+
+Published Time: Thu, 10 Sep 2026 01:18:54 GMT
+
+Number of Pages: 37
+
+Markdown Content:
+# Surrogate-accelerated parameterisation of physics-based Li-ion battery models 
+
+A. Emir Gümrükçüoğlu a, ∗, Josh Pearson a, Jamie M. Foster a,b , James Burridge a
+
+> aSchool of Mathematics and Physics University of Portsmouth Lion Terrace Portsmouth PO1 3HF UK
+> bThe Faraday Institution Quad One Becquerel Avenue Harwell Campus Didcot OX11 0RA UK
+
+Abstract 
+
+Physics-based lithium-ion battery models provide access to physically meaningful internal electrochemical states and processes, but cell-specific parameter inference from terminal current–voltage data is compu-tationally expensive and limited by identifiability. We present a surrogate-accelerated inverse framework based on a single-particle model with electrolyte dynamics (SPMe). Its forward map uses our Artiphy surrogate framework for rapid, differentiable evaluation of voltage and selected internal states. After rescaling to remove exact structural redundancies, we infer non-redundant transport, kinetic and ca-pacity parameter groups, including concentration-dependent solid and electrolyte diffusivities. Synthetic voltage data from a Doyle-Fuller-Newman (DFN) model under a WLTP-like current protocol provide a benchmark with known reference parameters and controlled model discrepancy. The inferred SPMe reproduces the benchmark voltage with an error of order 1 mV and recovers electrode capacities well. Positive-electrode diffusivity is recovered accurately over much of the probed stoichiometric range. Local sensitivity and Fisher-information analysis identifies correlated kinetic–Ohmic and electrolyte-transport directions, and shows how localised information and the global diffusivity parameterisation can yield nar-row Fisher-curvature envelopes despite weak voltage sensitivity to negative-electrode diffusion over much of the drive cycle. These results represent a step towards rapid physics-based in-silico parameterisation and reduced reliance on destructive cell characterisation.   
+
+> ∗Corresponding author
+> Email address: emir.gumrukcuoglu@port.ac.uk (A. Emir Gümrükçüoğlu) arXiv:2609.10341v1 [physics.app-ph] 9 Sep 2026
+
+Contents 1 Introduction 32 The SPMe forward model 4
+
+2.1 Solid diffusion in the active material particles . . . . . . . . . . . . . . . . . . . . . . . . . 42.2 Electrolyte concentration dynamics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42.3 Voltage construction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+
+3 Parameter grouping and exact structural redundancies 6
+
+3.1 Scalings and normalisations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 63.2 Rescaled SPMe . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 73.3 Reduced parameter groups . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 83.4 Exact redundancies and assumptions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+
+4 Synthetic DFN benchmark 95 Inference formulation 10 
+
+5.1 Inference parameters . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 5.2 Likelihood, priors, penalties and posterior distribution . . . . . . . . . . . . . . . . . . . . 14 
+
+6 Inference Results 15 
+
+6.1 Estimation of scalar parameters . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 6.2 Estimation of functional diffusion parameters . . . . . . . . . . . . . . . . . . . . . . . . . 17 
+
+7 Local sensitivity and practical identifiability 17 
+
+7.1 Local likelihood geometry and sensitivity coordinates . . . . . . . . . . . . . . . . . . . . . 17 7.2 Individual voltage sensitivities and temporal signatures . . . . . . . . . . . . . . . . . . . . 20 7.3 Correlated sensitivities and locally identifiable combinations . . . . . . . . . . . . . . . . . 21 7.4 Local Fisher-curvature envelopes for the inferred diffusivities . . . . . . . . . . . . . . . . 21 7.5 Diffusivity parameterisation and localisation of information . . . . . . . . . . . . . . . . . 24 7.6 Summary . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 
+
+8 Conclusions and Discussion 27 Appendix A Validation of the surrogate 28 Appendix B Prior distributions and latent parameterisation 29 Appendix C Correlations 30 Appendix D Effect of inferring electrode thickness fractions and porosities 31 Appendix E Electrolyte parameter coordinates 33 
+
+21. Introduction 
+
+Physics-based continuum models of lithium-ion batteries, notably the Doyle–Fuller–Newman (DFN) model [1, 2] and reduced counterparts such as the single-particle model (SPM) and single-particle model with electrolyte dynamics (SPMe) [3], are valuable because their parameters and internal states have elec-trochemical meaning. Unlike conventional equivalent-circuit models, which describe terminal behaviour through effective circuit elements, these models can expose internal electrochemical quantities that are not directly measurable in routine testing, including electrode stoichiometries, electrolyte concentration gradients, reaction overpotentials and transport limitations. This interpretability motivates their use in battery management, cell characterisation, lifetime modelling, and degradation-risk assessment [3–5]. However, these models are not automatically predictive for a particular cell. The DFN model is already an effective continuum description of a heterogeneous multiscale system [3, 4]. In particular, the pseudo-two-dimensional DFN geometry replaces the real porous electrode microstructure by a through-cell coordinate coupled to representative spherical particles, while quantities such as tortuosity, effective transport coefficients and particle radii summarise microstructural information that is not explicitly resolved [6, 7]. Cell-specific prediction therefore requires these effective parameters to be determined for the cell of interest. This generally requires several complementary experimental techniques, including cell teardown and imaging, half-cell open-circuit potential (OCP) measurements, GITT or PITT, and EIS, because no single experiment determines the full set of geometrical, thermodynamic, kinetic and transport quantities [8]. Comprehensive workflows have been demonstrated for commercial cells, but they are experimentally demanding, commonly involve destructive teardown and half-cell reconstruction, and may still require selected parameters to be fitted or adjusted against full-cell data [9–11]. Dynamic current–voltage data therefore offer a complementary, non-invasive route to cell-specific parameterisation [12]. Parameter estimation for physics-based lithium-ion battery models from applied-current and terminal-voltage data has substantial precedent, spanning SPM, SPMe and full DFN formulations and a wide range of optimisation and Bayesian inference methods [13–17]. The resulting inverse problems differ considerably in model fidelity, excitation protocol, measurement modality, and the number and type of fitted parameters [16, 17]. Many studies reduce the problem through sensitivity-based parameter selection [18, 19], structurally motivated parameter grouping [20–23], or staged estimation [18, 24], although high-dimensional simultaneous fits have also been demonstrated [14, 25–27]. These studies collectively show that accurate reproduction of terminal voltage does not by itself guarantee unique or physically meaningful parameter recovery [14, 23, 28, 29]. Structural and practical identifiability have also received considerable attention, through structural analysis, Fisher information, confidence-region analysis and Bayesian posterior inference [14, 15, 21, 29– 31]. Such analyses remain unevenly integrated into high-dimensional fitted problems, and several studies assess sensitivity or fit quality without characterising correlations among the fitted parameters [18, 19, 25, 32]. Computational cost remains a further limitation and has motivated reformulated models [33], surrogate forward operators [26, 34], automatic differentiation [35], batch-parallel optimisation and just-in-time model evaluation [36], and amortised neural inference [27]. One recent study brings several of these strands together by combining a differentiable, physics-informed operator surrogate for the SPM with global experimental design, staged differential-evolution fitting and local Fisher-information analysis for seven scalar parameters in a synthetic benchmark [37]. Even so, most full-cell inverse studies estimate scalar transport coefficients or, when state dependence is included, infer only an overall scale while keeping the functional form fixed [15, 19, 26, 35]. Although some specialised functional-inference precedents exist [14, 38, 39], inference of flexible state-dependent diffusivities together with a broad set of interacting SPMe/DFN parameters remains comparatively uncommon. The present study is positioned at the intersection of these issues. We first remove exact structural redundancies, but rather than subsequently selecting a subset of sensitive parameters before inference, as in a number of existing approaches [18, 19, 23], we infer a comparatively broad set of interacting SPMe parameter groups, including state-dependent solid and electrolyte diffusivities, from a single dynamic current–voltage dataset. We then use local sensitivity and Fisher-information analysis to assess which parameter combinations the voltage data constrain and which can compensate for one another. This exposes weak directions that prior constraints can mask and shows how the diffusivity parameterisation affects the apparent resolution of the reconstructed functions. This work investigates whether a fast differentiable SPMe forward map can make physics-based pa-rameter inference from dynamic current–voltage data computationally practical. We use our Artiphy surrogate framework to accelerate evaluation of the SPMe forward map. We then examine which non-redundant parameter groups and state-dependent diffusivities can be recovered under a prescribed drive-3cycle current protocol, which parameters remain weakly constrained or strongly correlated despite an accurate voltage fit, and how parameter recovery is affected in the presence of model discrepancy. Synthetic DFN data are used as the primary benchmark. This avoids the same-model “inverse crime” [40]: rather than generating and inferring the voltage trace with the same SPMe implementation, we generate data from a more detailed DFN model and infer with an SPMe. The benchmark therefore retains known reference parameters while introducing structured model discrepancy. This controlled drive-cycle benchmark provides a basis for future tests on experimental current–voltage data, including on-board measurements, where measurement noise and additional model discrepancy must also be addressed. The remainder of the paper is organised as follows. In §2, we introduce the SPMe used for inference. In §3, we reformulate the model in terms of parameter groups and remove exact structural redundancies. In §4, we describe the synthetic DFN benchmark, including the reference parameter set and current protocol. The inverse formulation is presented in §5, including the functional parameterisations, priors and surrogate-accelerated maximum a posteriori (MAP) inference, and §6 reports the resulting parameter estimates. We then examine the local sensitivity structure and practical identifiability of the inferred parameters in §7. Finally, we summarise our main findings in §8 and discuss their implications for physics-based parameter inference. Supporting details on the surrogate, priors and additional sensitivity diagnostics are provided in the appendices. 
+
+2. The SPMe forward model 
+
+We use an isothermal SPMe to compute the terminal voltage from a prescribed applied current and parameter set. It comprises spherical solid diffusion problems in the negative and positive electrodes, a one-dimensional electrolyte concentration problem, and a voltage construction combining open-circuit, reaction, concentration, and Ohmic contributions. To avoid the inconsistent use of anode and cathode in the battery literature, we refer throughout to the negative and positive electrodes, denoted by n and p.
+
+2.1. Solid diffusion in the active material particles 
+
+For each k ∈ { n, p}, the single-particle approximation represents the solid concentration by ck(r, t ),independent of the through-cell coordinate x, satisfying 
+
+∂c k
+
+∂t = 1
+
+r2
+
+∂∂r 
+
+
+
+r2Dk(ck) ∂c k
+
+∂r 
+
+
+
+, 0 < r < R k, (1) subject to boundary and initial conditions: 
+
+∂c k
+
+∂r r=0 
+
+= 0 , − Dk(ck) ∂c k
+
+∂r r=Rk
+
+= jk(t)
+
+F , ck(r, 0) = ck, 0 . (2) 
+
+Dk(ck) is the concentration-dependent solid diffusivity, Rk is the particle radius, F is Faraday’s constant, and jk(t) is the interfacial current density. Uniform distribution of the applied current over the active-particle surface area gives 
+
+jk(t) = ( −1) δkp iapp (t)Rk
+
+3Lkεact 
+
+> k
+
+, (3) where iapp is the applied areal current density 1, Lk is the electrode thickness and εact  
+
+> k
+
+is the active material volume fraction. The Kronecker delta δkp sets the relative sign: positive applied current delithiates the negative electrode ( jn > 0) and lithiates the positive electrode ( jp < 0). 
+
+2.2. Electrolyte concentration dynamics 
+
+The electrolyte concentration ce(x, t ) is modelled over the full cell thickness 0 < x < L , with x = 0 
+
+and x = L at the negative and positive current collectors, respectively, and L = Ln + Ls + Lp, with Ls
+
+denoting the separator thickness. Following Ref. [41], we use the formulation with the anion-flux F−
+
+ε(x) ∂c e
+
+∂t + ∂F−
+
+∂x = 0 , F− = −De(ce)B(x) ∂c e
+
+∂x − 1 − t+
+
+F ie(x, t ) , x ∈ [0 , L ] , (4)     
+
+> 1Here iapp is an areal current density per projected cell area (equivalently, per current-collector area), whereas jkis defined per unit active-particle surface area.
+
+4subject to no-flux boundary conditions and a uniform initial concentration 
+
+F−|x=0 = F−|x=L = 0 , ce(x, 0) = ce,0. (5) Both ce and F− are continuous at the electrode–separator interfaces. This formulation conserves elec-trolyte inventory, R L 
+
+> 0
+
+ε(x)ce(x, t )d x = ce,0
+
+R L 
+
+> 0
+
+ε(x)d x, and is equivalent, up to notation, to the usual cation-balance formulation (see e.g. Refs. [3, 42]). We use it because anions are not consumed or pro-duced by the electrode reactions, so their balance contains no intercalation source term. Both ie and F−
+
+are homogenised per unit electrode cross-sectional area, rather than local pore-space quantities. The porosity ε(x) and the effective transport efficiency factor B(x) are piecewise constant over the negative electrode, separator, and positive electrode, with 
+
+ε(x) = 
+
+
+
+εn , 0 ≤ x < L n ,εs , Ln ≤ x < L − Lp ,εp , L − Lp ≤ x ≤ L , 
+
+B(x) = 
+
+
+
+Bn , 0 ≤ x < L n ,
+
+Bs , Ln ≤ x < L − Lp ,
+
+Bp , L − Lp ≤ x ≤ L . 
+
+(6) As a consequence of the uniform interfacial reaction current assumed in Eq. (3), the electrolyte current density ie(x, t ) is piecewise linear in the electrodes and constant in the separator, 
+
+ie(x, t ) = iapp (t)
+
+
+
+xLn
+
+, 0 ≤ x < L n,
+
+1, Ln ≤ x < L − Lp,L − xLp
+
+, L − Lp ≤ x ≤ L . 
+
+(7) 
+
+2.3. Voltage construction 
+
+We use the electrode-averaged voltage construction of Ref. [42], derived in the combined limit of fast electrolyte transport and high conductivities, with first-order electrolyte concentration corrections. Arelated construction based on a different asymptotic limit is given in Ref. [41]; both agree closely with the DFN model from which they are derived. The terminal voltage is decomposed as 
+
+V (t) = Ueq (t) − ηr(t) − ηc(t) − ∆ϕe(t) − ∆ϕs(t). (8) where Ueq is the cell open-circuit potential, ηr and ηc are the reaction and concentration overpotentials, and ∆ϕe and ∆ϕs are the electrolyte and electrode Ohmic losses. The reaction and Ohmic terms have the sign of the applied current, whereas the concentration overpotential depends on the evolving electrolyte profile. The open-circuit potential, normally the dominant voltage contribution, depends on the particle surface concentrations: 
+
+Ueq = Up
+
+ cp|r=Rp
+
+ − Un (cn|r=Rn ) . (9) The exchange current densities are defined as 
+
+jk, 0(x, t ) = F K k
+
+s
+
+ce(x, t )
+
+ce,0
+
+ck(r, t )
+
+ck, max 
+
+
+
+1 − ck(r, t )
+
+ck, max 
+
+
+
+> r=Rk
+
+, k ∈ { n, p}. (10) Here, Kk is a reaction rate constant with SI units of mol m −2s−1. The SPMe formulation of Ref. [42] uses exchange current densities averaged over the corresponding electrode regions: 
+
+¯jn,0(t) = 1
+
+Ln
+
+Z Ln
+
+> 0
+
+jn,0(x, t )dx , ¯jp,0(t) = 1
+
+Lp
+
+Z LL−Lp
+
+jp,0(x, t )dx . (11) The reaction overpotential is then 
+
+ηr = 2Rg TF
+
+
+
+arcsinh 
+
+ jn(t)¯jn,0(t)
+
+
+
+− arcsinh 
+
+ jp(t)¯jp,0(t)
+
+ 
+
+, (12) where Rg is the universal gas constant and T is the prescribed temperature. This is a symmetric Butler– Volmer relation with transfer coefficients 1/2, using the exchange-current normalisation of Ref. [42]. 5The concentration overpotential obtained from the electrolyte solution is 
+
+ηc = 2Rg T (1 − t+)
+
+F c e,0
+
+1
+
+Ln
+
+Z Ln
+
+> 0
+
+ce(x, t )d x − 1
+
+Lp
+
+Z LL−Lp
+
+ce(x, t )d x
+
+!
+
+. (13) In Ref. [42], the electrolyte Ohmic loss depends only on scalar parameters and the areal current density: 
+
+∆ϕe = iapp 
+
+σe(ce,0)
+
+ Ln
+
+3 Bn
+
++ Ls
+
+Bs
+
++ Lp
+
+3 Bp
+
+
+
+, (14) where the concentration-dependent DFN conductivity σe(ce) is projected to its value σe(ce,0) at the reference concentration. Finally, the solid-phase Ohmic loss, often small in well-designed electrodes, is retained for completeness: 
+
+∆ϕs = iapp 
+
+3
+
+ Lp
+
+σp
+
++ Ln
+
+σn
+
+
+
+. (15) 
+
+3. Parameter grouping and exact structural redundancies 
+
+In this section, we rescale the SPMe to remove exact algebraic redundancies: distinct dimensional parameter sets give the same rescaled model when they share the combinations appearing in its equations. The resulting groups provide a non-redundant parametrisation under the modelling and known-input assumptions stated below. Removing these redundancies is necessary, but not sufficient, for structural identifiability from terminal-voltage data. §7 addresses a separate question: whether the voltage response to the chosen drive cycle locally distinguishes the remaining parameters. Our approach builds on the lumped-parameter reformulation of the DFN model by Jobman et al. [20], the structural-identifiability analysis of the SPM by Bizeray et al. [21], and the recent grouped-parameter SPMe of Hallemans et al. [26], adapting these ideas to an SPMe with concentration-dependent transport functions. 
+
+3.1. Scalings and normalisations 
+
+We first scale the spatial coordinates, concentrations and anion flux: 
+
+ck = ck, max xk , rk = Rkrk , k ∈ { n, p} , (16a) 
+
+ce = ce,0 ˆce , x = Lˆx , F− = ce,0BsDe,ref 
+
+L F⋆ 
+
+> −
+
+. (16b) Time, current densities and voltage remain dimensionful. The diffusivity functions are separated into scalar scales and dimensionless concentration dependence: 
+
+Dk(ck) = Dk, mean D⋆k(xk) , De(ce) = De,ref D⋆ 
+
+> e
+
+(ˆ ce) . (17) The scales and normalisations are defined by 
+
+Z ck, max 
+
+> 0
+
+log 
+
+ Dk(c)
+
+Dk, mean 
+
+
+
+dc = 0 , (18a) 
+
+De,ref = De(ce,0) , (18b) 
+
+D⋆ 
+
+> e
+
+(1) = 1 . (18c) Thus Dk, mean sets the overall solid diffusivity scale and D⋆k(xk) its concentration dependence. The fixed stoichiometry interval [0 , 1] makes a unit geometric mean convenient for the Fourier representation used in §5. For the electrolyte, normalisation at the prescribed initial concentration provides a reference without choosing a concentration interval over which to average. The electrode OCP functions are also expressed in terms of stoichiometry: 
+
+U (x) 
+
+> k
+
+(xk) = Uk(ck, max xk) . (19) For notational brevity, in the remainder of the paper we use Uk(xk) as shorthand for U (x) 
+
+> k
+
+(xk); the potential itself remains dimensionful. The regional geometry and material properties are expressed as 
+
+λi = Li
+
+L , ˆεi = εi
+
+εs
+
+, ˆBi = Bi
+
+Bs
+
+, i ∈ { n, s, p} , (20) 6with λs = 1 − λn − λp and ˆεs = ˆBs = 1 . Hence ε(x) = εs ˆε(ˆ x) and B(x) = Bs ˆB(ˆ x), where 
+
+ˆε(ˆ x) = 
+
+
+
+ˆεn , 0 ≤ ˆx < λ n ,
+
+1 , λn ≤ ˆx < 1 − λp ,
+
+ˆεp , 1 − λp ≤ ˆx ≤ 1 ,
+
+(21a) 
+
+ˆB(ˆ x) = 
+
+
+
+ˆBn , 0 ≤ ˆx < λ n ,
+
+1 , λn ≤ ˆx < 1 − λp ,
+
+ˆBp , 1 − λp ≤ ˆx ≤ 1 ,
+
+(21b) For this study, we assume the Bruggeman relation with a fixed exponent of 3/2:
+
+Bi = ε3/2 
+
+> i
+
+, ˆBi = ˆ ε3/2 
+
+> i
+
+, i ∈ { n, s, p} . (22) 
+
+3.2. Rescaled SPMe 
+
+We now state the rescaled dynamical problem and voltage construction. The scalar groups appearing below are defined together in §3.3. Using the scalings above and the relation between interfacial flux and applied current density (3), the solid diffusion equations become 
+
+τk
+
+∂x k
+
+∂t = 1
+
+# r2
+
+∂∂r 
+
+# r2D⋆k(xk) ∂x k
+
+∂r 
+
+,∂x k
+
+∂r r=0 
+
+= 0 ,
+
+−D⋆k(xk) ∂x k
+
+∂r r=1 
+
+= ( −1) δkp τk
+
+3Qk
+
+iapp (t) ,xk t=0 = xk, 0 , k ∈ { n, p} . (23) Similarly, the rescaled electrolyte concentration dynamics are 
+
+τe ˆε(ˆ x) ∂ˆce
+
+∂t + ∂F⋆
+
+> −
+
+∂ ˆx = 0 ,
+
+F⋆ 
+
+> −
+
+= −D⋆ 
+
+> e
+
+(ˆ ce) ˆB(ˆ x) ∂ˆce
+
+∂ ˆx − (1 − t+)τe
+
+Qe
+
+ie(ˆ x, t ) ,
+
+F⋆  
+
+> −ˆx=0
+
+= F⋆  
+
+> −ˆx=1
+
+= 0 ,
+
+ˆce t=0 = 1 , (24) with continuity of ˆce and F⋆ 
+
+> −
+
+at the electrode–separator interfaces. The electrolyte current density is 
+
+ie(ˆ x, t ) = iapp (t)
+
+
+
+ˆxλn
+
+, 0 ≤ ˆx < λ n ,
+
+1, λn ≤ ˆx < 1 − λp ,
+
+1 − ˆxλp
+
+, 1 − λp ≤ ˆx ≤ 1 .
+
+(25) The terminal voltage retains the decomposition 
+
+V (t) = Ueq (t) − ηr(t) − ηc(t) − ∆ϕe(t) − ∆ϕs(t) . (26) The open-circuit potential is now written in terms of the surface stoichiometries: 
+
+Ueq = Up
+
+ xp r=1 
+
+ − Un
+
+ xn r=1 
+
+ . (27) For the reaction overpotential, we use Eqs. (10)–(11) to define exchange current densities per geometric area, 
+
+ik, 0 = 3 Lkεact 
+
+> k
+
+Rk
+
+¯jk, 0 , (28) 7which become 
+
+in,0 = iref n,0
+
+pxn(1 − xn)
+
+λn
+
+Z λn
+
+> 0
+
+pˆcedˆ x
+
+# r=1 
+
+,ip,0 = iref p,0
+
+pxp(1 − xp)
+
+λp
+
+Z 11−λp
+
+pˆcedˆ x
+
+# r=1 
+
+.
+
+(29) The reaction and concentration overpotentials are then 
+
+ηr = ν
+
+
+
+arcsinh 
+
+ iapp (t)
+
+in,0(t)
+
+
+
++ arcsinh 
+
+ iapp (t)
+
+ip,0(t)
+
+ 
+
+, (30) 
+
+ηc = ν(1 − t+) 1
+
+λn
+
+Z λn
+
+> 0
+
+ˆcedˆ x − 1
+
+λp
+
+Z 11−λp
+
+ˆcedˆ x
+
+!
+
+. (31) Finally, the Ohmic drops are proportional to the applied current density: 
+
+∆ϕe = Reiapp , (32) 
+
+∆ϕs = Rsiapp . (33) 
+
+3.3. Reduced parameter groups 
+
+The scalar groups introduced in the rescaled equations are 
+
+τk = R2
+
+> k
+
+Dk, mean 
+
+, Qk = F ε act  
+
+> k
+
+Lkck, max , (34a) 
+
+τe = εsL2
+
+BsDe,ref 
+
+, (34b) 
+
+Qe = F c e,0Lε s , (34c) 
+
+iref  
+
+> k, 0
+
+= 3F K kLkεact 
+
+> k
+
+Rk
+
+, ν = 2Rg TF , (34d) 
+
+Re = 1
+
+σe(ce,0)
+
+ Ln
+
+3Bn
+
++ Ls
+
+Bs
+
++ Lp
+
+3Bp
+
+
+
+, (34e) 
+
+Rs = 13
+
+ Ln
+
+σn
+
++ Lp
+
+σp
+
+
+
+, Rohm = Re + Rs . (34f) Here τk is the mean solid diffusion time and Qk the maximum areal lithium inventory. The electrolyte scales τe and Qe are referenced to separator properties: Qe is the charge-equivalent salt inventory per unit area for a domain of thickness L and uniform porosity εs. The choice of separator values as reference for the electrolyte variables is discussed in Appendix E. The quantities ik, 0 and iref  
+
+> k, 0
+
+are, respectively, the exchange current density and its reference scale, both per projected current-collector area. The quantities Re and Rs are area-specific Ohmic resistances, and ν is the thermal voltage scale. 
+
+3.4. Exact redundancies and assumptions 
+
+For each electrode, Eq. (23) depends on two scalar groups and one functional parameter: 
+
+τk , Qk , D⋆k(xk) , k ∈ { n, p} . (35) The particle radius and diffusivity scale enter through τk and cannot be separated using the particle diffusion equation alone. Similarly, the factors in Qk enter that equation only through their product. The group Qk sets the current-to-stoichiometry scale, while D⋆k(xk) describes the concentration dependence of the diffusivity. Under the Bruggeman relation (22), Eq. (24) depends on six scalar groups and one functional param-eter: 
+
+λn , λp , ˆεn , ˆεp , τe , Qe
+
+1 − t+ , D⋆ 
+
+> e
+
+(ˆ ce) . (36) These six scalar coordinates are in one-to-one correspondence with the six independent regional groups; the construction is given in Appendix E. A closely related electrolyte parametrisation is used by Hallemans 8et al. [26], in terms of relative electrode thicknesses and porosities, a reference electrolyte capacity, and regional electrolyte diffusion time scales. The voltage construction adds the kinetic scales iref 
+
+> k, 0
+
+, the thermal voltage scale ν, and the Ohmic resistance groups. The two Ohmic losses enter terminal voltage only through their sum, 
+
+∆ϕe + ∆ ϕs = Rohm iapp . (37) Consequently, Re and Rs cannot be recovered separately from terminal-voltage data under this formula-tion. The concentration overpotential (31) contains an additional factor 1 − t+, removing the particular algebraic redundancy between Qe and t+ in the electrolyte dynamics. We therefore retain Qe and t+
+
+separately, without claiming that this establishes their input–output identifiability. Full-cell equilibrium voltage observes only the difference Up(xp) − Un(xn), so it cannot by itself deter-mine the two electrode OCP functions. In this work, we treat Un and Up as known from prior electrode characterisation. Even with known OCP functions, a single equilibrium-voltage value does not deter-mine both initial stoichiometries. We prescribe xn,0 and xp,0 from the synthetic DFN benchmark. For a physical cell, prescribing these values would require additional initial-state or alignment information. Prescribing the initial stoichiometries does not fix the electrode-capacity ratio. An independently established full-cell alignment, such as xp = xp(xn), would constrain Qp/Qn [23]. We impose no such constraint, so Qn and Qp remain independent parameter groups. Unlike Bizeray et al. [21], who analyse the input–output structural identifiability of an SPM lin-earised around equilibrium through its transfer function, we do not attempt an analogous small-signal analysis. Such an analysis would characterise only the parameter combinations visible in the local small-signal dynamics and the local values of the concentration-dependent transport functions, rather than the nonlinear response under the large-amplitude current protocol considered here. We assess the local distinguishability of the remaining finite-dimensional parameters for the chosen protocol in §7. Subject to the Bruggeman relation, prescribed temperature, known electrode OCP functions and prescribed initial state, the parameter groups remaining after removal of these exact redundancies are summarised in Table 1. 
+
+Parameter SI Units Physical meaning Model contribution Count 
+
+τk s Solid diffusion time scale Solid dynamics → Ueq , η r 2 S 
+
+Qk C m −2 Maximum areal lithium inventory Solid dynamics → Ueq , η r 2 S 
+
+iref  
+
+> k, 0
+
+A m −2 Geometric exchange current density scale 
+
+ηr 2 S 
+
+τe s Separator-referenced diffusion time in the electrolyte Electrolyte dynamics → ηc, η r 1 S 
+
+Qe C m −2 Separator-referenced areal electrolyte salt-inventory scale Electrolyte dynamics → ηc, ηr 1 S 
+
+t+ – Transference number Electrolyte dynamics and ηc 1 S 
+
+Rohm Ω m 2 Combined area-specific Ohmic resistance 
+
+∆ϕe, ∆ϕs 1 S 
+
+λk – Electrode thickness fraction Electrolyte dynamics → ηc, η r 2 S 
+
+ˆεk – Porosity relative to separator Electrolyte dynamics → ηc, η r 2 S 
+
+D⋆k (xk ) – Solid-state diffusivity with unit geometric mean Solid dynamics → Ueq , η r 2 F 
+
+D⋆ 
+
+> e
+
+(ˆ ce) – Electrolyte diffusivity normalised by its value at the initial concentration Electrolyte dynamics → ηc, η r 1 F 
+
+TOTAL 14 S, 3 F       
+
+> Table 1: Scalar and functional parameter groups in the non-redundant SPMe parameterisation used in this study, under the Bruggeman relation, prescribed temperature, known electrode OCP functions and prescribed initial state. Here S denotes a scalar parameter group and F denotes an unknown function. Quantities indexed by kare counted over k∈ { n,p}. The penultimate column indicates the model component through which each parameter group enters the voltage expression; it should not be read as assuming that the voltage components are separately measured.
+
+4. Synthetic DFN benchmark 
+
+To assess parameter recovery under model discrepancy, we use a synthetic benchmark with known data-generating DFN parameters. The benchmark voltage is generated using Dandeliion [43]. This 9provides a controlled inverse problem while avoiding the overly favourable case in which the inference model is identical to the data-generating model. The benchmark voltage is intentionally left noise-free so that the effects of the structured SPMe–DFN discrepancy on the voltage residuals and inferred parameter values can be examined without dependence on a particular noise realisation. The parameter set used for the simulation is listed in Table 2. We use a synthetic but physically plausible parameter set, with a layered-oxide-like positive electrode and a graphite-like negative electrode. The negative-electrode open-circuit potential uses the Dandeliion fit [44] to graphite data from Ref. [9]. The positive-electrode open-circuit potential uses the analytical Dandeliion fit whose coefficients match those reported in the supplementary material of Ref. [11]. The electrolyte diffusivity and conductivity are the fits reported in Ref. [9]. The solid-state diffusivities are synthetic positive functions chosen to lie within ranges reported for lithium-ion electrode materials [8], while providing nontrivial concentration dependence for the inverse problem. Inactive solid phases, such as binder and conductive additives, are not represented explicitly, so εact  
+
+> k
+
+= 1 − εk.The benchmark functional parameters are plotted in Fig. 1, together with the ranges of stoichiometry and electrolyte concentration visited during the DFN simulation. In panel (g), the reference conductivity 
+
+σe(ce,0), defined after Eq. (14), lies above the concentration-dependent conductivity over most of the range visited. Since the reduced resistance Re, defined in Eq. (34e), is evaluated using this reference value, the corresponding SPMe is expected to underestimate the electrolyte Ohmic loss ∆ϕe. For comparison with the inferred SPMe, the dimensionful DFN benchmark parameters are projected onto the reduced SPMe coordinates introduced in §3. The resulting projected DFN benchmark values are listed in Table 3. We stress that these are derived reference coordinates, not parameters of an SPMe used to generate the data. The benchmark current is a WLTP-like dynamic profile sampled at 1 Hz . After conversion from the Dandeliion sign convention, we report the discharge-positive total current as I(t) and define the corresponding areal current density as iapp (t) = I(t)/A , where A is the electrode cross-sectional area listed in Table 2. The cell is initialised at the prescribed electrode stoichiometries and evolved isothermally at room temperature. These and the remaining protocol details are summarised in Table 4. The resulting current trace and C-rate are shown in panel (a) of Fig. 1. We use a dynamic protocol rather than a constant-current discharge because the voltage sensitivity to transport and kinetic parameters is protocol-dependent. We define C-rate (in h−1 units) as 
+
+C( t) = 3600 iapp (t)
+
+Qnom 
+
+, (38) where the nominal capacity, given in SI units in the above equation ( C m −2), is defined as the areal charge density withdrawn from the prescribed initial state before either electrode reaches its independently specified nominal limit given in Table 4: 
+
+Qnom = min [ Qn(xn,0 − xn,min ) , Qp (xp,max − xp,0)] . (39) These nominal limits are used only to define the C-rate scale and are not imposed elsewhere. 
+
+5. Inference formulation 
+
+In this work, we treat the electrode and separator thickness fractions, λk, and porosities, ˆεk, as known cell-design quantities. Following established cell-parameterisation procedures, these quantities can be determined independently after cell teardown: thicknesses by direct dimensional measurement and electrode porosities from coating thickness, mass loading and constituent densities, optionally supported by microstructural imaging [10, 45]. Consistently with §3.1, the corresponding transport efficiencies are determined from the porosities through the Bruggeman closure, ˆBk = ˆ ε3/2 
+
+> k
+
+.
+
+5.1. Inference parameters 
+
+We infer the effective kinetic and transport parameters of the reduced SPMe representation, whose independent characterisation generally requires dedicated electrochemical experiments and additional modelling assumptions. The inferred set comprises all parameters in Table 1, except the four independent geometric and microstructural parameters λn, λp, ˆεn and ˆεp.The inferred set contains three functional parameters in addition to the scalar parameters. To obtain a finite-dimensional inference problem, we represent each function using a finite number of coefficients. 10 Quantity  Symbol  Value  Unit Electrode cross-sectional area  – 0.3168  m2
+
+> Negative electrode thickness  Ln 70  μm
+> Separator thickness  Ls 20  μm
+> Positive electrode thickness  Lp 60  μm
+> Negative particle radius  Rn 5 μm
+> Positive particle radius  Rp 4 μm
+> Negative electrode porosity  εn 0.3  –Positive electrode porosity  εp 0.32  –Separator porosity  εs 0.4  –Electrolyte reference concentration  ce,0 1000  mol m −3
+> Negative maximum concentration  cn,max  48000  mol m −3
+> Positive maximum concentration  cp,max  51000  mol m −3
+> Transference number  t+ 0.38  –Temperature  T 298.15  K
+> Transport efficiency in the negative electrode  Bn 0.164317  –Transport efficiency in the positive electrode  Bp 0.181019  –Transport efficiency in the separator  Bs 0.252982  –Reaction rate constant in the negative electrode  a Kn 7.58947  × 10 −5 mol m −2 s−1
+> Reaction rate constant in the positive electrode  Kp 9.67657  × 10 −5 mol m −2 s−1
+> Negative electrode conductivity  σn 100  S m −1
+> Positive electrode conductivity  σp 8 S m −1
+> Conductivity of the electrolyte  σe(ce) 0.1726 + 1 .7919  × 10 −3 ce − 1.2983  × 10 −6 c2e + 0 .2667  × 10 −9 c3e S m −1
+> Diffusivity in negative electrode particles  Dn(xn) 2 × 10 −15  exp  −6 ( xn − 0.5) 2   2 + sin  19  x2n
+>   m2 s−1
+> Diffusivity in positive electrode particles  Dp(xp) 3 × 10 −15  exp −9 ( xp − 0.5) 2
+> ×
+> h
+> 1 + 0 .58 tanh[9 ( xp − 0.35)] + 0 .20 tanh[14 ( xp − 0.75)]
+> i m2 s−1
+> Diffusivity of the electrolyte  De(ce) 2.646  × 10 −7 c−1e
+> ×  0.1726 + 1 .7919  × 10 −3 ce − 1.2983  × 10 −6 c2e + 0 .2667  × 10 −9 c3e
+>  m2 s−1
+> Negative electrode equilibrium potential  Un(xn) 0.14003 + 0 .7165 exp( −369 .03  xn) + 0 .1219 exp[ −35 .648 ( xn − 0.053095)]
+> −0.018919 tanh[21 .197( xn − 0.19618)]  − 0.016964 tanh[27 .137( xn − 0.31283)]
+> −0.019931 tanh[28 .57( xn − 0.61422)]  − 0.93115 exp[36 .328( xn − 1.1074)] V
+> Positive electrode equilibrium potential  Up(xp) 4.17032  − 1.30202  xp − 0.214712 tanh(23 .01( xp + 0 .00350287)) +2 .45808 tanh[2 .90232( xp − 0.215657)]  − 1.26644 tanh[4 .30574( xp − 0.329193)]
+> −0.40112 tanh[9 .07273( xp − 0.148644)]  − 0.0532656 exp[47 .0417( xp − 0.95703)] V
+> a In Dandeliion, a different convention for the reaction rate constant is adopted, where  kk has units of  m5/2 mol −1/2 s−1 [43]. It is related to our convention by  Kk = 2  kk
+> √ce,0 ck, max .Table 2: Scalar and functional parameters used to generate the DFN benchmark data.  The full DFN simulation can be accessed through the development version of Dandeliion here:
+> https://development.dandeliion.com/simulation/5632f5fd-3ecc-4c02-912a-9663eff75a7b .
+
+11 1                                           
+
+> 012345C-rate 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> t[h] 020 40 60
+> I [A]
+> (a)
+> 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+> xn
+> 2345
+> Dn [m 2/s]
+> 1e 15
+> (b)
+> 0.4 0.6 0.8 1.0
+> xp
+> 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+> Dp [m 2/s]
+> 1e 15
+> (c)
+> 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+> xn
+> 0.08 0.10 0.12 0.14 0.16 0.18
+> Un [V]
+> (d)
+> 0.4 0.6 0.8 1.0
+> xp
+> 3.0 3.2 3.4 3.6 3.8 4.0
+> Up [V]
+> (e)
+> 0.5 1.0 1.5 2.0
+> ce/ce, 0
+> 10 10
+> 10 9
+> De [m 2/s]
+> (f)
+> 0.5 1.0 1.5 2.0
+> ce/ce, 0
+> 0.4 0.5 0.6 0.7 0.8 0.9
+> e [S/m]
+> (g)
+> e(ce, 0 )
+
+Figure 1: Summary of the current protocol and functional parameters used in the synthetic DFN benchmark. (a) Two-hour WLTP-like current profile, shown using the discharge-positive convention adopted in this work, as total cell current on the left axis and the corresponding C-rate on the right axis. (b, c) Solid diffusivities in the negative and positive electrodes, respectively. (d, e) Equilibrium potentials in the negative and positive electrodes. (f, g) Electrolyte diffusivity and conductivity as functions of the normalised electrolyte concentration. The shaded regions indicate the stoichiometry or electrolyte-concentration ranges visited during the benchmark simulation. The dashed line in (g) denotes the constant value σe(ce,0) in the corresponding SPMe model. 
+
+12 Parameter Value 
+
+τn 2.86 h 
+
+Qn 63 .04 A h m −2
+
+iref n,0 215 .29 A m −2
+
+τp 3.69 h 
+
+Qp 55 .77 A h m −2
+
+iref p,0 285 .70 A m −2
+
+τe 144 .12s 
+
+Qe 1.61 A h m −2
+
+t+ 0.38 
+
+Rohm 3.58 × 10 −4 Ω m 2
+
+λn 0.47 
+
+λp 0.40 ˆεn 0.75 ˆεp 0.80 ˆBn 0.65 (derived) 
+
+ˆBp 0.72 (derived) 
+
+ν 0.051 V (fixed)      
+
+> Table 3: Projected DFN benchmark values in the grouped SPMe scalar coordinates, together with derived quantities. The transport-efficiency ratios ˆBiand thermal voltage scale νare derived from the prescribed porosities and temperature, respectively. The underlying functional parameters are given in Table 2 and normalised as described in §3.
+
+Quantity Symbol Value Duration tend 6967 s 
+
+Sampling frequency fs 1 Hz 
+
+Initial negative stoichiometry xn,0 0.9014 
+
+Initial positive stoichiometry xp,0 0.2661 
+
+Maximum discharge current max I(t) 56 .745 A 
+
+Maximum charge current − min I(t) 13 .984 A 
+
+Nominal negative-electrode discharge limit xn,min 0.0279 
+
+Nominal positive-electrode discharge limit xp,max 0.9084 
+
+Nominal areal discharge capacity Qnom 35 .82 A h m −2
+
+Maximum absolute C-rate max |C(t)| 5 h −1 (i.e. 5C) Absolute charge throughput R tend  
+
+> 0
+
+|I(t)| dt 12 .56 A h 
+
+Net discharge R tend  
+
+> 0
+
+I(t) d t 9.44 A h 
+
+> Table 4: Summary of the WLTP-like current protocol used for the synthetic DFN benchmark.
+
+For the solids, we introduce a Fourier expansion, truncated at fourth order: 
+
+log 10 D⋆k(xk) = 
+
+> 4
+
+X
+
+> m=1
+
+[ak,m cos(2 πmx k) + bk,m sin(2 πmx k)] , k ∈ { n, p} . (40) The absence of the zero-mode term ensures that the mean of log 10 D⋆k over xk ∈ [0 , 1] vanishes, consistently with the normalisation in Eqs. (17) and (18a). This represents each solid diffusivity shape using eight coefficients: 
+
+θDk = ( ak, 1, a k, 2, a k, 3, a k, 4, b k, 1, b k, 2, b k, 3, b k, 4) (41) For the electrolyte, we adopt the parameterisation: 
+
+D⋆ 
+
+> e
+
+(ˆ ce) = e −βe(ˆ ce−1) , (42) which satisfies D⋆ 
+
+> e
+
+(1) = 1 , consistently with the normalisation in Eq. (18c). Here, ˆce = 1 denotes the initially uniform equilibrium concentration, while βe > 0 controls the strength of the concentration dependence. During operation, lithiation consumes lithium ions from the electrolyte and therefore tends to produce local electrolyte depletion, whereas delithiation tends 13 to produce accumulation. The parameterisation consequently assigns a larger diffusivity to depleted regions and a smaller diffusivity to enriched regions. This monotonic form is motivated by the electrolyte diffusivities collected in LiionDB [8], and represents the functional electrolyte diffusivity shape using a single scalar. With this decomposition, we can now write the parameter vector in terms of these scalar parameters as: 
+
+θ =  τn, Qn, i ref n,0, τ p, Qp, i ref p,0, τ e, Qe, β e, t +, θDn , θDp , Rohm 
+
+ , (43) with a total of 27 scalar physical model parameters. 
+
+5.2. Likelihood, priors, penalties and posterior distribution 
+
+Let 
+
+D = {(ti, I i, V i)}Ni=1 (44) denote the benchmark dataset consisting of current and voltage time series sampled at 1 Hz , with N =6968 . Let I = ( I1, . . . , I N ) denote the imposed current protocol, and let ˜Vi(I; θ) be the voltage prediction obtained from the Artiphy surrogate framework at ti, with parameter vector θ. We adopt an independent and identically distributed (iid) Gaussian model 2 for the residuals: 
+
+ri(θ) = Vi − ˜Vi(I; θ) iid 
+
+∼ N (0 , σ 2) . (45) Under this error model, the likelihood, i.e. the probability density assigned to the observed voltage series, conditional on the parameter vector θ, and the voltage-error standard deviation σ, is: 
+
+f (D| θ, σ ) = 1(2 πσ 2)N/ 2 exp 
+
+"
+
+− 12σ2
+
+> N
+
+X
+
+> i=1
+
+
+
+Vi − ˜Vi(I; θ)
+
+2
+
+#
+
+(46) 
+
+= 1(2 πσ 2)N/ 2 exp 
+
+
+
+− N
+
+2σ2 MSE( θ)
+
+
+
+, (47) where we used the shorthand for the mean-squared error MSE( θ) = 1
+
+> N
+
+PNi=1 ri(θ)2.We construct prior distributions for the parameters informed by the literature compilation LiionDB [8]. Further details are given in Appendix B. Assuming prior independence between θ and σ, the joint prior density is 
+
+Π( θ, σ ) = f (θ)f (σ) , (48) where f (θ) and f (σ) are the prior distributions of the parameter vector and uncertainty, respectively. The uncertainty parameter σ > 0 is inferred jointly with θ and represents the standard deviation of the assumed Gaussian voltage-error model. Through the likelihood, σ determines the scale assigned to voltage residuals relative to the parameter prior, while the normalisation factor in Eq. (47) prevents its arbitrary inflation. For compactness, Π( θ, σ ) denotes the prior density in the coordinates used for numerical inference, written as a function of the corresponding physical parameters. The underlying parameterisation and the precise definition of the reported MAP are given in Appendix B. In addition to the literature-derived parameter prior, we impose soft physical-consistency constraints. For instance, the solid stoichiometry must remain within xk ∈ [0 , 1] and normalised electrolyte concen-tration must satisfy ˆce > 0. For the electrolyte term, we introduce the penalty: 
+
+Pe(θ) = 
+
+> N
+
+X
+
+> i=1
+
+
+
+1
+
+λn
+
+Z λn
+
+> 0
+
+p[ˆ ce(ˆ x, t i)] − dˆx
+
+!2
+
++ 1
+
+λp
+
+Z 11−λp
+
+p[ˆ ce(ˆ x, t i)] − dˆx
+
+!2 , (49) where we defined [z]− = max( −z, 0) (p[ˆ ce]− is equivalent to the imaginary part of the principal complex branch of √ˆce). If ˆce is non-negative throughout both electrode domains, the two averaged square roots     
+
+> 2The independent Gaussian error model is adopted here as a pragmatic working likelihood. In the present noise-free benchmark, the residuals may nevertheless contain temporally correlated discrepancy arising from the surrogate approxi-mation and from differences between the SPMe and the data-generating DFN model; with experimental data, they would also contain measurement noise. Since the correlation structure of these contributions is not known, we do not attempt to model it explicitly. As a result, σshould be interpreted as an effective voltage-error scale rather than as the standard deviation of measurement noise.
+
+14 are real and Pe = 0 . A negative predicted concentration in either electrode domain produces a non-zero contribution and hence a positive penalty. Similarly, we define the penalty for the solid concentrations: 
+
+Ps(θ) = 
+
+> N
+
+X
+
+> i=1
+
+X
+
+> k∈{ n,p }
+
+h
+
+max [ −xk, surf (ti), 0] 2 + max [ xk, surf (ti) − 1, 0] 2i
+
+, (50) where the surface stoichiometry is defined as xk, surf (ti) = xk(rk, t i)|rk =1 .We encode these physical-consistency conditions through the (unnormalised) effective prior density 
+
+Πeff (θ, σ ) = Π( θ, σ ) e −αePe(θ)−αsPs(θ) , (51) where αe and αs are the weights controlling the contribution from the penalty terms. Together, the literature-derived prior and the physical-consistency penalties are not merely numerical conveniences: the present voltage data do not independently constrain all parameters in the inferred family, as we demonstrate later in the local identifiability analysis in §7. The parameter prior also plays a practical role in the surrogate-based inference. The surrogate is trained over a finite parameter distribution and its accuracy is only established within the corresponding region of parameter space. An unconstrained maximum-likelihood optimisation could therefore drive the parameters into regions where the surrogate has not been validated. We accordingly retain the training-informed parameter prior in the inference, rather than pursuing a maximum-likelihood estimate. As discussed in §7, the subsequent Fisher analysis excludes this prior contribution in order to assess separately the information supplied by the voltage data. Marginal summaries of the conditioned prior are given in Table B.7, and the corresponding pointwise prior bands for the three diffusivity functions are shown in Fig. B.10. Finally, Bayes’ theorem gives the posterior density, up to normalisation: 
+
+Π( θ, σ |D ) ∝ f (D| θ, σ )Π eff (θ, σ ) . (52) We seek parameter values that maximise the posterior density. The objective function we use for the optimisation is the negative of the log-posterior density per observation, up to an additive constant: 
+
+L(θ, σ ) = log σ + 12 σ2 MSE( θ) + αe
+
+N Pe(θ) + αs
+
+N Ps(θ) − 1
+
+N log Π( θ, σ ) , (53) where division by N is a constant rescaling for a fixed dataset and therefore does not alter the location of the posterior mode. Any dependence on sampling rate arises from treating the observations as iid, rather than from this rescaling, and is discussed in §7.4. In the present study, using the benchmark dataset described in §4, we set αe = 10 2 and αs = 10 4. The resulting estimates are reported as (θMAP , σ MAP ) and referred to as the maximum a posteriori (MAP) estimates. For compactness, the formulation is written here in terms of the physical parameters; the numerical parameterisation of the correlated prior and the precise definition of the reported mode are given in Appendix B. MAP optimisation was performed using a multistart strategy. One hundred feasible initial parameter sets were drawn from the prior, screened using the adaptive moment estimation (Adam) optimiser under the same optimisation strategy, and ranked by their final posterior objective. The top performing prior draw was then continued from its endpoint with an additional low-learning-rate refinement. The final reported estimate was the refined solution with the lowest posterior objective. 
+
+6. Inference Results 
+
+The best refined solution from the multistart optimisation described in §5 yielded an objective value of −6.717 , a surrogate voltage RMSE of 0.73 mV , and an inferred voltage-error scale of σMAP = 0 .73 mV .In Fig. 2, we show a comparison of the predictions of the fitted SPMe model and the original DFN synthetic data from which the parameters were inferred. To get a more rigorous evaluation of the inferred model beyond the surrogate approximation, we adopt PyBaMM’s built-in SPMe solver under isothermal settings. Evaluated with this conventional numerical SPMe, the RMSE increases slightly to 
+
+1.09 mV (represented by the red dotted line in the figure). The largest discrepancies contributing to this value occur near the end of the protocol, consistent with the surrogate’s error distribution validated in Appendix A. 15 3.2 3.4 3.6 3.8 Voltage [V] DFN simulation PyBaMM-SPMe (fitted) 0 20 40 60 80 100 120 time [min] 2      
+
+> 02468
+> V [mV]
+> RMSE = 1.09 mV Figure 2: Comparison of the fitted SPMe model prediction using PyBaMM with the original DFN simulation. Top panel shows almost indistinguishable voltage results, while the bottom panel shows the difference Vpredicted −VDFN .The red dotted line denotes the RMSE of 1.09 mV , with most contribution coming from the last 15 minutes of the protocol.
+
+6.1. Estimation of scalar parameters 
+
+We now evaluate the inferred values of the scalar parameters. Table 5 summarises the inferred MAP estimates, the benchmark values projected to SPMe, and their corresponding relative differences. Overall, the solid-phase capacities Qk exhibit the highest agreement with their benchmark values. Furthermore, the positive electrode parameters are generally recovered with greater fidelity than those of the negative electrode. This discrepancy stems primarily from the mostly flat OCP profile of the anode, which de-creases the parameter identifiability (discussed further in §7). Excluding βe and the solid-phase diffusion timescales, all relative differences remain within 8%. It is necessary to note that the diffusion timescales τk alone do not capture the full transport dynamics, as the non-linear diffusivities Dk(x) are governed by multiple degrees of freedom. Specifically, τk should not be interpreted independently of the eight Fourier coefficients defining Dk(x) (40); because τk reflects a geometric average across the full stoichiometric range (17), (18a), (34a), it serves as a global measure sensitive to the overall functional shape. Therefore, the state-dependent diffusivity profiles presented below provide a more comprehensive representation of solid-phase transport than the scalar τk values alone. For the electrolyte, the effect is less pronounced, as the reference diffusivity defining τe is locally defined at the reference concentration (18b) and is less susceptible to global shape. Nevertheless, the shape parameter βe exhibits the largest deviation from its benchmark value, which is possibly a manifestation of the low sensitivity of the terminal voltage to this parameter, as demonstrated in §7. Parameter Unit Projected benchmark MAP estimate Relative difference [%] 
+
+τn h 2.86 1.46 -49.14 
+
+Qn A h m −2 63.04 61.65 -2.20 
+
+iref n,0 A m −2 215.29 220.96 +2.63 
+
+τp h 3.69 1.85 -49.76 
+
+Qp A h m −2 55.77 55.89 +0.21 
+
+iref p,0 A m −2 285.70 268.57 -6.00 
+
+τe s 144.12 146.99 +1.99 
+
+Qe A h m −2 1.61 1.68 +4.47 
+
+βe — 1.01 0.88 -13.45 
+
+t+ — 0.380 0.384 +1.08 
+
+Rohm Ω m 2 3.58 × 10 −4 3.31 × 10 −4 -7.69 
+
+σ mV — 0.73 
+
+> Table 5: Inference of scalar parameters.
+
+16 6.2. Estimation of functional diffusion parameters 
+
+Figure 3 compares the diffusion functions obtained from the MAP estimate with the DFN benchmark functions used to generate the data. The shaded regions indicate the stoichiometry or concentration intervals visited during the simulated experiment. Outside these intervals, the inferred curve represents an extrapolation governed by the prior distributions and functional parameterisations rather than direct voltage data. For the solid phases, the secondary axes show the corresponding OCP gradients, U ′
+
+> k
+
+(xk),which indicate regions where the terminal voltage is more sensitive to stoichiometry perturbations. The cathode diffusivity is accurately recovered over most of the probed stoichiometry interval. In contrast, the anode diffusivity exhibits larger discrepancies despite the sub-millivolt surrogate voltage fit. This behaviour is consistent with the form of the graphite-like anode’s OCP: over extensive portions of the sampled range, the plateaus yield U ′
+
+> n
+
+(xn) ≈ 0, rendering the terminal voltage largely insensitive to variations in the anode concentration profile. Consequently, distinct anode diffusivity functions can produce virtually identical voltage responses in these flat-OCP regions. Similarly, the electrolyte diffusiv-ity is recovered within the concentration range explored by the trajectory, with discrepancies increasing toward the edges of the interval and beyond, as a direct consequence of the 13.5% discrepancy in the shape parameter βe.These results highlight a fundamental distinction: a close voltage fit does not guarantee uniform recovery of all constitutive diffusion functions. Because the solid diffusivities are parameterised using truncated Fourier expansions with global support in the full stoichiometric range, informative data from a relatively narrow, voltage-sensitive region can sharply constrain the fitted Fourier coefficients. As a result, the inference can be locally precise within the chosen parameterisation without being globally accurate as a reconstruction of the data-generating DFN diffusivity. The fitted SPMe thus accurately reproduces the benchmark voltage despite uneven parameter re-covery. In §7, we examine how weak voltage sensitivity and parameter correlations contribute to this result. 
+
+7. Local sensitivity and practical identifiability 
+
+In §3 we eliminated exact parameter redundancies within the SPMe formulation, but this algebraic reduction does not guarantee that the remaining parameter combinations are uniquely identifiable from a finite voltage trace. Then in §6, we demonstrated that the inferred SPMe model evaluated with a conventional solver reproduces the DFN voltage trajectory with millivolt-order accuracy, whereas its agreement with the projected benchmark parameters was variable. In this section, we therefore evaluate the local voltage sensitivity around the MAP estimate to determine which parameter directions are tightly constrained by the benchmark protocol and which remain weakly determined or correlated. This analysis is local, protocol-specific, and conditional upon the SPMe model. It evaluates the cur-vature of the voltage likelihood at the MAP point to isolate the information content supplied exclusively by the measured data, distinct from a global identifiability analysis or full posterior uncertainty quantifi-cation. Although the MAP estimate is informed by prior physical distributions, examining the likelihood curvature directly quantifies the constraints imposed by the voltage data alone. Prior and regularisation penalties are excluded from the sensitivity calculations. The Fisher analysis characterises the local quadratic curvature of the likelihood and therefore does not require the MAP point itself to be a stationary point of the likelihood. A non-zero likelihood gradient affects the location of the local likelihood maximum, but not the sensitivity magnitudes, correlations, or Fisher-information directions examined in §§7.1–7.3. The parameter vector θMAP (43) contains 27 inferred model parameters. Although the geometric and microstructural parameters ( λn, λp, εn, εp) were held fixed in the inference formulation under the assumption of independent measurement (§5), we re-introduce them into the sensitivity calculations. Including these additional dimensions allows us to assess the additional coupling that would arise if they were inferred jointly; these directions are subsequently conditioned upon when constructing the Fisher-curvature envelopes for the inferred parameters. Under the Bruggeman relation adopted in §3.1, isothermal operation at T = 298 .15 K , and known open-circuit potentials, the local sensitivity analysis is conducted across a total of 31 model parameters. 
+
+7.1. Local likelihood geometry and sensitivity coordinates 
+
+To evaluate the local likelihood geometry and the Fisher Information Matrix (FIM), we transform the physical parameters into a non-dimensional, centred coordinate vector ξ ∈ R31 . This transformation maps bounded physical parameter domains to unconstrained real space, non-dimensionalises all quantities 17 0.3 0.4 0.5 0.6 0.7 0.8 0.9        
+
+> xn
+> 110
+> Dn(xn) [10  15  m2/s]
+> Ground truth Inferred 0.5
+> 0.4
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> U ′
+> n (xn) [V] 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+> xp
+> 1234
+> Dp(xp) [10  15  m2/s]
+> Ground truth Inferred 1.2
+> 1.1
+> 1.0
+> 0.9
+> 0.8
+> 0.7
+> 0.6
+> U ′
+> p (xp) [V]
+
+(a) Solid-phase diffusivities and OCP gradients. 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 
+
+> ce
+> 12346
+> De(ce) [10  10  m2/s]
+> Ground truth Inferred
+
+(b) Electrolyte diffusivity. 
+
+Figure 3: Inferred non-linear diffusivities from the MAP estimate. Solid blue curves show the inferred functions, while dashed black curves show the benchmark functions used in the benchmark simulation. Shaded regions indicate the stoi-chiometry or concentration intervals probed by the drive-cycle trajectory. For the solid phases, red curves on the secondary axes show the OCP gradients U ′ 
+
+> k
+
+(xk ), which indicate where stoichiometry perturbations are most visible in the voltage. The cathode diffusivity is recovered well over much of the probed range, whereas the anode diffusivity shows larger recovery errors in flat-OCP regions. 
+
+to place the diverse parameter scales on a democratic footing, and converts absolute perturbations into relative (fractional) shifts around the MAP estimate. The parameter transformations are defined as follows. Positive scalar parameters are log-transformed via their ratios to their inferred values, log( S/S MAP ), enforcing positivity and relative scaling. The solid-phase Fourier coefficients θDk (41), which already parameterise log-diffusivity, are centred by subtracting their MAP values, θDk − θDk ,MAP . For the local FIM calculation, the transference number is mapped using a centred logit function, logit( t+) − logit( t+MAP ), where logit( x) = log( x/ (1 − x)) .3 Finally, to respect the constraint λn + λs + λp = 1 on the fractional thicknesses, we apply an additive log-ratio (ALR) transform centred at the reference values, log( λk/λ s) − log( λk, MAP /λ s,MAP ), for k ∈ { n, p}. For the fixed parameters ˆεk and λk, which are not inferred as θMAP , the subscript “MAP” simply denotes their fixed benchmark values in Table 3. 
+
+> 3
+
+Since t+MAP ∈ (0 , 1) , this coordinate is well defined locally. Its use in the FIM calculation does not alter the untruncated inference prior described in Appendix B. 
+
+18 This yields the complete 31-dimensional sensitivity coordinate vector: 
+
+ξ = log 
+
+ τn
+
+τn,MAP 
+
+
+
+, log 
+
+ Qn
+
+Qn,MAP 
+
+
+
+, log iref n,0
+
+iref n,0,MAP 
+
+!
+
+, log 
+
+ τp
+
+τp,MAP 
+
+
+
+, log 
+
+ Qp
+
+Qp,MAP 
+
+
+
+, log iref p,0
+
+iref p,0,MAP 
+
+!
+
+,
+
+log 
+
+ τe
+
+τe,MAP 
+
+
+
+, log 
+
+ Qe
+
+Qe,MAP 
+
+
+
+, log 
+
+ βe
+
+βe,MAP 
+
+
+
+, logit( t+) − logit( t+MAP ),
+
+θDn − θDn,MAP , θDp − θDp,MAP , log 
+
+ Rohm 
+
+Rohm ,MAP 
+
+
+
+, log 
+
+ ˆεn
+
+ˆεn,MAP 
+
+
+
+, log 
+
+ ˆεp
+
+ˆεp,MAP 
+
+
+
+,
+
+log 
+
+ λn
+
+λs
+
+
+
+− log 
+
+ λn,MAP 
+
+λs,MAP 
+
+
+
+, log 
+
+ λp
+
+λs
+
+
+
+− log 
+
+ λp,MAP 
+
+λs,MAP 
+
+ !
+
+. (54) By construction, ξ = 0 corresponds exactly to the MAP fit point. Evaluating correlations in ξ provides a consistent framework for local sensitivity analysis under fractional perturbations. With these definitions, the elements of the voltage Jacobian matrix J are given by 
+
+Jji = ∂V (tj ; ξ)
+
+∂ξ i ξ=0 
+
+. (55) Under the iid Gaussian error assumption, we define the whitened Jacobian matrix scaled by the effective error scale σMAP ,
+
+Jw = 1
+
+σMAP 
+
+J . (56) We construct the Fisher information matrix from the whitened Jacobian, 
+
+F = ( Jw)⊤Jw , (57) which characterises the local Fisher curvature of the log-likelihood function around the MAP point. By normalising the Fisher information matrix, we obtain the sensitivity correlation matrix C with compo-nents: 
+
+Cij = Fij 
+
+pFii Fjj 
+
+. (58) The principal directions that dominate the local likelihood curvature are obtained by solving the eigenproblem 
+
+Fvr = λr vr . (59) For a parameter displacement along the r-th eigenvector, δξ = q vr , the quadratic form evaluates to 
+
+∥Jw δξ∥2 = q2 λr . (60) Thus, a displacement of magnitude q = λ−1/2 
+
+> r
+
+defines a unit Fisher displacement along this eigenmode, satisfying δξ⊤Fδξ = 1 . For illustration, in a one-dimensional logarithmic coordinate, an eigenvalue of 
+
+λr = 10 4 gives q = 10 −2, corresponding to approximately a 1% fractional variation in the physical parameter. Under the local linear response, a unit Fisher displacement produces ∥∆V ∥ = σMAP , or equivalently an RMS voltage response of σMAP /√N .The surrogate model achieves an approximate 1 mV forward accuracy for currents with peaks of up to 5 C . Because it is analytically differentiable, each gradient-based optimisation trajectory in the 28-dimensional parameter space (including σ) runs on the order of minutes, making the multistart MAP calculation computationally feasible. However, forward accuracy at this scale does not automatically guarantee reliable parameter sensitivities along weakly constrained directions. A residual waveform that is unchanged under a parameter perturbation cancels upon differentiation, while changes in its phase or detailed time dependence do not. These non-cancelling residual variations can dominate a genuinely weak voltage response even when the overall residual amplitude change is negligible. While the surrogate-derived FIM is generally reliable for strongly constrained parameters, it can over-estimate the sensitivity along the weakest directions (specifically in our problem, parameter combinations involving geometric, microstructural, and electrolyte properties 4). To eliminate surrogate differentiation             
+
+> 4Most notably, a 1% perturbation in βeproduces an RMS voltage response of only approximately 1.3μVwhen evaluated with a traditional solver (see Figs. 4 and 5), while the corresponding surrogate response is approximately 1.9μV, well below the surrogate’s approximation accuracy. Furthermore, because these represent RMS values over the 6968 discrete time points and the pointwise sensitivity vanishes at specific instants, surrogate differentiation becomes less reliable along these directions.
+
+19 artifacts, we compute the voltage Jacobian at the surrogate-inferred MAP point via central finite differ-ences using a traditional SPMe solver. The agreement between the Jacobians obtained with perturbation sizes h = 10 −2 and h = 5 × 10 −3 indicates step-size convergence. Thus, we adopt the smaller-step result as the reference local sensitivity matrix. Finally, the weighting F = J⊤J/σ 2MAP treats the N = 6968 voltage observations as statistically independent. Surrogate approximation error, SPMe–DFN model discrepancy and numerical solver errors can be temporally correlated. Ignoring these correlations may overstate the effective information and yield overly narrow Fisher-curvature envelopes. We return to this qualification in §7.4. 
+
+7.2. Individual voltage sensitivities and temporal signatures 
+
+To obtain an interpretable first view of the local sensitivities, we perturb each scalar coordinate individually around the MAP estimate and compute the RMS voltage response over the full drive cycle. Positive scalar parameters are increased by 1% , the transference number by an absolute increment of 
+
+0.01 , and either electrode thickness fraction by 0.01 . For a thickness perturbation, the other electrode fraction is held fixed and the separator fraction changes according to λs = 1 − λn − λp; the corresponding displacement therefore generally involves both ALR coordinates in Eq.(54). The resulting RMS voltage responses are presented in Fig. 4. This representation measures individual reference-step sensitivity rather than joint identifiability: a parameter exhibiting a large individual re-sponse may still be strongly correlated with other parameters (examined in §7.3), while a weak individual response is unlikely to be recoverable without additional prior information. Moreover, the dotted verti-cal line does not represent a strict identifiability threshold; it serves solely as a scale reference marking the fitted single-observation noise scale ( σ ≈ 0.73 mV ). Even an RMS response below this noise level can accumulate appreciable likelihood information over an extended time series, although the extent of information accumulation is governed by the effective number of independent observations rather than the raw sampling count (see discussion at the end of §7.4). 10 3 10 2 10 1 10 0                               
+
+> RMS voltage response [mV]
+> p+1%
+> n+1%
+> p+1%
+> t++0.01
+> iref n, 0 +1%
+> iref p, 0 +1%
+> ohm +1%
+> p+0.01
+> n+1%
+> e+1%
+> e+1%
+> n+0.01
+> p+1%
+> n+1%
+> e+1%
+> capacity solid diffusion time kinetics/Ohmic electrolyte geometry/transport
+> Figure 4: Single-coordinate local voltage sensitivities at the fitted parameter values. Each bar shows the RMS voltage change produced by the indicated reference perturbation, with all other coordinates fixed. Positive scalar parameters are perturbed by 1% ,t+by 0.01 , and electrode thickness fractions by one percentage point. For a thickness perturbation, the separator fraction changes according to the constraint λs= 1 −λn−λp. Colours indicate parameter groups. Parameters whose central values were not inferred in §6 are highlighted with green shaded labels. The dotted line marks the fitted voltage-noise standard deviation for an individual time point ( σ≈0.73 mV ) and serves as a scale reference rather than an identifiability threshold.
+
+Figure 5 illustrates the time-dependent voltage responses ∆V (t) for representative reference pertur-bations. The responses naturally group by physical mechanism. Perturbations to electrode capacities (Qp, Qn) generate cumulative stoichiometric drift. The cathode capacity response is substantially larger, reflecting the steeper voltage leverage supplied by the cathode OCP along the probed trajectory. Con-versely, the response to Qn is smaller and localised in time, developing notable features primarily when 20 the anode stoichiometry traverses voltage-sensitive OCP regions. In contrast, the solid-phase diffusion timescales ( τp, τ n) change the diffusion dynamics rather than average stoichiometry, so the responses are transient and dependent on current-history. Consistent with the stronger cathode sensitivity seen in the RMS ranking in Fig. 4, the magnitude of the τp response markedly exceeds that of τn. The electrolyte quantities Qe and t+ produce similar current-driven signatures, with pronounced spikes coinciding with peak current demand where electrolyte concentration gradients are driven most strongly. The close qual-itative similarity between their temporal profiles suggests a potential parameter degeneracy. By contrast, the Ohmic resistance Rohm tracks the applied-current structure directly, as expected for an ohmic con-tribution. Finally, the electrolyte shape parameter βe displays a temporal signature similar to Qe and 
+
+t+, but with an extremely small amplitude ( ∼ 1 μV), confirming that it is weakly observed under this excitation. A large individual voltage response is therefore a necessary, but not sufficient, condition for practical identifiability. Two parameters may each alter the terminal voltage strongly while remaining difficult to distinguish if their sensitivity waveforms are aligned. 
+
+7.3. Correlated sensitivities and locally identifiable combinations 
+
+While the individual sensitivity analysis in §7.2 establishes which parameters produce observable voltage signatures, it cannot identify parameter degeneracies. To determine which sensitivity directions can be distinguished from one another, we examine the sensitivity correlation matrix C defined in Eq. (58). The full 31 × 31 matrices evaluated at the fitted MAP estimate and the projected benchmark point are presented in Appendix C (Fig. C.11). The principal conclusions obtained by combining the individual sensitivity magnitudes with these correlations are summarised in Table 6. The principal correlation 
+
+Parameter group Sensitivity and correlation structure Implication 
+
+Qn, Qp Largest scalar sensitivities; distinct from one an-other, but each is correlated with its corresponding 
+
+τk .The capacities are distinguishable, al-though capacity changes can be par-tially offset by changes in solid diffusion within each electrode. 
+
+iref n,0, iref p,0, Rohm Substantial sensitivities; the kinetic directions are nearly aligned and nearly anti-aligned with the Ohmic direction. The voltage primarily constrains a com-bined kinetic–Ohmic loss direction. 
+
+Qe, τ e, t + Moderate sensitivities with strongly aligned or anti-aligned waveforms. The electrolyte quantities are con-strained mainly through correlated combinations. 
+
+βe Extremely weak response ( ∼ 1 μV for a 1% pertur-bation) and correlated with the electrolyte block. The concentration dependence of De is very poorly informed. 
+
+ˆεk and λk /λ s
+
+(fixed) Strong geometry–transport coupling. In particu-lar, ˆεp and λp/λ s are strongly correlated, and both couple to electrolyte, kinetic, and Ohmic direc-tions. The negative-electrode thickness ratio is less strongly entangled. Joint inference would introduce sub-stantial additional coupling, especially amongst the positive-electrode geome-try and transport parameters. 
+
+τk , θDk The negative-electrode block is densely correlated; the positive-electrode block displays greater wave-form orthogonality. The voltage constrains fewer indepen-dent combinations of the negative-electrode diffusivity parameters than of the positive-electrode parameters. 
+
+> Table 6: Principal sensitivity and correlation structures under the benchmark drive cycle. Quantities marked as fixed were included in the sensitivity analysis but not inferred in the reported MAP calculation.
+
+structures evaluated at the MAP estimate and at the projected benchmark point are broadly similar (Appendix C). In particular, the kinetic–Ohmic degeneracy and the electrolyte transport block persist at both points, indicating that they are robust local features of the SPMe–protocol combination rather than artefacts of the fitted parameter values. The most noticeable dependence on the expansion point occurs within the internal correlation structure of the negative-electrode diffusivity block. The diffusivity couplings are examined more directly in §7.4. 
+
+7.4. Local Fisher-curvature envelopes for the inferred diffusivities 
+
+To quantify the local Fisher-curvature scale associated with the reconstructed solid and electrolyte diffusivities, we first remove from the whitened Jacobian the four columns associated with the fixed geo-21 0.0 2.5 5.0 7.5 10.0    
+
+> p+1% |RMS 2.33 mV
+
+0.0 0.5 1.0 1.5    
+
+> n+1% |RMS 0.592 mV
+
+1.00 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00    
+
+> p+1% |RMS 0.228 mV
+
+0.2 
+
+0.1 
+
+0.0    
+
+> n+1% |RMS 0.0753 mV
+
+0.0 0.1 0.2 0.3    
+
+> e+1% |RMS 0.0705 mV
+
+0.00 0.25 0.50 0.75 1.00     
+
+> t++0.01 |RMS 0.217 mV
+
+0.0 0.5 1.0 1.5 2.0 0.6 
+
+0.4 
+
+0.2 
+
+0.0    
+
+> ohm +1% |RMS 0.106 mV
+
+0.0 0.5 1.0 1.5 2.0 0.000 0.005 0.010 0.015 e +1% | RMS 0.0013 mV 
+
+Time [h] 
+
+> V(t) [mV]
+
+Figure 5: Time-domain voltage responses for representative local reference perturbations at the MAP point. Each panel shows the linearised voltage change ∆V (t) for the indicated perturbation, with all other coordinates held fixed. Perturbation sizes match those in Fig. 4. Panel titles report the RMS voltage response over the full drive cycle. Note that vertical scales differ between panels; this figure emphasises temporal signatures and qualitative shapes rather than relative magnitudes. 
+
+22 metric and microstructural coordinates: the two electrode porosities and the two independent thickness-ratio coordinates. Denoting the resulting reduced Fisher information matrix by FMAP , we define the corresponding local curvature scale over the remaining 27 inferred coordinates by 
+
+Σξ = F−1MAP , (61) assuming that FMAP is numerically nonsingular. The complete reduced matrix is inverted before the sub-block associated with the diffusivity coordi-nates is extracted. The resulting Fisher-curvature scale therefore accounts for their local coupling to all other inferred parameters, including the capacities, kinetic scales and effective Ohmic resistance, while conditioning on the four quantities that were fixed in the MAP calculation. 5
+
+The expansion point is the posterior MAP obtained with the surrogate model, rather than a stationary point of the traditional-SPMe likelihood used for the present sensitivity analysis. Consequently, although 
+
+FMAP characterises the local Fisher curvature at this point, F−1MAP should not in general be interpreted as the covariance of a Gaussian likelihood centred on the MAP. A direct evaluation of the likelihood score confirms that the gradient at this point is non-negligible on the Fisher scale. We therefore use Σξ to visualise the parameter scale implied by the local Fisher curvature. We draw MAP-centred displacements 
+
+ξ ∼ N (0, Σξ) and, for each draw, map the transformed coordinates back to the physical parameters, from which the diffusivities are reconstructed as 
+
+Dk(xk) = R2
+
+> k
+
+τk
+
+D⋆k(xk) , log 10 D⋆k(xk) = X
+
+> m
+
+(ak,m cos(2 πmx k) + bk,m sin(2 πmx k)) , k ∈ { n, p}.De(ˆ ce) = εsL2
+
+Bsτe
+
+exp [ −βe(ˆ ce − 1)] . (62) The spread of the resulting ensemble of diffusivity functions is used to visualise the local inverse-Fisher resolution scale, rather than as an approximation to likelihood uncertainty centred at the MAP. The resulting local Fisher-curvature envelopes are shown in Fig. 6. At each fixed stoichiometry or concentration, the plotted regions contain the central 68 .3% and 95 .4% 
+
+of the diffusivity samples. They are therefore pointwise envelopes: the stated fractions apply separately at each abscissa and do not imply that an entire diffusivity curve lies within the corresponding region. More importantly, they quantify the parameter scale implied by the local Fisher curvature of the fitted SPMe representation; they are neither likelihood confidence bands nor posterior credible bands for the underlying DFN diffusivities. Their widths contain no prior or penalty curvature. The negative-electrode result is particularly instructive. The reconstructed diffusivity is tightly con-strained locally within the fitted Fourier family, despite differing substantially from the DFN benchmark function. A narrow local Fisher-curvature envelope therefore does not imply accurate recovery of the diffusivity used to generate the data. The narrow band reflects the curvature of the SPMe likelihood around the fitted point; it does not account for bias arising from the restricted parameterisation or from SPMe–DFN discrepancy. Representative finite-perturbation checks around the MAP estimate showed close agreement between the voltage changes predicted by the local Jacobian and those obtained from full forward evaluations. This supports the local linear approximation in the tested directions, but does not establish that the resulting envelopes are uncertainty intervals for the physical diffusivities. A further qualification arises from the iid voltage-error assumption used to construct FMAP . With N = 6968 observations, a unit Fisher displacement, δξ⊤FMAP δξ = 1 , produces an RMS voltage response of only σ/ √N ≃ 8.8 μV. Thus, even very small voltage responses can generate substantial Fisher information when accumulated over the full time series. In a smooth dynamical system, however, residual components arising from surrogate error, unresolved dynamics and model discrepancy are likely to be temporally correlated. Accounting for such correlations through a non-diagonal residual covariance would generally reduce the effective information and broaden the resulting Fisher-curvature envelopes. Quantifying this reduction is not straightforward. The residual correlation may contain contributions from measurement noise, surrogate error, SPMe–DFN discrepancy and unresolved dynamics, and may also depend on the imposed current protocol. These contributions need not share the same covariance       
+
+> 5Strictly speaking, reconstructing the diffusivities also conditions on the quantities entering the diffusion-time definitions in Eqs. (34a) and (34b): Rk,L,εsand Bs. In the synthetic benchmark, these are fixed and known exactly. For experimental data, voltage identifies only the diffusion time combinations, so these geometric and microstructural quantities would need to be measured independently before the dimensionful diffusivities could be recovered.
+
+23 0.3 0.4 0.5 0.6 0.7 0.8 0.9       
+
+> xn
+> 110
+> Dn(xn) [10  15  m2/s]
+> Probed region 2
+> 1
+> MAP fit Ground truth
+> 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+> xp
+> 1234
+> Dp(xp) [10  15  m2/s]
+> Probed region 2
+> 1
+> MAP fit Ground truth
+
+(a) Solid-phase diffusivities. 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 
+
+> ce
+> 12346
+> De(ce) [10  10  m2/s]
+> Probed region 2
+> 1
+> MAP fit Ground truth
+
+(b) Electrolyte diffusivity. 
+
+Figure 6: Local Fisher-curvature envelopes for the inferred diffusivities. Solid black curves show the MAP estimates, while dashed black curves show the DFN benchmark functions used in the benchmark simulation. Shaded cyan regions indicate the stoichiometry (for panel a) or concentration (for panel b) intervals visited by the drive-cycle trajectory. Orange regions show the pointwise central 68 .3% and 95 .4% quantile intervals obtained from MAP-centred Gaussian displacements with covariance (FMAP )−1, propagated through the diffusivity parameterisation. These regions visualise the local Fisher-curvature scale and are not likelihood confidence bands or posterior credible intervals. The intervals are conditional on the SPMe parameterisation and the iid voltage-error model. They do not account explicitly for temporal residual correlation or SPMe–DFN model discrepancy. 
+
+structure, so estimating a single effective number of independent observations from the residual auto-correlation would mix distinct effects and would not define a unique correction to the Fisher matrix. We therefore report the iid-FIM envelopes without an ad hoc correction and interpret them as condi-tional, protocol-specific inverse-Fisher resolution scales that are likely optimistic when viewed as proxies for physical uncertainty. The particularly narrow solid-phase envelopes also reflect how information is distributed through the global Fourier representation. We examine this structure more directly through the diffusivity eigenmodes in the following subsection. 
+
+7.5. Diffusivity parameterisation and localisation of information 
+
+The narrowness of the solid-phase envelopes is partly a consequence of the truncated global Fourier representation used for the diffusivities. Each Fourier basis function has support over the complete stoi-chiometric interval, so voltage information acquired while the trajectory passes through a sensitive region constrains all Fourier coefficients simultaneously. Information obtained over one part of the trajectory can therefore restrict the reconstructed diffusivity over a substantially wider stoichiometric range. The envelopes in Fig. 6 should therefore be interpreted as constraints on the fitted global functions, rather than as evidence that the diffusivity is independently resolved at every stoichiometry. 24 To examine how this information is distributed within the solid-diffusivity parameterisation, we con-sider, for each electrode, the nine coordinates comprising the transformed diffusion-time coordinate and the eight Fourier coefficients of log 10 D⋆k. Rather than holding the remaining inferred parameters fixed, we use the corresponding sub-block of the full 27 -coordinate inverse-Fisher matrix Σξ introduced in Eq. (61). We define the effective diffusivity information matrix after allowing the other inferred coordinates to vary as 
+
+Feff  
+
+> Dk
+
+=
+
+h
+
+(Σξ)Dk Dk
+
+i−1
+
+, (63) where the inversion used to construct Σξ is performed before extracting the diffusivity block. Thus, the resulting information directions allow all other inferred coordinates to compensate, while conditioning on the geometric and microstructural quantities held fixed in the inference. For each electrode k, let λm and vm denote the eigenvalues and eigenvectors of Feff  
+
+> Dk
+
+, ordered by decreasing eigenvalue. We define the normalised information fraction on the m–th mode as: 
+
+fm = λm
+
+P 
+
+> j
+
+λj
+
+. (64) These fractions quantify how the local diffusivity information is distributed amongst the diffusivity eigen-modes. Figure 7 shows that the negative-electrode information is strongly concentrated in a single di-rection: the leading mode accounts for approximately 82% of the total, and the first two modes for approximately 92% . The positive-electrode spectrum is less concentrated, with approximately 60% in the leading mode and 81% in the first two. Nevertheless, in both electrodes most of the local informa-tion occupies only a few combinations of the nine diffusivity coordinates. The distinction is therefore not between an identifiable and an unidentifiable diffusivity, but between a more nearly one-dimensional negative-electrode information structure and a more distributed positive-electrode one. The same con-1 2 3 4 5 6 7 8 9Mode index 0.0 0.2 0.4 0.6 0.8 1.0 Fraction of diffusivity information 
+
+Negative electrode         
+
+> cumulative
+> fm
+> 123456789Mode index
+
+Positive electrode           
+
+> cumulative
+> fm
+> Figure 7: Distribution of the effective local Fisher information within the solid-diffusivity parameterisation. For each electrode, the bars show the normalised eigenvalue fractions fm=λm/P
+> jλjof the nine-coordinate diffusivity block, ordered by decreasing eigenvalue. The black curves show the corresponding cumulative fractions. The negative-electrode information is dominated by one mode, whereas the positive-electrode information is distributed more broadly among the leading modes.
+
+struction can be used to determine when the information in a given mode is acquired. Let eJwDk denote the whitened diffusivity Jacobian after removing, by least-squares projection, the component lying in the span of the remaining inferred-parameter sensitivities. It satisfies 
+
+Feff  
+
+> Dk
+
+= eJwT
+
+> Dk
+
+eJwDk . (65) For each electrode, we define the whitened voltage response to the leading diffusivity eigenvector v1 by 
+
+g1(ti) = 
+
+heJwDk v1
+
+i
+
+> i
+
+. (66) Since g1(ti)2 gives the contribution of observation i to the Fisher information in this mode, we define the 25 cumulative information fraction as 
+
+C1(t) = 
+
+X
+
+> ti≤t
+
+g1(ti)2
+
+X
+
+> i
+
+g1(ti)2 . (67) Figure 8 compares this accumulation with the magnitude of the equilibrium-potential gradient evaluated along the corresponding surface-stoichiometry trajectory. 0.0 0.1 0.2 0.3 0.4 0.5 |U′    
+
+> n(xn, surf )|  [V] 0.6 0.7 0.8 0.9 1.0 1.1 |U′
+> p(xp, surf )|  [V] 0.0 0.5 1.0 1.5 2.0 Time / h 0.0 0.2 0.4 0.6 0.8 1.0 Cumulative information fraction
+
+Negative electrode     
+
+> C1(t)|U′
+> n(xn, surf )|
+> 0.0 0.5 1.0 1.5 2.0 Time / h
+
+Positive electrode       
+
+> C1(t)|U′
+> p(xp, surf )|
+> Figure 8: Time localisation of the leading diffusivity mode. The coloured curves show the cumulative information fraction
+> C1(t)for the leading diffusivity eigenmode in each electrode. Grey curves show the magnitude of the corresponding OCP gradient evaluated along the surface stoichiometry trajectory, |U′
+> k(xk, surf (t)) |. Periods of rapid information accumulation tend to coincide with regions of larger OCP sensitivity, particularly for the negative electrode.
+
+For the negative electrode, little leading-mode information is accumulated during the early part of the trajectory, whereas a large fraction is acquired as the surface stoichiometry enters the region in which the anode OCP becomes more sensitive to stoichiometry. The positive-electrode information is accumulated over a broader portion of the drive cycle, with further contributions at later times. In both cases, the association with |U ′
+
+> k
+
+| is expected because the OCP gradient provides the dominant route by which changes in the solid-state concentration become observable in the terminal voltage. The correspondence need not be pointwise, however, because the surface-stoichiometry response to a diffusivity perturbation is dynamical and depends on the preceding current history and evolving concentration profile. The construction of the effective FIM (65) additionally removes components of the voltage response that can be reproduced by the remaining inferred parameters. Taken together, Figs. 7 and 8 clarify the interpretation of the narrow solid-phase Fisher-curvature envelopes. The applied drive cycle does not provide uniform, independent information about Dk(xk)
+
+throughout the stoichiometric interval. Instead, much of the information is acquired over particular por-tions of the trajectory and constrains a small number of directions within the truncated global Fourier parameterisation. The resulting coupling then propagates those constraints over the complete recon-structed function. 
+
+7.6. Summary 
+
+The local sensitivity and Fisher-curvature analysis reveals clear hierarchies in parameter identifiability under the benchmark drive cycle. Terminal voltage data strongly constrain the electrode capacities (Qn, Qp) and several solid-phase diffusion directions, particularly for the cathode. In contrast, charge-transfer kinetics ( iref n,0, i ref p,0) and Ohmic resistance ( Rohm ) form a strongly correlated subset. Electrolyte transport parameters ( Qe, τ e, t +) constitute a tightly entangled correlation block, with the concentration-dependence parameter βe remaining exceptionally poorly informed due to both a minute voltage footprint (∼ 1 μV) and strong directional alignment with better-constrained electrolyte quantities. Furthermore, the strong coupling between the currently fixed geometric/microstructural parameters ( ˆεk, λ k/λ s) and transport directions supports measuring these quantities independently in experimental applications, rather than attempting to infer them jointly from voltage. The effect of inferring these quantities jointly is examined in Appendix D. 26 The functional diffusivity results highlight a critical distinction between curvature-based local pre-cision and physical accuracy. The narrow Fisher-curvature envelopes obtained for Dk(xk) demonstrate that the fitted diffusivity functions are sharply constrained within the chosen truncated global Fourier parameterisation under the iid likelihood model. However, as demonstrated by the negative electrode, a narrow Fisher-curvature envelope around an SPMe fit does not imply accurate recovery of the underlying data-generating DFN function. This apparent precision is amplified by the global support of the Fourier basis functions, which propagates localised information acquired during OCP-sensitive portions of the trajectory across the entire stoichiometric domain. The sensitivity, correlation, and Fisher-mode results above depend only on the local likelihood cur-vature and remain meaningful even though the surrogate-inferred MAP is not a stationary point of the traditional-SPMe likelihood. The Fisher-curvature envelopes in §7.4 require a stronger interpretation: they quantify the local inverse-Fisher resolution scale around the fitted point, rather than a Gaussian likelihood uncertainty centred there. Finally, these local Fisher diagnostics are inherently conditional on the SPMe model structure, the chosen finite-dimensional parameterisation, and the iid noise model. Residual components associated with model discrepancy and unresolved dynamics are likely to be temporally correlated, so the information content of the voltage trace may be substantially smaller than implied by treating all N samples as independent. As a result, the reported Fisher-curvature envelopes may be optimistic if interpreted as proxies for physical parameter uncertainty. Prior distributions may regularise weak likelihood directions to yield tight posterior bounds, but such precision reflects prior constraints rather than information extracted directly from the voltage trace. 
+
+8. Conclusions and Discussion 
+
+We have developed a surrogate-accelerated framework for inferring a non-redundant set of SPMe parameters from dynamic current–voltage data. Exact parameter redundancies are first removed by reformulating the SPMe in terms of non-redundant parameter groups. The state-dependent solid diffu-sivities are represented using truncated Fourier expansions, while the electrolyte diffusivity is reduced to a two-parameter scale-and-shape family. A differentiable forward map using the Artiphy surrogate frame-work then makes repeated evaluation and gradient-based optimisation of the resulting high-dimensional inverse problem computationally feasible. The method was tested using voltage data generated by a DFN model rather than by the inference SPMe itself, so that parameter recovery could be examined in the presence of a controlled discrepancy. For the benchmark drive cycle, the inferred SPMe reproduces the DFN voltage to O(1mV) accuracy when the fitted parameters are evaluated independently with a conventional SPMe solver. This close voltage agreement is accompanied by uneven parameter recovery. The electrode capacities show par-ticularly close agreement with their projected benchmark values, while several kinetic and electrolyte parameter groups also remain close to the corresponding benchmarks. The positive-electrode diffusivity is also reconstructed accurately over much of the probed stoichiometric range. The negative-electrode diffusivity, however, differs substantially from the DFN benchmark function despite the excellent voltage fit. The benchmark therefore provides a concrete example of why agreement in terminal voltage is not, by itself, evidence that the underlying constitutive parameters have been recovered. The local sensitivity analysis explains much of this behaviour. Under the present drive cycle, the elec-trode capacities Qk and several solid-diffusion directions produce substantial and distinguishable voltage responses, with the positive electrode generally providing greater transport information than the negative electrode. Other effects are visible individually but difficult to differentiate: the two kinetic scales iref  
+
+> k, 0
+
+and the effective Ohmic resistance Rohm form a strongly correlated subset, while the electrolyte inventory Qe,diffusion timescale τe and transference number t+ are constrained primarily through correlated combina-tions. The electrolyte-diffusivity shape parameter βe has an exceptionally small voltage footprint. The additional coupling observed when geometric ( λk) and microstructural ( ˆεk) quantities are included in the sensitivity analysis further supports determining quantities such as electrode thicknesses and porosities independently where possible rather than relying on voltage alone. The inferred diffusivity functions also illustrate an important distinction between curvature-based local precision within an inference model and accuracy relative to the data-generating physics. The negative-electrode diffusivity can have a narrow local Fisher-curvature envelope around the fitted SPMe function while remaining appreciably different from the corresponding DFN constitutive law. In the present for-mulation this effect is enhanced by the global Fourier basis: information acquired during OCP-sensitive 27 portions of the trajectory constrains coefficients that affect the diffusivity over the complete stoichiomet-ric domain. The resulting envelopes therefore quantify a local inverse-Fisher resolution scale conditional on the SPMe structure, the finite-dimensional functional representation and the assumed residual model, rather than posterior uncertainty. In addition, treating all voltage samples as independent is likely to overstate the information content of a smooth dynamical trajectory when surrogate error, unresolved dy-namics and SPMe–DFN discrepancy are temporally correlated. Physically informed priors can regularise weak directions and may substantially improve parameter estimation, but such regularisation should be distinguished from information supplied directly by the voltage data. The surrogate plays two related roles in this framework. First, it provides a practical avenue for the large number of forward evaluations and gradient-based optimisation steps required by the inverse problem. Second, its accuracy is established only over the region of parameter space represented in the training distribution, so the prior also helps restrict inference to a domain in which the surrogate has been validated. The surrogate-based inverse problem is therefore naturally coupled to the Bayesian formulation, rather than being simply an unconstrained replacement for the numerical SPMe solver. At the same time, the sensitivity analysis shows that forward accuracy alone is insufficient to guarantee accurate derivatives in directions whose voltage effect approaches the surrogate-error scale. We therefore evaluated the final voltage predictions and local sensitivities using conventional numerical SPMe calculations. This hybrid strategy, i.e. surrogate acceleration for inference followed by solver-based verification of physically important results, allows machine-learning acceleration to be exploited without treating the surrogate itself as the physical model. For experimental inference, however, numerical exactness of the forward solver should not be confused with physical fidelity: even an SPMe solved to arbitrary precision remains an approximation to a real cell. The longer-term objective is therefore not to reproduce a single voltage trajectory arbitrarily closely, but to infer parameter sets that remain predictive across multiple experiments and operating protocols. In this setting, surrogate error constitutes an additional controlled approximation within an already approximate modelling hierarchy, and its acceptability should be judged by its effect on the quantities being inferred and on out-of-sample predictive performance. The present benchmark remains substantially simpler than experimental parameterisation of a real cell, where additional model discrepancy and measurement uncertainty arise from imperfect model as-sumptions and uncontrolled cell physics, including, for example, OCP uncertainty and thermal effects. Future work should therefore consider joint inference from multiple complementary current protocols, with shared intrinsic cell parameters required to explain all datasets simultaneously and predictive per-formance assessed on operating conditions not used for fitting. Where available, additional observables and independently measured cell properties can further separate weakly identifiable parameter combi-nations, with protocol selection guided by sensitivity and identifiability analysis. A more systematic treatment of residual correlation and model discrepancy would be a useful direction for future work. Sur-rogate acceleration can remove much of the computational barrier to physics-based parameter inference, while the parameter resolution supported by the experimental data remains determined by the model structure and the information content of the experimental protocols. 
+
+Acknowledgments 
+
+This work was supported by the Faraday Institution (grant number FIRG095). AEG, JB and JF were supported by a Faraday Institution Industrial Sprint project (grant number FIRG080). JP gratefully acknowledges support from Verkor. 
+
+Appendix A. Validation of the surrogate 
+
+To validate the surrogate independently of the inference calculation, we compare its prediction at the MAP estimate with that of a conventional PyBaMM implementation of the same SPMe. Since the inference returns the non-redundant parameter groups rather than every dimensional model parameter, a dimensional parameter set must first be reconstructed. We retain the independently specified electrode and separator thicknesses, as well as porosities, and set εact  
+
+> k
+
+= 1 − εk. The inferred inventories then determine 
+
+ck, max = Qk
+
+F ε act  
+
+> k
+
+Lk
+
+, ce,0 = Qe
+
+F L ε s
+
+. (A.1) This reconstruction changes the dimensional concentration scales while preserving the inferred depen-dence of the constitutive functions on the stoichiometries xk = ck/c k, max and normalised electrolyte concentration ˆce = ce/c e,0.28 Similarly, for the purposes of the comparison, we fix the particle radii Rk and the diffusion times then determine: 
+
+Dk, mean = R2
+
+> k
+
+τk
+
+, De,ref = εsL2
+
+Bsτe
+
+, (A.2) where the transport efficiencies are determined using the Bruggeman relation specified in §3.1. The inferred Ohmic resistance does not uniquely determine the individual electrolyte and solid-phase conductivities, since these enter the voltage construction only through their combined resistance. For the present reconstruction, we retain the solid-phase conductivities from the projected benchmark parameter set (σref  
+
+> k
+
+) and assign the remaining resistance to the electrolyte: 
+
+σe(ce,0) =  
+
+> Ln
+> 3Bn
+
++ Ls 
+
+> Bs
+
++ Lp
+
+> 3Bp
+
+Rohm − 13
+
+ Ln
+
+> σref n
+
++ Lp
+
+> σref p
+
+ . (A.3) This choice provides one dimensional representative of the inferred lumped resistance and should not be interpreted as separately identifying the electrolyte and solid-phase conductivities. Finally, the inferred reaction-current-density scales determine the corresponding reaction-rate con-stants: 
+
+Kk = iref  
+
+> k, 0
+
+Rk
+
+3 F L k εact 
+
+> k
+
+. (A.4) A comparison of the surrogate and PyBaMM voltage predictions is shown in Fig. A.9. Across both parameter points, the RMSE remains below 1.8 mV , with the largest discrepancies localised near the end of the protocol. The residuals contain contributions from both surrogate approximation and differences between the two SPMe implementations. These results support the use of the surrogate as an accurate approximation to the reduced SPMe forward operator over the parameter regime used in the inference. The Artiphy framework can also be used with alternative OCP functions, once the corresponding initial stoichiometries are specified, and with varying current profiles within the validated input domain, which includes profiles with peaks up to 5C. 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 Time [h] 6              
+
+> 4
+> 2
+> 0246
+> Vpybamm  Vsurrogate  [mV]
+> Fitted MAP
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00 Time [h]
+> Projected DFN parameters
+> Figure A.9: Voltage differences between the PyBaMM and surrogate SPMe implementations at the fitted MAP estimate (left) and the projected DFN parameter set (right). The respective RMSE values are 1.25 mV and 1.71 mV , with maximum absolute differences of 7.19 mV and 5.89 mV . The largest discrepancies are localised near the end of the protocol.
+
+Appendix B. Prior distributions and latent parameterisation 
+
+The parameter distributions used in the inference delimit the regions over which the surrogate forward maps were validated, while assigning greater weight to physically plausible SPMe parameterisations. The underlying parameter ensembles combine ranges informed in part by the literature compilation LiionDB [8], with model-specific coverage requirements. The resulting priors should therefore not be interpreted as an empirical joint distribution for a population of cells. The dependent coordinates are separated into mutually independent Gaussian copula blocks for the negative electrode, positive electrode and electrolyte. For block b ∈ { n, p, e}, let Fb,j denote the fit-ted marginal cumulative distribution function of its jth construction coordinate. The Gaussian-copula transform is 
+
+zb ∼ N (0, Rb), ψb,j = F −1 
+
+> b,j
+
+[Φ( zb,j )] , (B.1) 29 where Φ is the standard-normal cumulative distribution function, Rb is the within-block copula correlation matrix, and ψb,j is the corresponding construction coordinate. These marginal maps, together with the independent scalar marginal maps, define the deterministic mapping 
+
+(θ, σ ) = T (z) , (B.2) into the manuscript parameters in Eq. (43), where z collects the latent coordinates. The copula marginals are truncated to the ranges represented in the validity ensembles. A fourth set contains the independent kinetic, Ohmic, transference-number and voltage-error-scale coordinates, including σ ∼ HalfNormal(5 mV) .In the reported inference, the solid blocks are conditioned on the prescribed initial stoichiometries and the electrolyte block is conditioned on the prescribed λk, ˆεk and ˆBk = ˆ ε3/2 
+
+> k
+
+. Holding these entries fixed in the correlated blocks gives the corresponding conditional copula prior for the remaining coordinates. Hereafter, z denotes only those latent coordinates that remain free, with the prescribed values held fixed within T . Accordingly, Π( θ, σ ) in the main text is the prior density with respect to these free latent coordinates. The normal prior for t+ is intentionally not truncated: it assigns 0.906% probability below zero and negligible probability above one. This small negative tail allows t+ to act as an effective parameter when the reduced model does not explicitly represent effects such as ionic aggregation, which can produce apparent negative transference numbers [46]. The objective L in Eq. (53) is evaluated through T . The reported estimate is therefore 
+
+bz = arg min 
+
+> z
+
+L(T (z)) ,
+
+(θMAP , σ MAP ) = T (bz).
+
+(B.3) The reported MAP is thus the mode in the coordinates actually optimised, mapped into the physical parameters. No change-of-variables Jacobian is needed in Eq. (B.3) because the optimisation is performed in z. Writing the posterior density directly in the physical parameters would introduce that Jacobian and can give a different mode. Conditioned prior Reference points Parameter 5th Median 95th Benchmark MAP 
+
+τn [h] 0.0513 1.89 15.4 2.86 1.46 
+
+Qn [A h m −2] 10.7 28.2 91.7 63.0 61.6 
+
+iref n,0 [A m −2] 1.46 54.6 2000 215 221 
+
+τp [h] 0.221 4.54 29.1 3.69 1.85 
+
+Qp [A h m −2] 30.1 51.9 95.5 55.8 55.9 
+
+iref p,0 [A m −2] 0.998 38.3 1490 286 269 
+
+τe [s] 33.6 178 934 144 147 
+
+Qe [A h m −2] 0.861 1.95 4.27 1.61 1.68 
+
+βe 0.139 0.738 2.19 1.01 0.878 
+
+t+ 0.0947 0.314 0.531 0.380 0.384 
+
+Rohm [Ω m 2] 1.30 × 10 −4 5.01 × 10 −4 2.15 × 10 −3 3.58 × 10 −4 3.31 × 10 −4
+
+σ [mV ] 0.308 3.38 9.82 – 0.733   
+
+> Table B.7: Marginal summaries of the conditioned prior in manuscript coordinates. The 5th and 95th percentiles delimit the central 90% prior interval. The benchmark and MAP columns show their locations within the prior; no benchmark value exists for σ. These one-dimensional summaries do not imply prior independence.
+
+All available projected benchmark values and all reported MAP values lie within their respective central 90% prior intervals. The particularly broad kinetic and solid-diffusion-time marginals reflect the intended coverage of the validity ensembles rather than information supplied by the voltage data. 
+
+Appendix C. Correlations 
+
+Figure C.11 compares the normalised cosine correlations between columns of the noise-whitened volt-age Jacobian associated with the 31 transformed parameter coordinates collected in ξ (54). This provides a two-point robustness check of the local sensitivity results discussed in §7: in addition to the fitted MAP point, the Jacobian is evaluated at the benchmark DFN parameters projected onto the SPMe param-eterisation. Although magnitude information is removed from Cij , a direct comparison of the RMS 30 0.0 0.2 0.4 0.6 0.8 1.0                     
+
+> xn
+> 110 100
+> Dn(xn) [10  15  m2/s]
+> (a)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> xp
+> 0.1 110
+> Dp(xp) [10  15  m2/s]
+> (b)
+> 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> ce
+> 0.1 110
+> De(ce) [10  10  m2/s]
+> (c) Figure B.10: Conditioned prior distributions of the dimensional diffusivity functions: (a) negative-electrode Dn(xn), (b) positive-electrode Dp(xp), and (c) electrolyte De(ˆ ce). Coloured lines show the pointwise prior medians; darker and lighter shading show the central 50% and 90% prior intervals. Solid black lines show the reported MAP functions and dashed black lines the DFN benchmark functions. The electrode bands jointly propagate the diffusion-time and Fourier-shape priors; the electrolyte bands propagate the priors for τeand βe. These are pointwise prior intervals, not likelihood confidence intervals or posterior credible intervals.
+
+Jacobian-column norms shows no order-of-magnitude change between the two parameter points. For 30 of the 31 columns, the norms differ by less than 9% . The exception is log βe, whose sensitivity is about 
+
+30% larger at the projected point, although it remains the weakest individual column by a clear margin. A separate, like-for-like comparison of each sensitivity trajectory between the two base points shows that the largest shape changes occur in the negative-electrode diffusion sensitivities. The cross-point cosine similarities of the Dn Fourier columns range from approximately 0.887 to 0.972 , while that of 
+
+log τn is 0.954 , despite their RMS norms differing by less than about 9% . Most positive-electrode and remaining scalar sensitivities retain very similar shapes. Thus, the broad sensitivity hierarchy is stable between these two physically relevant points, whereas the detailed negative-electrode correlation structure retains some local base-point dependence. 
+
+Appendix D. Effect of inferring electrode thickness fractions and porosities 
+
+The inference reported in the main text §6 conditions on the electrode thickness fractions and rel-ative porosities. To assess the consequence of treating these quantities as unknown, we repeated the inference after adding λn, λp, ˆεn and ˆεp to the inferred parameter vector. The separator fraction re-mains constrained by λs = 1 − λn − λp, and the transport-efficiency ratios are updated consistently with the Bruggeman relation, ˆBk = ˆ ε3/2 
+
+> k
+
+. All other inferred quantities and functional parameterisations are retained. Table D.8 compares the reported fit with the extended fit. Making the four structural quantities free does not buy a useful improvement in the voltage prediction. The inferred SPMe evolved with PyBaMM reveals an RMSE of 1.208 mV , a slightly higher value than the previous 1.088 mV . The original fit is therefore already in a regime of diminishing returns with respect to terminal-voltage accuracy. The most striking difference is in the broadening of the electrolyte diffusivity Fisher envelope, which increases by a factor of 30. In diffusion amplitude terms, this corresponds to a lower-to-upper multiplica-tive span of approximately 10 2.543 ≃ 349 in De. This is caused by the added compensation directions, rather than by the displacement of the fitted point alone. At the extended fit, conditioning on the four structural coordinates gives a median 1σ width of 0.038 decades, whereas allowing them to vary increases it to 2.543 decades. Drawn as an envelope, it would cover essentially the complete vertical range displayed for De(ˆ ce) in Fig. 6. The weakest local Fisher direction combines the electrode thickness fractions and porosities with the electrolyte inventory and diffusion timescale. Freeing the four structural quantities therefore gives the electrolyte effects additional directions along which they can be compensated, with the largest consequence for the inferred amplitude of De.The electrode-capacity and solid-diffusivity conclusions are otherwise essentially unchanged. For this benchmark, the extended calculation therefore supports the conditional analysis used in the main text: independently determining some members of this correlated geometric and electrolyte-transport group materially sharpens inference of the remaining members, while the extended fit provides no solver-verified improvement in voltage accuracy. 31 log  n
+
+> log  n
+> log  iref n, 0
+> log  p
+> log  p
+> log  iref p, 0
+> log  e
+> log  e
+> log  e
+> logit( t + )
+> an, 1
+> bn, 1
+> an, 2
+> bn, 2
+> an, 3
+> bn, 3
+> an, 4
+> bn, 4
+> ap, 1
+> bp, 1
+> ap, 2
+> bp, 2
+> ap, 3
+> bp, 3
+> ap, 4
+> bp, 4
+> log  ohm
+> log(  n/ s)
+> log(  p/ s)
+> log  n
+> log  p
+
+Parameter j                  
+
+> log n
+> log n
+> log iref n, 0
+> log p
+> log p
+> log iref p, 0
+> log e
+> log e
+> log e
+> logit( t+)
+> an, 1
+> bn, 1
+> an, 2
+> bn, 2
+> an, 3
+> bn, 3
+> an, 4
+> bn, 4
+> ap, 1
+> bp, 1
+> ap, 2
+> bp, 2
+> ap, 3
+> bp, 3
+> ap, 4
+> bp, 4
+> log ohm
+> log( n/s)
+> log( p/s)
+> log n
+> log p
+> Parameter  i
+
+1.00 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 0.25 0.50 0.75 1.00 
+
+> Cij
+> Fitted MAP
+> Projected ground truth
+
+Figure C.11: Normalised local sensitivity correlations for the 31 scaled parameters of the traditional SPMe under the applied current protocol. The correlations Cij , defined in Eq. (58), are evaluated at the fitted MAP point (upper-right triangle) and at the DFN benchmark parameters projected onto the SPMe parameterisation (lower-left triangle); both axes use the same parameter ordering. Red and blue indicate aligned and anti-aligned noise-whitened voltage-sensitivity waveforms, respectively, while pale entries indicate approximate orthogonality. Thin lines separate physical parameter groups, and diagonal entries are omitted. The parameters whose central values were not inferred in §6 are highlighted in green (shaded label background). These are local sensitivity correlations, not posterior parameter correlations. 
+
+32 Quantity Projected benchmark Inference with λk, ˆεk fixed Inference with λk, ˆεk free RMSE — 1.088 mV 1.208 mV 
+
+λn 0.467 0.467 (fixed) 0.479 
+
+λp 0.400 0.400 (fixed) 0.439 
+
+λs 0.133 0.133 (fixed) 0.082 (derived) 
+
+ˆεn 0.750 0.750 (fixed) 0.499 
+
+ˆεp 0.800 0.800 (fixed) 0.348 
+
+τe 144.12 s 146.99 s 118.52 s
+
+Qe 1.61 A h m −2 1.68 A h m −2 3.25 A h m −2
+
+βe 1.01 0.88 0.75 
+
+t+ 0.380 0.384 0.361 Median 1σ width in log 10 De
+
+— 0.088 2.543         
+
+> Table D.8: Comparison of the reported inference, in which the electrode thickness fractions and relative porosities are prescribed, with the extended inference in which they are fitted. The voltage RMSE is evaluated against the same synthetic data using PyBaMM’s SPMe. The final row reports the median full width of the central-68 .3% envelope in log 10 De, taken over ˆce∈[0 .1,2] .
+
+Appendix E. Electrolyte parameter coordinates 
+
+The use of separator properties in the definitions of τe and Qe in Eqs.(34b)-(34c) fixes a convenient reference scale. Replacing these quantities by corresponding whole-cell measures, such as the total salt inventory and an effective diffusion time, would amount to a nonsingular change of coordinates when the remaining dimensionless ratios are retained, and would therefore leave the model and its redundancy count unchanged. This freedom in the choice of reference scale is distinct from the two-dimensional redundancy of the unrestricted electrolyte parameter set discussed below. Without the Bruggeman relation, the electrolyte concentration problem is written in terms of eight scalar quantities, 
+
+λn , λp , ˆεn , ˆεp , ˆBn , ˆBp , τe , Qe
+
+1 − t+ , (E.1) but depends on them only through six combinations. This reduction is obscured in the single global coordinate because λn and λp enter through the region boundaries and associated source profiles. Mapping each region separately onto a unit interval [47], we introduce local coordinates yi = ( x−xi, left )/L i ∈ [0 , 1] ,where xi, left is the left boundary of region i. The six regional groups are then 
+
+qe,i = Qeλi ˆεi
+
+1 − t+ = F c e,0Liεi
+
+1 − t+ , (E.2a) 
+
+τe,i = τeλ2 
+
+> i
+
+ˆεi
+
+ˆBi
+
+= εiL2
+
+> i
+
+BiDe,ref 
+
+, i ∈ { n, s, p} . (E.2b) These quantities provide a parameterisation equivalent to the corresponding regional groups of Jobman et al. [20], with λs = 1 − λn − λp and ˆεs = ˆBs = 1 . With the rescaled anion flux 
+
+˜F− = F F−
+
+1 − t+ , (E.3) the concentration equation within each region becomes 
+
+qe,i 
+
+∂ˆce
+
+∂t + ∂ ˜F−
+
+∂y i
+
+= 0 , ˜F− = − qe,i 
+
+τe,i 
+
+D⋆ 
+
+> e
+
+(ˆ ce) ∂ˆce
+
+∂y i
+
+− ie . (E.4) The current profiles are iapp yn, iapp and iapp (1 − yp) in the negative electrode, separator and positive electrode, respectively. Concentration and ˜F− are continuous at interfaces, ˜F− = 0 at the current collectors, and ˆce = 1 initially. Thus the regional problem contains only the six scalar groups ( qe,i , τe,i )in Eq. (E.2) and the normalised function D⋆ 
+
+> e
+
+.Imposing ˆBi = ˆ ε3/2 
+
+> i
+
+supplies two relations amongst the original eight quantities. The resulting six coordinates in Eq. (36) can be recovered uniquely from the positive regional groups (E.2). To show this, 33 we first observe that the combination 
+
+qe,i τ 2e,i = Qe τ 2e
+
+(1 − t+) λ5
+
+> i
+
+ˆε3
+
+> i
+
+ˆB2
+
+> i
+
+!
+
+(E.5) becomes independent of porosity under the Bruggeman relation. Then we can write each fractional thickness as 
+
+λi =
+
+ qe,i τ 2e,i 
+
+1/5
+
+X
+
+> j∈{ n,s,p}
+
+ qe,j τ 2e,j 
+
+1/5 , (E.6) where the common factor Qeτ 2e /(1 − t+)1/5 cancels upon normalising the three thickness fractions to sum to one. The remaining quantities follow directly: 
+
+ˆεi = qe,i λs
+
+qe,sλi
+
+, τe = τe,s
+
+λ2s
+
+, Qe
+
+1 − t+ = qe,s
+
+λs
+
+. (E.7) This establishes the one-to-one correspondence claimed in §3.4; it does not establish identifiability of these groups from terminal-voltage data. 
+
+References 
+
+[1] Marc Doyle, Thomas F Fuller, and John Newman. Modeling of galvanostatic charge and discharge of the lithium/polymer/insertion cell. Journal of the Electrochemical Society, 140(6):1526–1533, 1993. [2] T. F. Fuller, M. Doyle, and J. Newman. Simulation and optimization of the dual lithium ion insertion cell. J. Electrochem. Soc., 141(1):1–10, 1994. doi: 10.1149/1.2054684. [3] Ferran Brosa Planella, Weilong Ai, Adam M. Boyce, Abir Ghosh, Ivan Korotkin, Smita Sahu, Valentin Sulzer, Robert Timms, Thomas G. Tranter, Maxim Zyskin, Samuel J. Cooper, Jacque-line S. Edge, Jamie M. Foster, Monica Marinescu, Billy Wu, and Giles Richardson. A continuum of physics-based lithium-ion battery models reviewed. Progress in Energy, 4(4):042003, 2022. doi: 10.1088/2516-1083/ac7d31. [4] Kailong Liu, Yizhao Gao, Chong Zhu, Kang Li, Minrui Fei, Chen Peng, Xi Zhang, and Qing-Long Han. Electrochemical modeling and parameterization towards control-oriented management of lithium-ion batteries. Control Engineering Practice, 124:105176, 2022. ISSN 0967-0661. doi: 10.1016/j.conengprac.2022.105176. [5] Feng Guo, Luis D Couto, Grietus Mulder, Khiem Trad, Guangdi Hu, Odile Capron, and Keivan Haghverdi. A systematic review of electrochemical model-based lithium-ion battery state estimation in battery management systems. 2024. doi: 10.1016/j.est.2024.113850. [6] Svyatoslav Korneev, Harikesh Arunachalam, Simona Onori, and Ilenia Battiato. A data-driven multiscale framework to estimate effective properties of lithium-ion batteries from microstructure images. Transport in Porous Media, 134(1):173–194, Aug 2020. ISSN 1573-1634. doi: 10.1007/ s11242-020-01441-w. [7] Toby L. Kirk, Jack Evans, Colin P. Please, and S. Jonathan Chapman. Modeling electrode hetero-geneity in lithium-ion batteries: Unimodal and bimodal particle-size distributions. SIAM Journal on Applied Mathematics, 82(2):625–653, 2022. doi: 10.1137/20M1344305. [8] A A Wang, S E J O’Kane, F Brosa Planella, J Le Houx, K O’Regan, M Zyskin, J Edge, C W Monroe, S J Cooper, D A Howey, E Kendrick, and J M Foster. Review of parameterisation and a novel database (liiondb) for continuum li-ion battery models. Progress in Energy, 4(3):032004, may 2022. doi: 10.1088/2516-1083/ac692c. [9] Madeleine Ecker, Thi Kim Dung Tran, Philipp Dechent, Stefan Käbitz, Alexander Warnecke, and Dirk Uwe Sauer. Parameterization of a physico-chemical model of a lithium-ion battery: I. determi-nation of parameters. Journal of The Electrochemical Society, 162(9):A1836, 2015. 34 [10] Chang-Hui Chen, Ferran Brosa Planella, Kieran O’regan, Dominika Gastol, W Dhammika Widanage, and Emma Kendrick. Development of experimental techniques for parameterization of multi-scale lithium-ion battery models. Journal of The Electrochemical Society, 167(8):080534, 2020. [11] Alana Zülke, Ivan Korotkin, Jamie M Foster, Mangayarkarasi Nagarathinam, Harry Hoster, and Giles Richardson. Parametrisation and use of a predictive DFN model for a high-energy NCA/Gr-SiO x battery. Journal of The Electrochemical Society, 168(12):120522, 2021. [12] Emil Namor, Fabrizio Sossan, Dimitri Torregrossa, Rachid Cherkaoui, and Mario Paolone. Battery storage system optimal exploitation through physics-based model predictive control. Proceedings of the 2017 IEEE PES PowerTech, pages 1–6, 7 2017. doi: 10.1109/PTC.2017.7981145. [13] Shriram Santhanagopalan, Qingzhi Guo, and Ralph E. White. Parameter estimation and model discrimination for a lithium-ion cell. Journal of The Electrochemical Society, 154:A198, 1 2007. ISSN 00134651. doi: 10.1149/1.2422896. [14] Joel C. Forman, Scott J. Moura, Jeffrey L. Stein, and Hosam K. Fathy. Genetic identification and fisher identifiability analysis of the doyle–fuller–newman model from experimental cycling of a lifepo4 cell. Journal of Power Sources, 210:263–275, 2012. ISSN 0378-7753. doi: 10.1016/j.jpowsour.2012. 03.009. [15] Antti Aitio, Scott G Marquis, Pedro Ascencio, and David Howey. Bayesian parameter estimation applied to the li-ion battery single particle model with electrolyte dynamics. IFAC-PapersOnLine, 53(2):12497–12504, 2020. [16] E. Miguel, Gregory L. Plett, M. Scott Trimboli, L. Oca, U. Iraola, and E. Bekaert. Review of computational parameter estimation methods for electrochemical models. Journal of Energy Storage, 44:103388, 2021. ISSN 2352-152X. doi: 10.1016/j.est.2021.103388. [17] Malin Andersson, Moritz Streb, Jing Ying Ko, Verena Löfqvist Klass, Matilda Klett, Henrik Ekström, Mikael Johansson, and Göran Lindbergh. Parametrization of physics-based battery models from input–output data: A review of methodology and current research. Journal of Power Sources, 521: 230859, 2022. ISSN 0378-7753. doi: 10.1016/j.jpowsour.2021.230859. [18] Ning Jin, Dmitri L. Danilov, Paul M.J. Van den Hof, and M. C.F. Donkers. Parameter estimation of an electrochemistry-based lithium-ion battery model using a two-step procedure and a parameter sensitivity analysis. International Journal of Energy Research, 42:2417–2430, 6 2018. ISSN 1099-114X. doi: 10.1002/ER.4022. [19] Weihan Li, Iskender Demir, Decheng Cao, Dominik Jöst, Florian Ringbeck, Mark Junker, and Dirk Uwe Sauer. Data-driven systematic parameter identification of an electrochemical model for lithium-ion batteries with artificial intelligence. Energy Storage Materials, 44:557–570, 1 2022. ISSN 2405-8297. doi: 10.1016/J.ENSM.2021.10.023. [20] Ryan Jobman, M Scott Trimboli, and Gregory L Plett. Identification of lithium-ion physics-based model parameter values. 2, 2015. ISSN 2056-9386. [21] Adrien M Bizeray, Jin-Ho Kim, Stephen R Duncan, and David A Howey. Identifiability and pa-rameter estimation of the single particle lithium-ion battery model. IEEE Transactions on Control Systems Technology, 27(5):1862–1877, 2018. [22] Zhengyu Chu, Gregory L Plett, M Scott Trimboli, and Minggao Ouyang. A control-oriented elec-trochemical model for lithium-ion battery, part i: Lumped-parameter reduced-order model with constant phase element. 2019. doi: 10.1016/j.est.2019.100828. [23] Z. Khalik, M.C.F. Donkers, J. Sturm, and H.J. Bergveld. Parameter estimation of the doyle–fuller–newman model for lithium-ion batteries by parameter normalization, grouping, and sensitivity analysis. Journal of Power Sources, 499:229901, 2021. ISSN 0378-7753. doi: 10.1016/j. jpowsour.2021.229901. [24] Guodong Fan. Systematic parameter identification of a control-oriented electrochemical battery model and its application for state of charge estimation at various operating conditions. Journal of Power Sources, 470:228153, 2020. doi: 10.1016/j.jpowsour.2020.228153. 35 [25] Sohail R. Reddy, Matthias K. Scharrer, Franz Pichler, Daniel Watzenig, and George S. Du-likravich. Accelerating parameter estimation in doyle–fuller–newman model for lithium-ion batteries. COMPEL - The international journal for computation and mathematics in electrical and electronic engineering, 38:1533–1544, 10 2019. ISSN 0332-1649. doi: 10.1108/COMPEL-12-2018-0533. [26] Noël Hallemans, Nicola E. Courtier, Colin P. Please, Brady Planden, Rishit Dhoot, Robert Timms, S. Jon Chapman, David Howey, and Stephen R. Duncan. Physics-based battery model parametri-sation from impedance data. Journal of The Electrochemical Society, 172:060507, 6 2025. ISSN 1945-7111. doi: 10.1149/1945-7111/ADD41B. [27] Malik Hassanaly, Corey R Randall, Peter J Weddle, Paul J Gasper, Conlain Kelly, Tanvir R Tanim, and Kandler Smith. Neural posterior estimation for scalable and accurate inverse parameter inference in li-ion batteries. 2026. doi: 10.1016/j.est.2026.123823. [28] Jose Morales Escalante, Smita Sahu, Jamie M. Foster, and Bartosz Protas. On uncertainty quan-tification in the parametrization of newman-type models of lithium-ion batteries. Journal of The Electrochemical Society, 168:110519, 4 2021. ISSN 0013-4651. doi: 10.1149/1945-7111/ac3159. [29] Marc D. Berliner, Hongbo Zhao, Supratim Das, Michael Forsuelo, Benben Jiang, William H. Chueh, Martin Z. Bazant, and Richard D. Braatz. Nonlinear identifiability analysis of the porous electrode theory model of lithium-ion batteries. Journal of The Electrochemical Society, 168(9):090546, sep 2021. doi: 10.1149/1945-7111/ac26b1. [30] Alexander P Schmidt, Matthias Bitzer, Árpád W Imre, and Lino Guzzella. Experiment-driven electrochemical modeling and systematic parameterization for a lithium-ion battery cell. Journal of Power Sources, 195:5071–5080, 2010. doi: 10.1016/j.jpowsour.2010.02.029. [31] Vincent Laue, Fridolin Röder, and Ulrike Krewer. Practical identifiability of electrochemical p2d models for lithium-ion batteries. Journal of Applied Electrochemistry, 51:1253–1265, 9 2021. ISSN 15728838. doi: 10.1007/S10800-021-01579-5. [32] Jun Xie, Yaxuan Liu, Yixiao Zhang, Yuanxin Bai, Kun Tian, and Zhichao Tang. A multi-stage parameter identification method for lithium-ion battery electrochemical models based on sensitivity analysis and physical properties. Journal of The Electrochemical Society, 173:130514, 7 2026. ISSN 1945-7111. doi: 10.1149/1945-7111/AE77AB. [33] Vijayasekaran Boovaragavan, S Harinipriya, and Venkat R Subramanian. Towards real-time (mil-liseconds) parameter estimation of lithium-ion batteries using reformulated physics-based models. Journal of Power Sources, 183:361–365, 2008. doi: 10.1016/j.jpowsour.2008.04.077. [34] Malik Hassanaly, Peter J Weddle, Ryan N King, Subhayan De, Alireza Doostan, Corey R Randall, Eric J Dufek, Andrew M Colclasure, and Kandler Smith. Pinn surrogate of li-ion battery models for parameter inference, part ii: Regularization and application of the pseudo-2d model. 2024. doi: 10.1016/j.est.2024.113104. [35] Weipeng Xu, Kaiqi Yang, Yuzhi Zhang, Wenchang Zhang, Shichao Sun, Sheng Mao, and Tianju Xue. Difflib: high-fidelity differentiable modeling of lithium-ion batteries and efficient gradient-based parameter identification. Structural and Multidisciplinary Optimization, 69:83–, 4 2026. ISSN 16151488. doi: 10.1007/S00158-026-04286-X. [36] Feng Guo, Luis D. Couto, Keivan Haghverdi, Khiem Trad, and Grietus Mulder. Rapid and robust parameter estimation for electrochemical battery models via bolt: A batch-optimized local-to-global technique. Applied Energy, 422, 6 2026. doi: 10.1016/j.apenergy.2026.128307. [37] Philipp Brendel, Christopher Straub, Andreas Rosskopf, Vincent Lorentz, Felix Dietrich, and P Brendel. Physics-informed operator learning for parameter estimation in lithium-ion-battery models enhanced by global experimental design and local identifiability analysis. 2026. doi: 10.1016/j.egyai.2026.100847. [38] E. Ayerbe, J. L. Gutiérrez, and F. Varas. Using numerical models to accelerate electrolyte transport parameter identification. Journal of The Electrochemical Society, 169:110541, 11 2022. ISSN 0013-4651. doi: 10.1149/1945-7111/ACA2ED. 36 [39] A. Emir Gümrükçüoğlu, James Burridge, Kieran O’Regan, Emma Kendrick, and Jamie M. Foster. A fast and accurate method for inferring solid-state diffusivity in lithium-ion battery active materials. Journal of Energy Storage, 153:120831, 2026. ISSN 2352-152X. doi: 10.1016/j.est.2026.120831. [40] Armand Wirgin. The inverse crime. 1 2004. doi: 10.48550/arXiv.math-ph/0401050. [41] Giles Richardson, Ivan Korotkin, Rahifa Ranom, Michael Castle, and Jamie Foster. Generalised single particle models for high-rate operation of graded lithium-ion electrodes: Systematic derivation and validation. Electrochimica Acta, 339:135862, 2020. doi: 10.1016/j.electacta.2020.135862. [42] Scott G. Marquis, Valentin Sulzer, Robert Timms, Colin P. Please, and S. Jon Chapman. An asymptotic derivation of a single particle model with electrolyte. Journal of The Electrochemical Society, 166(15):A3693–A3706, 2019. doi: 10.1149/2.0341915jes. [43] Ivan Korotkin, Smita Sahu, Simon EJ O’Kane, Giles Richardson, and Jamie M Foster. Dandeliion v1: An extremely fast solver for the Newman model of lithium-ion battery (dis) charge. Journal of The Electrochemical Society, 2021. [44] Ivan Korotkin, Smita Sahu, Simon EJ O’Kane, Giles Richardson, and Jamie M Foster. Dandeliion website, 2021. URL https://www.dandeliion.com .[45] Thomas Beuse, Mathias Fingerle, Christian Wagner, Martin Winter, and Markus Börner. Compre-hensive insights into the porosity of lithium-ion battery electrodes: A comparative study on positive electrodes based on lini0.6mn0.2co0.2o2 (nmc622). Batteries, 7:70, 12 2021. ISSN 23130105. doi: 10.3390/BATTERIES7040070/S1. [46] Giles Richardson, Jamie M. Foster, Athinthra K. Sethurajan, Sergey A. Krachkovskiy, Ion C. Halalay, Gillian R. Goward, and Bartosz Protas. The effect of ionic aggregates on the transport of charged species in lithium electrolyte solutions. Journal of The Electrochemical Society, 165:H561–H567, 6 2018. ISSN 0013-4651. doi: 10.1149/2.0981809JES/XML. [47] Paul W. C. Northrop, Venkatasailanathan Ramadesigan, Sumitava De, and Venkat R. Subrama-nian. Coordinate transformation, orthogonal collocation, model reformulation and simulation of electrochemical-thermal behavior of lithium-ion battery stacks. Journal of The Electrochemical Society, 158:A1461, 11 2011. ISSN 00134651. doi: 10.1149/2.058112JES/XML. 37
