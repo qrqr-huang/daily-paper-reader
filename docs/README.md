@@ -6,29 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-11
-- 运行时间：2026-09-11 21:50:12 UTC
+- 最新运行日期：2026-09-12
+- 运行时间：2026-09-12 21:27:43 UTC
 - 运行状态：成功
-- 本次总论文数：2
+- 本次总论文数：0
 - 精读区：0
-- 速读区：2
+- 速读区：0
 
 ### 今日简报（AI）
-- 今日共生成 2 篇推荐（精读 0 篇，速读 2 篇）
-- 速读：《Surrogate-accelerated parameterisation of physics-based Li-ion battery models》（7.0/10）, 《A Framework for Discharge Time Prediction of Energy Storage Units Based on Coupled Dynamics and Multi-Factor Aging Models》（7.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202609/11/README](/202609/11/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202609/12/README](/202609/12/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Surrogate-accelerated parameterisation of physics-based Li-ion battery models](/202609/11/2609.10341v1-surrogate-accelerated-parameterisation-of-physics-based-li-ion-battery-models)  
-   标签：评分：7.0/10、query:lfp-soc
-   evidence：基于端部数据的物理锂离子电池模型参数化，为基于模型的SOC估计提供支持
-2. [A Framework for Discharge Time Prediction of Energy Storage Units Based on Coupled Dynamics and Multi-Factor Aging Models](/202609/11/2609.11086v1-a-framework-for-discharge-time-prediction-of-energy-storage-units-based-on-coupled-dynamics-and-multi-factor-aging-models)  
-   标签：评分：7.0/10、query:lfp-soc
-   evidence：耦合SOC-温度动态和老化模型预测放电时间
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
