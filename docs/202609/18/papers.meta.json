@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-18",
+  "date": "2026-09-18",
+  "generated_at": "2026-09-18T22:16:50",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/18/2609.13506v1-nbms-a-neuromorphic-battery-management-system-with-a-silicon-validated-spiking-state-of-charge-core-for-evtol-aircraft",
+      "section": "deep",
+      "title_en": "nBMS, a Neuromorphic Battery Management System with a Silicon-Validated Spiking State-of-Charge Core for eVTOL Aircraft",
+      "authors": "İsmail Can Dikmen",
+      "date": "2026-09-11",
+      "pdf": "https://arxiv.org/pdf/2609.13506v1",
+      "score": "9.0",
+      "evidence": "神经形态BMS，脉冲SoC估计核心，在eVTOL数据集上验证（2.45% RMSE）",
+      "tldr": "针对电动垂直起降（eVTOL）飞机电池荷电状态估计需在低能耗与严认证预算下机载运行、且载荷循环与汽车文献显著不同的难题，本文提出nBMS神经形态电池管理系统中的事件驱动脉冲状态估计核心。核心采用delta与群体编码器、二阶sigma-delta脉冲层和速率累加器读出，仅保存34433个int16参数且无需稠密乘加运算。在公开22节eVTOL数据集上，估计器均方根误差为2.45%，而调优的LSTM基线为1.74%，误差差距源于巡航段的时间混合限制；但该核心在传感器噪声下退化比自适应LIF控制慢1.6倍，每步仅约3500次加法。完整核心部署于汽车级Artix-7 FPGA，单次推理耗能1.30微焦，0.5赫兹任务节奏下平均功耗0.65微瓦，为机载荷电状态估计提供了硅验证的高能效神经形态方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "State-of-charge (SoC) estimation for electric vertical take-off and landing (eVTOL) aircraft must run on the vehicle under hard energy and certification budgets, on a duty cycle unlike anything in the automotive literature. In this study an event-driven spiking network, the state-estimation core of the nBMS neuromorphic battery management architecture, is designed for per-timestep SoC estimation and evaluated on a public 22-cell eVTOL dataset with an automotive cross-check. A delta and population encoder, a second-order sigma-delta spiking layer, and a rate-accumulator readout hold 34{,}433 int16 parameters with zero dense multiply-accumulate (MAC) operations. The estimator reaches 2.45\\% root-mean-square error (RMSE) against 1.74\\% for a tuned long short-term memory (LSTM) baseline, a gap characterized as a temporal-mixing limit in cruise; in exchange it degrades 1.6 times slower than an adaptive leaky integrate-and-fire control under sensor noise and needs roughly 3{,}500 additions per step where the LSTM needs 67{,}700 multiply-accumulates. The full core is deployed on a low-cost automotive-qualified Artix-7 field-programmable gate array at 87\\% block-RAM utilization, meets timing at 50~MHz, and reproduces the frozen fixed-point reference bit-exactly over a real 491-step flight segment on silicon. Fully annotated post-implementation analysis gives 1.30~$μ$J per inference, an average of 0.65~$μ$W at the 0.5~Hz mission cadence.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
