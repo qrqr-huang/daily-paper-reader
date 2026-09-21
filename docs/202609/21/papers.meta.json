@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-21",
+  "date": "2026-09-21",
+  "generated_at": "2026-09-21T23:14:13",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/21/2609.21932v1-joint-remaining-useful-life-prediction-and-capacity-estimation-of-lithium-ion-batteries-using-partial-charging-data",
+      "section": "deep",
+      "title_en": "Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data",
+      "authors": "Khoa Tran, Ho-Si-Hung Nguyen, Phone Wai Yan Moe, Hung-Cuong Trinh, Thi-Hoang-Giang Tran",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.21932v1",
+      "score": "8.0",
+      "evidence": "基于部分充电数据的锂离子电池剩余寿命与容量联合估计",
+      "tldr": "锂离子电池剩余使用寿命预测与容量估计通常依赖完整循环历史，难以利用部分充电数据。本文提出跨专家框架，RUL专家处理10分钟片段捕捉长时退化，容量专家处理40分钟片段统计特征，并通过特征线性调制融合短期与长期表征。在两个公开数据集上，RUL均方根误差分别为143.69和161.10周期，容量误差为12.36和7.28mAh，融合在数据集I上降低误差。结果表明所提方法在比较方法中取得最低RUL误差，但容量精度存在权衡。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Joint remaining useful life (RUL) prediction and capacity estimation require representations of both gradual degradation and recent battery behavior. This paper presents a cross-expert framework using partial-charging measurements without measured historical full-cycle capacity as an input. The RUL Expert encodes nominal 10-min segments from ten cycles sampled within a 30-cycle history using a pretrained gated recurrent unit (GRU) encoder, a two-dimensional convolutional neural network (2D-CNN), and a temporal GRU. The Capacity Expert processes statistical descriptors of nominal 40-min segments from ten consecutive cycles using a 2D-CNN and a Transformer. A feature-wise linear modulation module uses the short-term representation to condition the long-term representation for joint prediction. Training comprises supervised autoencoder pretraining, independent expert pretraining, and fusion training with frozen experts. On two public battery-aging datasets, the reference configuration achieves mean RUL root-mean-square errors of 143.69 and 161.10 cycles and capacity errors of 12.36 and 7.28mAh, respectively. On Dataset I, fusion reduces both mean errors relative to either standalone expert. The results demonstrate a trade-off between RUL and capacity accuracy: the proposed method attains the lowest reported RUL RMSE among the compared methods on both datasets, whereas several baselines yield lower capacity errors.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

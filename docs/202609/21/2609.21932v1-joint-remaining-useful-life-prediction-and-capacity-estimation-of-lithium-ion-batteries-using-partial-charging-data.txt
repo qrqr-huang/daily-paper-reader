@@ -1,0 +1,687 @@
+Title: Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data
+
+URL Source: https://arxiv.org/pdf/2609.21932v1
+
+Published Time: Mon, 21 Sep 2026 01:09:47 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+> 1
+
+# Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data 
+
+Khoa Tran †, Ho-Si-Hung Nguyen *, Phone Wai Yan Moe †, Hung-Cuong Trinh, and Thi-Hoang-Giang Tran 
+
+Abstract —Joint remaining useful life (RUL) prediction and capacity estimation require representations of both gradual degradation and recent battery behavior. This paper presents a cross-expert framework using partial-charging measurements without measured historical full-cycle capacity as an input. The RUL Expert encodes nominal 10-min segments from ten cycles sampled within a 30-cycle history using a pretrained gated recurrent unit (GRU) encoder, a two-dimensional con-volutional neural network (2D-CNN), and a temporal GRU. The Capacity Expert processes statistical descriptors of nominal 40-min segments from ten consecutive cycles using a 2D-CNN and a Transformer. A feature-wise linear modulation module uses the short-term representation to condition the long-term representation for joint prediction. Training comprises supervised autoencoder pretraining, independent expert pretraining, and fusion training with frozen experts. On two public battery-aging datasets, the reference configuration achieves mean RUL root-mean-square errors of 143.69 and 161.10 cycles and capacity errors of 12.36 and 7.28 mAh, respectively. On Dataset I, fusion reduces both mean errors relative to either standalone expert. The results demonstrate a trade-off between RUL and capacity accuracy: the proposed method attains the lowest reported RUL RMSE among the compared methods on both datasets, whereas several baselines yield lower capacity errors. 
+
+Index Terms —Battery capacity estimation, feature-wise linear modulation, lithium-ion batteries, multi-task learning, partial charging, remaining useful life. 
+
+I. I NTRODUCTION 
+
+Lithium-ion batteries (LIBs) are widely used in electric ve-hicles (EVs) [4] and stationary energy-storage systems because of their high energy density, long cycle life, and established manufacturing infrastructure. Transportation electrification and renewable-energy integration are increasing the demand for reliable battery systems. For example, [23] projects that battery 
+
+> *
+
+Khoa Tran and Phone Wai Yan Moe contributed equally to this work. 
+
+> †
+
+Corresponding author: Ho-Si-Hung Nguyen (e-mail: nhshung@dut.udn.vn). Khoa Tran is with the Data Science Laboratory, Faculty of Information Technology, Ton Duc Thang University, Ho Chi Minh City 70000, Vietnam (e-mail: trandinhkhoa@tdtu.edu.vn). Ho-Si-Hung Nguyen is with the Faculty of Electrical Engineering, The Uni-versity of Danang—University of Science and Technology, 54 Nguyen Luong Bang, Lien Chieu, Da Nang 550000, Vietnam (e-mail: nhshung@dut.udn.vn). Phone Wai Yan Moe is with AIWARE Limited Company, 17 Huynh Man Dat Street, Hoa Cuong Bac Ward, Hai Chau District, Da Nang 550000, Vietnam (e-mail: wyan40653@gmail.com). Hung-Cuong Trinh is with the Natural Language Processing and Knowl-edge Discovery Research Group, Faculty of Information Technology, Ton Duc Thang University, Ho Chi Minh City 70000, Vietnam (e-mail: trin-hhungcuong@tdtu.edu.vn). Thi-Hoang-Giang Tran is with the Faculty of Project and Industrial Man-agement, The University of Danang—University of Science and Technology, 54 Nguyen Luong Bang, Lien Chieu, Da Nang 550000, Vietnam (e-mail: tthgiang@dut.udn.vn). 
+
+demand for e-mobility and stationary storage in the European Union will reach approximately 1 TWh by 2030. Reliable assessment of battery degradation is therefore important for managing an expanding population of batteries throughout their service lives. Battery management systems (BMSs) [8] monitor battery condition to support operating and maintenance decisions and avoid unnecessary replacement. Two complementary indica-tors are state of health (SOH) [6], [7], [15] and remaining useful life (RUL) [1], [2], [12]. Capacity-based SOH quantifies the available capacity relative to the nominal capacity, whereas cycle-based RUL describes the remaining cycles before end of life (EOL): 
+
+SOH c = Qc
+
+Qnom 
+
+× 100% , (1) 
+
+RUL c = cEOL − c, (2) where Qc is the available capacity at cycle c, Qnom is the nominal capacity, and cEOL is the cycle at which the EOL criterion is reached. Joint capacity estimation and RUL prediction therefore characterize both the present condition and the anticipated service life of a battery. Model-based approaches, including equivalent circuit mod-els (ECMs) [3], [11], relate measured signals to battery states through parameterized representations. Their performance de-pends on model assumptions, parameter identification, and state initialization, which can become challenging as operating conditions change. Data-driven methods provide an alternative by learning degradation-related relationships directly from ob-servations. However, their accuracy and practical applicability depend on the representativeness of the training data and the availability of the required measurements during operation. Recent RUL prediction methods investigate different rep-resentations of battery degradation. Ge et al. [9] introduce a Koopman-inspired Degradation Model with Embedded Op-erating Conditions (EKIDM). Charging or relaxation voltage sequences and operating-condition variables are encoded into a latent degradation representation, while a condition-dependent Koopman operator models its evolution. Wu et al. [24] use multiple battery signals within a network employing de-formable depthwise convolution. Learnable sampling offsets adapt feature extraction to the observed signals, providing a flexible approach to degradation modeling. Yu et al. [25] extract degradation features from the first 100 complete cycles, primarily using discharge capacity–voltage curves, Q(V ). Features at multiple time scales are selected and processed by a Transformer-based hybrid network. Although such observations can support early-life prediction, complete arXiv:2609.21932v1 [cs.LG] 18 Sep 2026 2
+
+cycling records and reliable discharge-capacity measurements may be unavailable during routine EV operation. Moreover, predictions based on early operating conditions may require reassessment when subsequent usage differs from the training conditions. For capacity forecasting, Qian et al. [18] combine empirical mode decomposition (EMD), a cycle-consistent adversarial network (CycleGAN), and a condition-focused Transformer. Operating-condition signals are decomposed into intrinsic mode functions and transformed into representations used to generate target-condition signals. These signals and historical capacity sequences are then used for forecasting. Peng et al. [16] propose the MIC-BOA-TiDE framework, which com-bines historical capacity, battery attributes, and selected health indicators. The maximal information coefficient guides feature selection, a dense encoder–decoder forecasts capacity, and kernel density estimation provides prediction intervals from the error distribution. Both approaches illustrate the usefulness of historical capacity information, but obtaining accurate full-cycle capacity measurements during routine operation remains challenging. Partial-charging measurements offer a more accessible source of degradation information. Ma et al. [14] use voltage, accumulated charge, and their differences within a charging interval from 80% state of charge (SOC) to the first occurrence of 3.6 V. An important distinction is whether accumulated charge is referenced to the beginning of the full charging cycle or to the start of the observed segment. If the former reference is retained, values within a partial segment can depend on measurements collected before that segment. This dependence can complicate deployment when charging begins at different SOC levels. Segment-local integration addresses this input requirement by resetting accumulated charge at the beginning of the available observation, without requiring the preceding charging trajectory. Song et al. [21] further demonstrate the potential of partial-charging information for SOH estimation. Their framework extracts the charging time over a specified voltage interval, voltage standard deviation, and root-mean-square voltage from constant-current charging. Kernel principal component analy-sis combines these indicators, and a Bayesian LSTM estimates SOH and predictive variance. A collaborative learning strategy transfers degradation information across operating conditions. This approach supports the practicality of charging-derived indicators, while highlighting the value of uncertainty assess-ment under changing conditions. These studies motivate three considerations for practical joint prediction. First, the observation history and charg-ing protocol determine what information is available to a prognostic model, as illustrated by early-cycle and partial-charging formulations [14], [25]. Second, methods developed primarily for RUL or capacity/SOH emphasize different pre-diction objectives [9], [18], [21]. Although joint prediction has been investigated [14], it remains useful to examine whether complementary temporal representations can improve the balance between the two tasks. Third, the reference and availability of capacity-related inputs must be explicit: accu-mulated charge derived from measurements and historical full-cycle capacity are distinct quantities with different acquisition requirements [14], [16], [18]. The contrast between complete-cycle features and partial-charging indicators also motivates reducing observation requirements without assuming that ev-ery existing method requires complete cycles [21], [25]. To address these considerations, this study proposes a cross-expert framework comprising an RUL Expert, a Capacity Expert, and a feature-wise linear modulation (FiLM) mod-ule [17]. The RUL Expert learns cycle-level embeddings from short charging segments sampled across an extended cycle history. The Capacity Expert processes statistical descriptors from longer charging segments over recent consecutive cycles. Both experts are pretrained to predict RUL and capacity; their names indicate their intended temporal roles rather than exclusive prediction targets. During fusion, the short-term representation generates feature-wise scaling and shifting vectors that modulate the long-term representation. A shared two-output regression head then estimates RUL and capacity. Neither branch requires measured historical full-cycle capacity as an input, although capacity and RUL labels are required during supervised training. The main contributions are summarized as follows: 1) Complementary partial-charging representations: 
+
+Nominal 10-min charging segments from ten cycles sampled at stride three within a 30-cycle window are paired with nominal 40-min segments from ten con-secutive cycles. Both views begin at the first observed charging sample above 3.1 V. Accumulated charge and elapsed time are referenced to each segment’s start. Lag-12 differences are computed within the 30-cycle window, with unavailable differences set to zero. 2) Cross-expert feature fusion: A pretrained gated recur-rent unit (GRU) encoder, a two-dimensional convolu-tional neural network (2D-CNN), and a temporal GRU process the long-term view. A 2D-CNN and Transformer process the short-term statistical descriptors. FiLM con-ditions the long-term representation on the short-term representation for joint RUL prediction and capacity estimation. 3) Three-stage optimization: Supervised GRU-autoencoder pretraining combines reconstruction with RUL and capacity supervision. Independent expert pretraining then retains the transferred encoder as a frozen feature extractor. Finally, both experts are frozen while the FiLM module and shared regression head are trained. 4) Experimental assessment: Comparisons on two public battery-aging datasets and ablation studies on Dataset I examine input representations, charging-segment du-ration, cycle history, temporal backbones, and fusion strategies. The analysis evaluates RUL improvements alongside capacity-estimation trade-offs. II. P ROPOSED METHOD 
+
+As illustrated in Fig. 1, the proposed framework comprises an RUL Expert, a Capacity Expert, and a feature-wise linear modulation (FiLM) module for cross-expert knowledge fusion. 3
+
+The two experts capture complementary temporal contexts. The RUL Expert processes nominal 10-min partial charging segments sampled from a 30-cycle window to characterize gradual degradation. Lag-12 inter-cycle differences are com-puted within this window. The Capacity Expert processes nominal 40-min charging segments from the 10 most recent consecutive cycles to characterize short-term battery behavior. The framework is optimized in three stages: 1) supervised GRU-autoencoder pretraining, 2) independent multi-task pre-training of both experts, and 3) FiLM-based fusion training with both experts frozen. Both experts are pretrained to predict RUL and capacity; their names identify their respective tem-poral representations rather than exclusive prediction targets. Predictions are issued after the required charging segments have been observed. Each fusion sample pairs the two temporal views with the same RUL and capacity targets. 
+
+A. RUL Expert 
+
+The RUL Expert characterizes degradation over an extended cycle history. Its pipeline consists of long-term data prepara-tion, a pretrained gated recurrent unit (GRU) encoder [5] for cycle-level representation learning, a 2D-CNN for local feature extraction, and a temporal GRU for modeling degradation across cycles. 
+
+1) Long-Term Data Processing: For cycle c, the measured current, voltage, and temperature sequences are denoted by 
+
+Ic, Vc, and Tc, with corresponding timestamps tc. Bold symbols denote sequences, whereas Ic,j , Vc,j , and Tc,j denote individual samples. A nominal 10-min charging segment is extracted beginning at the first sample satisfying V > 3.1 V .Using partial charging segments supports practical battery-management applications in which complete charge–discharge records may be unavailable. Let Mc be the number of samples in the extracted segment. A second-order Savitzky–Golay filter [19] G(·) is indepen-dently applied to current, voltage, and temperature: 
+
+¯Ic = G(Ic), ¯Vc = G(Vc), ¯Tc = G(Tc). (3) The odd filter window is selected as approximately 25% of Mc
+
+and is clipped to satisfy the segment-length and polynomial-order constraints. Elapsed time is measured relative to the beginning of the segment: 
+
+τc,j = tc,j − tc, 0, j = 0 , . . . , M c − 1. (4) The charge accumulated within the observed segment is ob-tained by numerical integration of the filtered current: 
+
+QLc, 0 = 0 ,QLc,j =
+
+> j
+
+X
+
+> k=1
+
+¯Ic,k (τc,k − τc,k −1) , j = 1 , . . . , M c − 1. (5) Current and time are expressed in compatible units, such that amperes and hours yield ampere-hours. Here, QLc,j is the charge accumulated only within the observed partial segment and is distinct from the full-cycle capacity used as a prediction target. The four long-term channels are assembled as 
+
+ZLc = QLc ¯Vc ¯Tc τ c
+
+ ∈ RMc×4. (6) Each channel is linearly interpolated over sample positions to a fixed length of 50: 
+
+XLc = I50 (ZLc ) ∈ R50 ×4, (7) where I50 (·) denotes channel-wise interpolation. To explicitly represent degradation changes, a 12-cycle lag difference is computed within each 30-cycle observation window. Let XLw,p denote the representation at chronological position p ∈ { 0, . . . , 29 } in window w. Then 
+
+∆XLw,p =
+
+(
+
+0, p < 12 ,
+
+XLw,p − XLw,p −12 , p ≥ 12 . (8) The first 12 difference tensors are zero because their reference cycles precede the window. No observations outside the 30-cycle window are used. The base and difference channels are concatenated as 
+
+eXLw,p = Concat ch 
+
+ XLw,p , ∆XLw,p 
+
+ ∈ R50 ×8. (9) Min–max normalization ML is applied independently to each resampled-position–channel pair. Its parameters are es-timated exclusively from the training set and subsequently reused for validation and testing: 
+
+bXLw,p = ML
+
+ eXLw,p 
+
+
+
+∈ R50 ×8. (10) Ten cycles are selected at stride three from the 30-cycle window, i.e., pk = 3 k for k = 0 , . . . , 9. Thus, positions 28 and 29 are not selected for this branch. The long-term model input is therefore 
+
+HLw = Stack cycle 
+
+ bXLw, 0, bXLw, 3, . . . , bXLw, 27 
+
+
+
+∈ R10 ×50 ×8.
+
+(11) 
+
+2) GRU-Autoencoder: The GRU-autoencoder learns com-pact cycle-level representations from partial charging mea-surements. Its encoder maps each 50 × 8 input sequence to a 64-dimensional embedding. The decoder projects this embedding to 128 dimensions and repeats it across 50 se-quence positions. A two-layer GRU followed by a linear output layer reconstructs the eight input channels at each position. Reconstruction is non-autoregressive: previously reconstructed samples are not fed back into the decoder. The embeddings from 10 sampled cycles are also stacked and processed by an auxiliary GRU predictor for joint RUL prediction and capacity estimation. Table I summarizes the architecture. During Stage I, the encoder, decoder, and auxiliary predic-tor are optimized jointly using reconstruction and prediction losses. This supervision encourages the embeddings to retain input information relevant to battery degradation. After pre-training, only the encoder is transferred to the RUL Expert and frozen; the decoder and auxiliary predictor are discarded. 4STAGE II  Independent Expert Pretraining 
+
+> Transfer the pretrained encoder to the RUL Expert; train the two experts independently.
+
+RUL Expert 
+
+> Long-term degradation history
+> Long-Term Data Processing
+> 30-cycle window; 10 selected cycles; stride 3
+> 10-min segment from V > 3.1 V; measured I, V, T, t
+> Q, V, T, t + difference features; 10 x 50 x 8
+
+Pretrained Encoder 
+
+Cross-Expert Knowledge Fusion 
+
+(FiLM) 
+
+Cross-Expert Framework: Three-Stage Training  
+
+> STAGE I
+
+Supervised GRU-Autoencoder Pretraining  
+
+> Learn cycle embeddings using reconstruction and RUL / capacity supervision.
+> Long-term input Encoder
+> Cycle embeddings
+> Decoder
+> Input reconstruction
+> Auxiliary Predictor
+> Prediction head
+> Reconstruction loss
+> MSE
+> Supervised losses
+> RUL MSE + capacity MSE
+
+Capacity Expert  
+
+> Short-term degradation history
+> Short-Term Data Processing
+> 10-cycle window; 10 consecutive cycles; stride 1
+> 40-min segment from V > 3.1 V; measured I, V, T, t
+> Q, V, T, t; 10 x 50 x 4
+> Long-Term Feature Extraction
+> 2D-CNN + GRU
+> Short-Term Feature Extraction
+> 2D-CNN + Transformer
+> STAGE III
+
+Cross-Expert Knowledge Fusion Training 
+
+> Freeze both pretrained experts; train FiLM fusion with supervision from both tasks.
+
+Pretrained RUL Expert  Pretrained Capacity Expert 
+
+RUL prediction  Capacity estimation 
+
+> FROZEN
+> TRAINABLE
+> Supervised losses
+> RUL MSE + capacity MSE
+> Supervised losses
+> RUL MSE + capacity MSE
+> Supervised losses
+> RUL MSE + 0.5.capacity MSE
+
+Fig. 1. Overview of the proposed cross-expert framework and its three-stage training procedure. Stage I learns cycle-level embeddings through supervised GRU-autoencoder pretraining. Stage II independently trains the RUL and Capacity Experts using long- and short-term degradation histories, respectively. Stage III freezes both experts and optimizes the FiLM-based fusion module and shared regression head for joint RUL prediction and capacity estimation. Tensor dimensions in the diagram omit the batch axis. 
+
+3) Long-Term Degradation Feature Extraction: The pre-trained encoder independently processes the 10 cycle se-quences in HLw. Their embeddings are stacked into a 10 × 64 
+
+degradation map, which is processed by two 2D convolutional layers. Mean pooling over the embedding-position axis pro-duces a sequence of 10 cycle-level feature vectors, each with 128 dimensions. A two-layer temporal GRU models dependencies across the sampled cycles. Its final top-layer hidden state, hLw ∈ R128 ,is supplied to the two-output regression head during Stage II and to the FiLM fusion module during Stage III. Table II summarizes the architecture. 
+
+B. Capacity Expert 
+
+The Capacity Expert characterizes recent battery behavior using longer partial charging segments from 10 consecutive cycles. Channel-wise statistical descriptors summarize each segment, and a 2D-CNN followed by a Transformer encoder models the resulting cycle sequence. 
+
+1) Short-Term Data Processing: For each cycle, a nominal 40-min charging segment is extracted beginning at the first sample satisfying V > 3.1 V . Savitzky–Golay filtering is not applied in this branch. Elapsed time and accumulated charge are calculated using Eqs. (4) and (5), respectively, with the original current replacing the filtered current and the summation taken over the 40-min segment. Its locally accumulated charge is denoted by QSc,j to distinguish it from 5   
+
+> TABLE I SUPERVISED GRU-A UTOENCODER PRETRAINING ARCHITECTURE
+
+Component Operation Output shape 
+
+Input Long-term window B × 10 × 50 × 8
+
+Merge batch/cycle axes 10 B × 50 × 8
+
+Encoder GRU, 2 layers 10 B × 50 × 128 
+
+Final top-layer state 10 B × 128 
+
+Linear, 128 → 64 10 B × 64 
+
+Decoder Linear, 64 → 128 10 B × 128 
+
+Repeat over 50 steps 10 B × 50 × 128 
+
+GRU, 2 layers 10 B × 50 × 128 
+
+Linear, 128 → 8 10 B × 50 × 8
+
+Auxiliary Restore cycle axis B × 10 × 64 
+
+predictor GRU, 2 layers B × 10 × 128 
+
+Final top-layer state B × 128 
+
+Two-output regression head B × 2  
+
+> Bdenotes the mini-batch size. All three GRUs use 128 hidden units per layer and inter-layer dropout of 0.1. The decoder and auxiliary predictor form separate branches receiving the encoder embeddings. The decoder reconstructs each cycle independently, whereas the predictor models the sequence of 10 cycle embeddings to estimate RUL and capacity. TABLE II RUL E XPERT ARCHITECTURE
+
+Component Operation Output shape 
+
+Input Long-term window B × 10 × 50 × 8
+
+Merge batch/cycle axes 10 B × 50 × 8
+
+Pretrained GRU encoder, final state 10 B × 128 
+
+Encoder Linear, 128 → 64 10 B × 64 
+
+Restore cycle axis B × 10 × 64 
+
+Long-Term Add channel axis B × 1 × 10 × 64 
+
+Degradation Conv2D, 1 → 32 B × 32 × 10 × 64 
+
+Feature Extraction Conv2D, 32 → 128 B × 128 × 10 × 64 
+
+Mean over embedding axis B × 128 × 10 
+
+Transpose B × 10 × 128 
+
+Temporal GRU, final state B × 128 
+
+Predictor Two-output regression head B × 2    
+
+> Both GRUs have two layers with 128 hidden units per layer and inter-layer dropout of 0.1. Both convolutions use 3×3kernels, unit stride, and padding of one. Each convolution is followed by ReLU; dropout of 0.1 follows the first ReLU. The transferred encoder remains frozen during Stage II, while the expert CNN, temporal GRU, and regression head are trained. Stage III uses the 128-dimensional expert representation before the regression head.
+
+QLc,j . Raw-signal and elapsed-time symbols in this subsection refer to the short-term segment. The resulting channels are 
+
+ZSc = QSc Vc Tc τ c
+
+ ∈ RM Sc ×4, (12) where M Sc denotes the number of samples in the extracted short-term segment. Let p ∈ { 0, . . . , 9} index its chronological cycle position within the short-term window associated with sample w. Channel-wise interpolation and training-set min– max normalization produce 
+
+bXSw,p = MS
+
+ I50 (ZSw,p ) ∈ R50 ×4. (13) The normalization parameters are fitted only on the training set and are reused without modification for validation and testing.   
+
+> TABLE III CAPACITY EXPERT ARCHITECTURE
+
+Component Operation Output shape 
+
+Input Statistical descriptors B × 10 × 28 
+
+Short-Term Add channel axis B × 1 × 10 × 28 
+
+Degradation Conv2D, 1 → 32 B × 32 × 10 × 28 
+
+Feature Extraction Conv2D, 32 → 128 B × 128 × 10 × 28 
+
+Mean over feature axis B × 128 × 10 
+
+Transpose to cycle sequence B × 10 × 128 
+
+Linear, 128 → 128 B × 10 × 128 
+
+Add sinusoidal encoding B × 10 × 128 
+
+Transformer encoder, 2 layers B × 10 × 128 
+
+Mean over cycle tokens B × 128 
+
+Predictor Two-output regression head B × 2     
+
+> Bdenotes the mini-batch size. Both convolutions use 3×3kernels, unit stride, and padding of one, followed by ReLU; dropout of 0.1 follows the first ReLU. The Transformer has an embedding dimension of 128, four attention heads, a feedforward dimension of 512, and dropout of 0.1. Fixed sinusoidal positional encoding supports up to 10 cycle tokens. The pooled representation is extracted before the prediction head for Stage III.
+
+For each channel q ∈ {1, . . . , 4}, seven descriptors are computed over the 50 normalized, resampled positions: 
+
+dSw,p,q = μ, σ, min , max , median , σ 2, skew ⊤ ∈ R7.
+
+(14) Here, μ, σ, and σ2 denote the mean, standard deviation, and variance, respectively; the remaining entries denote the minimum, maximum, median, and skewness of the same channel sequence. Concatenating the descriptors of all four channels yields the cycle-level statistical vector 
+
+sSw,p = Concat  dSw,p, 1, . . . , dSw,p, 4
+
+ ∈ R28 . (15) The vectors from 10 consecutive cycles, sampled at stride one, are stacked to form the Capacity Expert input: 
+
+ASw = Stack cycle 
+
+ sSw, 0, . . . , sSw, 9
+
+ ∈ R10 ×28 . (16) 
+
+2) Short-Term Degradation Feature Extraction: The Ca-pacity Expert processes the statistical descriptor matrix ASw ∈
+
+R10 ×28 using a 2D-CNN followed by a Transformer en-coder [22]. The CNN preserves the cycle and statistical-feature axes while expanding the channel dimension to 128. Averaging over the statistical-feature axis and transposing the result produces a sequence of 10 cycle tokens, each with 128 features. A learned linear projection maps these tokens to the Trans-former embedding space, and fixed sinusoidal positional en-coding represents their order within the cycle window. The resulting sequence is processed by two Transformer encoder layers. Mean pooling over the cycle axis yields the short-term representation hSw ∈ R128 , which is passed to a two-output regression head for joint RUL prediction and capacity estimation during Stage II. During Stage III, this representation is extracted before the regression head and supplied to the fusion module. Table III summarizes the architecture. 
+
+C. Cross-Expert Knowledge Fusion 
+
+The fusion module integrates the long-term representa-tion hLw ∈ R128 and the short-term representation hSw ∈6
+
+R128 through FiLM. The short-term representation generates feature-wise scaling and shifting vectors that modulate the long-term representation: 
+
+ehw = γ(hSw) ⊙ hLw + β(hSw), (17) where ⊙ denotes element-wise multiplication, and γ, β :
+
+R128 → R128 are learned mappings. This modulation allows recent battery behavior to condition the long-term degradation representation. The fused representation ehw is passed to a shared regression head comprising a linear layer, ReLU activation, dropout, and a final linear layer with two outputs for RUL prediction and capacity estimation: 
+
+byw = W2 Dropout 
+
+
+
+ReLU 
+
+
+
+W1 ehw + b1
+
+ 
+
++ b2 ∈ R2,
+
+(18) where W1 ∈ Rdh×128 and W2 ∈ R2×dh are learned weight matrices, b1 and b2 are bias vectors with dimensions dh and 2, respectively, and dh denotes the head’s hidden dimension. The two entries of byw are the scaled RUL and capacity estimates. Physical units are restored before evaluation as described in Section III-D. During Stage III, both pretrained experts remain frozen. The frozen experts are used in evaluation mode to disable dropout. Only the FiLM module and shared regression head are optimized, preserving the expert representations while learning their interaction for joint prediction. 
+
+D. Three-Stage Training Strategy 
+
+Let the RUL, capacity, and reconstruction losses be 
+
+LRUL = MSE( byRUL , yRUL ),
+
+LCap = MSE( byCap , yCap ),
+
+Lrec = MSE( bHL, HL),
+
+(19) where the prediction and target vectors collect the correspond-ing task values over a mini-batch. The tensor bHL denotes the reconstructed long-term input after restoring its batch and cycle axes. Each MSE is averaged over all elements of its corresponding tensors. The prediction losses are computed on the scaled targets and corresponding outputs defined in Section III-D, using the model trained in the respective stage. 
+
+1) Stage I: Supervised GRU-Autoencoder Pretraining: The GRU autoencoder is trained using the long-term partial charg-ing sequences. The encoder produces cycle-level embeddings, the decoder reconstructs the encoder input, and an auxiliary predictor predicts both RUL and capacity from the embedding sequence. All three components are jointly optimized using 
+
+LI = LRUL + LCap + Lrec . (20) The resulting encoder is transferred to the RUL Expert and frozen in the subsequent stages. 
+
+2) Stage II: Independent Expert Pretraining: The RUL and Capacity Experts are trained independently. Both experts use a two-output regression head and receive supervision from the RUL and capacity targets. For expert e ∈ { L, S }, the objective is 
+
+L(e)II = L(e)RUL + L(e)Cap . (21) For the RUL Expert, the transferred encoder remains frozen while the 2D-CNN, temporal GRU, and regression head are optimized. For the Capacity Expert, the 2D-CNN, Trans-former, and regression head are optimized. The two experts are optimized separately, without feature exchange or shared trainable parameters during this stage. 
+
+3) Stage III: Cross-Expert Fusion Training: After Stage II, both pretrained experts are frozen. The FiLM module and shared regression head are optimized using 
+
+LIII = LRUL + λCap LCap , (22) where λCap controls the relative contribution of the capacity estimation loss. The reference configuration uses λCap = 1 ;
+
+λCap = 0.5 is evaluated separately as an RUL-prioritized alternative in the loss-weight ablation. During this stage, only the fusion module and shared regression head are updated, preserving the representations learned by both experts during pretraining. III. E XPERIMENTAL SETUP 
+
+A. Datasets 
+
+Two public battery-aging datasets are considered. Dataset I, released by [20], contains 124 commercial A123 APR18650M1A lithium iron phosphate (LFP)/graphite cells, with a nominal capacity of 1.1 Ah and a nominal voltage of 3.3 V. The cells were cycled at 30 ◦C under different fast-charging protocols, yielding cycle lives of approximately 150–2300 cycles. The dataset includes electrical and surface-temperature measurements and provides a benchmark for degradation prediction under charging-protocol variability. Dataset II, released by Ma et al. [14], comprises 77 com-mercial LFP/graphite cells with a nominal capacity of 1.1 Ah. The cells were tested at 30 ◦C using an identical charging procedure and 77 different multistage discharge protocols. The charging procedure includes 5C charging to 80% state of charge, followed by 1C charging to 3.6 V and a constant-voltage stage. The dataset contains more than 140 000 cycles, with cell lifetimes of approximately 1100–2700 cycles. It complements Dataset I by emphasizing discharge-protocol variability. Both source studies use 80% of nominal capacity as the end-of-life criterion. 
+
+B. Data Partitioning and Evaluation Protocol 
+
+Both datasets are partitioned by battery identity, ensuring that all windows from a given cell belong to the same partition. For Dataset I, we adopt the cell grouping reported in the supplementary information of [20], using 41 cells for training, 43 for validation, and 40 for testing. The source study’s primary test set is used here for validation, while its secondary test set serves as the test set. Training and validation cells come from the 2017-05-12 and 2017-06-30 batches; the 40 test cells come from the later 2018-04-12 batch. Thus, Dataset I evaluates unseen cells under a manufacturing-batch and charging-protocol shift. For Dataset II, we follow the predefined division of 55 de-velopment cells and 22 test cells in [14]. The 55 development cells are further divided into training and validation subsets 7
+
+using an approximately 90:10 ratio at the cell level. The remaining 22 cells are reserved exclusively for final testing. All learned preprocessing parameters are fitted using only the training partition and remain fixed during validation and testing. Rolling windows contain only measurements available at the prediction time. Model configurations, loss weights, and checkpoints are selected using the validation partition; the test partitions are reserved for final performance evaluation. Unless otherwise indicated, predictions are averaged over five runs using fixed data partitions. This prediction-level averaging forms a five-model ensemble. Evaluation metrics are then computed separately for each test cell and summarized as the mean and standard deviation across test cells, ¯m±sm. The standard deviation therefore quantifies between-cell variability in predictive performance, rather than variability across runs. 
+
+C. Implementation Details 
+
+The neural networks are implemented in PyTorch 2.5.1 and trained using the Adam optimizer [13] with a learning rate of 10 −4. Data preprocessing and numerical computations use NumPy 2.2.6, SciPy 1.15.3, pandas 2.3.3, and scikit-learn 1.7.2. XGBoost 3.2.0 is used for the tree-based regression experiments. All experiments are conducted on a workstation equipped with an NVIDIA GeForce RTX 5060 GPU, an AMD Ryzen 7 CPU, and 32 GB of system RAM. 
+
+D. Evaluation Metrics 
+
+During training, RUL and capacity targets are scaled as 
+
+eyRUL = yRUL 
+
+3000 , eyCap = yCap 
+
+sQ
+
+, (23) where sQ = 1 .1 Ah for Dataset I and sQ = 1300 mAh for Dataset II, matching the native capacity units of each dataset. At inference, predictions are multiplied by their respective scaling factors to recover the original units before evaluation. Capacity values are converted to mAh for consistent reporting across datasets. Performance is evaluated using root-mean-square error (RMSE), coefficient of determination ( R2), and mean absolute percentage error (MAPE): 
+
+RMSE = 
+
+vuut 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+(yi − ˆyi)2, (24) 
+
+R2 = 1 −
+
+PNi=1 (yi − ˆyi)2
+
+PNi=1 (yi − ¯y)2 , (25) 
+
+MAPE = 100 
+
+N
+
+> N
+
+X
+
+> i=1
+
+yi − ˆyi
+
+yi
+
+, (26) where N is the number of evaluated samples for one test cell, yi and ˆyi are the true and predicted values, respectively, and ¯y = N −1 PNi=1 yi. RMSE is reported in cycles for RUL and in mAh for capacity, whereas MAPE is reported as a percentage. Lower RMSE and MAPE and higher R2 indicate better predictive performance. The MAPE expression assumes nonzero targets; R2 requires a nonconstant target sequence. The cell-level metric values are averaged with equal weight across test cells, rather than pooling all windows across cells. 
+
+E. Baseline Methods 
+
+Three groups of comparisons are considered. First, raw-curve GRU, LSTM, and Transformer baselines use nominal 40-min charging observations above 3.1 V without autoen-coder embeddings or handcrafted statistics. Second, repre-sentation and architecture ablations compare XGBoost re-gression on statistical descriptors, raw resampled curves, and learned embeddings, together with recurrent, convolutional, and Transformer-based expert backbones. Third, fusion com-parisons use the same two pretrained experts with alternative feature- or prediction-level fusion operators. The comparison additionally includes MSFEH [25], struc-tural pruning [10], Ma et al. [14], Ge et al. [9], and Qian et al. [18]. Their numerical results are presented as reference comparisons. Differences in input availability, test partitions, and metric aggregation must be considered when interpreting rankings against external methods. IV. R ESULTS AND DISCUSSION 
+
+This section reports performance on both datasets and ablations on Dataset I. The reference FiLM configuration uses 
+
+λCap = 1 ; the RUL-prioritized configuration uses λCap = 0 .5.Unless stated otherwise, deviations quantify variation across test cells after predictions are averaged over five runs. Mean-only tables omit these deviations for compactness. 
+
+A. RUL Prediction Performance 
+
+Table V reports the comparison on both datasets, and Table IV separates the standalone experts and fusion configu-rations on Dataset I. With equal task weights, FiLM achieves an RUL RMSE of 143.69 cycles, R2 = 0 .74 , and MAPE of 10.91% on Dataset I. Its RMSE is 43.18%, 48.13%, and 32.36% lower than those of the raw-curve GRU, LSTM, and Transformer, respectively. These comparisons assess the com-plete pipeline, including its observations and representations, rather than isolating fusion. On Dataset II, the proposed method achieves an RUL RMSE of 161.10 cycles, R2 = 0 .88 , and MAPE of 7.15%. Relative to the raw-curve Transformer, RMSE decreases from 172.11 to 161.10 cycles (6.40%). The proposed method has the lowest reported RUL RMSE in both dataset blocks. However, MSFEH has a lower Dataset I MAPE (9.82%), so the proposed method does not lead every RUL metric. External-method rankings remain conditional on protocol compatibility. On Dataset I, reducing λCap to 0.5 lowers RMSE to 141.64 cycles, a 1.43% reduction, while increasing capacity error. This small mean difference does not establish statistical significance. Evaluation on two separately trained datasets demonstrates performance in two settings, not zero-shot trans-fer between datasets. 
+
+B. Capacity Estimation Performance 
+
+Table IV shows that equal-weight FiLM achieves a capacity RMSE of 12 .36 ± 5.32 mAh, R2 = 0 .90 ± 0.08 , and MAPE of 0.99 ± 0.45% on Dataset I. Mean RMSE is 14.23% lower than that of the Capacity Expert and 63.91% lower than that 8RUL RMSE RUL R 2      
+
+> RUL MAPE Cap RMSE Cap R 2Cap MAPE
+> First Data normalized performance
+> (larger = better) Proposed Ge2025 Qian2026 GRU LSTM Transformer RUL RMSE RUL R 2
+> RUL MAPE Cap RMSE Cap R 2Cap MAPE
+> Second Data normalized performance
+> (larger = better) Proposed Ge2025 Qian2026 GRU LSTM Transformer
+
+Fig. 2. Normalized metric profiles for (a) Dataset I and (b) Dataset II, using the six methods with complete metrics shown in the legend. Each metric is min–max normalized separately within each dataset; error metrics are reversed so that larger values indicate better performance. Normalization uses the displayed rounded values. Polygon area is not an aggregate performance metric. TABLE IV PERFORMANCE COMPARISON ON DATASET I. V ALUES ARE MEAN CELL -LEVEL METRICS ; STANDARD DEVIATIONS ARE OMITTED . T HE TWO FILM 
+
+> CONFIGURATIONS USE DIFFERENT CAPACITY
+
+-LOSS WEIGHTS .RUL Prediction Capacity Estimation Method RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) GRU 252.90 0.30 18.48 9.39 0.93 0.59 LSTM 277.03 0.13 21.46 24.13 0.64 1.85 Transformer 212.44 0.44 16.93 15.13 0.85 1.11 RUL Expert 147.08 0.72 11.44 34.25 0.27 2.98 Capacity Expert 151.04 0.70 11.21 14.41 0.86 1.10 FiLM, λCap = 1 143.69 0.74 10.91 12.36 0.90 0.99 FiLM, λCap = 0 .5 141.64 0.74 10.91 15.50 0.84 1.26 
+
+of the RUL Expert. Together with the lower RUL error, this supports the value of combining their representations in the reference configuration. The raw-curve GRU nevertheless has a lower Dataset I capacity RMSE of 9.39 mAh and MAPE of 0.59%, at the expense of higher RUL error. With λCap = 0.5, FiLM capacity RMSE increases to 15.50 mAh, exceeding that of the standalone Capacity Expert. Improvement in both tasks relative to the experts therefore applies to equal-weight fusion, not every loss configuration. On Dataset II, the proposed method achieves a capacity RMSE of 7.28 mAh, R2 = 0.99 , and MAPE of 0.50%. Several reference methods and the raw-curve GRU and LSTM have lower capacity errors. The strongest observed advantage is therefore RUL prediction; the method does not provide uniformly superior capacity estimation. The radar profiles in Fig. 2 visualize this trade-off without defining a combined ranking. 
+
+C. Ablation Studies 
+
+The following comparisons use Dataset I. Preliminary XG-Boost experiments investigate representation choices, whereas subsequent neural-network experiments investigate expert backbones and fusion. Their different prediction heads and preprocessing conditions preclude interpreting every compar-ison as a one-factor ablation of the final model. 
+
+1) Input Features and Statistical Descriptors: Figs. 3 and 4 summarize the input-feature and statistical-descriptor abla-tions, respectively. As shown in Fig. 3, adding time to the Q, V, T inputs reduces RUL RMSE from 250.31 to 219.81 cycles, while increasing capacity RMSE from 20.24 to 23.34 mAh. The lag-12 configuration with Savitzky–Golay filtering achieves RMSEs of 216.83 cycles and 26.03 mAh for RUL and capacity, respectively. Filtering reduces RUL error for the lag-9 and lag-12 configurations but increases it for lag-6; capacity error increases for all three lag configurations. Thus, feature augmentation and filtering have task-dependent effects. These comparisons remain exploratory because several configura-tions were evaluated in a single run. For statistical inputs, Fig. 4 shows that extending the four-channel descriptors from means alone to mean, standard devi-ation, minimum, maximum, median, variance, and skewness reduces RUL RMSE from 228.52 to 216.40 cycles. Adding kurtosis increases the error to 223.98 cycles. The seven-statistic set produces the 28-dimensional cycle descriptor used 9
+
+TABLE V PERFORMANCE COMPARISON ON DATASETS I AND II. RUL RMSE IS REPORTED IN CYCLES , CAPACITY RMSE IN M AH, AND MAPE IN PERCENT . GRU, LSTM, AND TRANSFORMER USE RAW PARTIAL -CHARGING CURVES (V > 3.1 V, t:t+40 MIN ), WITHOUT AN AUTOENCODER OR HANDCRAFTED STATISTICS . A DASH DENOTES AN UNAVAILABLE RESULT . T HE PROPOSED METHOD USES λCap = 1 .Method Dataset I Dataset II RUL Prediction Capacity Estimation RUL Prediction Capacity Estimation RMSE ↓ R2 ↑ MAPE ↓ RMSE ↓ R2 ↑ MAPE ↓ RMSE ↓ R2 ↑ MAPE ↓ RMSE ↓ R2 ↑ MAPE ↓
+
+MSFEH [25] 161.81 - 9.82 - - - - - - - - -Structural Pruning [10] - - - - - - 192.17 0.858 - 6.18 0.995 -Ma et al. [14] - - - - - - 186 0.804 8.72 2.57 0.999 0.176 Ge2025 [9] 274.71 0.11 21.67 13.51 0.87 1.17 171.82 0.86 8.15 3.13 1.00 0.21 Qian2026 [18] 290.76 0.02 23.25 32.91 0.32 2.76 173.57 0.84 8.01 5.13 1.00 0.34 GRU 252.90 0.30 18.48 9.39 0.93 0.59 176.98 0.86 8.41 3.07 1.00 0.21 LSTM 277.03 0.13 21.46 24.13 0.64 1.85 192.88 0.83 9.31 4.62 1.00 0.33 Transformer 212.44 0.44 16.93 15.13 0.85 1.11 172.11 0.83 8.30 19.73 0.95 1.64 Proposed method 143.69 0.74 10.91 12.36 0.90 0.99 161.10 0.88 7.15 7.28 0.99 0.50 Q,V,T Q,V,T,t Q,V,T,t + SG Lag-9 without SG Lag-9 with SG Lag-6 without SG Lag-6 with SG Lag-12 without SG Lag-12 with SG    
+
+> 100 125 150 175 200 225 250 275
+> RMSE (cycles)
+> 250.31 219.81 223.09 237.26 219.59 214.83 223.34 235.38 216.83
+> (a) RUL prediction
+> Q,V,T Q,V,T,t Q,V,T,t + SG Lag-9 without SG Lag-9 with SG Lag-6 without SG Lag-6 with SG Lag-12 without SG Lag-12 with SG
+> 0510 15 20 25 30
+> RMSE (mAh)  20.24 23.34 30.04 21.39 25.90 22.61 26.80 22.34 26.03
+> (b) Capacity estimation
+> Without SG With SG
+
+Fig. 3. Input-feature ablation on Dataset I: (a) RUL prediction RMSE and (b) capacity estimation RMSE. SG denotes Savitzky–Golay filtering. Bars show mean cell-level errors; some preliminary configurations use a single run rather than five-run prediction averaging. Standard deviations are omitted, and the RUL axis starts at 100 cycles. Lower values indicate better performance. 
+
+by the Capacity Expert. However, the subset comprising mean, standard deviation, minimum, and maximum achieves a lower capacity RMSE of 22.67 mAh, compared with 23.96 mAh for the selected set. Descriptor selection therefore reflects a trade-off between the two tasks, rather than simultaneous minimization of both errors. 
+
+2) Charging Segment Duration and Cycle History: Ta-bles VI–IX report the window experiments. For partial-charging embeddings with an XGBoost head, a nominal 10-min segment gives an RUL RMSE of 159.38 cycles, compared with 316.30, 286.84, and 285.96 cycles for 20-, 30-, and 40-min segments. Conversely, statistical representations favor longer segments for capacity: their capacity RMSEs are 32.41, 14.74, 10.86, and 12.77 mAh for 10, 20, 30, and 40 min, respectively. The 40-min statistical input gives the lowest RUL RMSE in that group (199.98 cycles), whereas 30 min gives the lowest capacity RMSE. The selected 40-min view should therefore not be described as universally optimal. With the 2D-CNN–GRU embedding backbone, sampling ten cycles over a 30-cycle history reduces RUL RMSE from 171.84 to 147.08 cycles relative to ten consecutive cycles. For the statistical 2D-CNN–Transformer, ten consecutive cycles give an RUL RMSE of 151.04 cycles, versus 154.43 cycles for the extended history, with similar capacity RMSEs of 14.41 and 14.27 mAh, respectively. These observations motivate complementary history lengths, while providing limited evi-dence that the shorter history itself improves capacity accuracy. 
+
+3) Temporal Feature Extraction Architectures: Capacity Expert ablation: Table X evaluates statistical-input backbones with ten cycles sampled across a 30-cycle history. The 2D-CNN–Transformer gives the lowest capacity RMSE in that ta-ble (14.27 mAh), compared with 22.18, 23.65, and 23.51 mAh for the 2D-CNN–LSTM, GRU, and Mamba alternatives. Its RUL RMSE is 154.43 cycles; the 2D-CNN–LSTM is slightly lower at 153.47 cycles. This table supports the Capacity Expert architecture under an extended-history ablation, rather than reporting its final consecutive-cycle setting. Table XII evaluates the same statistical family with ten consecutive cycles, matching the Capacity Expert history in Section II-B. The 2D-CNN–Transformer yields 151.04 cycles and 14.41 mAh, which are the standalone Capacity Expert values used in the fusion comparison. Thus, the extended and 10 Mean + Std + Min + Max + Median + Var + Skew + Kurtosis            
+
+> Cumulative statistical descriptors
+> 100 150 200 250 300
+> RMSE (cycles)  253.84 287.40 262.38 250.30 250.39 239.56 233.93 228.52 240.99 229.51 231.14 231.14 216.40 223.98
+> (a) RUL prediction
+> Mean + Std + Min + Max + Median + Var + Skew + Kurtosis
+> Cumulative statistical descriptors
+> 0510 15 20 25 30 35 40
+> RMSE (mAh)
+> 35.78 26.92 27.83 26.12 26.12 33.29 30.57 32.87 26.40 22.67 22.82 22.82 23.96 24.24
+> (b) Capacity estimation
+> Q,V,T Q,V,T,t
+
+Fig. 4. Statistical-descriptor ablation on Dataset I using XGBoost: (a) RUL prediction RMSE and (b) capacity estimation RMSE. Descriptors are added cumulatively from left to right for the Q, V, T and Q, V, T, t inputs. Values above the bars are the reported point estimates. The RUL axis starts at 100 cycles. Lower RMSE indicates better performance. TABLE VI STATISTICAL DESCRIPTORS : VOLTAGE -INTERVAL AND DURATION ABLATION ON DATASET I WITH XGB OOST . V OLTAGES ARE IN V; t:t+d DENOTES A NOMINAL d-MIN INTERVAL BEGINNING AT THE FIRST CHARGING SAMPLE ABOVE 3.1 V. T HESE ARE PRELIMINARY REPRESENTATION COMPARISONS ;
+
+> LABELS DISTINGUISH THE RECORDED PREPROCESSING CONFIGURATIONS
+
+.Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 
+
+[3 .4, 3.6] 216.40 0.44 16.51 23.96 0.66 1.70 
+
+[3 .3, 3.5] 229.88 ± 162.24 0.36 ± 0.47 17.57 ± 7.64 21.31 ± 9.30 0.71 ± 0.25 1.58 ± 0.72 
+
+[3 .2, 3.4] 269.71 ± 169.62 0.03 ± 0.98 21.25 ± 10.84 36.46 ± 18.28 0.08 ± 0.91 2.83 ± 1.61 
+
+[3 .1, 3.3] 256.43 ± 142.50 0.01 ± 1.49 20.36 ± 10.68 39.38 ± 18.76 -0.06 ± 0.90 3.18 ± 1.74 
+
+[3 .3, 3.6] 255.40 ± 158.06 0.23 ± 0.47 19.74 ± 6.68 26.29 ± 9.91 0.57 ± 0.32 1.90 ± 0.82 
+
+[3 .2, 3.6] 226.29 ± 145.81 0.40 ± 0.40 17.14 ± 6.12 26.26 ± 7.66 0.57 ± 0.25 1.90 ± 0.64 
+
+[3 .1, 3.6] 205.64 ± 140.99 0.51 ± 0.36 15.72 ± 5.90 24.69 ± 6.76 0.63 ± 0.20 1.71 ± 0.56 
+
+V > 3.1 V, (t:t+10) 214.55 ± 145.24 0.45 ± 0.40 16.44 ± 5.69 32.41 ± 6.48 0.37 ± 0.32 2.45 ± 0.66 
+
+V > 3.1 V, (t:t+20) 267.25 ± 156.63 0.14 ± 0.49 21.61 ± 7.49 14.74 ± 4.26 0.87 ± 0.09 1.18 ± 0.35 
+
+V > 3.1 V, (t:t+30) 220.62 ± 135.48 0.40 ± 0.42 16.38 ± 6.50 10.86 ± 3.45 0.93 ± 0.05 0.81 ± 0.26 
+
+V > 3.1 V, (t:t+40) 199.98 ± 138.06 0.51 ± 0.37 14.72 ± 6.39 12.77 ± 3.83 0.90 ± 0.07 0.93 ± 0.35 
+
+consecutive histories provide similar capacity accuracy, while the consecutive history gives lower mean RUL error for this backbone. 
+
+RUL Expert ablation: Table XI evaluates embedding-input backbones with the extended history. The 2D-CNN–GRU achieves the lowest RUL RMSE in that table (147.08 cycles), compared with 162.81, 173.48, and 167.28 cycles for the corresponding LSTM, Transformer, and Mamba hybrids. A standalone GRU gives 159.08 cycles. Table XIII provides the consecutive-cycle embedding comparison; the 2D-CNN–GRU error increases to 171.84 cycles. The selected RUL and Capac-ity backbones therefore reflect different input representations and temporal contexts. 
+
+4) Autoencoder Pretraining: Table XIV compares autoen-coder architectures. In the reported 10-min embedding exper-iment with an XGBoost head, the GRU autoencoder achieves an RUL RMSE of 157.87 cycles. The LSTM autoencoder is slightly better at 156.31 cycles, whereas Ti-MAE, TS-MAE, H3MAE, and TimeMAE yield 195.36, 208.55, 213.76, and 230.42 cycles, respectively. GRU and LSTM therefore perform similarly for RUL, and the GRU should not be described as the unique best encoder. Capacity results also differ: H3MAE reaches 27.87 mAh, compared with 32.64 mAh for GRU. The raw-curve 10-min configuration without an autoencoder yields an RUL RMSE of 237.17 cycles. Although the embed-ding result is lower, the source records associate the selected embedding experiment with full charge–discharge data. Until preprocessing is matched, this comparison cannot isolate the benefit of pretraining. A definitive pretraining ablation requires the same downstream architecture and observations, com-paring supervised pretraining, reconstruction-only pretraining, and random initialization under the same training budget. 
+
+5) Individual Experts and Fusion Strategies: The RUL Expert gives an RUL RMSE of 147.08 cycles but a capacity RMSE of 34.25 mAh. The Capacity Expert gives 151.04 cycles and 14.41 mAh, respectively. Equal-weight FiLM im-proves both mean errors to 143.69 cycles and 12.36 mAh, consistent with complementary expert information. 11            
+
+> TABLE VII GRU-AUTOENCODER EMBEDDINGS FROM PARTIAL -CHARGE DATA :VOLTAGE -INTERVAL AND DURATION ABLATION ON DATASET IWITH XGB OOST .VOLTAGES ARE IN V; t:t+dDENOTES A NOMINAL d-MIN INTERVAL BEGINNING AT THE FIRST CHARGING SAMPLE ABOVE 3.1 V. T HESE ARE PRELIMINARY REPRESENTATION COMPARISONS ;LABELS DISTINGUISH THE RECORDED PREPROCESSING CONFIGURATIONS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 
+
+[3 .4, 3.6] 216.83 ± 141.44 0.43 ± 0.38 16.96 ± 6.36 26.03 ± 8.23 0.57 ± 0.29 1.93 ± 0.75 
+
+[3 .3, 3.5] 175.66 ± 144.57 0.61 ± 0.38 12.84 ± 6.93 22.15 ± 10.24 0.68 ± 0.31 1.63 ± 0.90 
+
+[3 .2, 3.4] 206.67 ± 123.98 0.37 ± 0.66 16.46 ± 7.95 31.84 ± 13.22 0.34 ± 0.48 2.37 ± 0.96 
+
+[3 .1, 3.3] 193.84 ± 133.89 0.28 ± 1.42 15.85 ± 11.79 33.74 ± 17.58 0.20 ± 0.75 2.59 ± 1.49 
+
+[3 .3, 3.6] 232.85 ± 135.60 0.33 ± 0.40 18.28 ± 6.21 27.94 ± 12.77 0.48 ± 0.44 2.05 ± 1.03 
+
+[3 .2, 3.6] 226.82 ± 139.97 0.38 ± 0.39 17.64 ± 6.00 28.10 ± 13.75 0.47 ± 0.49 2.10 ± 1.14 
+
+[3 .1, 3.6] 228.23 ± 145.49 0.37 ± 0.41 17.67 ± 6.28 28.69 ± 12.13 0.47 ± 0.39 2.14 ± 0.96 
+
+V > 3.1 V, (t:t+10) 159.38 ± 126.86 0.68 ± 0.29 12.21 ± 6.35 36.66 ± 7.78 0.19 ± 0.41 3.07 ± 0.77 
+
+V > 3.1 V, (t:t+20) 316.30 ± 155.38 -0.17 ± 0.48 25.93 ± 5.75 21.13 ± 8.75 0.72 ± 0.28 1.67 ± 0.82 
+
+V > 3.1 V, (t:t+30) 286.84 ± 145.60 0.03 ± 0.42 23.36 ± 5.68 19.59 ± 6.12 0.77 ± 0.16 1.50 ± 0.59 
+
+V > 3.1 V, (t:t+40) 285.96 ± 144.86 0.05 ± 0.40 23.29 ± 5.49 23.77 ± 7.85 0.65 ± 0.26 1.90 ± 0.72 TABLE VIII GRU-AUTOENCODER EMBEDDINGS FROM THE CONFIGURATION LABELED “PARTIAL CHARGE ”: VOLTAGE -INTERVAL AND DURATION ABLATION ON         
+
+> DATASET IWITH XGB OOST . V OLTAGES ARE IN V; t:t+dDENOTES A NOMINAL d-MIN INTERVAL BEGINNING AT THE FIRST CHARGING SAMPLE ABOVE
+> 3.1 V. T HESE ARE PRELIMINARY REPRESENTATION COMPARISONS ;LABELS DISTINGUISH THE RECORDED PREPROCESSING CONFIGURATIONS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 
+
+[3 .4, 3.6] 182.75 ± 135.86 0.56 ± 0.37 15.25 ± 7.86 18.68 ± 5.13 0.79 ± 0.12 1.44 ± 0.44 
+
+[3 .3, 3.5] 243.08 ± 157.18 0.30 ± 0.45 20.15 ± 7.02 30.88 ± 7.17 0.43 ± 0.26 2.10 ± 0.56 
+
+[3 .2, 3.4] 551.83 ± 181.54 -2.60 ± 0.34 47.12 ± 2.54 136.07 ± 19.51 -9.73 ± 3.30 12.18 ± 1.77 
+
+[3 .1, 3.3] 357.70 ± 171.81 -0.49 ± 0.58 29.70 ± 5.95 39.46 ± 16.38 -0.04 ± 0.81 3.52 ± 1.54 
+
+[3 .3, 3.6] 209.27 ± 141.63 0.47 ± 0.37 17.48 ± 6.77 22.31 ± 8.90 0.68 ± 0.28 1.66 ± 0.88 
+
+[3 .2, 3.6] 236.89 ± 149.26 0.33 ± 0.43 20.00 ± 6.80 22.89 ± 8.69 0.67 ± 0.27 1.73 ± 0.83 
+
+[3 .1, 3.6] 253.05 ± 147.59 0.24 ± 0.42 21.38 ± 6.44 23.08 ± 8.31 0.67 ± 0.21 1.81 ± 0.80 
+
+V > 3.1 V, (t:t+10) 157.87 ± 130.12 0.70 ± 0.28 11.91 ± 5.62 32.64 ± 7.76 0.36 ± 0.36 2.73 ± 0.74 
+
+V > 3.1 V, (t:t+20) 334.89 ± 157.53 -0.30 ± 0.47 27.74 ± 5.62 20.24 ± 7.48 0.75 ± 0.21 1.61 ± 0.69 
+
+V > 3.1 V, (t:t+30) 321.28 ± 156.41 -0.20 ± 0.46 26.29 ± 5.82 26.12 ± 8.18 0.59 ± 0.29 2.25 ± 0.67 
+
+V > 3.1 V, (t:t+40) 331.90 ± 165.46 -0.26 ± 0.51 26.64 ± 5.43 33.11 ± 8.79 0.34 ± 0.36 2.89 ± 0.76 
+
+Figure 5 compares predictions from the standalone experts and the fused model on Dataset I. FiLM reduces the mean cell-level RUL RMSE from 147.08 to 143.69 cycles and capacity RMSE from 14.41 to 12.36 mAh. However, substantial under-estimation remains at high RUL values, and improvements are not uniform across samples. The figure therefore complements the aggregate metrics by illustrating the remaining prediction errors. Table XV compares the fusion operators. Attention pool-ing achieves the lowest mean RUL RMSE (143.55 cycles), followed closely by concatenation (143.57 cycles) and FiLM (143.69 cycles). These differences are small relative to the between-cell variability; paired cell-level comparisons are needed to assess their statistical significance. FiLM achieves the lowest mean capacity RMSE (12.36 mAh), compared with 15.12 mAh for concatenation and 18.67 mAh for attention pooling. It also yields the lowest mean RUL MAPE among the evaluated fusion operators (10.91%). These results sup-port FiLM as a favorable trade-off between RUL prediction and capacity estimation, although it does not minimize RUL RMSE. Cross-attention, bilinear fusion, and the Hadamard prod-uct give capacity RMSEs of 30.37, 32.06, and 44.37 mAh, respectively. The prediction-level mixture of experts gives 35.56 mAh. More elaborate interaction mechanisms do not improve the reported results under these training conditions. The graph-attention experiments additionally change prepro-cessing and therefore cannot isolate the effect of the fusion operator alone. 
+
+6) Capacity Loss Weight in Fusion Training: Table XVI reports the loss-weight comparison. Reducing the capacity coefficient from 1 to 0.5 lowers mean RUL RMSE by 12            
+
+> TABLE IX RAW INTERPOLATED FEATURES WITHOUT AN AUTOENCODER :VOLTAGE -INTERVAL AND DURATION ABLATION ON DATASET IWITH XGB OOST .VOLTAGES ARE IN V; t:t+dDENOTES A NOMINAL d-MIN INTERVAL BEGINNING AT THE FIRST CHARGING SAMPLE ABOVE 3.1 V. T HESE ARE PRELIMINARY REPRESENTATION COMPARISONS ;LABELS DISTINGUISH THE RECORDED PREPROCESSING CONFIGURATIONS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 
+
+[3 .4, 3.6] 241.94 ± 147.19 0.32 ± 0.38 18.63 ± 5.47 28.79 ± 7.76 0.49 ± 0.31 2.10 ± 0.62 
+
+[3 .3, 3.5] 162.27 ± 149.71 0.69 ± 0.35 11.29 ± 6.73 21.32 ± 9.54 0.71 ± 0.23 1.47 ± 0.69 
+
+[3 .2, 3.4] 287.75 ± 182.36 -0.77 ± 3.93 24.14 ± 20.29 35.15 ± 13.56 0.21 ± 0.54 2.61 ± 1.13 
+
+[3 .1, 3.3] 256.54 ± 162.09 -0.42 ± 3.13 21.85 ± 18.32 39.04 ± 17.09 -0.01 ± 0.78 3.08 ± 1.53 
+
+[3 .3, 3.6] 261.79 ± 134.44 0.20 ± 0.36 20.19 ± 4.75 29.14 ± 9.32 0.47 ± 0.34 2.11 ± 0.84 
+
+[3 .2, 3.6] 240.85 ± 127.05 0.31 ± 0.34 18.26 ± 4.94 31.12 ± 9.69 0.39 ± 0.39 2.30 ± 0.89 
+
+[3 .1, 3.6] 245.70 ± 133.04 0.29 ± 0.35 18.76 ± 4.73 32.55 ± 10.02 0.33 ± 0.42 2.45 ± 0.88 
+
+V > 3.1 V, (t:t+10) 237.17 ± 153.88 0.35 ± 0.44 17.92 ± 5.89 34.49 ± 6.70 0.29 ± 0.34 2.57 ± 0.71 
+
+V > 3.1 V, (t:t+20) 306.44 ± 157.22 -0.07 ± 0.47 24.48 ± 5.84 17.37 ± 4.69 0.81 ± 0.10 1.44 ± 0.45 
+
+V > 3.1 V, (t:t+30) 316.40 ± 165.56 -0.15 ± 0.54 24.34 ± 6.61 27.11 ± 6.76 0.56 ± 0.24 2.36 ± 0.67 
+
+V > 3.1 V, (t:t+40) 342.38 ± 162.34 -0.38 ± 0.62 27.28 ± 6.75 41.84 ± 5.63 0.01 ± 0.25 3.51 ± 0.53 TABLE X CAPACITY EXPERT BACKBONE ABLATION WITH STATISTICAL DESCRIPTORS FROM NOMINAL 40-MIN SEGMENTS : TEN CYCLES SAMPLED AT STRIDE THREE WITHIN A 30-CYCLE WINDOW . D ATASET I RESULTS ARE MEAN ± STANDARD DEVIATION ACROSS TEST CELLS AFTER AVERAGING PREDICTIONS OVER FIVE RUNS .Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 1D CNN 229.30 ± 141.97 0.36 ± 0.40 18.53 ± 6.70 27.78 ± 7.78 0.54 ± 0.30 1.88 ± 0.73 2D CNN 168.62 ± 117.76 0.60 ± 0.38 12.96 ± 6.92 21.46 ± 10.40 0.68 ± 0.30 1.81 ± 0.99 LSTM 254.76 ± 158.96 0.19 ± 0.54 21.19 ± 8.44 42.50 ± 10.42 -0.06 ± 0.56 3.26 ± 0.96 GRU 232.09 ± 142.38 0.32 ± 0.47 19.55 ± 8.19 50.73 ± 14.20 -0.55 ± 0.87 3.73 ± 1.19 Transformer 264.13 ± 153.24 0.16 ± 0.48 21.48 ± 6.97 25.72 ± 6.75 0.61 ± 0.20 1.54 ± 0.66 Mamba 292.75 ± 160.49 -0.02 ± 0.52 24.38 ± 6.96 33.21 ± 7.62 0.35 ± 0.31 2.32 ± 0.66 1D CNN +LSTM 256.46 ± 157.64 0.20 ± 0.49 20.87 ± 7.57 32.70 ± 8.16 0.38 ± 0.33 2.13 ± 0.80 1D CNN +GRU 256.83 ± 153.31 0.20 ± 0.48 20.94 ± 7.35 33.45 ± 7.17 0.35 ± 0.28 2.37 ± 0.70 1D CNN +Transformer 269.99 ± 156.72 0.12 ± 0.51 22.24 ± 7.43 35.54 ± 10.91 0.25 ± 0.50 2.26 ± 1.07 1D CNN +Mamba 259.35 ± 151.85 0.19 ± 0.46 21.02 ± 7.01 27.77 ± 8.30 0.54 ± 0.29 2.09 ± 0.73 2D CNN + LSTM 153.47 ± 113.44 0.70 ± 0.27 11.52 ± 5.67 22.18 ± 6.28 0.70 ± 0.17 1.48 ± 0.68 2D CNN + GRU 155.17 ± 113.80 0.69 ± 0.26 11.57 ± 5.46 23.65 ± 8.03 0.65 ± 0.24 1.70 ± 0.79 2D CNN + Transformer 154.43 ± 115.44 0.66 ± 0.40 12.07 ± 7.03 14.27 ± 5.35 0.87 ± 0.11 1.09 ± 0.51 2D CNN + Mamba 168.57 ± 122.63 0.64 ± 0.30 12.87 ± 6.13 23.51 ± 8.32 0.65 ± 0.25 1.62 ± 0.79 
+
+2.05 cycles, but increases capacity RMSE by 3.14 mAh (25.40%). Increasing the coefficient to 2 gives 144.63 cycles and 12.85 mAh and does not improve on equal weighting for either mean RMSE. The (1 .5, 2) configuration also changes the overall loss scale, so it is not strictly equivalent to varying only λCap while holding the optimization dynamics fixed. The λCap = 0 .5 configuration prioritizes mean RUL RMSE, whereas λCap = 1 provides the better observed capacity result. The equal-weight configuration is retained as the reference for joint-task comparison; the 0.5 configuration is reported separately. Loss weights act on the normalized targets defined in Section III-D. Removing one task loss produces very poor performance on the unsupervised output; this is expected because that output is no longer trained toward its target and does not by itself prove beneficial cross-task transfer. 
+
+D. Computational Efficiency 
+
+The architecture uses ten tokens per expert and 128-dimensional expert representations. During fusion training, freezing the experts eliminates their parameter updates; their forward computations are still required unless features are cached. At inference, the Stage-I reconstruction decoder and auxiliary prediction backbone are discarded, and both expert representations are processed by FiLM and a shared regression head. No measured parameter-count, memory, or timing com-parison is available. Consequently, the experiments do not 13        
+
+> TABLE XI RUL E XPERT BACKBONE ABLATION WITH CYCLE EMBEDDINGS FROM THE NOMINAL 10-MIN CONFIGURATION :TEN CYCLES SAMPLED AT STRIDE THREE WITHIN A 30-CYCLE WINDOW . D ATASET IRESULTS ARE MEAN ±STANDARD DEVIATION ACROSS TEST CELLS AFTER AVERAGING PREDICTIONS OVER FIVE RUNS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 1D CNN 164.82 ± 129.34 0.61 ± 0.39 13.44 ± 8.27 23.78 ± 8.69 0.64 ± 0.28 1.73 ± 0.89 2D CNN 165.92 ± 134.24 0.63 ± 0.36 12.93 ± 7.72 30.94 ± 10.28 0.40 ± 0.43 2.69 ± 1.00 LSTM 164.22 ± 133.49 0.59 ± 0.50 13.46 ± 9.53 32.96 ± 9.00 0.33 ± 0.42 2.88 ± 0.87 GRU 159.08 ± 135.97 0.63 ± 0.43 12.80 ± 8.68 29.04 ± 7.69 0.48 ± 0.30 2.39 ± 0.76 Transformer 159.03 ± 124.58 0.65 ± 0.33 12.82 ± 7.57 49.42 ± 8.47 -0.44 ± 0.60 4.49 ± 0.79 Mamba 161.62 ± 124.14 0.67 ± 0.27 12.73 ± 6.18 30.53 ± 8.53 0.43 ± 0.37 2.50 ± 0.87 1D CNN +LSTM 173.12 ± 128.26 0.61 ± 0.34 14.07 ± 7.15 32.61 ± 8.22 0.35 ± 0.39 2.77 ± 0.84 1D CNN +GRU 165.31 ± 128.12 0.62 ± 0.37 13.18 ± 7.85 33.60 ± 8.49 0.31 ± 0.39 2.90 ± 0.81 1D CNN +Transformer 164.45 ± 127.81 0.64 ± 0.33 13.07 ± 7.27 44.91 ± 8.21 -0.20 ± 0.55 4.02 ± 0.79 1D CNN +Mamba 163.61 ± 121.35 0.66 ± 0.28 12.86 ± 5.93 31.22 ± 8.27 0.40 ± 0.36 2.64 ± 0.87 2D CNN + LSTM 162.81 ± 131.40 0.64 ± 0.35 13.21 ± 7.45 30.73 ± 9.67 0.41 ± 0.39 2.53 ± 0.87 2D CNN + GRU 147.08 ± 121.88 0.72 ± 0.27 11.44 ± 6.20 34.25 ± 9.19 0.27 ± 0.45 2.98 ± 0.85 2D CNN + Transformer 173.48 ± 125.65 0.60 ± 0.35 14.19 ± 7.39 43.42 ± 9.29 -0.12 ± 0.55 3.84 ± 0.83 2D CNN + Mamba 167.28 ± 132.85 0.65 ± 0.31 13.11 ± 6.42 32.68 ± 8.32 0.34 ± 0.39 2.81 ± 0.80 TABLE XII CAPACITY EXPERT BACKBONE ABLATION WITH STATISTICAL DESCRIPTORS FROM NOMINAL 40-MIN SEGMENTS : TEN CONSECUTIVE CYCLES ,      
+
+> MATCHING THE FINAL CAPACITY EXPERT HISTORY . D ATASET IRESULTS ARE MEAN ±STANDARD DEVIATION ACROSS TEST CELLS AFTER AVERAGING PREDICTIONS OVER FIVE RUNS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 1D CNN 252.00 ± 145.98 0.28 ± 0.41 19.64 ± 6.08 24.63 ± 6.32 0.63 ± 0.19 2.06 ± 0.56 2D CNN 174.16 ± 114.40 0.60 ± 0.33 13.10 ± 6.39 21.61 ± 10.81 0.67 ± 0.32 1.80 ± 1.02 LSTM 282.48 ± 165.72 0.07 ± 0.56 22.77 ± 7.85 43.27 ± 7.94 -0.08 ± 0.40 3.49 ± 0.77 GRU 224.75 ± 137.11 0.39 ± 0.42 18.29 ± 7.66 50.92 ± 13.13 -0.55 ± 0.80 3.63 ± 1.13 Transformer 280.56 ± 153.59 0.10 ± 0.47 22.48 ± 6.47 36.94 ± 8.09 0.22 ± 0.31 2.27 ± 0.81 Mamba 282.61 ± 154.53 0.10 ± 0.45 22.60 ± 6.18 28.13 ± 6.48 0.54 ± 0.22 1.83 ± 0.47 1D CNN +LSTM 252.63 ± 153.53 0.25 ± 0.47 20.24 ± 7.44 28.55 ± 7.82 0.52 ± 0.27 1.79 ± 0.78 1D CNN +GRU 270.67 ± 151.88 0.15 ± 0.47 21.91 ± 6.98 33.99 ± 6.95 0.33 ± 0.28 2.39 ± 0.71 1D CNN +Transformer 289.18 ± 158.28 0.03 ± 0.52 23.67 ± 7.21 33.87 ± 9.44 0.33 ± 0.39 1.97 ± 0.96 1D CNN +Mamba 270.74 ± 151.92 0.16 ± 0.45 21.57 ± 6.60 31.94 ± 6.28 0.41 ± 0.23 2.28 ± 0.63 2D CNN + LSTM 152.26 ± 110.38 0.70 ± 0.29 11.33 ± 5.97 18.29 ± 5.14 0.80 ± 0.13 1.22 ± 0.55 2D CNN + GRU 154.69 ± 113.42 0.71 ± 0.26 11.07 ± 5.42 17.41 ± 6.70 0.80 ± 0.16 1.26 ± 0.65 2D CNN + Transformer 151.04 ± 109.64 0.70 ± 0.30 11.21 ± 5.94 14.41 ± 6.28 0.86 ± 0.13 1.10 ± 0.62 2D CNN + Mamba 153.35 ± 108.58 0.71 ± 0.24 11.05 ± 5.17 20.68 ± 7.78 0.72 ± 0.22 1.41 ± 0.73 
+
+establish a computational advantage or real-time execution capability. In addition, five-run prediction averaging requires evaluating five trained instances unless an alternative de-ployment scheme is adopted. The nominal charging duration describes measurement availability and must be distinguished from computational inference latency. 
+
+E. Limitations and Practical Implications 
+
+The experiments cover two laboratory datasets of nominally similar chemistry at controlled ambient temperature. General-ization to other chemistries, variable temperatures, and field operating conditions remains untested. RUL also depends on future usage, so forecasts learned under the recorded protocols may change under a different operating policy. Substantial between-cell variation remains despite predic-tion averaging. Cell-level error distributions, age-dependent evaluation, and calibrated prediction intervals would provide a fuller assessment than mean metrics. External comparison protocols and preliminary preprocessing configurations also limit conclusions about universal superiority. Segment-local charge integration removes the need for a full-cycle capacity measurement as an input, but does not 14       
+
+> TABLE XIII RUL E XPERT HISTORY -CONTROL ABLATION WITH CYCLE EMBEDDINGS FROM THE NOMINAL 10-MIN CONFIGURATION :TEN CONSECUTIVE CYCLES .DATASET IRESULTS ARE MEAN ±STANDARD DEVIATION ACROSS TEST CELLS AFTER AVERAGING PREDICTIONS OVER FIVE RUNS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 1D CNN 175.55 ± 128.72 0.62 ± 0.31 13.66 ± 6.57 25.53 ± 7.93 0.60 ± 0.25 1.91 ± 0.81 2D CNN 177.55 ± 137.34 0.61 ± 0.36 14.03 ± 7.36 39.93 ± 9.75 0.03 ± 0.53 3.36 ± 1.03 LSTM 165.74 ± 126.14 0.64 ± 0.33 13.06 ± 7.36 31.63 ± 8.70 0.38 ± 0.38 2.70 ± 0.83 GRU 169.88 ± 130.22 0.64 ± 0.31 13.09 ± 6.71 33.58 ± 8.92 0.31 ± 0.41 2.88 ± 0.86 Transformer 170.05 ± 128.06 0.65 ± 0.29 13.05 ± 5.95 45.58 ± 8.54 -0.23 ± 0.56 4.09 ± 0.81 Mamba 169.05 ± 124.18 0.65 ± 0.29 13.03 ± 6.50 29.79 ± 8.46 0.45 ± 0.35 2.48 ± 0.84 1D CNN +LSTM 157.60 ± 133.26 0.68 ± 0.33 12.33 ± 7.16 36.73 ± 8.23 0.19 ± 0.42 3.10 ± 0.81 1D CNN +GRU 162.19 ± 123.59 0.66 ± 0.31 12.58 ± 7.14 33.79 ± 7.47 0.31 ± 0.37 2.91 ± 0.72 1D CNN +Transformer 171.53 ± 128.20 0.63 ± 0.32 13.36 ± 6.81 50.46 ± 8.38 -0.50 ± 0.64 4.57 ± 0.81 1D CNN +Mamba 167.47 ± 126.38 0.65 ± 0.30 12.80 ± 6.73 34.90 ± 8.52 0.26 ± 0.41 3.05 ± 0.84 2D CNN + LSTM 169.52 ± 137.17 0.59 ± 0.46 13.74 ± 9.17 31.03 ± 8.41 0.40 ± 0.37 2.49 ± 0.75 2D CNN + GRU 171.84 ± 131.04 0.65 ± 0.29 13.32 ± 5.69 31.17 ± 8.39 0.40 ± 0.36 2.56 ± 0.79 2D CNN + Transformer 179.29 ± 123.41 0.61 ± 0.29 14.23 ± 6.36 46.07 ± 8.40 -0.26 ± 0.57 4.13 ± 0.79 2D CNN + Mamba 168.27 ± 130.70 0.66 ± 0.30 13.01 ± 6.02 27.62 ± 7.71 0.52 ± 0.31 2.24 ± 0.76 TABLE XIV COMPARISON OF AUTOENCODER ARCHITECTURES ON DATASET I. A LL ENCODERS ARE TRAINED WITH RECONSTRUCTION , RUL, AND CAPACITY SUPERVISION , FOLLOWED BY XGB OOST REGRESSION . R ESULTS ARE REPORTED AS THE MEAN ± STANDARD DEVIATION ACROSS TEST CELLS ,
+
+> CALCULATED BY AVERAGING PREDICTIONS OVER FIVE RUNS .
+
+Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) GRU 157.87 ± 130.12 0.70 ± 0.28 11.91 ± 5.62 32.64 ± 7.76 0.36 ± 0.36 2.73 ± 0.74 LSTM 156.31 ± 120.96 0.69 ± 0.27 11.88 ± 5.96 34.46 ± 7.19 0.30 ± 0.33 2.77 ± 0.70 Ti-MAE 195.36 ± 144.24 0.55 ± 0.36 14.91 ± 6.09 29.02 ± 10.48 0.46 ± 0.40 2.28 ± 0.95 TS-MAE 208.55 ± 147.32 0.47 ± 0.41 15.87 ± 6.62 31.27 ± 10.18 0.39 ± 0.40 2.33 ± 0.97 H3MAE 213.76 ± 149.45 0.45 ± 0.42 16.59 ± 6.74 27.87 ± 8.53 0.52 ± 0.31 2.01 ± 0.80 TimeMAE 230.42 ± 145.57 0.36 ± 0.46 17.56 ± 6.68 31.85 ± 10.61 0.36 ± 0.41 2.32 ± 0.98 
+
+eliminate data-availability constraints. Prediction requires the stated cycle history, current and temperature measurements, and sufficiently long charging observations. Missing or in-terrupted segments, cells whose observed voltage already exceeds the threshold, and sensor errors require explicit han-dling before deployment. The availability of a nominal 40-min charging segment is an observation requirement, not a guarantee for every operating cycle. V. C ONCLUSION 
+
+This paper presents a three-stage framework for joint RUL prediction and capacity estimation from partial-charging ob-servations. A GRU-autoencoder-based long-term view and a statistical short-term view are processed by specialized tem-poral backbones and combined through FiLM, with the short-term representation conditioning the long-term representation. The reference configuration achieves mean RUL RMSEs of 143.69 and 161.10 cycles and capacity RMSEs of 12.36 and 7.28 mAh on Datasets I and II, respectively. On Dataset I, equal-weight fusion improves both mean errors relative to the standalone experts. A capacity-loss weight of 0.5 further reduces RUL RMSE to 141.64 cycles but increases capac-ity RMSE to 15.50 mAh. The results support complemen-tary feature fusion while showing that the proposed method does not minimize capacity error across all baselines. Future work will examine broader operating conditions, incomplete charging observations, uncertainty calibration, and measured deployment costs. DATA AND CODE AVAILABILITY 
+
+The datasets are described in [14], [20]. Code inquiries may be directed to AIWARE Limited Company at https://aiware. website. 15 250 500 750 1000 1250 1500 1750 
+
+Actual RUL (cycles) 
+
+> 250 500 750 1000 1250 1500 1750
+> Predicted RUL (cycles)
+
+(a) RUL before vs after FiLM      
+
+> Before (Task 3.26) After (FiLM) Ideal ( y=x)
+> 900 950 1000 1050
+
+Actual Capacity (mAh) 
+
+> 900 950 1000 1050
+> Predicted Capacity (mAh)
+
+(b) Capacity before vs after FiLM   
+
+> Before (Task 3.51) After (FiLM) Ideal ( y=x)
+
+Fig. 5. Predicted versus actual values on Dataset I before and after FiLM fusion: (a) standalone RUL Expert versus FiLM fusion; (b) standalone Capacity Expert versus FiLM fusion. The fusion configuration uses λCap = 1 . All models are evaluated on the same test windows. The dashed line denotes ideal agreement, y = x.TABLE XV FUSION -OPERATOR COMPARISON ON DATASET I USING THE SAME TWO FROZEN EXPERTS AND THEIR ORIGINAL PREPROCESSING . T HE FILM 
+
+> REFERENCE USES EQUAL TASK
+
+-LOSS WEIGHTS . V ALUES REPRODUCE THE REPORTED MEAN ± STANDARD DEVIATION ACROSS TEST CELLS AFTER AVERAGING PREDICTIONS OVER FIVE RUNS .Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) Mixture of Experts (gate) 152.02 ± 113.19 0.71 ± 0.26 11.92 ± 5.85 35.56 ± 9.87 0.22 ± 0.43 3.13 ± 0.92 Element-wise Addition 144.01 ± 106.53 0.74 ± 0.23 11.06 ± 5.26 14.94 ± 6.80 0.84 ± 0.13 1.23 ± 0.57 Feature Concatenation 143.57 ± 103.43 0.73 ± 0.24 11.32 ± 5.40 15.12 ± 7.50 0.84 ± 0.14 1.27 ± 0.66 Attention Pooling 143.55 ± 103.48 0.74 ± 0.23 11.31 ± 5.30 18.67 ± 8.34 0.76 ± 0.20 1.59 ± 0.75 Cross-Attention 169.58 ± 129.38 0.64 ± 0.30 13.10 ± 6.15 30.37 ± 9.95 0.42 ± 0.37 2.65 ± 0.96 Gated Multimodal Unit (GMU) 144.59 ± 104.30 0.73 ± 0.24 11.37 ± 5.34 20.02 ± 8.47 0.73 ± 0.23 1.70 ± 0.78 Bilinear 153.80 ± 115.65 0.70 ± 0.25 12.08 ± 5.73 32.06 ± 9.70 0.36 ± 0.38 2.56 ± 0.91 Max Pooling 143.77 ± 104.43 0.73 ± 0.24 11.28 ± 5.42 18.40 ± 8.23 0.77 ± 0.20 1.57 ± 0.73 Hadamard Product 145.23 ± 107.23 0.74 ± 0.23 11.34 ± 5.15 44.37 ± 12.22 -0.22 ± 0.69 3.74 ± 1.19 FiLM (feature modulation) 143.69 ± 107.15 0.74 ± 0.23 10.91 ± 5.17 12.36 ± 5.32 0.90 ± 0.08 0.99 ± 0.45 
+
+REFERENCES [1] Zaid Allal, Hassan N Noura, Flavien Vernier, Ola Salman, and Khaled Chahine. Machine learning for fuel cell remaining useful life prediction: A review. Energy Conversion and Management: X , page 101597, 2026. [2] Zhengyi Bao, Tingting Luo, Mingyu Gao, Zhiwei He, Kejie Gao, and Jiahao Nie. A lightweight and term-arbitrary memory network for remaining useful life prediction of li-ion battery. IEEE Transactions on Instrumentation and Measurement , 74:1–13, 2025. [3] Chun Chang, Shaojin Wang, Chen Tao, Jiuchun Jiang, Yan Jiang, and Lujun Wang. An improvement of equivalent circuit model for state of health estimation of lithium-ion batteries based on mid-frequency and low-frequency electrochemical impedance spectroscopy. Measurement ,202:111795, 2022. [4] Weidong Chen, Jun Liang, Zhaohua Yang, and Gen Li. A review of lithium-ion battery for electric vehicle applications and beyond. Energy Procedia , 158:4363–4368, 2019. [5] Kyunghyun Cho, Bart Van Merri¨ enboer, C ¸ a˘ glar Gulc ¸ehre, Dzmitry Bah-danau, Fethi Bougares, Holger Schwenk, and Yoshua Bengio. Learning phrase representations using rnn encoder–decoder for statistical machine translation. In Proceedings of the 2014 conference on empirical methods in natural language processing (EMNLP) , pages 1724–1734, 2014. [6] Guangzhong Dong, Fukang Shen, Li Sun, Mingming Zhang, and Jing-wen Wei. A bayesian inferred health prognosis and state of charge estimation for power batteries. IEEE Transactions on Instrumentation and Measurement , 74:1–12, 2024. [7] Shiyi Fu, Hongtao Fan, Zhaorui Jin, Fan Ji, Yulin Tao, Yachao Dong, Xunyuan Chen, Minghao Shao, Shuyu Yuan, Yu Wang, et al. Recent progress in state of health estimation for lithium-ion batteries: From laboratory to practical application. Renewable and Sustainable Energy Reviews , 226:116323, 2026. [8] Hossam A Gabbar, Ahmed M Othman, and Muhammad R Abdussami. Review of battery management systems (bms) development and indus-trial standards. Technologies , 9(2):28, 2021. [9] Yang Ge, Xingxing Jiang, and Benlian Xu. Deep koopman operator-16 
+
+TABLE XVI FUSION -LOSS ABLATION ON DATASET I WITH FROZEN EXPERTS . T HE TWO COEFFICIENTS WEIGHT THE RUL AND CAPACITY LOSSES ; NO RECONSTRUCTION TERM IS USED . λCap DENOTES THE CAPACITY COEFFICIENT . R EPORTED MEAN ± STANDARD DEVIATION ACROSS TEST CELLS AFTER AVERAGING PREDICTIONS OVER FIVE RUNS .Configuration RUL prediction Capacity estimation RMSE (cycles) R2 MAPE (%) RMSE (mAh) R2 MAPE (%) 
+
+λRUL = 1 , λCap = 1 143.69 ± 107.15 0.74 ± 0.23 10.91 ± 5.17 12.36 ± 5.32 0.90 ± 0.08 0.99 ± 0.45 RUL loss only ( λRUL = 1 , λCap = 0 ) 144.09 ± 108.54 0.74 ± 0.23 10.87 ± 5.17 993.27 ± 12.24 -559.18 ± 102.52 93.07 ± 1.00 
+
+Q loss only ( λRUL = 0 , λCap = 1 ) 778.07 ± 179.51 -6.55 ± 0.96 72.99 ± 5.24 18.77 ± 9.02 0.75 ± 0.20 1.56 ± 0.84 
+
+λRUL = 1 , λCap = 0 .5 141.64 ± 105.12 0.74 ± 0.23 10.91 ± 5.36 15.50 ± 6.56 0.84 ± 0.14 1.26 ± 0.56 
+
+λRUL = 1 , λCap = 2 144.63 ± 107.08 0.74 ± 0.23 11.22 ± 5.17 12.85 ± 5.96 0.89 ± 0.10 1.06 ± 0.52 
+
+λRUL = 1 .5, λCap = 2 143.62 ± 106.15 0.74 ± 0.23 11.03 ± 5.18 13.08 ± 5.04 0.89 ± 0.08 1.05 ± 0.44 based remaining useful life prediction of lithium-ion batteries under multi-condition scenarios. Journal of Energy Storage , 119:116369, 2025. [10] Yang Ge, Jiaxin Ma, and Guodong Sun. A structural pruning method for lithium-ion batteries remaining useful life prediction model with multi-head attention mechanism. Journal of Energy Storage , 86:111396, 2024. [11] Arijit Guha and Amit Patra. Online estimation of the electrochemical impedance spectrum and remaining useful life of lithium-ion batteries. 
+
+IEEE Transactions on Instrumentation and Measurement , 67(8):1836– 1849, 2018. [12] TaiLong Jing, Sheng Du, Cong Wang, Chao Wu, Witold Pedrycz, Mohamed Sharaf, and ZhiWu Li. A hybrid data-driven granular model for battery remaining useful life prediction. IEEE Transactions on Instrumentation and Measurement , 74:1–12, 2025. [13] Diederik P Kingma and Jimmy Ba. Adam: A method for stochastic optimization. arXiv preprint arXiv:1412.6980 , 2014. [14] Guijun Ma, Songpei Xu, Benben Jiang, Cheng Cheng, Xin Yang, Yue Shen, Tao Yang, Yunhui Huang, Han Ding, and Ye Yuan. Real-time personalized health status prediction of lithium-ion batteries using deep transfer learning. Energy & Environmental Science , 15(10):4083–4094, 2022. [15] Gabriele Patrizi, Fabio Canzanella, Nedka Dechkova Nikiforova, Rossella Berni, G Geoffrey Vining, and Lorenzo Ciani. A novel frame-work for estimating battery health indicator under different operating conditions. IEEE Transactions on Instrumentation and Measurement ,2026. [16] Tian Peng, Zhongzheng Mo, Jie Chen, Chenghao Sun, Zhi Wang, Muhammad Shahzad Nazir, and Chu Zhang. A novel mic-boa-tide fusion framework with kernel density estimation for point and probabilistic remaining useful life prediction of lithium-ion batteries. Applied Energy ,410:127570, 2026. [17] Ethan Perez, Florian Strub, Harm De Vries, Vincent Dumoulin, and Aaron Courville. Film: Visual reasoning with a general conditioning layer. In Proceedings of the AAAI conference on artificial intelligence ,volume 32, 2018. [18] Zhuoyi Qian, Zhen Chen, and Ershun Pan. A transfer condition-focused model for battery capacity forecast. Reliability Engineering & System Safety , 267:111928, 2026. [19] Abraham Savitzky and Marcel JE Golay. Smoothing and differentiation of data by simplified least squares procedures. Analytical chemistry ,36(8):1627–1639, 1964. [20] Kristen A Severson, Peter M Attia, Norman Jin, Nicholas Perkins, Benben Jiang, Zi Yang, Michael H Chen, Muratahan Aykol, Patrick K Herring, Dimitrios Fraggedakis, et al. Data-driven prediction of battery cycle life before capacity degradation. Nature energy , 4(5):383–391, 2019. [21] Yuchen Song, Xinyi Zhang, Yuhang Du, Shumei Cui, and Datong Liu. Uncertainty-oriented collaborative learning for on-orbit state-of-health estimation of satellite lithium-ion batteries considering multi-operating conditions. Applied Energy , 409:127457, 2026. [22] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. [23] Elias Vollert, Dominic Bresser, Marcel Weil, et al. Assessing the critical role of graphite in the carbon footprint of lithium-ion battery production. 
+
+Journal of Energy Storage , 161:121887, 2026. [24] Xiankui Wu, Penghua Li, Zhongwei Deng, Zhitao Liu, Mekhrdod S Kurboniyon, Sheng Xiang, and Gang Yin. Ldnet-rul: lightweight de-formable neural network for remaining useful life prognostics of lithium-ion batteries. IEEE Transactions on Power Electronics , 40(9):13514– 13528, 2025. [25] Qiuyu Yu, Fujin Wang, Zhi Zhai, Shiyu Zheng, Bingchen Liu, Zhibin Zhao, and Xuefeng Chen. Multi-time scale feature extraction for early prediction of battery rul and knee point using a hybrid deep learning approach. Journal of Energy Storage , 117:116024, 2025.

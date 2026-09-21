@@ -1,0 +1,57 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-21T23:10:25.609359+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 0,
+    "quick_skim_target": 12,
+    "quick_selected": 0
+  },
+  "deep_dive": [
+    {
+      "id": "2609.21932v1",
+      "source": "arxiv",
+      "title": "Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data",
+      "abstract": "Joint remaining useful life (RUL) prediction and capacity estimation require representations of both gradual degradation and recent battery behavior. This paper presents a cross-expert framework using partial-charging measurements without measured historical full-cycle capacity as an input. The RUL Expert encodes nominal 10-min segments from ten cycles sampled within a 30-cycle history using a pretrained gated recurrent unit (GRU) encoder, a two-dimensional convolutional neural network (2D-CNN), and a temporal GRU. The Capacity Expert processes statistical descriptors of nominal 40-min segments from ten consecutive cycles using a 2D-CNN and a Transformer. A feature-wise linear modulation module uses the short-term representation to condition the long-term representation for joint prediction. Training comprises supervised autoencoder pretraining, independent expert pretraining, and fusion training with frozen experts. On two public battery-aging datasets, the reference configuration achieves mean RUL root-mean-square errors of 143.69 and 161.10 cycles and capacity errors of 12.36 and 7.28mAh, respectively. On Dataset I, fusion reduces both mean errors relative to either standalone expert. The results demonstrate a trade-off between RUL and capacity accuracy: the proposed method attains the lowest reported RUL RMSE among the compared methods on both datasets, whereas several baselines yield lower capacity errors.",
+      "authors": [
+        "Khoa Tran",
+        "Ho-Si-Hung Nguyen",
+        "Phone Wai Yan Moe",
+        "Hung-Cuong Trinh",
+        "Thi-Hoang-Giang Tran"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-18T15:51:51+00:00",
+      "link": "https://arxiv.org/pdf/2609.21932v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "joint RUL prediction and capacity estimation for lithium-ion batteries using partial-charging data",
+      "llm_evidence_cn": "基于部分充电数据的锂离子电池剩余寿命与容量联合估计",
+      "llm_evidence": "基于部分充电数据的锂离子电池剩余寿命与容量联合估计",
+      "canonical_evidence": "基于部分充电数据的锂离子电池剩余寿命与容量联合估计",
+      "llm_tldr_en": "This paper proposes a cross-expert framework to jointly predict remaining useful life and estimate capacity of lithium-ion batteries using partial-charging data, without requiring historical full-cycle capacity. RUL Expert uses GRU and CNN on 10-min segments, Capacity Expert uses CNN and Transformer on 40-min statistical descriptors, fused via feature-wise linear modulation. Experiments show promising joint estimation from limited partial-charging data.",
+      "llm_tldr_cn": "针对依赖完整充电历史进行锂离子电池剩余寿命预测和容量估计的限制，本文提出一种跨专家框架，仅利用部分充电数据。RUL专家通过预训练GRU编码器、2D-CNN和时序GRU处理10分钟片段，容量专家用2D-CNN和Transformer处理40分钟片段的统计描述符，并通过特征线性调制融合。实验表明该方法无需历史全周期容量输入即可实现联合估计，为电池健康管理提供数据高效方案。",
+      "llm_tldr": "针对依赖完整充电历史进行锂离子电池剩余寿命预测和容量估计的限制，本文提出一种跨专家框架，仅利用部分充电数据。RUL专家通过预训练GRU编码器、2D-CNN和时序GRU处理10分钟片段，容量专家用2D-CNN和Transformer处理40分钟片段的统计描述符，并通过特征线性调制融合。实验表明该方法无需历史全周期容量输入即可实现联合估计，为电池健康管理提供数据高效方案。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": []
+}
