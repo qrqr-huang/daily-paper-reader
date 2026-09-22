@@ -1,0 +1,211 @@
+Title: Intelligent Degradation Monitoring in Lithium-ion Batteries via Discharge Incremental Capacity Feature Estimation
+
+URL Source: https://arxiv.org/pdf/2609.22843v1
+
+Published Time: Tue, 22 Sep 2026 00:41:38 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+> 1
+
+# Intelligent Degradation Monitoring in Lithium-ion Batteries via Discharge Incremental Capacity Feature Estimation 
+
+Amir Madmolilvand, Farzaneh Abdollahi 
+
+Abstract —Accurate and timely detection of degradation in lithium-ion batteries is crucial to ensure safety, reliability, and longevity in high-demand applications such as electric vehicles and energy storage systems. Traditional incremental capacity (IC) analysis methods require low-current cycling for discharge measurements, limiting their practical use in real-time battery management. This paper proposes a novel neural network-based framework that predicts discharge IC features directly from charging signals, eliminating the need for low-current discharge. Trained on a comprehensive dataset of 53 battery cells cycled under diverse fast-charging protocols, the model demonstrates robust generalization ability, effectively estimating degradation indicators on unseen battery data. Among several architectures evaluated, the LSTM model provides the best balance of prediction accuracy and computational efficiency. The proposed approach enables real-time integration into Battery Management Systems (BMS), enhancing degradation monitoring without disrupting normal battery operation. This paper presents a study to bridge IC analysis with practical, fast-charging scenarios, marking a significant step towards intelligent and scalable battery health monitoring. 
+
+Index Terms —Li-ion battery, degradation monitoring, incre-mental capacity, neural networks 
+
+I. I NTRODUCTION 
+
+# LITHIUM-ION batteries (LIBs) are the predominant en-ergy storage solution in contemporary applications; how-ever, their long-term performance and safety are inherently linked to complex degradation mechanisms [1], [2]. LIBs offer high energy density and extended cycle life (typically 1,000 to 6,000 cycles). On the other hand, they are prone to several limitations that remain a focus of ongoing researches [3], [4]. Most of these limitations are further highlighted by concerns related to safety, cost, and environmental impact, prompting exploration into alternative battery chemistries and advanced battery management strategies. Despite continuous technological advancements, LIB sys-tems encounter persistent degradation and performance-related issues [5], [6], [7], [8]. This is particularly crucial in high-reliability applications such as electric vehicles (EVs), bat-tery energy storage systems (BESS), and aerospace applica-tions, which demand sustained performance under rigorous operational conditions. Accurate monitoring and assessment of the operational state of LIBs, coupled with robust safe-guards against potentially hazardous conditions, is therefore 
+
+Amir Madmolilvand and Farzaneh Abdollahi are with the Department of Electrical Engineering, Amirkabir University of Technology, Tehran, Iran (e-mail: amir.mmv@aut.ac.ir; f abdollahi@aut.ac.ir). 
+
+paramount. The degradation pathways in LIBs are multi-faceted, resulting in a spectrum of aging patterns and failure modes. Consequently, effective Battery Management Systems (BMS) necessitate a comprehensive understanding of these degradation phenomena to optimize system performance and longevity. Recent research are focused on developing innovative ap-proaches for monitoring and mitigating LIB degradation. Operando techniques, such as impedance thickness methods, have been explored for real-time monitoring of lithium plating, utilizing impedance measurements and thickness monitoring, complemented by post-mortem analyses like Mass Spec-trometry Titration (MST) and Scanning Electron Microscopy (SEM) [9]. These approaches have identified critical degrada-tion pathways. Similarly, studies employing Electrochemical Impedance Spectroscopy (EIS) on Nickel-Cobalt-Aluminum-Oxide (NCA) cells during cyclic overcharging have identified Loss of Conductivity (LoC), Loss of Lithium Inventory (LLI), and Loss of Active Material (LAM) as key degradation modes, with Incremental Capacity-Differential Voltage (IC-DV) anal-ysis proposed as a diagnostic strategy [10]. Further investiga-tions into lithium plating mechanisms have integrated exper-imental methods with finite element modeling, using in-situ measurements, post-mortem analyses, and two-dimensional modeling, though practical implementation is constrained by the invasive nature of reference electrode methods and the additional cost of heat signal monitoring equipment [11]. Model-based Differential Voltage Analysis (DVA) methods have been developed for Lithium Deposition (LD) detec-tion, focusing on enhancing sensitivity and reliability. These methods have been extended to impedance relaxation tech-niques for adaptive charging control, minimizing capacity fade and reducing LAM and LLI [12], [13]. The integration of deep learning methodologies, such as the ICFormer model, has shown promise in leveraging incremental capacity (IC) curves to identify degradation modes and predict capacity degradation trajectories [14]. Furthermore, studies employing electrochemical and physical characterization techniques have quantitatively assessed the contributions of degradation mecha-nisms under extreme fast charging (XFC), correlating capacity fade and impedance growth with LLI and cathode material loss [15]. Machine learning frameworks have been developed to differentiate lithium plating from solid electrolyte interphase (SEI) growth, leveraging electrochemical signatures such as capacity loss and Coulombic efficiency [16], and surface-level degradation analysis using Xenon ion ( Xe +) plasma arXiv:2609.22843v1 [eess.SY] 19 Sep 2026 2
+
+focused ion beam (PFIB) milling has provided insights into deactivation and parasitic reactions [17]. Acoustic ultrasound techniques have also been explored for lithium plating detec-tion [18]. As previously mentioned, many studies have utilized IC analysis and differential voltage analysis in their approaches. However, these methods typically require the battery to be charged or discharged under low currents. The recommended current for accurate IC analysis is investigated in [19]. In practical applications, cycling batteries at such low currents is infeasible due to prohibitive time requirements. Therefore, a novel approach that bridges the gap between IC analysis and real-world usage scenarios is needed. In this paper, we propose employing a neural network to address this challenge. By enabling practical IC analysis as outlined, previous methods relying on IC for battery state-of-health (SOH) and capacity prediction [20], [21], or battery diagnosis and degradation estimation [14] will be more viable under operational conditions. The IC curve can be obtained during both charge and discharge. However, increasing the current in either process leads to a smoothing effect in the IC curve, making the extraction of discriminative features more difficult. This limitation significantly impacts the applicability of charge IC analysis, particularly in real-world scenarios where fast charging is necessary. For discharge IC, if a dataset contains batteries charged with fast protocols but discharged at sufficiently low constant currents to produce informative IC curves, a neural network can be trained to map typical charging signals (e.g., voltage and current) to discharge IC features. Despite extensive methodological efforts, challenges remain in practical deployment, time-intensive testing, and bridging the gap between laboratory and real-world conditions. Motivated by these challenges, the present study aims to quantify lithium-ion battery degradation during charging by employing a neural network that uses charging voltage and capacity signals as inputs to predict discharge incremental capacity features. This approach eliminates the need for actual battery discharge in batteries under normal operation (i.e., con-nected to a circuit and in use), thereby overcoming traditional constraints. By monitoring changes in the predicted discharge IC characteristics across successive cycles, degradation modes and faults in lithium-ion batteries can be effectively detected. The network is trained on historical data consisting of various fast-charging C-rates and profiles, and can be integrated into Battery Management Systems to provide real-time degradation detection without requiring low-current cycling. To the best of our knowledge, this study is the first to predict discharge incremental capacity features solely from charging data. The key contributions of this work are summarized as follows:  
+
+> •
+
+A novel approach is presented to estimate the character-istics of the discharge incremental capacity curve based solely on charging data, enabling practical applicability in real-world scenarios without the need for low-current cycling.  
+
+> •
+
+A neural network framework is proposed, exten-sively trained and validated on a large dataset of 53 NMC/graphite cells cycled under various fast charging protocols, demonstrating strong generalization capabili-ties across diverse conditions.  
+
+> •
+
+It is shown that the proposed method can reliably ex-tract diagnostic features indicative of battery degradation and faults, facilitating enhanced battery management and safety.  
+
+> •
+
+It is validated that the model can be integrated into Battery Management Systems for real-time, non-intrusive degradation monitoring that circumvents traditional incre-mental capacity analysis limitations. The remainder of this article is organized as follows: Section II details the proposed methodology, including the dataset description, data partitioning strategy, analysis of aging effects on IC features, the design of the neural network architectures, and training procedures. Section III presents the experimental results and discussion, highlighting model performance, generalization capability, and comparative anal-yses against baseline models. Finally, Section IV concludes the paper by summarizing key contributions and outlining potential directions for future research. II. M ETHOD DESCRIPTION 
+
+A. Dataset 
+
+Incremental capacity (IC) can be calculated for both charge and discharge processes. As explained in the introduction, we focus on discharge IC. Therefore, the training and validation datasets for our task must include batteries charged at various C-rates but discharged under a unified, low C-rate. Ideally, this small discharge current should be around C/ 20 . One of the closest publicly available datasets that meets these criteria is the ISU-ILCC dataset [22]. The smallest discharge C-rate available in this dataset is 0.5C, which we thus consider as the discharge IC current for our study. As noted in [19], increasing the discharge rate tends to smooth the IC curve, thereby obscuring subtle changes within the battery. Consequently, an IC curve obtained at a discharge current of 0.5C retains valuable diagnostic information, and tracking changes in its features remains indicative of underlying battery degradation modes. 
+
+B. Dataset Partitioning 
+
+ISU-ILCC dataset [22] comprises 225 nickel-manganese-cobalt/graphite (NMC/Gr) cells and was designed to sys-tematically investigate battery aging under a wide range of operating conditions, including varying charge rates, discharge rates, and depth of discharge. These varied conditions yield a broad distribution of end-of-life (EOL) times, enabling robust training and validation of models aimed at battery degradation estimation. In the dataset, 52 batteries meet the specified criteria, having been discharged at a constant rate of 0.5C while charged at various practical rates including 1C, 2C, and others. We refer to this subset as the IC cells, while the remaining batteries form the nonIC cells. The nonIC cells are not applicable for our task, as their discharge IC is not available for each cycle at the required current. However, the dataset also provides 3
+
+weekly reference performance tests (RPTs), during which cells are charged and discharged at 0.5C. We utilize these RPT data of the nonIC cells for final validation to determine the best-performing model, a topic discussed in detail later. Importantly, we do not use the RPT data alongside the IC dataset for training because in the RPT tests both charging and discharging occur at 0.5C. In real-world scenarios, if an RPT can be performed, the discharge IC would already be directly available, obviating the need for a neural network prediction. Moreover, performing weekly RPTs requires temporarily ex-tracting the battery from its working conditions, which limits their practicality. Despite this, the nonIC dataset remains valuable since differences in discharge current between the IC and nonIC cells might induce distinct aging dynamics. Given available datasets, this represents as close an approximation as possible to real-world applications. We anticipate that the model trained on the IC dataset will generalize well to the nonIC RPT data. Note that the RPT data for IC cells are excluded from our analysis. For statistical evaluation, we employ k-fold cross-validation with k = 6 on the 52 IC cells. In each fold, 20% of the batteries (approximately 9 to 10 cells) are reserved for validation, while the remaining 80% are used for training. 
+
+C. Aging Effects on IC Features 
+
+To examine battery aging modes using IC, we refer to the IC features depicted in Figure 1, adhering to the naming conventions established in [23], where the significance of these features is thoroughly discussed. With one exception, the referenced study identifies five distinct peaks; however, three of these peaks are closely spaced in discharge IC curve. Due to the relatively higher discharge current in our dataset compared to the ideal C/ 20 , these three peaks effectively merge into a single peak, corresponding to peak 3 in our analysis. This rep-resents a necessary compromise. Nevertheless, the variations of the three original peaks are similar across most degradation modes identifiable through discharge IC. The voltage of peak 
+
+i is Vi and the corresponding peak value is as follows: 
+
+Pi = dQ dV V =Vi
+
+(1) 
+
+A1, A 2 are the areas depicted in Figure 1. Hence, the complete set of IC features is defined as 
+
+S = {P1, P 2, P 3, V 1, V 2, V 3, A 1, A 2}. (2) Figure 2 illustrates the evolution of IC peak locations as a function of cycle number. Both the voltage and magnitude of each peak change noticeably as the battery ages. For instance, peak 1 exhibits an upward shift, which is indicative of loss of lithium inventory (LLI). Additionally, the figure demonstrates the degradation of battery state of health (SOH) over cycling. It is clear that degradation significantly influences each IC feature, and a strong correlation between SOH and IC characteristics is evident. These findings are consistent with previous work reported in [23]. To derive the required discharge IC curves, appropriate filtering and interpolation methods must be applied. Several  
+
+> Fig. 1. Schematic of Peak Numbers and Areas. The schematic representation illustrates the identification of peak numbers and areas.
+
+practical challenges arise because directly extracting IC curves from raw measurement data results in significant noise. This noise level renders automated feature extraction nearly infea-sible, as reliable identification of IC peaks and features typi-cally requires manual expert intervention to accurately select relevant points. Therefore, robust preprocessing techniques are essential to obtain usable IC curves for subsequent analysis. We used a Savitzky-Golay filter [24] with a window size corresponding to 10% of the entire input signal and a poly-nomial order of 2 is applied to the data. This is followed by the application of a Gaussian filter [25] with σ = 10 .0. The discharge IC curve shown in Figure 1 is obtained using this procedure. It is worth noting that certain IC peaks may dis-appear under extreme degradation conditions, which typically occur during the final cycles of battery life. Although these scenarios warrant further investigation, we discontinued the analysis at this stage, as extracting the IC features in such cases would require manual intervention. 
+
+D. Problem Formulation 
+
+Our goal is to use a neural network (NN) model that estimates the value of each discharge IC feature in S in each consecutive cycle using only charge signals, specifically cell voltage Vcharge (t) and capacity Qcharge (t). It is very important to note that the input is from charge but the output is from discharge of the same cycle. The input sequences for each data sample may vary in length, which can complicate the training process. To address this issue, we first interpolate each signal Vcharge (t) and 
+
+Qcharge (t) as functions of time t, ensuring a uniform length across all data. This step is crucial for maintaining consistency and facilitating efficient processing by the model. Thus, the network input data X can be represented as follows: 
+
+X2×n =
+
+ V Tcharge 
+
+QTcharge 
+
+
+
+> 2×n
+
+=
+
+ V1 V2 . . . Vn
+
+Q1 Q2 . . . Qn
+
+
+
+> 2×n
+
+(3) where n is the selected length during time interpolation. For this work, we set n = 2000 .For the model targets, we consider the discharge IC features 4
+
+Fig. 2. Evolution of incremental capacity (IC) peaks with respect to battery cycling and SOH. The figure presents the evolution of IC peak locations, characterized by peak voltage and peak value, as a function of cycle number, indicated by the color bar. This is for battery cell G23C1. Subplots illustrate: (a) the relationship between the value and voltage location of peak 1, (b) the value and voltage location of peak 2, (c) the value and voltage location of peak 3, and (d) the SOH progression as a function of cycle number. 5
+
+as described in S. By combining these features, the network output will be as follows: 
+
+Y =
+
+
+
+V1
+
+V2
+
+V3
+
+P1
+
+P2
+
+P3
+
+A1
+
+A2
+
+
+
+> 8×1
+
+(4) Having mathematically formulated the problem, the next step is to develop a model that maps the input-output pairs with minimal loss. This involves training a network to learn the relationship between the charge signals and the corresponding discharge IC features, optimizing the model parameters to minimize the prediction error. 
+
+E. Model Variations 
+
+The goal of this study is to identify a model that achieves the best performance. However, the landscape of possible archi-tectures is vast, each with numerous hyperparameters—such as activation functions, numbers of hidden layer nodes, and downsampling strategies that can significantly impact perfor-mance. We selected five widely used neural network architec-tures for evaluation: Multi-Layer Perceptron (MLP), Trans-former [26], Long Short-Term Memory (LSTM) [27], bidi-rectional LSTM (BiLSTM) [28], and Convolutional Neural Network (CNN). Although other machine learning models, such as decision trees, may also perform well, this study focuses exclusively on neural networks. Table III summarizes the number of trainable parameters for each model variation. To facilitate a fair comparison, we endeavored to keep the number of trainable parameters similar across all architectures. We conducted extensive hyperparam-eter tuning, and the architectures presented here represent the best-performing configurations discovered. It is worth noting that even better architectures may exist, but these models provide a robust baseline for comparison.  
+
+> •
+
+LSTM : The long short-term memory (LSTM) network employed in this study consists of two stacked LSTM layers, each with a hidden size of 32 units. The model is designed as a unidirectional recurrent architecture without dropout regularization. The LSTM outputs are followed by three fully connected layers with intermediate dimen-sions of 32, each activated by Leaky-ReLU nonlinearities to introduce non-linearity and mitigate potential vanishing gradient issues. The model weights are initialized using Xavier uniform initialization [29] to facilitate stable con-vergence during training. During forward propagation, the hidden state from the last LSTM layer at the final time step is extracted and passed through the fully connected layers to generate the model output. This architecture balances complexity and expressiveness to capture tem-poral dependencies in the charge signals necessary to accurately estimate discharge IC features.  
+
+> •
+
+BiLSTM : The bidirectional LSTM (biLSTM) network used in this study consists of two stacked LSTM layers, each with 32 hidden units. The LSTM layers are con-figured as bidirectional, enabling the model to capture temporal dependencies in both forward and backward directions. The output of the bidirectional LSTM, which has dimensionality twice the hidden size due to concate-nation of forward and backward hidden states, is fed into a series of three fully connected layers with intermediate sizes of 32 units each. LeakyReLU activations are applied after the first two linear transformations to introduce non-linearity and improve model expressiveness. Weight ini-tialization is performed using Xavier uniform initializa-tion to promote stable and efficient training convergence. During the forward pass, the final hidden states from both directions of the last LSTM layer are concatenated and processed through the fully connected layers to produce the output feature vector. Most hyperparameters in our BiLSTM are similar to those of the unidirectional LSTM; however, the bidirectional nature leads to a larger number of trainable parameters.  
+
+> •
+
+MLP : The multilayer perceptron (MLP) network em-ployed in this study consists of three fully connected layers. The first two linear layers each map to 16 hid-den units, followed by a final output layer of 8 units corresponding to the discharge IC features. LeakyReLU activation functions are applied after the first two linear transformations to introduce non-linearity and improve model generalization. Weight initialization uses Xavier uniform initialization to facilitate stable training conver-gence.  
+
+> •
+
+CNN : The convolutional neural network (CNN) em-ployed in this study consists of three 1D convolutional layers followed by three fully connected layers. The CNN layers have respective output channels of 32, 16, and 8, with kernel sizes of 9, 9, and 5, respectively. Each convolutional layer is followed by a LeakyReLU activation and max pooling operation with a kernel size of 5 to reduce spatial dimensionality while retaining important features. The fully connected layers have two intermediate layers of size 128 each and an output layer producing 8 discharge IC feature values. Weight ini-tialization uses Xavier uniform initialization to facilitate stable training.  
+
+> •
+
+Transfomer : The Transformer network employed in this study is designed to process 2-channel sensor data and consists of a 1D convolutional downsampling module, a positional encoding module, a multi-layer Transformer encoder, and a fully connected output projection. The downsampling module reduces the input sequence length from 2000 to 250 through a Conv1D layer with stride 4, followed by a ReLU activation and max pooling with kernel size 2. The network employs Rectified Linear Unit (ReLU) activation in the CNN component, which extracts salient features from the input data X. To incorporate information about the order of the sequence, positional encoding based on sinusoidal functions is applied to the downsampled sequence. This encoding injects unique, 6
+
+deterministic signals to represent each position using sine and cosine functions of different frequencies, enabling the model to capture relative and absolute position informa-tion effectively [26]. The core Transformer encoder con-sists of six layers, each equipped with two attention heads and a feedforward network of dimension 64, regularized with dropout of 0.1. After encoding, an average pooling operation aggregates the sequence information, and a final dense layer with eight neurons projects the representation into the output feature space. Xavier uniform initialization is employed across all model parameters to ensure stable and efficient training convergence. 
+
+F. NN Training 
+
+To effectively train the neural network models, we employ the mean absolute error (MAE) loss function, as defined in Equation 5. The neural network models are trained using the backpropagation algorithm, which iteratively adjusts network weights to minimize the prediction error between estimated and actual discharge IC features. 
+
+LY = 1
+
+k
+
+> k
+
+X
+
+> i=1
+
+∥Yi − ˆYi∥ (5) where Yi represent the true output values for the ith sample, and ˆYi denote the corresponding estimated value by the network. The total number of samples is denoted by k.Table I presents the hyperparameters employed during the training. All network variations were trained using a consistent set of hyperparameters to enable a fair comparison across architectures. Specifically, the Adam optimizer was employed with a learning rate of 0.0001, a batch size of 64, and a maximum of 200 training epochs. As it was thoroughly explained in section II-B, each model was trained with the same training and validation battery cells for each fold.       
+
+> TABLE I HYPERPARAMETERS EMPLOYED DURING THE TRAINING OF ALL NETWORK VARIATIONS .
+> Training Hyperparameter Value
+> Learning Rate ( η)0.0001 Batch Size 64 Number of Epochs 200 Optimizer Adam Loss Function LY
+
+III. R ESULTS AND DISCUSSION 
+
+Figure 3 illustrates the loss progression across epochs for all model variations. Almost all models converge to a small final loss value, with the notable exception of the MLP, which struggles to reach a stable minimum, as evidenced by the fluctuations in validation loss after epoch 150. The final loss values are summarized in Table II. It is important to note that the variation in each discharge IC feature with degradation is inherently small, as shown in Figure 2. Therefore, the observed small magnitudes of all final loss values are expected and reasonable. This underscores the need for a model that performs exceptionally well relative to others. From the results in Table II, the Transformer model achieves the lowest loss on training IC cells across all folds, with a mean final loss of 4.75 ×10 −3±0.08 ×10 −3. However, the BiL-STM model attains the smallest validation loss, 6.83 × 10 −3 ±
+
+0.60 × 10 −3, and the LSTM model performs best on non-IC cells, achieving a final loss of 13 .89 × 10 −3 ± 0.24 × 10 −3.Additionally, LSTM rivals BiLSTM on validation loss with 
+
+8.39 × 10 −3 ± 0.82 × 10 −3. Table III presents the number of trainable parameters for each model variation. Among them, the LSTM model yields a favorable balance between perfor-mance and model complexity, offering competitive results with the smallest parameter count (15,432 trainable parameters). Based on these observations, it is reasonable to conclude that the LSTM model outperforms the other variations in this study with the best generalization ability.                                                                   
+
+> TABLE II FINAL MEAN MAE ERRORS (LY)WITH STANDARD DEVIATIONS ACROSS ALL FOLDS FOR DIFFERENT MODEL VARIATIONS . R ESULTS ARE REPORTED SEPARATELY FOR TRAINING AND VALIDATION SETS ON IC CELLS ,AS WELL AS FINAL LOSS ON NON IC CELLS .
+> Model Train ×10 −3Validation ×10 −3nonIC cells ×10 −3
+> BiLSTM 6.49 ±0.30 6.83 ±0.60 17 .77 ±3.73
+> LSTM 8.04 ±0.13 8.39 ±0.82 13 .89 ±0.24
+> CNN 7.38 ±0.23 8.18 ±1.80 16 .81 ±1.05
+> MLP 13 .14 ±2.62 13 .96 ±4.14 21 .53 ±3.28
+> Transformer 4.75 ±0.08 10 .30 ±1.16 20 .06 ±1.49
+> TABLE III NUMBER OF TRAINABLE PARAMETERS FOR EACH MODEL VARIATION EVALUATED IN THIS STUDY .
+> Model Number of Trainable Parameters
+> BiLSTM 37,704 LSTM 15,432 CNN 37,888 MLP 64,424 Transformer 51,816
+
+IV. C ONCLUSION 
+
+This paper proposed a novel neural network-based approach for intelligent degradation detection of Lithium-ion batteries through estimation of discharge incremental capacity features using only charging data. Our method overcomes the con-ventional limitations of incremental capacity analysis that require low-current cycling, thus enabling practical, real-time implementation within Battery Management Systems. Leveraging a comprehensive dataset of 53 NMC/graphite cells cycled under varied fast charging protocols, we employed a 6-fold cross-validation strategy to rigorously evaluate model performance across multiple training and validation splits. The trained models, particularly the LSTM architecture, demon-strated strong generalization capabilities, effectively capturing diagnostic features indicative of battery aging and degrada-tion across diverse cycling conditions. This approach reliably extracted subtle degradation signatures from charging data 7   
+
+> Fig. 3. Training and validation loss LYprogression over epochs for all model variations, averaged across all k-folds. Subplots display (a) training loss and (b) validation loss as functions of epoch for each dataset and model variant. The solid lines represent the mean loss across folds, while the shaded bands indicate the standard deviation, illustrating variability across folds for each model.
+
+alone, eliminating the need for disruptive and time-consuming discharge tests. The results highlight the feasibility of integrating this data-driven framework into operational battery systems to enhance safety, extend battery life, and improve system efficiency. Future work will focus on expanding the methodology to di-verse battery chemistries and formats, investigating robustness under varying operational and environmental scenarios, and implementing the trained model in embedded BMS hardware for on-line diagnostics and prognostics. Overall, this study bridges the gap between laboratory incremental capacity diagnostics and real-world battery man-agement applications, providing a practical and scalable solu-tion for early fault detection and state-of-health estimation in Lithium-ion batteries. ACKNOWLEDGMENTS 
+
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors. The data that support the findings of this study are openly available in the Iowa State University repository at https://doi. org/10.25380/iastate.22582234.v2 [22]. 8
+
+REFERENCES [1] M. Kabir and D. E. Demirocak, “Degradation mechanisms in li-ion batteries: a state-of-the-art review,” International Journal of Energy Research , vol. 41, no. 14, pp. 1963–1986, 2017. [2] C. R. Birkl, M. R. Roberts, E. McTurk, P. G. Bruce, and D. A. Howey, “Degradation diagnostics for lithium ion cells,” Journal of Power Sources , vol. 341, pp. 373–386, 2017. [3] J. Betz, G. Bieker, P. Meister, T. Placke, M. Winter, and R. Schmuch, “Theoretical versus practical energy: a plea for more transparency in the energy calculation of different rechargeable battery systems,” Advanced energy materials , vol. 9, no. 6, p. 1803170, 2019. [4] F. Duffner, N. Kronemeyer, J. T¨ ubke, J. Leker, M. Winter, and R. Schmuch, “Post-lithium-ion battery cell production and its compat-ibility with lithium-ion cell production infrastructure,” Nature Energy ,vol. 6, no. 2, pp. 123–134, 2021. [5] J. Shao, J. Li, W. Yuan, C. Dai, Z. Wang, M. Zhao, and M. Pecht, “A novel method of discharge capacity prediction based on simplified elec-trochemical model-aging mechanism for lithium-ion batteries,” Journal of Energy Storage , vol. 61, p. 106788, 2023. [6] Q. Wang, B. Mao, S. I. Stoliarov, and J. Sun, “A review of lithium ion battery failure mechanisms and fire prevention strategies,” Progress in Energy and Combustion Science , vol. 73, pp. 95–131, 2019. [7] Z. Zheng, X. Fang, W. Deng, P. Li, X. Zheng, H. Zhang, L. Li, S. Chou, Y. Chen, Y. Tang et al. , “Quantitatively detecting and characterizing metallic lithium in lithium-based batteries,” Energy & Environmental Science , 2024. [8] C. Hendricks, N. Williard, S. Mathew, and M. Pecht, “A failure modes, mechanisms, and effects analysis (fmmea) of lithium-ion batteries,” 
+
+Journal of Power Sources , vol. 297, pp. 113–120, 2015. [9] Y. Lin, W. Hu, M. Ding, Y. Hu, Y. Peng, J. Liang, Y. Wei, A. Fu, J. Lin, and Y. Yang, “Unveiling the three stages of li plating and dynamic evolution processes in pouch c/lifepo4 batteries,” Advanced Energy Materials , vol. 14, no. 36, p. 2400894, 2024. [10] L. Zhang, L. Huang, Z. Zhang, Z. Wang, and D. D. Dorrell, “Degradation characteristics investigation for lithium-ion cells with nca cathode during overcharging,” Applied Energy , vol. 327, p. 120026, 2022. [11] W. Mei, L. Jiang, C. Liang, J. Sun, and Q. Wang, “Understanding of li-plating on graphite electrode: detection, quantification and mechanism revelation,” Energy Storage Materials , vol. 41, pp. 209–221, 2021. [12] F. Katzer, L. Jahn, M. Hahn, and M. A. Danzer, “Model-based lithium deposition detection method using differential voltage analysis,” Journal of Power Sources , vol. 512, p. 230449, 2021. [13] F. Katzer, P. M¨ oßle, M. Schamel, and M. A. Danzer, “Adaptive fast charging control using impedance-based detection of lithium deposi-tion,” Journal of Power Sources , vol. 555, p. 232354, 2023. [14] N. Costa, D. Anse´ an, M. Dubarry, and L. S´ anchez, “Icformer: A deep learning model for informed lithium-ion battery diagnosis and early knee detection,” Journal of Power Sources , vol. 592, p. 233910, 2024. [15] Z. Yang, T. R. Tanim, H. Liu, I. Bloom, E. J. Dufek, B. Key, and B. J. Ingram, “Quantitative analysis of origin of lithium inventory loss and interface evolution over extended fast charge aging in li ion batteries,” 
+
+ACS Applied Materials & Interfaces , vol. 15, no. 31, pp. 37 410–37 421, 2023. [16] B.-R. Chen, M. R. Kunz, T. R. Tanim, and E. J. Dufek, “A machine learning framework for early detection of lithium plating combining multiple physics-based electrochemical signatures,” Cell Reports Phys-ical Science , vol. 2, no. 3, 2021. [17] X. Yao, T. ˇ Samoˇ ril, J. Dluhoˇ s, J. F. Watts, Z. Du, B. Song, S. R. P. Silva, T. Sui, and Y. Zhao, “Degradation diagnostics from the subsurface of lithium-ion battery electrodes,” Energy & Environmental Materials ,vol. 5, no. 2, pp. 662–669, 2022. [18] C. Bommier, W. Chang, Y. Lu, J. Yeung, G. Davies, R. Mohr, M. Williams, and D. Steingart, “In operando acoustic detection of lithium metal plating in commercial licoo2/graphite pouch cells,” Cell Reports Physical Science , vol. 1, no. 4, 2020. [19] A. Fly and R. Chen, “Rate dependency of incremental capacity analysis (dq/dv) as a diagnostic tool for lithium-ion batteries,” Journal of Energy Storage , vol. 29, p. 101329, 2020. [20] S. Zeng, S. Chen, and B. Alkali, “Lithium-ion battery capacity esti-mation based on incremental capacity analysis and deep convolutional neural network,” Energies , vol. 17, no. 6, p. 1272, 2024. [21] J. Lai, D. Chao, A. Wu, and C. Wang, “Combining machine learning algorithms and an incremental capacity analysis on 18650 cell under different cycling temperature and soc range,” in E3S Web of Conferences ,vol. 182. EDP Sciences, 2020, p. 03007. [22] A. Thelen, T. Li, J. Liu, C. Tischer, and C. Hu, “Isu-ilcc battery aging dataset [dataset],” Dataset, 2023. [Online]. Available: https://doi.org/10.25380/iastate.22582234.v2 [23] D. Anse´ an, V. M. Garc´ ıa, M. Gonz´ alez, C. Blanco-Viejo, J. C. Viera, Y. F. Pulido, and L. S´ anchez, “Lithium-ion battery degradation indicators via incremental capacity analysis,” IEEE Transactions on Industry Applications , vol. 55, no. 3, pp. 2992–3002, 2019. [24] L. Wang, S. Qiao, D. Lu, Y. Zhang, C. Pan, Z. He, X. Zhao, and R. Wang, “State of health estimation of lithium-ion battery in wide temperature range via temperature-aging coupling mechanism analysis,” Journal of Energy Storage , vol. 47, p. 103618, 2022. [25] Y. Li, M. Abdel-Monem, R. Gopalakrishnan, M. Berecibar, E. Nanini-Maury, N. Omar, P. van den Bossche, and J. Van Mierlo, “A quick on-line state of health estimation method for li-ion battery with incremental capacity curves processed by gaussian filter,” Journal of Power Sources ,vol. 373, pp. 40–53, 2018. [26] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, “Attention is all you need,” Advances in neural information processing systems , vol. 30, 2017. [27] S. Hochreiter and J. Schmidhuber, “Long short-term memory,” Neural computation , vol. 9, no. 8, pp. 1735–1780, 1997. [28] M. Schuster and K. K. Paliwal, “Bidirectional recurrent neural net-works,” IEEE transactions on Signal Processing , vol. 45, no. 11, pp. 2673–2681, 1997. [29] X. Glorot and Y. Bengio, “Understanding the difficulty of training deep feedforward neural networks,” in Proceedings of the thirteenth international conference on artificial intelligence and statistics . JMLR Workshop and Conference Proceedings, 2010, pp. 249–256.

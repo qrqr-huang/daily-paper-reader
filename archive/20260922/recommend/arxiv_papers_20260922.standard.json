@@ -1,0 +1,137 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-22T21:43:56.539487+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 2,
+    "deep_cap": 7,
+    "deep_selected": 2,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.22843v1",
+      "source": "arxiv",
+      "title": "Intelligent Degradation Monitoring in Lithium-ion Batteries via Discharge Incremental Capacity Feature Estimation",
+      "abstract": "Accurate and timely detection of degradation in lithium-ion batteries is crucial to ensure safety, reliability, and longevity in high-demand applications such as electric vehicles and energy storage systems. Traditional incremental capacity (IC) analysis methods require low-current cycling for discharge measurements, limiting their practical use in real-time battery management. This paper proposes a novel neural network-based framework that predicts discharge IC features directly from charging signals, eliminating the need for low-current discharge. Trained on a comprehensive dataset of 53 battery cells cycled under diverse fast-charging protocols, the model demonstrates robust generalization ability, effectively estimating degradation indicators on unseen battery data. Among several architectures evaluated, the LSTM model provides the best balance of prediction accuracy and computational efficiency. The proposed approach enables real-time integration into Battery Management Systems (BMS), enhancing degradation monitoring without disrupting normal battery operation. This paper presents a study to bridge IC analysis with practical, fast-charging scenarios, marking a significant step towards intelligent and scalable battery health monitoring.",
+      "authors": [
+        "Amir Madmolilvand",
+        "Farzaneh Abdollahi"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-09-19T07:25:45+00:00",
+      "link": "https://arxiv.org/pdf/2609.22843v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "lithium-ion battery degradation monitoring via neural network prediction of discharge IC features from charging signals",
+      "llm_evidence_cn": "通过神经网络从充电信号预测放电IC特征实现锂离子电池退化监测",
+      "llm_evidence": "通过神经网络从充电信号预测放电IC特征实现锂离子电池退化监测",
+      "canonical_evidence": "通过神经网络从充电信号预测放电IC特征实现锂离子电池退化监测",
+      "llm_tldr_en": "Proposes a neural network framework to predict discharge incremental capacity features from charging signals, eliminating low-current discharge for lithium-ion battery degradation monitoring; trained on 53 cells under diverse fast-charging protocols with strong generalization.",
+      "llm_tldr_cn": "锂离子电池退化在线监测对电动汽车和储能系统安全至关重要，但传统增量容量分析依赖低电流放电，难以在实时电池管理中实施。本文提出神经网络框架，直接从充电信号预测放电增量容量特征，从而消除低电流放电需求。在包含53个电池单体、多种快充协议的数据集上训练，模型表现出良好的泛化能力。该工作为无需低电流放电的实时退化监测提供了有效方案，有助于提升电池管理系统中的健康状态估计效率。",
+      "llm_tldr": "锂离子电池退化在线监测对电动汽车和储能系统安全至关重要，但传统增量容量分析依赖低电流放电，难以在实时电池管理中实施。本文提出神经网络框架，直接从充电信号预测放电增量容量特征，从而消除低电流放电需求。在包含53个电池单体、多种快充协议的数据集上训练，模型表现出良好的泛化能力。该工作为无需低电流放电的实时退化监测提供了有效方案，有助于提升电池管理系统中的健康状态估计效率。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.21932v2",
+      "source": "arxiv",
+      "title": "Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data",
+      "abstract": "Joint remaining useful life (RUL) prediction and capacity estimation require representations of both gradual degradation and recent battery behavior. This paper presents a cross-expert framework using partial-charging measurements without requiring measured historical full-cycle capacity as an input. The RUL Expert captures long-term degradation from nominal 10-min segments sampled across a 30-cycle history, while the Capacity Expert characterizes recent battery behavior from statistical descriptors of nominal 40-min segments over ten consecutive cycles. Their complementary representations are integrated through feature-wise linear modulation for joint RUL and capacity prediction. A key contribution is a three-stage training strategy that progressively controls frozen and trainable components: supervised representation pretraining, independent expert pretraining, and final fusion training with both experts frozen. This staged optimization preserves expert-specific degradation knowledge while improving the balance between the two prediction tasks, with RUL treated as the primary prognostic objective. On two public battery-aging datasets, the reference configuration achieves mean RUL root-mean-square errors of 143.69 and 161.10 cycles and capacity errors of 12.36 and 7.28 mAh, respectively. On Dataset I, cross-expert fusion reduces both mean errors relative to either standalone expert. The proposed framework achieves the lowest reported RUL RMSE among the compared methods on both datasets while maintaining competitive capacity-estimation accuracy.",
+      "authors": [
+        "Khoa Tran",
+        "Ho-Si-Hung Nguyen",
+        "Phone Wai Yan Moe",
+        "Hung-Cuong Trinh",
+        "Thi-Hoang-Giang Tran"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-18T15:51:51+00:00",
+      "link": "https://arxiv.org/pdf/2609.21932v2",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "joint RUL prediction and capacity estimation for lithium-ion batteries using partial-charging data, directly addressing state of health",
+      "llm_evidence_cn": "利用部分充电数据联合预测锂离子电池剩余使用寿命和容量估计，直接针对健康状态表征与估计",
+      "llm_evidence": "利用部分充电数据联合预测锂离子电池剩余使用寿命和容量估计，直接针对健康状态表征与估计",
+      "canonical_evidence": "利用部分充电数据联合预测锂离子电池剩余使用寿命和容量估计，直接针对健康状态表征与估计",
+      "llm_tldr_en": "The paper proposes a cross-expert framework that uses partial-charging measurements to jointly predict remaining useful life (RUL) and capacity of lithium-ion batteries without requiring full-cycle historical capacity, addressing SOH estimation challenges.",
+      "llm_tldr_cn": "本文针对锂离子电池健康状态估计中难以获取完整历史容量的问题，提出了一种基于部分充电数据的跨专家框架，联合预测剩余使用寿命（RUL）和容量。RUL专家从30个循环的10分钟片段提取长期退化特征，容量专家从最近10个连续循环的40分钟片段统计描述符表征近期行为，并通过特征线性调制融合两者。实验表明该方法无需完整循环容量输入即可实现准确的RUL和容量联合预测，为电池健康管理提供了有效工具。",
+      "llm_tldr": "本文针对锂离子电池健康状态估计中难以获取完整历史容量的问题，提出了一种基于部分充电数据的跨专家框架，联合预测剩余使用寿命（RUL）和容量。RUL专家从30个循环的10分钟片段提取长期退化特征，容量专家从最近10个连续循环的40分钟片段统计描述符表征近期行为，并通过特征线性调制融合两者。实验表明该方法无需完整循环容量输入即可实现准确的RUL和容量联合预测，为电池健康管理提供了有效工具。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.22704v1",
+      "source": "arxiv",
+      "title": "Recursive Parameter Identification of Nonlinear Stochastic State-Space Models via Sequentialized Ensemble Kalman Inversion",
+      "abstract": "Recursive parameter identification in nonlinear stochastic state-space models is challenging because unknown parameters affect the measurements through latent-state dynamics. This paper develops a sequentialized ensemble Kalman inversion method for recursive parameter identification from streaming measurements. The proposed method represents the parameter posterior by an evolving ensemble and updates it sequentially as new measurements become available. For each parameter ensemble member, implicit particle filtering is used to approximate the predictive observation statistics required for parameter correction. This formulation enables recursive parameter learning. The method is evaluated on a strongly nonlinear benchmark, with comparison to several existing methods, and then on a nonlinear double-capacitor lithium-ion battery model. The numerical results demonstrate accurate recursive parameter identification and latent-state estimation.",
+      "authors": [
+        "Farzaneh Barat",
+        "Rachel Carter",
+        "Sara Wilson",
+        "Huazhen Fang"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-09-19T02:33:42+00:00",
+      "link": "https://arxiv.org/pdf/2609.22704v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "recursive parameter identification for nonlinear stochastic state-space models via sequential ensemble Kalman inversion",
+      "llm_evidence_cn": "基于序列化集合卡尔曼反演的递归参数辨识方法",
+      "llm_evidence": "基于序列化集合卡尔曼反演的递归参数辨识方法",
+      "canonical_evidence": "基于序列化集合卡尔曼反演的递归参数辨识方法",
+      "llm_tldr_en": "Addresses recursive parameter identification in nonlinear stochastic state-space models where parameters affect measurements through latent states. Proposes sequentialized ensemble Kalman inversion with implicit particle filtering for streaming updates. Evaluated on strongly nonlinear case; method enables online parameter learning for equivalent circuit models.",
+      "llm_tldr_cn": "针对非线性随机状态空间模型中未知参数通过隐状态影响测量的递归辨识难题，提出序列化集合卡尔曼反演方法。该方法用演化集合表示参数后验，并利用隐式粒子滤波近似预测观测统计量，实现流式测量下的递归参数学习。在强非线性案例上验证，为电池等效电路模型在线参数更新和状态估计精度提升提供可借鉴的序列化方法。",
+      "llm_tldr": "针对非线性随机状态空间模型中未知参数通过隐状态影响测量的递归辨识难题，提出序列化集合卡尔曼反演方法。该方法用演化集合表示参数后验，并利用隐式粒子滤波近似预测观测统计量，实现流式测量下的递归参数学习。在强非线性案例上验证，为电池等效电路模型在线参数更新和状态估计精度提升提供可借鉴的序列化方法。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "equivalent circuit model for SOC estimation",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

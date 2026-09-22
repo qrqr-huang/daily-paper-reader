@@ -1,0 +1,54 @@
+{
+  "label": "2026-09-22",
+  "date": "2026-09-22",
+  "generated_at": "2026-09-22T21:49:20",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202609/22/2609.22843v1-intelligent-degradation-monitoring-in-lithium-ion-batteries-via-discharge-incremental-capacity-feature-estimation",
+      "section": "deep",
+      "title_en": "Intelligent Degradation Monitoring in Lithium-ion Batteries via Discharge Incremental Capacity Feature Estimation",
+      "authors": "Amir Madmolilvand, Farzaneh Abdollahi",
+      "date": "2026-09-19",
+      "pdf": "https://arxiv.org/pdf/2609.22843v1",
+      "score": "9.0",
+      "evidence": "通过神经网络从充电信号预测放电IC特征实现锂离子电池退化监测",
+      "tldr": "传统增量容量（IC）分析依赖低电流放电测量，难以用于实时电池管理。本文提出神经网络框架，直接从充电信号预测放电IC特征，从而免除低电流放电需求。模型在53个电池单元和多种快充协议数据集上训练，LSTM架构对未见电池数据表现出强泛化能力，且在预测精度和计算效率间取得最佳平衡。该方法可集成到电池管理系统，实现实时退化监测，为快充场景下的智能电池健康管理迈出重要一步。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Accurate and timely detection of degradation in lithium-ion batteries is crucial to ensure safety, reliability, and longevity in high-demand applications such as electric vehicles and energy storage systems. Traditional incremental capacity (IC) analysis methods require low-current cycling for discharge measurements, limiting their practical use in real-time battery management. This paper proposes a novel neural network-based framework that predicts discharge IC features directly from charging signals, eliminating the need for low-current discharge. Trained on a comprehensive dataset of 53 battery cells cycled under diverse fast-charging protocols, the model demonstrates robust generalization ability, effectively estimating degradation indicators on unseen battery data. Among several architectures evaluated, the LSTM model provides the best balance of prediction accuracy and computational efficiency. The proposed approach enables real-time integration into Battery Management Systems (BMS), enhancing degradation monitoring without disrupting normal battery operation. This paper presents a study to bridge IC analysis with practical, fast-charging scenarios, marking a significant step towards intelligent and scalable battery health monitoring.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/22/2609.21932v2-joint-remaining-useful-life-prediction-and-capacity-estimation-of-lithium-ion-batteries-using-partial-charging-data",
+      "section": "deep",
+      "title_en": "Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data",
+      "authors": "Khoa Tran, Ho-Si-Hung Nguyen, Phone Wai Yan Moe, Hung-Cuong Trinh, Thi-Hoang-Giang Tran",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.21932v2",
+      "score": "8.0",
+      "evidence": "利用部分充电数据联合预测锂离子电池剩余使用寿命和容量估计，直接针对健康状态表征与估计",
+      "tldr": "锂离子电池联合剩余使用寿命（RUL）预测和容量估计需同时捕捉长期退化与近期行为，现有方法多依赖全周期容量。本文提出跨专家框架，利用部分充电数据，RUL专家从30循环历史提取长期退化，容量专家从10连续循环统计特征表征近期行为，并通过特征线性调制融合。在两公共数据集上实现最低RUL均方根误差（143.69和161.10循环）与竞争性容量误差，融合优于单专家。三阶段训练策略保留专家知识，提升联合预测精度与稳健性。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Joint remaining useful life (RUL) prediction and capacity estimation require representations of both gradual degradation and recent battery behavior. This paper presents a cross-expert framework using partial-charging measurements without requiring measured historical full-cycle capacity as an input. The RUL Expert captures long-term degradation from nominal 10-min segments sampled across a 30-cycle history, while the Capacity Expert characterizes recent battery behavior from statistical descriptors of nominal 40-min segments over ten consecutive cycles. Their complementary representations are integrated through feature-wise linear modulation for joint RUL and capacity prediction. A key contribution is a three-stage training strategy that progressively controls frozen and trainable components: supervised representation pretraining, independent expert pretraining, and final fusion training with both experts frozen. This staged optimization preserves expert-specific degradation knowledge while improving the balance between the two prediction tasks, with RUL treated as the primary prognostic objective. On two public battery-aging datasets, the reference configuration achieves mean RUL root-mean-square errors of 143.69 and 161.10 cycles and capacity errors of 12.36 and 7.28 mAh, respectively. On Dataset I, cross-expert fusion reduces both mean errors relative to either standalone expert. The proposed framework achieves the lowest reported RUL RMSE among the compared methods on both datasets while maintaining competitive capacity-estimation accuracy.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/22/2609.22704v1-recursive-parameter-identification-of-nonlinear-stochastic-state-space-models-via-sequentialized-ensemble-kalman-inversion",
+      "section": "quick",
+      "title_en": "Recursive Parameter Identification of Nonlinear Stochastic State-Space Models via Sequentialized Ensemble Kalman Inversion",
+      "authors": "Farzaneh Barat, Rachel Carter, Sara Wilson, Huazhen Fang",
+      "date": "2026-09-19",
+      "pdf": "https://arxiv.org/pdf/2609.22704v1",
+      "score": "6.0",
+      "evidence": "基于序列化集合卡尔曼反演的递归参数辨识方法",
+      "tldr": "非线性随机状态空间模型的递归参数辨识极具挑战，因未知参数通过隐状态动力学影响测量。本文提出序列化集成卡尔曼反演方法，以演化集成表示参数后验，结合隐式粒子滤波近似预测观测统计量，实现流式测量下的递归参数学习。在强非线性基准和双电容锂离子电池模型上的数值实验表明，该方法能准确递归辨识参数并估计隐状态。这一方法为非线性随机系统的在线参数学习提供了新思路。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Recursive parameter identification in nonlinear stochastic state-space models is challenging because unknown parameters affect the measurements through latent-state dynamics. This paper develops a sequentialized ensemble Kalman inversion method for recursive parameter identification from streaming measurements. The proposed method represents the parameter posterior by an evolving ensemble and updates it sequentially as new measurements become available. For each parameter ensemble member, implicit particle filtering is used to approximate the predictive observation statistics required for parameter correction. This formulation enables recursive parameter learning. The method is evaluated on a strongly nonlinear benchmark, with comparison to several existing methods, and then on a nonlinear double-capacitor lithium-ion battery model. The numerical results demonstrate accurate recursive parameter identification and latent-state estimation.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
