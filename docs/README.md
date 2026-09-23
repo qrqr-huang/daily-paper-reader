@@ -6,30 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-22
-- 运行时间：2026-09-22 21:49:04 UTC
+- 最新运行日期：2026-09-23
+- 运行时间：2026-09-23 22:35:25 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：2
+- 本次总论文数：1
+- 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今日聚焦锂电池智能健康监测，精读2篇高分论文、速读1篇非线性参数辨识研究。  
-最值得看：用放电增量容量特征做智能退化监测（9.0/10），以及仅靠部分充电数据
-- 详情：[/202609/22/README](/202609/22/README)
+- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
+- 速读：《Bayesian Filtering in Physical Systems via Test-time Trained Flow Matching》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
+- 详情：[/202609/23/README](/202609/23/README)
 
 ### 精读区论文标签
-1. [Intelligent Degradation Monitoring in Lithium-ion Batteries via Discharge Incremental Capacity Feature Estimation](/202609/22/2609.22843v1-intelligent-degradation-monitoring-in-lithium-ion-batteries-via-discharge-incremental-capacity-feature-estimation)  
-   标签：评分：9.0/10、query:soc-soh
-   evidence：通过神经网络从充电信号预测放电IC特征实现锂离子电池退化监测
-2. [Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data](/202609/22/2609.21932v2-joint-remaining-useful-life-prediction-and-capacity-estimation-of-lithium-ion-batteries-using-partial-charging-data)  
-   标签：评分：8.0/10、query:soc-soh
-   evidence：利用部分充电数据联合预测锂离子电池剩余使用寿命和容量估计，直接针对健康状态表征与估计
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Recursive Parameter Identification of Nonlinear Stochastic State-Space Models via Sequentialized Ensemble Kalman Inversion](/202609/22/2609.22704v1-recursive-parameter-identification-of-nonlinear-stochastic-state-space-models-via-sequentialized-ensemble-kalman-inversion)  
+1. [Bayesian Filtering in Physical Systems via Test-time Trained Flow Matching](/202609/23/2609.23383v1-bayesian-filtering-in-physical-systems-via-test-time-trained-flow-matching)  
    标签：评分：6.0/10、query:lfp-soc
-   evidence：基于序列化集合卡尔曼反演的递归参数辨识方法
+   evidence：生成式贝叶斯滤波方法，可应用于电池SOC在线估计
 
 
 <div class="dpr-home-promo-card">

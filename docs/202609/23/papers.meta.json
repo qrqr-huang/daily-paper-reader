@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-23",
+  "date": "2026-09-23",
+  "generated_at": "2026-09-23T22:35:45",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/23/2609.23383v1-bayesian-filtering-in-physical-systems-via-test-time-trained-flow-matching",
+      "section": "quick",
+      "title_en": "Bayesian Filtering in Physical Systems via Test-time Trained Flow Matching",
+      "authors": "Ruiqi Feng, Chongyi Wang, Tao Zhang, Tailin Wu",
+      "date": "2026-09-20",
+      "pdf": "https://arxiv.org/pdf/2609.23383v1",
+      "score": "6.0",
+      "evidence": "生成式贝叶斯滤波方法，可应用于电池SOC在线估计",
+      "tldr": "针对高维复杂后验的贝叶斯滤波难题，现有流匹配方法依赖粒子表示或轨迹级逆问题，损失信息或违背递归结构。提出 Belief Flow Filter (BFF)，在测试时通过梯度下降更新流匹配模型权重，直接编码演化分布。在五个物理系统（含混沌与稀疏观测）上验证，于9项 PDE 基准指标中8项最佳，并在极端传感器与托卡马克任务领先。BFF 为高维概率空间中的递归滤波算子逼近提供了新途径。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Bayesian filtering provides a principled framework for online state estimation under uncertainty, yet its application to systems with high-dimensional states and complicated posterior distributions remains challenging. Recent generative models, such as flow matching, have shown potential in Bayesian filtering. However, they still rely on particle-based representations of the posterior, which lose the rich information of the full distribution, or tackle a trajectory-level inverse problem that conflicts with the recursive structure of Bayesian filtering. To address this, we propose a new perspective of directly encoding the evolving distribution into flow matching model weights, namely, the Belief Flow Filter (BFF). It is a generative filtering framework that updates model weights via gradient descent at test time to track the posterior evolution. Thereby, BFF bypasses the scalability issue of particle representations or the flexibility limitation of Gaussian assumptions in conventional filters. We theoretically justify that the BFF design is structurally aligned with Bayesian filtering, and its training objective targets the recursive filtering operator. BFF is empirically verified across 5 different physical systems, including ones with chaotic dynamics and highly sparse, non-linear observations. The results show that BFF attains the best score in 8 of 9 metric-benchmark cells across the three standard 1D and 2D PDE benchmarks, and similarly leads on the extreme single-moving-sensor setting and on a real-world-grounded tokamak plasma estimation task, demonstrating its potential to accurately approximate the Bayesian filtering operator in high-dimensional probability space.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

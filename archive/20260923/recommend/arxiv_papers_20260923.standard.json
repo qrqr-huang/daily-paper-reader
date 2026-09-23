@@ -1,0 +1,59 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-23T22:33:55.590298+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.23383v1",
+      "source": "arxiv",
+      "title": "Bayesian Filtering in Physical Systems via Test-time Trained Flow Matching",
+      "abstract": "Bayesian filtering provides a principled framework for online state estimation under uncertainty, yet its application to systems with high-dimensional states and complicated posterior distributions remains challenging. Recent generative models, such as flow matching, have shown potential in Bayesian filtering. However, they still rely on particle-based representations of the posterior, which lose the rich information of the full distribution, or tackle a trajectory-level inverse problem that conflicts with the recursive structure of Bayesian filtering. To address this, we propose a new perspective of directly encoding the evolving distribution into flow matching model weights, namely, the Belief Flow Filter (BFF). It is a generative filtering framework that updates model weights via gradient descent at test time to track the posterior evolution. Thereby, BFF bypasses the scalability issue of particle representations or the flexibility limitation of Gaussian assumptions in conventional filters. We theoretically justify that the BFF design is structurally aligned with Bayesian filtering, and its training objective targets the recursive filtering operator. BFF is empirically verified across 5 different physical systems, including ones with chaotic dynamics and highly sparse, non-linear observations. The results show that BFF attains the best score in 8 of 9 metric-benchmark cells across the three standard 1D and 2D PDE benchmarks, and similarly leads on the extreme single-moving-sensor setting and on a real-world-grounded tokamak plasma estimation task, demonstrating its potential to accurately approximate the Bayesian filtering operator in high-dimensional probability space.",
+      "authors": [
+        "Ruiqi Feng",
+        "Chongyi Wang",
+        "Tao Zhang",
+        "Tailin Wu"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-09-20T06:03:12+00:00",
+      "link": "https://arxiv.org/pdf/2609.23383v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative Bayesian filtering method for online state estimation applicable to battery SOC",
+      "llm_evidence_cn": "生成式贝叶斯滤波方法，可应用于电池SOC在线估计",
+      "llm_evidence": "生成式贝叶斯滤波方法，可应用于电池SOC在线估计",
+      "canonical_evidence": "生成式贝叶斯滤波方法，可应用于电池SOC在线估计",
+      "llm_tldr_en": "Proposes Belief Flow Filter, which encodes evolving posterior distributions into flow matching model weights for online state estimation, offering a generative alternative to particle-based Bayesian filtering for physical systems including batteries.",
+      "llm_tldr_cn": "针对高维状态和复杂后验分布下贝叶斯滤波难以应用的问题，本文提出信念流滤波器（BFF），将演化分布直接编码进流匹配模型权重，替代传统粒子表示。该方法在物理系统仿真中表现出优于粒子滤波的性能，为在线状态估计提供了全新生成式框架，有望应用于电池荷电状态等动态系统的实时估计。",
+      "llm_tldr": "针对高维状态和复杂后验分布下贝叶斯滤波难以应用的问题，本文提出信念流滤波器（BFF），将演化分布直接编码进流匹配模型权重，替代传统粒子表示。该方法在物理系统仿真中表现出优于粒子滤波的性能，为在线状态估计提供了全新生成式框架，有望应用于电池荷电状态等动态系统的实时估计。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

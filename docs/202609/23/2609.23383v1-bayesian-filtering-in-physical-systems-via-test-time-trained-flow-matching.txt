@@ -1,0 +1,2769 @@
+Title: Bayesian Filtering in Physical Systems via Test-time Trained Flow Matching
+
+URL Source: https://arxiv.org/pdf/2609.23383v1
+
+Published Time: Tue, 22 Sep 2026 01:44:14 GMT
+
+Number of Pages: 51
+
+Markdown Content:
+# Bayesian Filtering in Physical Systems via Test-time Trained Flow Matching 
+
+Ruiqi Feng ∗
+
+Westlake University & Zhejiang University 
+
+fengruiqi@westlake.edu.cn 
+
+Chongyi Wang ∗
+
+Westlake University 
+
+wangchongyi@westlake.edu.cn 
+
+Tao Zhang 
+
+Westlake University & Zhejiang University 
+
+Tailin Wu †
+
+Westlake University 
+
+wutailin@westlake.edu.cn 
+
+## Abstract 
+
+Bayesian filtering provides a principled framework for online state estimation under uncertainty, yet its application to systems with high-dimensional states and complicated posterior distributions remains challenging. Recent generative models, such as flow matching, have shown potential in Bayesian filtering. However, they still rely on particle-based representations of the posterior, which lose the rich information of the full distribution, or tackle a trajectory-level inverse problem that conflicts with the recursive structure of Bayesian filtering. To address this, we propose a new perspective of directly encoding the evolving distribution into flow matching model weights , namely, the Belief Flow Filter (BFF). It is a generative filtering framework that updates model weights via gradient descent at test time to track the posterior evolution. Thereby, BFF bypasses the scalability issue of particle representations or the flexibility limitation of Gaussian assumptions in conventional filters. We theoretically justify that the BFF design is structurally aligned with Bayesian filtering, and its training objective targets the recursive filtering operator. BFF is empirically verified across 5 different physical systems, including ones with chaotic dynamics and highly sparse, non-linear observations. The results show that BFF attains the best score in 8 of 9 metric-benchmark cells across the three standard 1D and 2D PDE benchmarks, and similarly leads on the extreme single-moving-sensor setting and on a real-world-grounded tokamak plasma estimation task, demonstrating its potential to accurately approximate the Bayesian filtering operator in high-dimensional probability space. 
+
+## 1 Introduction 
+
+In complex physical systems ranging from weather forecasting to magnetically confined nuclear fusion, a central problem is to sequentially infer the current posterior distribution of the system state ( i.e. , the belief state) from noisy observations, which is named sequential Bayesian filtering. Traditional Bayesian filters [17, 11, 13] rely on Gaussian assumptions or discrete particle ensembles, which struggle in the presence of complicated dynamics and posteriors. Crucially, the Gaussian assumption fails to capture the multi-modality or long tail in the posterior, while particle-based methods tend to suffer from the curse of dimensionality and can require a prohibitively large number of particles to represent the full posterior in high-dimensional state spaces. 
+
+> ∗Equal contribution.
+> †Corresponding author. Preprint. arXiv:2609.23383v1 [stat.ML] 20 Sep 2026
+
+Recent flow-based generative models [22, 15] provide a scalable free-form probabilistic modeling framework. Yet, their application to Bayesian filtering problems is still inherently limited: Li et al. [20] and Rozet and Louppe [28] view the filtering process as a posterior sampling problem along the entire trajectory simultaneously. This breaks the recursive structure of sequential Bayesian filtering, reducing computational efficiency and distorting the posterior as dimensionality increases. Alternatively, Chen et al. [4] and Bao et al. [1] comply with the recursive structure by explicitly tracking the posterior distribution. However, they still use particles to represent the posterior after each update. This approximates the distribution with a limited-capacity compression, leading to information loss as in classical particle-based filters. Can we maintain the recursive nature of Bayesian filtering while alleviating the bottleneck of representing the posterior? Here, we introduce the Belief Flow Filter (BFF), whose key insight is 
+
+using flow matching model weights to encode the posterior distribution . To lift the filtering procedure from the probability space into the weight space, we derive a learnable surrogate loss, whose gradient updates the flow matching model weight at test time ( i.e. , test-time training [33, 32]) to track the posterior distribution evolution at each physical time step. Furthermore, we propose a training objective which ensures that the learnable surrogate loss is optimized to produce the true Bayesian filtering operator, enabling scalable learning of BFF in high-dimensional probability space. We tested BFF across 1D and 2D benchmarking PDEs with non-linear and even chaotic dynamics under sparse observation (as few as one single moving sensor), and a real-world-grounded tokamak plasma state estimation task with highly non-linear observations. Compared against Gaussian filters (EKF, EnKF) and state-of-the-art generative model-based filters (SDA, FlowDAS), BFF is the only method that holds up on reconstruction er-ror, physical consistency of the predicted state, and calibration of the inferred poste-rior at once, which validates that the Bayesian filtering operator is faithfully learned. Model Weight 𝜽 𝒕 Model Weight 𝜽 𝒕"𝟏  
+
+> 𝒐 𝒕"𝟏 , 𝒂 𝒕
+> 𝒃 𝜽,𝒕 𝒃 𝜽,𝒕"𝟏
+> Test-time Training Surrogate Loss
+
+Figure 1: An overview of our proposed BFF. 
+
+Blue frames denote the flow matching model pa-rameterized by θ at different physical times. The model weights θt parameterize the posterior distri-bution bθt , and evolve ( θt → θt+1 ) as new informa-tion ot+1 , a t comes in, creating the next posterior 
+
+bθt+1 . The update is executed by a gradient step on a learnable surrogate loss ℓϕ that takes θt, ot+1 ,and at as inputs. The gap is most pronounced under ultra-sparse observations and the highly non-linear tokamak diagnostics, suggesting that BFF’s weight-space update is closer to the true Bayesian filtering operator than these baselines. Our main contributions are three-fold: (1) A new perspective of using flow-based gener-ative model weights as belief states in sequential Bayesian filtering to overcome the posterior rep-resentation limitations. (2) Theoretical foundations for BFF of a specif-ically designed surrogate loss that provably rep-resents the exact recursive filtering operator, paired with an outer-loop training objective that bounds the distribution-level error. (3) Empirical evidence that BFF accurately tracks the posterior on an array of challenging physical systems, including chaotic dynamics, sparse observations, and non-linear observation models. The code is open-sourced here. 
+
+## 2 Background 
+
+2.1 Problem Setup 
+
+Consider a discrete-time dynamical system. At time step t, the system is in a true physical state 
+
+st ∈ X ⊆ Rn, where X denotes the state space. The state st could be the fluid velocity and pressure field or the temperature and density profile of the tokamak plasma at time t, both of which are high-dimensional. Subject to a control action at ∈ A ⊆ Rm, the state evolves to st+1 governed by the environmental transition dynamics p(st+1 | st, a t). However, in a partially observable setting, the exact physical state remains hidden. Instead, we only have access to noisy and potentially sparse observations ot ∈ O ⊆ Rk (typically k ≪ n), generated by an observation model p(ot | st). Here, 2A and O denote the action and observation spaces, respectively. We adopt the standard Markov assumption: the transition depends only on the current state and action, and the observation depends only on the current state. This structure, satisfied by most PDE-governed physical systems under full-state representation, underlies the recursive form of the filtering updates below. Due to this partial observability, we must infer the true state from the history of past observations and actions ht := ( o1: t, a 1: t−1). We encapsulate this uncertainty in the posterior probability distribution (also referred to as the belief state in control theory), defined as bt(s) := p(st = s | ht). The filtering problem can thus be viewed as recursively updating this belief state bt into bt+1 upon executing action at3and receiving a new observation ot+1 . This is achieved via a two-step iteration process: 
+
+¯bt+1 (s) = 
+
+Z
+
+p(s | s′, a t)bt(s′) d s′ (Prediction Step) (1) 
+
+bt+1 (s) = ¯bt+1 (s)p(ot+1 | s)
+
+R ¯bt+1 (s)p(ot+1 | s) d s (Update Step) (2) where ¯bt+1 is the propagated prior , the distribution of where the system would land at t + 1 before the new observation arrives, whereas bt+1 is the Bayesian posterior obtained by updating the propagated prior with the latest observation. Equations (1) and (2) together define a recursive filtering operator 
+
+K : P(X ) × O × A 7 → P (X ) that maps the current belief state, together with the latest observation and action, to the next belief state. In the following, we abbreviate K(bt, o t+1 , a t) as Kb t whenever the new information (ot+1 , a t) is clear from context: 
+
+bt+1 (s) = Kb t(s) := 1
+
+Zt+1 
+
+p(ot+1 | s)
+
+Z
+
+p(s | s′, a t)bt(s′) d s′, (3) where Zt+1 = R p(ot+1 | s) R p(s | s′, a t)bt(s′) d s′ ds is the normalization constant ensuring bt+1 
+
+integrates to one. Our aim is to learn this Bayesian update by faithfully represent the belief state and then learn the recursive operator K via test-time training, as described and theoretically justified next. 
+
+2.2 Neural Representation of Belief States 
+
+The recursive Bayesian filtering involves representation of the complex belief state (Eq. (2)). Previ-ously, the belief is usually approximated by particle ensembles or simple parametric distributions ( e.g. ,Gaussian), both of which limit the expressivity. Alternatively, flow-based generative models [15, 22] parameterize rich, high-dimensional distributions through a learned velocity field uθ (s(τ ), τ ) that defines a probability flow ODE ds(τ )/dτ = uθ (s(τ ), τ ) for τ ∈ [0 , 1] . Integrating this ODE from 
+
+τ = 0 to τ = 1 induces a flow map ϕuθ : X → X that transports a simple Gaussian distribution 4 p(0) 
+
+into an arbitrarily complex target distribution p(1) up to mild regularity conditions [22]. Throughout, superscripts in parentheses ( e.g. , s(τ ), p (τ )) index flow time internal to the generation process, while subscripts ( e.g. , θt, b t) index physical time of the filtering process. Fitting θ to a target distribution q uses the conditional flow matching (CFM) loss [22, 23] 
+
+LCFM (θ; q) = Eτ ∼U (0 ,1) , s (0) ∼p(0) , s (1) ∼q
+
+
+
+uθ (s(τ ), τ ) − (s(1) − s(0) ) 2
+
+, (4) with s(τ ) = τ s (1) + (1 − τ )s(0) . We write μq for the resulting joint distribution of (s(τ ), τ ), the flow matching probability path of q. The minimizer of LCFM drives p(1) to q in the population limit. We use θ to represent the belief state. At each physical time step t, we maintain a weight vector 
+
+θt ∈ Θ that parameterizes the velocity field uθt , which in turn defines a parametric mapping 
+
+Φ : Θ → P (X ), θt 7 → bθt , (5) where bθt is our model’s approximation of the true belief bt. In this parameterization, θt plays the role of a high-capacity “belief representation”. Unlike a finite particle ensemble or a Gaussian mean-covariance pair, θt encodes a full continuous distribution through the flow map it induces.   
+
+> 3Filters must account for action when control is exerted on the physical system. For example, plasma in tokamaks is controlled, and our experiments also include this case. When action is not present, the argument ais simply omitted.
+> 4Technically, flow matching allows construction of flows between any two distributions, but most existing work focuses on the Gaussian base distribution for simplicity and efficiency.
+
+32.3 Bayesian Filtering Update in Neural Network Weight Space 
+
+At filtering step t, the flow matching weights θt induce a belief bθt . As recursive Bayesian filtering updates beliefs in distribution space, our filtering algorithm needs to update neural network weights 
+
+bt+1 = K(bt, o t+1 , a t) ⇔ θt+1 = K(θt, o t+1 , a t), (6) where K denotes the weight-space update corresponding to K. Yet, designing K is non-trivial. We can compute bθ from θ (one forward pass plus ODE integration), but inverting this map, i.e. , finding the θ whose induced belief equals a given target Kb θt , has no closed form. In this subsection, we design a closed-form evaluable loss whose minimizer at every timestep correctly induces the next belief. This establishes the theoretical foundation that our algorithm builds on. 
+
+Bayesian filtering step as an ideal loss minimizer. We reformulate the belief-space target Kb θt
+
+as a velocity-matching objective in weight space, define K as its minimizer, and approximate it by test-time gradient steps. Concretely, instantiating the CFM loss Eq. (4) with target Kb θt and writing it in the marginal form gives the ideal filtering loss 
+
+ℓ⋆(θ) = E(s,τ )∼μKb θt
+
+h
+
+uθ (s, τ ) − uKb θt (s, τ ) 2i
+
+, (7) where uKb θt (s, τ ) is the target marginal velocity field of Kb θt , and μKb θt is the joint distribution along flow probability path as in Eq. (4). We anchor the target at Kb θt since the model’s current belief is bθt and the best one-step weight-space update fits θt+1 to the Bayes update of this current belief. The residual gap between bθt and the true bt is closed by the outer training of ϕ (Theorem 3.1). We then define the weight-space update K as its minimizer, 
+
+K(θt, o t+1 , a t) := arg min  
+
+> θ
+
+ℓ⋆(θ), (8) which defines the lift of K in probability space to K in weight space. 
+
+Empirical filtering loss as an evaluable estimator of the ideal loss. However, we cannot evaluate 
+
+ℓ⋆ directly because the target velocity uKb θt is unknown. Fortunately, the Bayesian filtering and flow matching structures (elaborated in Appendix F.1) allow us to approximate ℓ⋆ with the empirical filtering loss ˆℓ. It consists of a model velocity branch FN depending only on θ and a target branch 
+
+GN that depends only on (θt, o t+1 , a t), both evaluable since the unknown uKb θt does not appear: 
+
+ˆℓ(θ) := ∥FN (θ) − GN (θt, o t+1 , a t)∥2 , (9) 
+
+FN (θ) = 1
+
+√N
+
+ uθ (s(τi) 
+
+> i
+
+, τ i)Ni=1 ,GN (θt, o t+1 , a t) = 1
+
+√N
+
+
+
+spi − s(0) 
+
+> i
+
+| {z }
+
+> propagation
+
++ 1 − τi
+
+τi
+
+∇s log ¯ p(τi)(ot+1 | s)
+
+| {z }
+
+> likelihood
+> s=s(τi)
+> i
+
+Ni=1 
+
+, (10) where () Ni=1 denotes the concatenation of N vectors. The constituents of FN , G N ∈ RN ×n are defined as follows. For each anchor i ∈ { 1, . . . , N }, (s(0)  
+
+> i
+
+, τ i) are the standard flow-matching anchor noise and time, and spi ∼ ¯bθt+1 is sampled from the propagated model prior of Eq. (1). Together, they form the path point s(τi) 
+
+> i
+
+= τispi + (1 − τi)s(0)  
+
+> i
+
+, thus defining the propagation term and the likelihood term in Eq. (10). In the likelihood term, path-smoothed likelihood ¯p(τ )(ot+1 | s) ∝
+
+Es′∼¯bθt+1 
+
+[ p(ot+1 | s′) N (s; τ s ′, (1 − τ )2I) ] (normalized by integrating out ot+1 ) is evaluated by self-normalized Monte-Carlo with Nj propagation samples. The details are in Appendix F.1. Intuitively, the empirical filtering loss makes ideal filtering loss evaluable via conditional flow matching and Monte-Carlo estimation. FN stacks model velocity uθ (s(τi) 
+
+> i
+
+), whereas GN stacks the 
+
+propagation term and the likelihood term that together form the target velocity. The propagation term is the conditional flow matching velocity acquired by first sampling a cloud of particles from 
+
+bθ and then simulate them to where the prior would land, i.e. ¯bθt+1 . The likelihood term is the Bayesian correction that tilts ¯bθt+1 into the target posterior Kb θt . Furthermore, we formally state that the empirical filtering loss estimates the ideal filtering loss with controllable bias and shares its weight-space minimizer: 4Proposition 1 (Empirical filtering loss, informal) . Under standard regularity assumptions, ˆℓ is an estimator of ℓ⋆ up to a θ-independent constant C, with bias and variance 
+
+E[ˆℓ(θ)] − ℓ⋆(θ) − C ≤ L1
+
+Nj
+
+, Var  ˆℓ(θ) ≤ 1
+
+N
+
+
+
+σ2 + c5
+
+Nj
+
+
+
+,
+
+for constants L1, c 5, σ 2 depending only on the prior, observation, and dynamics models. 
+
+Hence, ˆℓ shares its weight-space minimizer with ℓ⋆ up to an O(1 /N j )-controlled gradient bias. The full statement and proof are deferred to Appendix F.1. 
+
+## 3 Test-time Training of Flow Matching Filters 
+
+In this section, we present our method BFF. It represents the belief with flow matching model weights θ, and executes Bayesian filtering through test-time training (TTT) using a surrogate loss ℓϕ
+
+with learnable parameters ϕ. Two “training” loops are involved: the inner loop that updates θ via 
+
+ϕ-dependent surrogate loss (Section 3.1 and Algorithm 2) and the outer loop that updates ϕ via the outer loss (Section 3.2 and Algorithm 1). The implementation details are in Appendix D. 
+
+3.1 Surrogate Loss for Test-time Training 
+
+The empirical filtering loss ∥FN (θ) − GN (θt, o t+1 , a t)∥2 provides a representable estimation of ℓ⋆,but evaluating GN at every filtering step requires forward dynamics and observation models, which can be expensive and even infeasible if these models are not known in advance. This motivates us to amortize this by introducing a learnable surrogate loss 
+
+ℓϕ(θ; θt, o t+1 , a t) = ∥fϕ(θ) − gϕ(sg[ θt], o t+1 , a t)∥2 
+
+> H
+
+, (11) where fϕ and gϕ are two learnable projection heads 5 which approximate FN and GN respectively. Thereby, ℓϕ approximate ˆℓ with error |ℓϕ − ˆℓ| controlled by each head’s approximation error (Propo-sition 3 in the appendix). In practice, we use a single test-time gradient step on ℓϕ to update θt+1 :
+
+θt+1 = Kϕ(θt, o t+1 , a t) = θt − η ∇θ ℓϕ(θ; θt, o t+1 , a t) θ=θt
+
+, (12) where Kϕ denotes the ϕ-parameterized realization of the weight-space update K. Kϕ effectively performs test-time training (TTT) on the flow matching parameters θ, using the learned surrogate loss ℓϕ. As Figure 2 show, our implementation uses the DiT backbone [25], augmented with a per-layer TTT module inserted after each self-attention block; the TTT module’s weights are updated as θ, while the rest of the DiT backbone is shared across all physical steps. The surrogate loss ℓϕ
+
+constitutes two learned projection heads parameterized by ϕ.
+
+Remark 3.1 (Surrogate loss as a learnable amortization) . The surrogate loss ℓϕ amortizes ˆℓ of Section 2.3 by replacing FN , G N with learned heads fϕ, g ϕ. The structural link to the ideal filtering loss ℓ⋆ (residual-norm form, asymmetric split between θ and (θt, o t+1 , a t)) is preserved, so the TTT update Eq. (12) stays a faithful realization of K. ˆℓ’s dependence on known dynamics, observation model, and finite-sample Monte Carlo anchors is absorbed into ϕ. Moreover, these approximations do not bottleneck Kϕ. (i) Expressivity. Eq. (12) can realize the Bayesian filtering operator K
+
+(Proposition 4), so the function class is not capped by the inherited structure. (ii) Training target. ϕ is trained against K, not ˆℓ (Theorem 3.1), pulling ℓϕ toward the true filter. Hence BFF can learn general Bayesian filters. 
+
+3.2 Learning the Surrogate Loss 
+
+So far, we have established that our Kϕ, i.e. TTT with the surrogate loss ℓϕ, is a structurally faithful realization of the Bayesian filtering operator K. Since ℓϕ also consists of learnable parameters ϕ, we now show how the meta-parameters ϕ are trained from datasets with trajectories (ht, o t+1 , a t) so that Kϕ actually approximates K in practice.           
+
+> 5To highlight that they constitute the learnable part in the surrogate loss ℓϕand are optimized together in L(ϕ)(Section 3.2), we denote both fϕand gϕwith the same subscript ϕthough they are separate neural networks.
+
+5DiT Block 
+
+× N           
+
+> Self-Attn
+> SSM Gating
+> o, a
+> g= proj_g(W_sg,o,a) TTT Update
+> 𝜃 !=W, 𝜃 !"# =W_next
+> W_sg = W.stop_grad()
+> W_next = W + grad(ell, W)
+> W= WK, WQ, WV
+> f= proj_f(W)
+> ell = loss(f, g)
+> Self-Attn
+
+Figure 2: Architecture overview of BFF. The weights θ (W in the figure) in the per-layer TTT modules inserted into a DiT backbone are updated at test time by the surrogate loss ℓϕ whose proj_f 
+
+and proj_g are learnable heads parameterized by ϕ. Detailed description is in Appendix D. 
+
+Filtering operator error in probability space. The two operators live in different spaces. K acts on beliefs in P(X ), while Kϕ acts on weights in Θ. To compare them on equal footing, we use the weight-to-belief lift Φ : Θ → P (X ), θ 7 → bθ from Section 2.2 (Eq. (5)) and feed both operators the same current belief Φ( θt), then measure how their resulting next beliefs differ: 
+
+E(ϕ) := Et∼U {1: T −1} E(ht, o t+1 , a t)∼Pdata 
+
+h
+
+W 22
+
+
+
+K Φ( θt), o t+1 , a t
+
+, Φ Kϕ(θt, o t+1 , a t)i 
+
+,θt = Ktϕ(ht) = Kϕ(... Kϕ(Kϕ
+
+| {z }   
+
+> Kϕapplied ttimes
+
+(θ0, o 1, a 0), o 2, a 1), ..., o t, a t−1) (13) where ht is the history of observations and actions from the dataset, W2 measures the Wasserstein-2
+
+distance between distributions, and θt is produced from θ0 by recursively applying Kϕ to the history 
+
+ht ∼ Pdata , identical to the filtering loop at test time. This error quantifies the distributional mismatch between the true Bayesian filtering update and the learned TTT update, averaged across the dataset distribution Pdata . The pseudocode is in Algorithm 1. 
+
+Sample loss bounds to filtering operator error. Eq. (13) is at the level of distributions, which in general cannot be directly evaluated or optimized. The insight is that by the Markov factorization that defines the trajectory distribution, the ground-truth state st+1 in any training trajectory data is implicitly conditional on ht+1 and is thus an exact sample from bt+1 . Therefore, we can define the outer-loop training loss as a flow matching-style loss that upper bounds the distributional error. 
+
+L(ϕ) = Et∼U {1: T } Eτ ∼U (0 ,1) Eht, s t, s (0) 
+
+> t
+
+h
+
+uθt (s(τ ) 
+
+> t
+
+, τ ) − (st − s(0)  
+
+> t
+
+) 2i
+
+, (14) 
+
+θt = Ktϕ(ht) is obtained by iteratively applying Kϕ as in Eq. (13), st is the corresponding ground-truth state at step t, s(0)  
+
+> t
+
+∼ N (0 , I ) is a noise sample, and s(τ ) 
+
+> t
+
+= τ s t +(1 −τ )s(0)  
+
+> t
+
+is the flow matching interpolant. We show next that L bounds the operator error in Eq. (13) (proof in Appendix G). 
+
+Theorem 3.1 (Training loss bounds the operator error) . Assume the velocity field uθ and the filtering operator K are Lipschitz with constants L and LK respectively. Then for any horizon T ≥ 2 there exist a constant A > 0 and a ϕ-independent constant C ≥ 0 such that the operator error in Eq. (13) 
+
+satisfies 
+
+E(ϕ) ≤ A ·  L(ϕ) − C, A = 4 CL (L2 
+
+> K
+
++ 1) , (15) 
+
+where CL depends only on L and is the Grönwall pre-factor from Step (1) of the appendix proof. 
+
+The bound is sharp at zero. The constant C is exactly the unoptimizable variance part in the conditional flow-matching loss [22], and does not depend on ϕ. The remaining L(ϕ) − C is the marginal velocity-matching term that can be driven to zero, in which case the model belief equals the true posterior at every step and E(ϕ) = 0 as well. Minimizing the conditional flow matching-style loss L(ϕ) therefore drives a sharp upper bound on the filtering operator error E(ϕ).
+
+## 4 Results 
+
+Our experiments aim to answer the following questions: (1) As a prerequisite of Bayesian filtering, can BFF produce nontrivial, i.e. , multimodal posterior distributions? (2) Can BFF predict the 
+
+posterior distribution more accurately than state-of-the-art methods in high-dimensional systems with nonlinear dynamics? (3) Beyond standard super-resolution benchmarks, does BFF remain reliable in 60.0 0.2 0.4 0.6 0.8 1.0 Space x                      
+
+> 0.75
+> 0.50
+> 0.25
+> 0.00 0.25 0.50 State Value  u
+> (a) Burgers
+> BFF Samples Truth State Sensor
+> 0510 15 20 Space x
+> 4
+> 2
+> 024State Value  u
+> KS
+> 0200 400 600 800 1000 20
+> 020 State X
+> (b) Lorenz63
+> Truth State BFF Samples
+> 0200 400 600 800 1000 20
+> 10
+> 010 20 State Y
+> 0200 400 600 800 1000 Time Steps 20 40 State Z
+
+Figure 3: Bimodal posterior visualizations. (a) Spatial probability density on the 4-sensor Burgers’ and KS equations showing spread-out and sometimes multi-modal posterior distributions. (b) State-channel trajectories exhibiting the expected symmetric bimodal posterior on the Lorenz-63 system. observation regimes encountered in real applications, where measurements may be extremely sparse or routed through highly nonlinear observation operators? Therefore, we empirically validate BFF on a range of physical systems including the Lorenz-63 system, two 1D PDEs (Burgers’ equation and the 1D Kuramoto-Sivashinsky, KS), the 2D Navier-Stokes (NS) flow past triple cylinders, and a tokamak plasma profile estimation problem. These benchmarks combine chaotic turbulence or stiff dynamics with sparse, moving, and line-integral observation models, yielding complex multimodal posteriors. We compare BFF with state-of-the-art learning-based filtering methods and classical filters [17, 11], deterministic supervised learners [21], and diffusion/flow-based Bayesian filters [28, 20, 4]. Detailed dataset, baseline, task descriptions, and supplementary results are given in Appendices H, I, and J. 
+
+4.1 Multimodal Posterior Representation 
+
+Bayesian filtering is challenging when the posterior is multimodal, since a single Gaussian collapses the modes into a spurious mean and distorts the underlying distribution. We demonstrate that BFF captures such non-trivial multimodal posteriors in two settings, the Burgers’ and KS equations, with only 4 spatial sensors, and the Lorenz-63 system with only the Z component observed (details in Appendix H). We make two observations: (1) In the Lorenz-63 system, since the system is symmetrically observable (Z observed, X, Y hidden), an ideal filter would yield a bimodal posterior. As shown in Figure 3(b), BFF successfully captures the bimodality, with one mode accurately tracking the true state. (2) In the Burgers’ and KS equations, the posterior may also be multimodal. For example, due to sparse sensor placement, there is uncertainty in shock wave propagation that creates two modes around the possible shock locations. As shown in Figure 3(a), BFF captures the spread-out and sometimes multimodal posterior distributions. Beyond bimodality, on the tokamak benchmark the residual posterior of Te
+
+exhibits sharp peaks, heavy tails, and radius-dependent correlation structure (near independence at the core, near-collinear dependence at the edge), all of which a single Gaussian cannot represent (Appendix J.6, Figure 17). 
+
+4.2 Distributional Accuracy of the Posterior 
+
+We evaluate on 1D Burgers’, KS, and 2D NS (uniformly placed sensors) equations under sparse-sensing regimes (downsample ratio of 128 , 85 , and 16 × 16 ) with σ = 0 .1 Gaussian noise. See Appendix H for data generation and sensor placement details. A Bayesian filter outputs a posterior distribution , so evaluation should be distribution-level. We report three metrics, the state estimation error EL2 , the per-sample energy spectral error Espec capturing marginal distribution deviation, and the Miscalibration Area (MA) capturing posterior coverage of 70 100 200 300 400 500 Wavenumber k                                                                   
+
+> 10 9
+> 10 8
+> 10 7
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Energy  E(k)
+> (a) Burgers' Energy Spectrum
+> 050 100 150 200 Wavenumber k
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Energy  E(k)
+> KS Energy Spectrum
+> 020 40 60 80 Wavenumber k
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Energy  E(k)
+> NS Energy Spectrum
+> 050 100 150 200 Wavenumber k
+> 10 34
+> 10 35
+> 10 36
+> 10 37
+> Energy  E(k)
+> Tokamak Energy Spectrum
+> 0.0 0.2 0.4 0.6 0.8 1.0 Expected Coverage 0.0 0.2 0.4 0.6 0.8 1.0 Actual Coverage
+> (b) Burgers' Uncertainty Calibration
+> 0.0 0.2 0.4 0.6 0.8 1.0 Expected Coverage 0.0 0.2 0.4 0.6 0.8 1.0 Actual Coverage
+> KS Uncertainty Calibration
+> 0.0 0.2 0.4 0.6 0.8 1.0 Expected Coverage 0.0 0.2 0.4 0.6 0.8 1.0 Actual Coverage
+> NS Uncertainty Calibration
+> 0.0 0.2 0.4 0.6 0.8 1.0 Expected Coverage 0.0 0.2 0.4 0.6 0.8 1.0 Actual Coverage
+> Tokamak Uncertainty Calibration
+> Ground Truth Perfect Calibration TTT (BFF) SDA EKF EnKF FlowDAS S3GM Transformer FNO
+
+Figure 4: Diagnostic evaluations of physical consistency and probabilistic modeling across PDE benchmarks. (a) BFF maintains spectral fidelity across scales, while baselines deviate significantly at high frequencies. (b) BFF consistently provides reliable posterior distributional estimates with lower Miscalibration Area (MA), avoiding the over- or under-confidence observed in baselines. the true posterior (computation details in Appendix H.5). A good filter must perform well on all three simultaneously. As shown in Table 1 and Figure 4, BFF attains the best score in 8 of 9 benchmark cells across the three PDE systems, with the sole exception being spectral error on 1D KS, where BFF stays within 1.6× of the best Gaussian baseline (EnKF) while delivering > 50 × better calibration. The high EL2 ≈ 0.91 on 1D KS across all methods reflects benchmark difficulty rather than failure to learn, and the qualitative KS dynamics are in fact recovered by BFF (Appendix J.4, Figure 16). For classical filters, Ensemble Kalman Filter (EnKF) achieves the best or second-best spectral error on KS and 2D NS (uniform), but its Gaussian assumption hinders both uncertainty quantification and mean prediction. The same applies to Extended Kalman Filter (EKF). Deterministic learned models (Transformer, FNO) achieve good mean prediction but blur out high-frequency components (Figure 4 (a)) and cannot quantify uncertainty by construction. Among generative filters, SDA [28] captures uncertainty better than classical filters but suffers from trajectory-level posterior sampling, leaving its mean estimation and spectral consistency unstable. S 3GM [20] shows the same pattern. FlowDAS [4] represents the posterior with particles, whose limited expressivity drives its unstable performance and motivates our weight-space approach. To verify the gains come specifically from the weight-space belief representation, we replace the TTT block with a GRU-conditioned flow matching model of the same backbone and training data. The GRU variant degrades sharply on 2D NS (Appendix J.2, Figure 13), confirming that fixed-dimensional hidden states cannot encode the full posterior that weight-space memory carries. 
+
+4.3 Realistic Applications 
+
+To stress-test BFF under the sparse and nonlinear observations encountered in real applications, we include two reality-oriented setups, (1) a single moving sensor scanning a 2D flow field (underwater robot exploration), and (2) tokamak plasma internal state estimation under indirect line-integrated diagnostics. 
+
+Single moving sensor. In the 2D benchmarks, we introduce a setting where a single moving sensor traverses the domain along a fixed zig-zag path to scan the entire flow field (Figure 6). Here, the filters need to reconstruct the full 128 × 128 state distribution from a single measurement point with a 
+
+16384 : 1 compression ratio. In this extremely sparsely observed problem, the gap between BFF and the next baseline widens further. BFF outperforms the second-best by 36% , 55% , and 65% in EL2 ,
+
+Espec , and MA respectively (Table 1). Visualizations of the predicted posterior are in Appendix J.5. 80.5 1.0 1.5       
+
+> Te [keV] 0.5 1.0 1.5
+> ne [10 19  m 3]
+> 0.00 0.25 0.50 0.75 1.00
+> 0.0 0.5 1.0 [Wb]
+> 1.5 2.0 R [m] 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00 0.25 0.50 0.75 1.00 Z [m]
+> (R,Z)
+> N=0.20
+> N=0.40
+> N=0.60
+> N=0.80
+> POINT chord ECE channel LCFS
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> N
+
+Figure 5: Poloidal cross-section of the toka-mak in the profile estimation task. The obser-vation includes line-integrated measurements (POINT) which is inherently nonlinear. 
+
+Method sec./step ↓ EL2 ↓ Egrad ↓ Espec ↓ MA ↓
+
+EKF 0.0499 0.1016 0.1657 0.2075 0.4275 EnKF 0.0488 0.0870 0.1207 0.2039 0.9182 FNO 0.0041 0.0174 0.0779 0.0688 –Transformer 0.0031 0.0170 0.1140 0.0728 –SDA 3.7466 0.2940 0.9483 0.0788 0.3682 FlowDAS 0.8553 0.0299 0.0581 0.0629 0.2268 BFF (ours) 0.0369 0.0193 0.0486 0.0101 0.0225 
+
+Table 2: Channel-averaged quantitative results for tokamak plasma profile estimation. Bold 
+
+denotes the best and underline the second best. 
+
+Figure 6: Single-moving-sensor setup. One sensor sweeps the flow field along a zig-zag trajectory. 
+
+Tokamak plasma state Real-time access to the internal plasma pro-files is a load-bearing capability for plasma control, and is increas-ingly critical for next-generation devices such as ITER (details in Ap-pendix H.4). The state is the stack of three radial profiles (ne, T e, ψ )
+
+on ˆρ ∈ [0 , 1] , evolving under stiff nonlinear transport PDEs conditioned on heating-power actions at. Diagnostics are local ECE temperature plus line-integrated polarimetry/interferometry, making the observation operator inherently nonlinear. Despite these challenges, BFF attains the best score on three of the four metrics in Table 2, namely Egrad , Espec ,and MA, where Egrad is the relative-L2 error in the profile gradient, crit-ical for plasma downstream tasks. It stays within 14% of the strongest baseline (Transformer), trading slightly increased mean prediction error for uncertainty estimates. 
+
+4.4 Computation Efficiency 
+
+BFF reaches inference latencies compatible with the real-time control loops we target. It can be accelerated to 23 ms per filtering update on 2D systems and 37 ms per step on the tokamak benchmark (Table 2), fitting within the ∼ 100 ms budget of real-time tokamak plasma control. Under controlled ODE integration steps, BFF is the fastest generative-model-based filter we benchmark, while sacrificing inference speed against deterministic baselines (FNO, Transformer) in exchange for full distributional estimates. A full discussion and ablations are provided in Appendix J.1. Table 1: Comprehensive quantitative results on the 1D KS and Burgers’ and 2D NS datasets. 
+
+We report the relative L2 error ( EL2 ), spectrum deviation ( Espec ), and Miscalibration Area (MA). 
+
+Bold denotes the best method and underline denotes the second best. Transformer and FNO are deterministic models that cannot represent the posterior distribution, thus do not have MA score. 
+
+Method 1D KS 1D Burgers’ 2D NS (Uniform) 2D NS (Moving) 
+
+EL2 ↓ Espec ↓ MA ↓ EL2 ↓ Espec ↓ MA ↓ EL2 ↓ Espec ↓ MA ↓ EL2 ↓ Espec ↓ MA ↓
+
+EKF 1.4186 0.1455 0.5117 0.3030 1.0408 0.5747 0.6621 0.2904 0.8301 0.5910 0.5844 0.8738 EnKF 1.0552 0.0376 0.6766 0.5514 0.3122 0.1017 0.9240 0.1313 0.8682 0.7859 0.0642 0.7328 FNO 0.9873 0.2221 – 0.3274 0.2021 – 0.3086 0.7974 – 0.7812 0.1743 –Transformer 0.9621 0.2668 – 0.4338 0.1432 – 0.3202 0.3212 – 0.7516 0.2766 –S3GM 0.9828 0.1923 0.5449 0.3888 0.2002 0.7401 0.5432 1.2255 0.6786 0.7031 0.0572 0.7943 SDA 0.9622 0.1277 0.0904 0.3370 0.9140 0.0477 0.1951 0.4919 0.5925 0.5901 0.3133 0.5112 FlowDAS 1.0057 0.0502 0.0293 1.1219 0.5201 0.7222 0.8171 0.4364 0.3938 1.0733 0.2617 0.9456 BFF (ours) 0.9061 0.0575 0.0135 0.2896 0.0441 0.0127 0.1651 0.0279 0.0643 0.3771 0.0286 0.1799 
+
+95 Conclusion 
+
+We introduced BFF, a scalable Bayesian filtering framework that encodes the evolving posterior directly into the weights of a flow matching model via test-time training. By representing the belief state in weight space, BFF inherently preserves the recursive structure of Bayesian filtering updates without relying on discrete particles or parametric Gaussian assumptions. Our analysis proves this update can exactly realize the Bayesian operator, with the outer-loop loss strictly bounding the W2 operator error. Evaluations across chaotic PDEs and a highly non-linear tokamak plasma benchmark show that BFF attains the best score in 8 of 9 PDE benchmark cells, retains its lead under a single moving sensor with 16384:1 compression, and runs within the ∼ 100 ms budget of real-time tokamak plasma control. Limitations of BFF and the corresponding future directions are discussed in Appendix C. 
+
+## References 
+
+[1] Feng Bao, Zezhong Zhang, and Guannan Zhang. An ensemble score filter for tracking high-dimensional nonlinear dynamical systems. Computer Methods in Applied Mechanics and Engineering , 432:117447, 2024. [2] Gal Berkooz, Philip Holmes, and John L Lumley. The proper orthogonal decomposition in the analysis of turbulent flows. Annual review of fluid mechanics , 25(1):539–575, 1993. [3] Johannes Brandstetter, Daniel E Worrall, and Max Welling. Message passing neural pde solvers. In International Conference on Learning Representations , 2022. [4] Siyi Chen, Yixuan Jia, Qing Qu, He Sun, and Jeffrey A Fessler. Flowdas: A flow-based framework for data assimilation. In The Second Conference on Parsimony and Learning (Recent Spotlight Track) , 2025. [5] Hyungjin Chung, Jeongsol Kim, Michael Thompson Mccann, Marc Louis Klasky, and Jong Chul Ye. Diffusion posterior sampling for general noisy inverse problems. In The Eleventh Interna-tional Conference on Learning Representations , 2023. [6] Youngseog Chung, Ian Char, Han Guo, Jeff Schneider, and Willie Neiswanger. Uncertainty tool-box: an open-source library for assessing, visualizing, and improving uncertainty quantification, 2021. URL https://arxiv.org/abs/2109.10254 .[7] S.M. Cox and P.C. Matthews. Exponential time differencing for stiff systems. Journal of Computational Physics , 176(2):430–455, 2002. [8] Karan Dalal, Daniel Koceja, Jiarui Xu, Yue Zhao, Shihao Han, Ka Chun Cheung, Jan Kautz, Yejin Choi, Yu Sun, and Xiaolong Wang. One-minute video generation with test-time training. In 
+
+Proceedings of the Computer Vision and Pattern Recognition Conference , pages 17702–17711, 2025. [9] Bradley Efron. Tweedie’s formula and selection bias. Journal of the American Statistical Association , 106(496):1602–1614, 2011. [10] Geir Evensen. Sequential data assimilation. In Data Assimilation: The Ensemble Kalman Filter ,pages 27–45. Springer, 2009. [11] Geir Evensen. The ensemble Kalman filter for combined state and parameter estimation. IEEE Control Systems , 29(3):83–104, June 2009. [12] Ruiqi Feng, Chenglei Yu, Wenhao Deng, Peiyan Hu, and Tailin Wu. On the guidance of flow matching. In Forty-second International Conference on Machine Learning , 2025. [13] Neil J Gordon, David J Salmond, and Adrian FM Smith. Novel approach to nonlinear/non-gaussian bayesian state estimation. In IEE proceedings F (radar and signal processing) , volume 140, pages 107–113. IET, 1993. [14] Jonathan Ho and Tim Salimans. Classifier-free diffusion guidance. In NeurIPS 2021 Workshop on Deep Generative Models and Downstream Applications , 2021. 10 [15] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020. [16] Semin Joung, Y.-C. Ghim, Jaewook Kim, Sehyun Kwak, Daeho Kwon, C. Sung, D. Kim, Hyun-Seok Kim, J. G. Bak, and S. W. Yoon. GS-DeepNet: mastering tokamak plasma equilibria with deep neural networks and the Grad–Shafranov equation. Scientific Reports , 13(1):15799, September 2023. Publisher: Nature Publishing Group. [17] R. E. Kalman. A New Approach to Linear Filtering and Prediction Problems. Journal of Basic Engineering , 82(1):35–45, March 1960. [18] Aly-Khan Kassam and Lloyd N. Trefethen. Fourth-order time-stepping for stiff pdes. SIAM Journal on Scientific Computing , 26(4):1214–1233, 2005. [19] Randall J LeVeque. Finite difference methods for ordinary and partial differential equations: steady-state and time-dependent problems . SIAM, 2007. [20] Zeyu Li, Wang Han, Yue Zhang, Qingfei Fu, Jingxuan Li, Lizi Qin, Ruoyu Dong, Hao Sun, Yue Deng, and Lijun Yang. Learning spatiotemporal dynamics with a pretrained generative model. 
+
+Nature Machine Intelligence , 6(12):1566–1579, 2024. [21] Zongyi Li, Nikola Borislavov Kovachki, Kamyar Azizzadenesheli, Burigede liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. In International Conference on Learning Representations , 2021. [22] Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le. Flow match-ing for generative modeling. In 11th International Conference on Learning Representations, ICLR 2023 , 2023. [23] Yaron Lipman, Marton Havasi, Peter Holderrieth, Neta Shaul, Matt Le, Brian Karrer, Ricky TQ Chen, David Lopez-Paz, Heli Ben-Hamu, and Itai Gat. Flow matching guide and code. arXiv preprint arXiv:2412.06264 , 2024. [24] John Leask Lumley. The structure of inhomogeneous turbulent flows. Atmospheric turbulence and radio wave propagation , pages 166–178, 1967. [25] William Peebles and Saining Xie. Scalable Diffusion Models with Transformers. In 2023 IEEE/CVF International Conference on Computer Vision (ICCV) , pages 4172–4182, October 2023. ISSN: 2380-7504. [26] Anatol Roshko. On the development of turbulent wakes from vortex streets. Technical report, 1954. [27] François Rozet, Gérôme Andry, François Lanusse, and Gilles Louppe. Learning diffusion priors from observations by expectation maximization. In A. Globerson, L. Mackey, D. Bel-grave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang, editors, Advances in Neural Information Processing Systems , volume 37, pages 87647–87682. Curran Associates, Inc., 2024. [28] François Rozet and Gilles Louppe. Score-based Data Assimilation. In Advances in Neural Information Processing Systems , volume 36, pages 40521–40541, 2023. [29] Imanol Schlag, Kazuki Irie, and Jürgen Schmidhuber. Linear transformers are secretly fast weight programmers. In Marina Meila and Tong Zhang, editors, Proceedings of the 38th Inter-national Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Research , pages 9355–9366. PMLR, 18–24 Jul 2021. [30] Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. In 
+
+International Conference on Learning Representations , 2021. [31] Michael Stein. Large sample properties of simulations using latin hypercube sampling. Techno-metrics , 29(2):143–151, 1987. 11 [32] Yu Sun, Xiaolong Wang, Zhuang Liu, John Miller, Alexei Efros, and Moritz Hardt. Test-time training with self-supervision for generalization under distribution shifts. In International conference on machine learning , pages 9229–9248. PMLR, 2020. [33] Yu Sun, Xinhao Li, Karan Dalal, Jiarui Xu, Arjun Vikram, Genghan Zhang, Yann Dubois, Xinlei Chen, Xiaolong Wang, Sanmi Koyejo, Tatsunori Hashimoto, and Carlos Guestrin. Learning to (learn at test time): RNNs with expressive hidden states. In Forty-second International Conference on Machine Learning , 2025. [34] Lloyd N Trefethen. Spectral methods in MATLAB . SIAM, 2000. [35] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is All you Need. In Advances in Neural Information Processing Systems , volume 30. Curran Associates, Inc., 2017. [36] Th Von Karman. Über den mechanismus des widerstandes, den ein bewegter körper in einer flüssigkeit erfährt. Nachrichten von der Gesellschaft der Wissenschaften zu Göttingen, Mathematisch-Physikalische Klasse , 1911:509–517, 1911. [37] Gabriel D. Weymouth. Lily pad: Towards real-time interactive computational fluid dynamics, 2015. URL https://arxiv.org/abs/1510.06886 .[38] G.D. Weymouth and Dick K.P. Yue. Boundary data immersion method for cartesian-grid simulations of fluid-body interaction problems. Journal of Computational Physics , 230(16): 6233–6247, 2011. [39] Karen Willcox. Unsteady flow sensing and estimation via the gappy proper orthogonal decom-position. Computers & fluids , 35(2):208–226, 2006. 12 A Notation 
+
+For ease of reading, Table 3 consolidates the symbols used throughout the paper. We follow the convention that subscripts (e.g. , θt, b t) index the discrete physical time of the filtering process, while 
+
+parenthesized superscripts (e.g. , s(τ ), p (τ )) index the continuous flow time internal to the generative model. Table 3: Summary of notation used in the main paper and the appendix. 
+
+Symbol Meaning 
+
+Physical system and filtering problem 
+
+st ∈ X ⊆ Rn Physical state at time t; X is the state space. 
+
+ot ∈ O ⊆ Rk Observation at time t (typically k ≪ n); O is the observation space. 
+
+at ∈ A ⊆ Rm Control action at time t; A is the action space. 
+
+ht := ( o1: t, a 1: t−1) History of past observations and actions up to time t.
+
+p(st+1 | st, a t) Transition dynamics. 
+
+p(ot | st) Observation model. 
+
+bt(s) := p(st = s | ht) Belief state (posterior) at time t.
+
+¯bt+1 Propagated prior, the one-step pushforward of bt before the new observation. 
+
+K : P(X )×O×A → P (X ) Recursive Bayesian filtering operator: bt+1 = K(bt, o t+1 , a t).
+
+T Number of physical time steps in a trajectory. 
+
+Flow matching belief representation 
+
+τ ∈ [0 , 1] Flow time internal to the generative model. 
+
+s(τ ), p (τ ) Flow-time interpolant and its marginal distribution. 
+
+uθ (s(τ ), τ ) Velocity field of the flow matching model with parameters θ.
+
+ϕuθ : X → X Flow map induced by integrating uθ from τ =0 to τ =1 .
+
+θt ∈ Θ Flow matching weights at physical time t (the BFF belief representation). 
+
+bθt Belief distribution induced by θt.
+
+¯bθt+1 Propagated model prior, the one-step pushforward of bθt before the new observation. 
+
+Φ : Θ → P (X ), θ 7 → bθ Weight-to-belief lift. 
+
+Filtering operator in weight space 
+
+K(θt, o t+1 , a t) Weight-space filtering operator that lifts K to Θ: θt+1 = K(θt, o t+1 , a t).
+
+Kϕ The ϕ-parameterized realization of K used by BFF. 
+
+η Inner-loop (test-time) learning rate; learned jointly with ϕ.
+
+sg[ · ] Stop-gradient operator. 
+
+Loss functions 
+
+ℓ⋆(θ) Ideal filtering loss: target population flow-matching loss against uKb θt
+
+(Eq. (7)). 
+
+ˆℓ(θ) Empirical filtering loss: evaluable Monte-Carlo estimator of ℓ⋆ (Eq. (9)). 
+
+ℓϕ(θ; θt, o t+1 , a t) BFF surrogate loss in latent space (Eq. (11)). 
+
+FN (θ), G N (θt, o t+1 , a t) Stacked model and target velocity branches of the empirical filtering loss. 
+
+fϕ, g ϕ Learned latent heads taking values in the latent space H.
+
+H Shared latent space of fϕ, g ϕ.
+
+ΠN : RN ×n → H Latent map used in the latent amortization analysis. 
+
+L(ϕ) Outer-loop training loss (Eq. (14)). 
+
+E(ϕ) Filtering operator error in W 22 (Eq. (13)). 
+
+N, N j Number of anchor samples and propagation Monte-Carlo samples. 
+
+W2 Wasserstein-2 distance. 
+
+13 B Related Works 
+
+Non-learning filters. Sequential state estimation for PDEs is primarily hindered by the difficulty of accurately representing the posterior distribution in high-dimensional, non-linear state spaces. Standard Kalman Filter variants, such as the EKF and EnKF [17, 11], rely on a parametric Gaussian assumption, which fails to capture the multi-modal or highly skewed distributions common in non-linear physical systems. Conversely, Particle Filtering [13] offers a non-parametric representation of the posterior but is plagued by the "curse of dimensionality"; as the state dimension increases, the particle weights exponentially concentrate on a single sample, making standard PF computationally intractable for the discretized fields typically found in PDE simulations. To bypass these sampling issues, Variational Methods (e.g., 4D-Var or Variational Bayes) transform filtering into an optimization framework by maximizing the Evidence Lower Bound (ELBO). While these scale more effectively via adjoint-based gradients, they often converge to local optima and typically provide over-simplified uncertainty estimates, failing to recover the full, complex topology of the true posterior. 
+
+Diffusion- and flow matching posterior sampling-based filters. Following the paradigm of processing the entire trajectory for state estimation, like in variational inference, diffusion generative models like [27, 20] have been applied to PDE Bayesian filtering. They execute posterior sampling at the trajectory level and utilize energy guidance of diffusion/flow matching models [14, 12] to sample states conditioned on the observations. However, this approach has two fundamental limitations. The first one lies in the trajectory-level modeling, where the model is required to conduct posterior sampling of the entire trajectory in online filtering, which is computationally inefficient (as shown in Table 4). Secondly, guidance does not, by itself, address the difficulties in high-dimensional posterior sampling. As proved in Chung et al. [5], the exact guidance requires estimation of a high-dimensional integration of 
+
+Ex1∼p(x1|xt)[log p(y|x1)] , (16) where x1 denotes the clean sample, xt is the noisy sample, and y is the label, at every single integration time of diffusion sampling, and for flow matching, the same problem exists [12]. Therefore, contemporary guidance methods typically exhibit large approximation error [12]. This results in unsatisfactory performance in high-dimensional complex distributions like the belief state in PDE state estimation, just as we observed in our experiments. 
+
+Transport- and optimal-transport-based filters. A complementary line of work frames the update step as learning a transport map from the prior to the posterior at each time step, including Brenier optimal-transport filters and ensemble coupling methods. A practical strength of these approaches is that the per-step map is typically close to identity, because the prior and posterior are often similar over a single filtering step, which makes the map easy to approximate. BFF differs in a complementary way: instead of constructing a new transport map at every step, we keep the posterior inside the weights θt of a single flow matching model and evolve those weights through a meta-learned gradient step. This has two practical implications. First, once θt is updated, an arbitrary number of posterior samples can be drawn through the ODE integrator without re-solving an optimization problem. Second, the update is structurally Markovian at the weight level, which provides an inductive bias aligned with the recursive filtering operator and helps generalize beyond the training horizon. We therefore view transport-based and weight-space approaches as compatible perspectives on recursive filtering rather than competitors, and leave a direct empirical comparison to future work. 
+
+Flow-based generative models and test-time training. There have been rapid advances in the generative models, especially diffusion models and flow matching [15, 22]. They share the ideology of defining a forward and reverse probability path, where the forward path is simple and is used to conduct scalable training, while the reverse path is used to generate samples via numerical simulations of ODEs and SDEs. Flow matching has demonstrated accelerated sampling speed and better sample quality, which motivates us to adopt it in our work. The online gradient descent algorithm in BFF is closely related to the advances in the research field of Test-Time Training (TTT) [32, 33] and Fast Weights [29], where the model parameters themselves evolve to represent the belief over the system state. This paradigm is rooted in the concept of dual-speed learning, where “slow weights” capture long-term dynamics and “fast weights” adapt to transient information, and it extends the traditional concept of associative memory [29]. Recently, TTT has also been applied to flow-based generative models [8]. This motivates us to treat inference 14 as a continuous optimization process, using self-supervised “inner loops” to update the flow matching model’s weights during the test phase. 
+
+## C Limitations, Discussion and Future Work 
+
+From existence to finite-capacity approximation. Proposition 4 is an existence result: it guar-antees that the functional form of our surrogate loss is rich enough to represent K, but does not quantify the approximation error that arises when fϕ, g ϕ have finite capacity (for instance, the MLP projections we use in practice). Characterizing how this error depends on posterior complexity and embedding capacity is an interesting direction for future theoretical work. This assumption on the TTT block is a condition on its formulation, not on the specific backbone architecture. 
+
+Accelerated inference via more efficient flow samplers. The midpoint solver with 5 ODE steps already brings per-step latency on the tokamak benchmark to ∼ 37 ms (Appendix J.1), but ODE integration remains the dominant cost in our inference pipeline. Recent flow-matching variants such as mean flow, rectified flow, and optimal-transport flow matching are designed to produce nearly straight trajectories and can in principle generate high-quality samples in a handful of steps (or even one). Plugging these training objectives into BFF is largely orthogonal to its weight-space update mechanism and would directly translate into faster inference. We have not pursued this in the current paper but consider it a high-value direction. 
+
+Training overhead from second-order gradients. The inner-loop second-order derivative used by the TTT update inflates the training-step cost by roughly 30% over vanilla flow matching at a comparable batch size (Appendix J.1). This overhead is moderate per step but does compound over long training runs. Reducing it via truncated backpropagation through the inner loop, implicit-differentiation tricks, or learned approximations of the weight update is a natural direction we have not pursued. 
+
+Weight-as-feature for downstream tasks. To alleviate particle-number limits on downstream tasks such as estimating statistical properties of the posterior, it is a promising direction to feed the TTT-updated weights themselves into downstream models that predict quantities of interest end-to-end. Our work demonstrates the feasibility of manipulating flow-based generative-model weights to tackle complex distributional operations in data assimilation, which opens such possibilities. 
+
+Designing task-specific surrogate losses. Proposition 4 indicates that our surrogate loss with sufficiently expressive fϕ, g ϕ can represent the filtering operator exactly, but our MLP or linear projections are a deliberate minimal choice. Incorporating physical structure or constraints directly into ℓϕ or the inner-loop optimization (e.g., a conservation-aware projection after each TTT step) is a natural direction that we have not pursued here. 
+
+Active, safety-aware sensor exploration. Our 2D moving-sensor benchmark uses a fixed, prede-fined zig-zag trajectory, which simplifies evaluation but sidesteps the practical question of how to choose informative measurement paths online. Since observation paths heavily influence estimation accuracy in our experiments, coupling BFF with active-exploration algorithms that simultaneously maximize information gain and respect physical safety (e.g., collision-free trajectories around obsta-cles) is a key open direction. 
+
+## D Implementation Details 
+
+This section unpacks the practical instantiation of BFF, walking through the backbone, the choice of online-updated weights θ, the architecture of the surrogate-loss heads fϕ, g ϕ, and the training pipeline. We organize the description around three concrete design questions: (i) which subset of the flow matching model constitutes θ, (ii) how fϕ ingests the high-dimensional θ, and (iii) how gϕ fuses the observation ot+1 and action at.
+
+Backbone: a DiT with per-layer TTT modules. Our flow matching velocity field uθ (s(τ ), τ )
+
+is parameterized by a Diffusion Transformer (DiT) [25]. Inside each transformer layer we insert 15 (a) DiT layer with TTT      
+
+> hidden state x
+> self-attention TTT block
+> weight W(ℓ)∈R3H×H
+> SSM gate to MLP
+
+(b) Inner-loop W (ℓ) update at step t                  
+
+> W(ℓ)
+> t−1
+> digest W(ℓ)
+> t−1x(ℓ)
+> fϕ(W)gϕ(sg[ Wt−1], o t, a t−1)
+> ℓϕ=∥fϕ−gϕ∥2
+> W(ℓ)
+> t=W(ℓ)
+> t−1−η∇Wℓϕ
+
+Figure 7: Architecture and inner-loop update of the TTT block. (a) Inside every transformer layer of the DiT, a TTT module sits between self-attention and an SSM-style residual gate. It performs a second multi-head self-attention on the first attention’s output, parameterized by a single per-layer weight W (ℓ) ∈ R3H×H stacking Q, K, V . (b) At each physical step t, W (ℓ) is updated by one gradient step on the inner surrogate loss ℓϕ. Both heads fϕ = theta _proj (W · x(ℓ)) and 
+
+gϕ = target _proj ([sg( Wt−1 · x(ℓ)), o t, a t−1]) share the digest W (ℓ)
+
+> t−1
+
+x(ℓ), but gϕ stop-gradients it (dashed arrow), realizing the asymmetric dependence on θ in Eq. (11). Orange highlights the online-updated W (ℓ); gray boxes are the static backbone shared across all physical steps. a TTT module after self-attention, so that the layer applies the sequence Attention → TTT →
+
+SSMGating . By default, the TTT module performs a second multi-head self-attention on top of the first attention’s output, parameterized by a single per-layer weight W (ℓ) ∈ R3H×H that stacks the Q/K/V projections of this second attention; the SSM-style gate then residually adds the TTT output back to the attention output. W (ℓ) is the only online-updated parameter in the layer: it is evolved across physical time by a single gradient step on the inner surrogate loss (Eq. (11)). All other DiT components (token embedding, the layer’s first-attention QKV/output projections, MLP sub-layers, AdaLN modulation, output head) form a static backbone shared across all physical steps. Figure 7 illustrates the integration and the per-step weight update. 
+
+Online-updated weights θ. The online state θ comprises only the per-layer TTT weight matrices 
+
+W (ℓ) ∈ R3H×H , one per transformer layer (with H the model hidden size); each W (ℓ) stacks the query, key, and value projections that drive the second self-attention computed on top of the layer’s standard attention output. The full belief representation is the concatenation θ =  W (1) , . . . , W (L),where L is the number of transformer layers. Each W (ℓ) is updated independently of the others by the inner step, so the per-step gradient computation parallelizes across layers and depth. The static DiT backbone (token embedding, regular attention QKV/output, MLP sub-layers, AdaLN, output head) is not part of θ and is shared across all physical steps; it encodes the prior knowledge of the state distribution and dynamics learned during outer training. With our defaults ( H=256 , L=6 ), θ
+
+contains ∼ 1.2×10 6 scalars, which is of the same order as the static backbone but small enough that a single backward pass through the inner loss is the dominant per-step cost. 
+
+Per-layer auxiliary parameters. Three additional per-layer parameter groups parameterize the inner objective and are trained only by the outer loss: • An initial weight W (ℓ)0 ∈ R∗× H from which the inner loop starts at the beginning of every trajectory. • A scalar inner step size η(ℓ) ∈ R, initialized to 0.01 and learned jointly with ϕ.• A learnable probe vector x(ℓ) ∈ RH that summarizes W (ℓ) via the contraction W (ℓ)x(ℓ)
+
+(see below). 16 We collect all three groups together with the heads fϕ, g ϕ defined next under the meta-parameter symbol ϕ used in the main text. 
+
+Surrogate-loss heads fϕ and gϕ. A direct projection from the high-dimensional matrix W (ℓ) ∈
+
+R∗× H into a feature space would be parameter-heavy and break differentiability through the inner step. We instead summarize W (ℓ) by its action on the learnable probe x(ℓ):
+
+pred (ℓ) := W (ℓ)x(ℓ) ∈ R∗, ∗ ∈ { H, 3H},
+
+which is a smooth, low-dimensional digest of the full matrix that retains the linear dependence on 
+
+W (ℓ) needed for the inner gradient. The model channel fϕ then projects pred (ℓ) into observation space: 
+
+f (ℓ) 
+
+> ϕ
+
+(θ) = theta _proj (ℓ) W (ℓ)x(ℓ) ∈ Robs _dim ,
+
+where theta _proj (ℓ) is a per-layer MLP (or, optionally, a linear map). The target channel gϕ fuses the three inputs (sg[ θ], o t+1 , a t) by raw feature-dimension concatenation followed by a single projection: 
+
+g(ℓ) 
+
+> ϕ
+
+(sg[ θ], o t+1 , a t) = target _proj (ℓ) sg  W (ℓ)x(ℓ), o t+1 , a t
+
+
+
+∈ Robs _dim .
+
+Three points are worth noting. First, the heads are valued in observation space, so the latent space H in the main text is concretely Robs _dim . Second, the weight digest W (ℓ)x(ℓ) entering g is detached: the stop-gradient operator sg[ ·] blocks the inner-loop gradient from flowing into g’s side of the residual, so the inner update direction is shaped only by f ’s W (ℓ) path, while g’s own weights target _proj (ℓ)
+
+remain in the outer-loop graph and are still trained by the outer flow-matching loss. Third, the g-side encoding of ot+1 and at is intentionally minimal (raw concatenation followed by a single per-layer linear or MLP projection), because the asymmetry between f (which depends on the live θ) and g
+
+(which depends only on the new information) is what makes a single inner gradient step on ℓϕ realize a Bayesian-style update; richer g-side encoders are admissible but unnecessary in practice. 
+
+Inner update at inference. Per layer, at every physical step, we perform the differentiable single gradient step (Algorithm 2) 
+
+W (ℓ) 
+
+> t+1
+
+= W (ℓ) 
+
+> t
+
+− η(ℓ) ∇W (ℓ)
+
+> t
+
+f (ℓ) 
+
+> ϕ
+
+(θt) − g(ℓ) 
+
+> ϕ
+
+(sg[ θt], o t+1 , a t) 2,
+
+implemented by torch.autograd.grad with create_graph=True so that the inner update is itself differentiable for the outer-loop training described next. We restrict to a single inner step both for efficiency and because the expressivity result in Proposition 4 already covers single-step updates. 
+
+Training pipeline. Outer training proceeds in two stages. (1) Pretraining the static backbone. We pretrain the DiT backbone together with W0 on the marginal state distribution p(s) with a standard flow-matching loss before outer training, which gives the inner loop a better starting point at small cost since no spatio-temporal dynamics are involved at this stage. (2) Outer-loop training. We then jointly train all parameter groups (DiT backbone, W (ℓ)0 , η(ℓ), x(ℓ), fϕ, and gϕ) with the unrolled outer-loop loss Eq. (14). The bottleneck of this stage is the DiT forward pass through the unrolled trajectory rather than the lightweight TTT modules; we therefore subsample physical time steps when evaluating the flow-matching loss and initialize the gating with α = 0 .1 to stabilize early outer-loop dynamics. We optimize with AdamW (learning rate 10 −4, weight decay 0, gradient clip 1.0) using a cosine schedule with 1,000 -step linear warmup; η(ℓ) uses a 10 ×smaller learning rate to keep the inner step size stable in early training. 
+
+Hyperparameters and efficiency. Per-experiment hyperparameter choices (DiT depth/width, training horizon T , batch size, total outer steps) are reported in our released code, and sensor configurations and dataset specifics are reported in Appendix H. As reported in Table 4, the per-step inference overhead from the TTT update is negligible (one extra backward pass restricted to the per-layer W (ℓ) matrices), and outer-training wall-clock time is comparable to standard flow-matching training of a DiT of the same backbone size. 17 Algorithm 1 BFF Training. 
+
+Input: Dataset s[1: T ], o [1: T ], a [1: T −1] ∼ Pdata .
+
+Output: Trained ϕ, θ 0, η .Pretrain θ0 on st ∼ Pdata , t ∼ U {1 : T } using standard flow matching loss 
+
+for i = 0 to train steps ▷ Outer Loop 
+
+L ← 0
+
+for t = 1 to T do ▷ Inner Loop 
+
+θt ← θt−1 − η∇θt−1 ∥fϕ(θt−1) − gϕ(sg[ θt−1], o t, a t−1)∥2
+
+if t ∈ loss steps then 
+
+Sample τ ∼ U (0 , 1) , s (0)  
+
+> t
+
+∼ N (0 , I )
+
+s(τ ) 
+
+> t
+
+← τ s (1)  
+
+> t
+
++ (1 − τ )s(0) 
+
+> t
+
+L ← L + ∥uθt (s(τ ) 
+
+> t
+
+, τ ) − (s(1)  
+
+> t
+
+− s(0)  
+
+> t
+
+)∥2
+
+end if end for 
+
+Optimize ϕ, θ 0, η with ∇ϕ,θ 0,η L
+
+end for Algorithm 2 BFF Inference. 
+
+Input: Observation sequence o[1: T ], a [1: T −1] , trained model ϕ, θ 0, η .
+
+Output: Sampled states ˆs[1: T ].
+
+for t = 1 to T do ▷ Physical Time Loop 
+
+θt ← θt−1 − η∇θ ℓϕ(θ; θt−1, o t, a t−1) θ=θt−1
+
+Sample s(0)  
+
+> t
+
+∼ N (0 , I )
+
+for τ = 0 to 1 step dτ do ▷ Flow ODE Integration 
+
+s(τ +dτ ) 
+
+> t
+
+← s(τ ) 
+
+> t
+
++ uθt (s(τ ) 
+
+> t
+
+, τ ) · dτ 
+
+end for 
+
+ˆst ← s(1) 
+
+> t
+
+end for 
+
+## E BFF Algorithm Pseudocode 
+
+The pseudo-code for the training and inference loops of BFF are summarized in Algorithm 1 and Algorithm 2, respectively. 
+
+## F Surrogate (Inner) Loss Design 
+
+This appendix provides the proofs of the lemmas and proposition stated in Section 2.3. 
+
+F.1 Empirical Filtering Loss 
+
+This subsection proves the main-text Proposition 1 of the Empirical filtering loss paragraph. Three helper facts are used: a score–velocity affine bijection that is standard in flow matching, an additive split of the Bayesian update at the score level, and a conditional flow-matching identity that turns the propagation channel into an unbiased target. 
+
+Lemma F.1 (Score–velocity affine bijection) . For the linear-Gaussian probability path s(τ ) = τ s +(1 − τ )s(0) with s ∼ q and s(0) ∼ N (0 , I ), the marginal velocity field uq (s, τ ) = E[s′ − s(0) | s(τ ) =
+
+s] and the marginal score ∇s log q(τ )(s) are related by 
+
+uq (s, τ ) = sτ + 1 − ττ ∇s log q(τ )(s), ∇s log q(τ )(s) = τ u q (s, τ ) − s
+
+1 − τ , (17) 
+
+for any τ ∈ (0 , 1) and any q ∈ P (X ) with differentiable marginal q(τ ).
+
+18 Proof. The path identity s(τ ) = τ s ′ + (1 − τ )s(0) rearranges to s′ − s(0) = ( s′ − s(τ ))/(1 − τ ),hence taking conditional expectations gives 
+
+uq (s, τ ) = E[s′ | s(τ ) = s] − s
+
+1 − τ . (18) The conditional density of s(τ ) given s′ is N (τ s ′, (1 − τ )2I). We use the following form of Tweedie’s formula [9]: if X = μ + σZ with μ ∼ π, Z ∼ N (0 , I ) independent, and marginal density 
+
+m(x) = R N (x; μ, σ 2I) π(μ) dμ , then 
+
+E[μ | X = x] = x + σ2 ∇x log m(x). (19) We apply Eq. (19) with X = s(τ ), μ = τ s ′ (so the prior on μ is the pushforward of q under s′ 7 → τ s ′,and the marginal of X is exactly q(τ )), and σ = 1 − τ . This yields 
+
+E[τ s ′ | s(τ ) = s] = s + (1 − τ )2 ∇s log q(τ )(s), (20) and dividing by τ gives 
+
+E[s′ | s(τ ) = s] = sτ + (1 − τ )2
+
+τ ∇s log q(τ )(s). (21) Substituting Eq. (21) into Eq. (18) gives the first identity in Eq. (17); the second is its inverse. The map Eq. (17) is the technical bridge between scores and velocities under the FM probability path: every additive decomposition at the score level induces an additive decomposition at the velocity level with gain factor α(τ ) = (1 − τ )/τ .
+
+Lemma F.2 (Bayes split at the score level) . Let π ∈ P (X ) be a prior with differentiable density and p(o | s) a likelihood with finite normalization Z = R p(o | s) π(s) ds ∈ (0 , ∞). Define the Bayes posterior πo(s) := π(s) p(o | s)/Z . Then 
+
+∇s log πo(s) − ∇ s log π(s) = ∇s log p(o | s). (22) 
+
+Proof. Bayes’ formula gives 
+
+log πo(s) − log π(s) = log p(o | s) − log Z. (23) The normalization log Z does not depend on s, so differentiating in s removes it and yields Eq. (22). In the inner-loss derivation we apply Lemma F.2 to the prior–posterior pair (¯bθt+1 , Kb θt ) defined relative to the model belief bθt , where ¯bθt+1 (s) := R p(s | s′, a t) bθt (s′) ds ′ is the propagated model prior and Kb θt is the Bayes update of bθt . The same identity Eq. (3) applies with bt replaced by bθt .
+
+Lemma F.3 (Conditional flow-matching identity) . Let s′ ∼ bθt , sp ∼ p( · | s′, a t), s(0) ∼ N (0 , I ),
+
+τ ∼ U (0 , 1) (mutually independent given s′), and s(τ ) = τ s p + (1 − τ )s(0) as in the anchor sampling of Section 2.3. Then 
+
+E
+
+h
+
+sp − s(0) s(τ ) = s, τ 
+
+i
+
+= u¯bθt+1 
+
+(s, τ ). (24) 
+
+Proof. We first identify the marginal law of the propagated anchor sp, then match it to the linear-Gaussian probability path of Lemma F.1, and conclude by reading off the conditional mean. Since s′ ∼ bθt and sp | s′ ∼ p( · | s′, a t), the marginal law of sp is, by the tower property, 
+
+Law( sp) = 
+
+Z
+
+p( · | s′, a t) bθt (s′) ds ′ = ¯bθt+1 ,
+
+the propagated model prior obtained by applying the prediction step Eq. (1) to bθt in place of bt.Thus sp ∼ ¯bθt+1 , and by construction s(0) ∼ N (0 , I ) is independent of sp (and of τ ). The triple 
+
+(sp, s (0) , τ ) therefore realizes exactly the linear-Gaussian probability path of Lemma F.1 with data law q = ¯bθt+1 , anchor noise s(0) , and path point s(τ ) = τ s p + (1 − τ )s(0) .19 Specializing Eq. (18) to q = ¯bθt+1 gives 
+
+u¯bθt+1 
+
+(s, τ ) = E[sp | s(τ ) = s, τ ] − s
+
+1 − τ .
+
+On the other hand, the path identity s(τ ) = τ s p + (1 − τ )s(0) rearranges as sp − s(0) = ( sp −
+
+s(τ ))/(1 − τ ), so taking conditional expectation in (s(τ ), τ ),
+
+E
+
+h
+
+sp − s(0) s(τ ) = s, τ 
+
+i
+
+= E[sp | s(τ ) = s, τ ] − s
+
+1 − τ .
+
+The two right-hand sides coincide, yielding Eq. (24). 
+
+Anatomy of the empirical filtering loss. We restate the constituents of Eqs. (9)–(10) with the dependencies the proof will use. For each anchor i ∈ { 1, . . . , N }, draw a particle s′ 
+
+> i
+
+∼ bθt from the current model belief, simulate one transition step spi ∼ p( · | s′
+
+> i
+
+, a t), and pair it with independent draws s(0)  
+
+> i
+
+∼ N (0 , I ) and τi ∼ U (0 , 1) , giving the path point s(τi) 
+
+> i
+
+= τispi + (1 − τi)s(0)  
+
+> i
+
+. By the tower-property argument of Lemma F.3, the marginal law of spi is the propagated model prior ¯bθt+1 ,so (spi , s (0)  
+
+> i
+
+, τ i, s (τi) 
+
+> i
+
+) realizes the linear-Gaussian probability path of Lemma F.1 with data law ¯bθt+1 .The empirical filtering loss compares two branches at these path points. The model branch FN
+
+stacks uθ (s(τi) 
+
+> i
+
+, τ i), the standard flow-matching velocity to be fit. The target branch GN stacks a two-channel target. The first is the propagation term spi − s(0)  
+
+> i
+
+, which by Lemma F.3 is con-ditionally unbiased for the prior velocity u¯bθt+1 
+
+(s(τi) 
+
+> i
+
+, τ i). The second is the likelihood term 
+
+α(τi) ∇s log ¯ p(τi)(ot+1 | s) s=s(τi)
+
+> i
+
+, with prefactor α(τ ) = (1 − τ )/τ , that converts the Bayesian score correction into a velocity contribution via the score-to-velocity affine map of Lemma F.1. The path-smoothed likelihood ¯p(τ ) is the central object that the proof will introduce in Eq. (28) below; in practice it is replaced by the self-normalized Monte-Carlo estimator with Nj extra samples drawn from ¯bθt+1 , independent of spi , whose explicit form appears in Eq. (31). We now state the full version of Proposition 1 and prove it. 
+
+Proposition 2 (Empirical filtering loss, full version) . Assume the densities in Eq. (3) are differentiable, the path-smoothed likelihood ¯p(τ )(ot+1 | s) is differentiable and bounded away from zero in s, and the model velocity uθ is uniformly bounded with bounded θ-derivative on the compact θ-domain of interest. Let ˆℓ be the empirical filtering loss Eq. (9) in which ∇s log ¯ p(τ ) is replaced by its Nj -sample self-normalized Monte-Carlo estimator. Then there exist constants L1, L 2, c 5 ≥ 0 and a 
+
+θ-independent C depending only on the prior, observation, and dynamics models such that, for every 
+
+θ in this domain, 
+
+E[ˆℓ(θ)] − ℓ⋆(θ) − C ≤ L1
+
+Nj
+
+, ∇θ E[ˆℓ(θ)] − ∇ θ ℓ⋆(θ) ≤ L2
+
+Nj
+
+,
+
+and 
+
+Var  ˆℓ(θ) ≤ 1
+
+N
+
+
+
+σ2 + c5
+
+Nj
+
+
+
+,
+
+where σ2 is the per-anchor residual variance under closed-form ¯p(τ ). The 1/N j bias and variance contributions vanish identically whenever ¯p(τ ) admits a closed form (e.g. Gaussian observation with Gaussian prior). Proof. We first establish a propagation–likelihood decomposition of the target velocity at each flow time τ , then check that the per-anchor stack of Eq. (10) is conditionally unbiased for this target, and finally promote pointwise unbiasedness to a variance bound on the empirical loss. 
+
+Bayesian velocity decomposition. At the data level τ = 1 , applying Lemma F.2 to the prior– posterior pair (¯bθt+1 , Kb θt ) gives the additive split ∇s log Kb θt − ∇ s log ¯bθt+1 = ∇s log p(ot+1 | s).20 To carry this split through the path, we must extend it to the marginal scores at τ ∈ (0 , 1) . Let 
+
+κτ (s | s′) := N (s; τ s ′, (1 − τ )2I) be the conditional density of s(τ ) given the data anchor s′. Then 
+
+¯b(τ ) 
+
+> θt+1
+
+(s) = 
+
+Z
+
+¯bθt+1 (s′) κτ (s | s′) ds ′, (25) 
+
+(Kb θt )(τ )(s) = 1
+
+Zt+1 
+
+Z
+
+p(ot+1 | s′) ¯bθt+1 (s′) κτ (s | s′) ds ′ = ¯b(τ ) 
+
+> θt+1
+
+(s) ·
+
+E¯b(τ )   
+
+> θt+1 (s′|s)
+
+p(ot+1 | s′)
+
+Zt+1 
+
+,
+
+(26) where ¯b(τ ) 
+
+> θt+1
+
+(s′ | s) := ¯bθt+1 (s′) κτ (s | s′)/¯b(τ ) 
+
+> θt+1
+
+(s) is the conditional law of the data anchor s′ given the path-level sample s under the prior, and Zt+1 = R p(ot+1 | s′) ¯bθt+1 (s′) ds ′ is the normalization of Kb θt . Taking ∇s log of the ratio in Eq. (26) and noting that log Zt+1 does not depend on s,
+
+∇s log( Kb θt )(τ )(s) − ∇ s log ¯b(τ ) 
+
+> θt+1
+
+(s) = ∇s log E¯b(τ )   
+
+> θt+1 (s′|s)
+
+p(ot+1 | s′). (27) Eq. (27) motivates the central object of this proof, the path-smoothed likelihood at flow time τ :
+
+¯p(τ )(ot+1 | s) := E¯b(τ )   
+
+> θt+1 (s′|s)
+
+p(ot+1 | s′) =
+
+R p(ot+1 | s′) ¯bθt+1 (s′) κτ (s | s′) ds ′
+
+R ¯bθt+1 (s′) κτ (s | s′) ds ′ , (28) which averages the data-level likelihood against the kernel-weighted conditional law of the data anchor given the path point. With this definition, Eq. (27) reads 
+
+∇s log( Kb θt )(τ )(s) − ∇ s log ¯b(τ ) 
+
+> θt+1
+
+(s) = ∇s log ¯ p(τ )(ot+1 | s), (29) and is exact for any observation model and any prior ¯bθt+1 , with the only required regularity being differentiability of ¯p(τ ) in s. The data anchor is the point limit: at τ = 1 the kernel collapses to 
+
+κ1(s | s′) = δ(s − τ s ′), so ¯b(τ ) 
+
+> θt+1
+
+(s′ | s) concentrates on s′ = s, hence ¯p(1) (ot+1 | s) = p(ot+1 | s) and Eq. (29) reduces to the data-level Bayes split (Lemma F.2). For τ < 1, ¯p(τ ) is the genuine likelihood object on the path-level marginal ¯b(τ ) 
+
+> θt+1
+
+; the data-level p(ot+1 | s) recovers it only in special cases (e.g. Gaussian observation with Gaussian prior) and is otherwise an uncontrolled approximation, which is why we work with ¯p(τ ) throughout. Applying Lemma F.1 separately to q = Kb θt and q = ¯bθt+1 and subtracting (the deterministic s/τ 
+
+term cancels) yields 
+
+uKb θt (s, τ ) − u¯bθt+1 
+
+(s, τ ) = 1 − ττ
+
+∇s log( Kb θt )(τ )(s) − ∇ s log ¯b(τ ) 
+
+> θt+1
+
+(s).
+
+Combining with Eq. (29) gives the exact propagation–likelihood decomposition of the target velocity, 
+
+uKb θt (s, τ ) = u¯bθt+1 
+
+(s, τ ) + α(τ ) ∇s log ¯ p(τ )(ot+1 | s), α(τ ) = 1 − ττ , (30) which holds for any observation model and any propagated model prior ¯bθt+1 .
+
+Per-anchor unbiasedness. Reading the anchor stack Eq. (10) per coordinate, the per-anchor targets are Gprop  
+
+> i
+
+:= spi − s(0)  
+
+> i
+
+and 
+
+Glik  
+
+> i
+
+:= α(τi) ∇s log ¯ p(τi)(ot+1 | s) s=s(τi)
+
+> i
+
+,
+
+where ¯p(τi) is the path-smoothed likelihood Eq. (28). By Lemma F.3 the propagation target is conditionally unbiased for the prior velocity, E[Gprop  
+
+> i
+
+| s(τi) 
+
+> i
+
+, τ i] = u¯bθt+1 
+
+(s(τi) 
+
+> i
+
+, τ i). The likelihood target is a deterministic function of s(τi) 
+
+> i
+
+and τi, and combining Eq. (29) with Lemma F.1 gives 
+
+E
+
+h
+
+Glik  
+
+> i
+
+s(τi) 
+
+> i
+
+, τ i
+
+i
+
+= Glik  
+
+> i
+
+= uKb θt (s(τi) 
+
+> i
+
+, τ i) − u¯bθt+1 
+
+(s(τi) 
+
+> i
+
+, τ i).
+
+Adding the two expectations gives E[Gprop  
+
+> i
+
++ Glik  
+
+> i
+
+| s(τi) 
+
+> i
+
+, τ i] = uKb θt (s(τi) 
+
+> i
+
+, τ i), i.e. the per-anchor target Gi := Gprop  
+
+> i
+
++ Glik  
+
+> i
+
+is conditionally unbiased for uKb θt .21 Constant-shifted unbiasedness of the closed-form loss and variance bound. We first establish the result under exact ¯p(τ ), then quantify the Nj -dependent perturbation. Expanding the squared norm and taking conditional expectation in Gi gives 
+
+E
+
+h
+
+∥uθ − Gi∥2 s(τi) 
+
+> i
+
+, τ i
+
+i
+
+= uθ − uKb θt 
+
+> 2
+
++ Var( Gi | s(τi) 
+
+> i
+
+, τ i),
+
+where the variance term does not depend on θ. Averaging over the joint anchor distribution gives E[ˆℓ(θ)] = ℓ⋆(θ) + C with C = E[Var( Gi | s(τi) 
+
+> i
+
+, τ i)] a θ-independent constant; in partic-ular ∇θ E[ˆℓ(θ)] = ∇θ ℓ⋆(θ), and pointwise minimization of the population quadratic in uθ gives 
+
+u⋆θ (s, τ ) = uKb θt (s, τ ). Writing Fi = uθ (s(τi) 
+
+> i
+
+, τ i), the per-anchor summands ∥Fi − Gi∥2 are i.i.d. with variance at most σ2, so Var( ˆℓ) ≤ σ2/N , which is the closed-form half of the variance bound. 
+
+Monte-Carlo evaluation of the path-smoothed likelihood. While Eq. (28) defines ¯p(τ )(ot+1 | s)
+
+as a ratio of two integrals over the propagated model prior ¯bθt+1 , both integrals can be estimated by Monte-Carlo using the same propagation samples that already populate GN . Drawing Nj extra propagation samples {sp, (τi) 
+
+> i,j
+
+}Nj 
+
+> j=1
+
+∼ ¯bθt+1 (independent of spi , conditional on the anchor), the self-normalized estimator 
+
+ˆ¯p(τi)(ot+1 | s) := 
+
+PNj 
+
+> j=1
+
+κτi (s | sp, (τi) 
+
+> i,j
+
+) p(ot+1 | sp, (τi) 
+
+> i,j
+
+)
+
+PNj 
+
+> j=1
+
+κτi (s | sp, (τi) 
+
+> i,j
+
+) (31) converges to ¯p(τi)(ot+1 | s) a.s. as Nj → ∞ , and its ∇s has a closed form through the kernel weights. Whenever ¯p(τ ) itself admits a closed form (e.g. Gaussian observation with Gaussian prior), Eq. (31) is bypassed and the bounds below collapse to the closed-form result of the previous paragraph. 
+
+Quantitative finite-Nj bias and variance bounds. We now propagate the Monte-Carlo error of 
+
+ˆ¯p(τi) through the score, the per-anchor target, and finally the empirical loss to obtain explicit 1/N j
+
+bounds. Throughout we use the standing hypotheses of Proposition 1: ¯p(τ ) is differentiable and bounded away from zero in s, uθ and ∇θ uθ are uniformly bounded on a compact θ-domain, and ¯bθt+1 
+
+has finite second moments. Under these conditions the standard self-normalized importance-sampling bias-variance bounds give, uniformly in s on the support of the anchor distribution, 
+
+E[ˆ ¯p(τi)(ot+1 | s)] − ¯p(τi)(ot+1 | s) ≤ c1
+
+Nj
+
+, Var  ˆ¯p(τi)(ot+1 | s) ≤ c2
+
+Nj
+
+, (32) with constants c1, c 2 depending only on the prior, observation, kernel, and the lower bound on ¯p(τ ).Since ˆ¯p(τi) is bounded below by the same constant uniformly in Nj (with high probability that we absorb into c1, c 2), the delta-method bound transfers Eq. (32) to ∇s log ˆ ¯p(τi), and therefore to the per-anchor likelihood target, 
+
+E[ ˆGlik  
+
+> i
+
+| s(τi) 
+
+> i
+
+, τ i] = Glik  
+
+> i
+
++ βi, ∥βi∥ ≤ c3
+
+Nj
+
+, Var   ˆGlik  
+
+> i
+
+| s(τi) 
+
+> i
+
+, τ i
+
+ ≤ c4
+
+Nj
+
+.
+
+Let ˆGi := Gprop  
+
+> i
+
++ ˆGlik  
+
+> i
+
+and ∆i := uθ (s(τi) 
+
+> i
+
+, τ i) − Gi. Expanding, 
+
+E
+
+
+
+uθ (s(τi) 
+
+> i
+
+, τ i) − ˆGi
+
+> 2
+
+s(τi) 
+
+> i
+
+, τ i
+
+
+
+= ∥∆i − βi∥2 + Var( ˆGi | s(τi) 
+
+> i
+
+, τ i).
+
+Subtracting the closed-form expectation ∥∆i∥2 + Var( Gi | · ), the cross-term −2∆ ⊤ 
+
+> i
+
+βi is bounded by 
+
+2 ∥∆i∥ ∥ βi∥ ≤ 2D c 3/N j for ∥∆i∥ ≤ D on the compact domain, the ∥βi∥2 term is O(1 /N 2 
+
+> j
+
+), and the variance term is shifted by at most c4/N j . Averaging over anchors gives the loss-bias bound 
+
+E[ˆℓ(θ)] − ℓ⋆(θ) − C ≤ L1
+
+Nj
+
+, L1 = 2 Dc 3 + c4,
+
+which absorbs the constant shift C from the closed-form case. Differentiating the same identity in 
+
+θ and using the bounded ∥∇ θ uθ ∥ ≤ D′ gives the gradient-bias bound ∇θ E[ˆℓ] − ∇ θ ℓ⋆ ≤ L2/N j
+
+with L2 = 2 D′c3, since the variance term is θ-independent and the ∥βi∥2 contribution is O(1 /N 2 
+
+> j
+
+) ≤O(1 /N j ).22 Variance bound with Nj contribution. The per-anchor residual uθ − ˆGi
+
+> 2
+
+has variance bounded by σ2+c5/N j for some c5, since the extra randomness in ˆGlik  
+
+> i
+
+contributes at most an additive O(1 /N j )
+
+term to the per-anchor second moment. The N anchors are i.i.d., hence 
+
+Var  ˆℓ(θ) ≤ 1
+
+N
+
+
+
+σ2 + c5
+
+Nj
+
+
+
+,
+
+which is the variance bound stated in Proposition 1. Choosing Nj ∝ N matches the 1/N rate of the closed-form term, so a single Monte-Carlo budget controls the joint (N, N j ) error to leading order. 
+
+Remark F.1 . The decomposition Eq. (30) is exact at every τ ∈ (0 , 1] for any observation model and any propagated model prior ¯bθt+1 , provided the likelihood term is the path-smoothed object 
+
+¯p(τ )(ot+1 | s) of Eq. (28); in particular no Gaussianity assumption is required on either the observation or the prior. Replacing ¯p(τ ) by the data-level p(ot+1 | s) is exact at τ = 1 for any model and exact at all τ when both the observation and the prior are Gaussian, but is otherwise an uncontrolled approximation. The factor α(τ ) = (1 − τ )/τ is dictated by the score–velocity affine map; alternative weightings can be absorbed into the head amortization (Section F.2) without changing the population minimizer. 
+
+F.2 Learned Latent Surrogate 
+
+This subsection proves the latent amortization proposition (Proposition 3) of the Learned latent surrogate paragraph. The proof bounds the deviation between the BFF surrogate and the explicit empirical filtering loss in terms of three independently tunable error terms: the latent-distortion of 
+
+ΠN , the head approximation errors εf , ε g , and the latent residual radius B.
+
+Proposition 3 (Latent amortization) . Suppose there exists a latent map ΠN : RN ×n → H that approximately preserves the stacked residual norm with distortion δN , that the heads approximate 
+
+ΠN FN and ΠN GN within errors εf , ε g , and that the latent residual is bounded by B. Then 
+
+ℓϕ(θ; θt, o t+1 , a t) − ˆℓ(θ) ≤ δN + 2 B(εf + εg ) + ( εf + εg )2. (33) 
+
+Proof. Let 
+
+RN (θ; θt, o t+1 , a t) = FN (θ) − GN (θt, o t+1 , a t) (34) denote the two-channel anchor residual on the compact domain D. The hypotheses on ΠN , fϕ, gϕ
+
+spell out as 
+
+∥ΠN RN ∥2 
+
+> H
+
+− ∥ RN ∥2 ≤ δN , ∥ΠN RN ∥H ≤ B, (35) and 
+
+∥fϕ(θ) − ΠN FN (θ)∥H ≤ εf , (36) 
+
+∥gϕ(sg[ θt], o t+1 , a t) − ΠN GN (θt, o t+1 , a t)∥H ≤ εg . (37) Set rN = Π N RN and 
+
+e = [ fϕ(θ) − ΠN FN (θ)] − [gϕ(sg[ θt], o t+1 , a t) − ΠN GN (θt, o t+1 , a t)] .
+
+By the triangle inequality and Eqs. (36)–(37), ∥e∥H ≤ εf + εg . The BFF residual in H equals rN + e,so 
+
+∥rN + e∥2 
+
+> H
+
+− ∥ rN ∥2 
+
+> H
+
+≤ 2 ∥rN ∥H ∥e∥H + ∥e∥2 
+
+> H
+
+≤ 2B(εf + εg ) + ( εf + εg )2,
+
+using ∥rN ∥H ≤ B from Eq. (35). Combining with the latent-distortion bound δN via the triangle inequality 
+
+ℓϕ − ˆℓ ≤ ℓϕ − ∥ rN ∥2 
+
+> H
+
++ ∥rN ∥2 
+
+> H
+
+− ˆℓ
+
+yields Eq. (33). 
+
+Remark F.2 . Setting H = RN d , ΠN = id , fϕ = FN , and gϕ = GN gives δN = εf = εg = 0 , so Eq. (33) reduces to ℓϕ = ˆℓ. The BFF surrogate Eq. (11) is therefore a strict generalization of the explicit empirical filtering loss; in practice the learned heads compress the propagation–likelihood pair into a low-dimensional latent representation, and Proposition 3 controls the resulting approximation error in terms of three independently tunable knobs: the latent dimension (controlling δN ), the capacity of fϕ (controlling εf ), and the capacity of gϕ (controlling εg ). 23 F.3 Expressivity of the Residual-Pullback Form 
+
+The result in this subsection serves as a sanity check on the BFF surrogate loss parameterization. The proposition below confirms that the residual-pullback form is rich enough to realize any continuous online update field on a compact domain, so the Bayesian-derived template does not pay an expres-sivity cost relative to an unconstrained parameterization, regardless of the assumptions made during the template. 
+
+Proposition 4 (Residual-pullback expressivity) . Let ∆⋆(θ, o t+1 , a t) be any continuous desired online update field on a compact domain in RP . If the target branch is allowed to depend on sg[ θ], then there exist heads f ⋆, g ⋆ such that a single gradient step on 
+
+∥f ⋆(θ) − g⋆(sg[ θ], o t+1 , a t)∥2 (38) 
+
+realizes 
+
+θ+ = θ + ∆ ⋆(θ, o t+1 , a t). (39) 
+
+Proof. Set 
+
+f ⋆(θ) = θ, g⋆(sg[ θ], o t+1 , a t) = sg[ θ] + 12η ∆⋆(sg[ θ], o t+1 , a t). (40) Because the second branch is stop-gradient with respect to θ,
+
+∇θ ∥f ⋆(θ) − g⋆(sg[ θ], o t+1 , a t)∥2 = −η−1∆⋆(θ, o t+1 , a t). (41) One gradient step with step size η therefore realizes Eq. (39). Under standard universal approximation assumptions, neural heads can approximate the continuous maps in Eq. (40) on compact domains. Thus, the one-gradient step residual-pullback interface can represent rich online update rules, including the actual Bayes update with nonlinear observation models. In Section 3.2, Theorem 3.1 governs outer training to learn the true Bayesian filtering operator, validating that the BFF update Eq. (12) is not limited by the assumptions in Section 2.3. 
+
+## G Proof of Theorem 3.1: the Filtering Operator Training Loss 
+
+We prove Theorem 3.1 in this section. The target is to show that L(ϕ) in Eq. (14) 
+
+L(ϕ) = Et∼U {1: T }[Lt(ϕ)] , (42) 
+
+Lt(ϕ) := Eτ ∼U (0 ,1) Eht, s t, s (0) 
+
+> t
+
+h
+
+∥uθt (s(τ ) 
+
+> t
+
+, τ ) − (st − s(0)  
+
+> t
+
+)∥2i
+
+,
+
+provides an upper bound on the filtering operator error E(ϕ) defined in Eq. (13), 
+
+E(ϕ) = Et∼U {1: T −1} E(ht, o t+1 , a t)∼Pdata 
+
+h
+
+W 22
+
+
+
+K Φ( θt), o t+1 , a t
+
+, Φ Kϕ(θt, o t+1 , a t)i 
+
+,
+
+where Φ : Θ → P (X ) is the weight-to-belief lift from Eq. (5) and θt is produced by recursively applying Kϕ from θ0 along the history ht.
+
+Proof. We split the proof into two steps for clarity. 
+
+Flow matching loss bounds the squared Wasserstein-2 distance. As proved in Lipman et al. [22], the conditional flow matching loss 
+
+Lt(ϕ) := Eτ ∼U (0 ,1) Est∼p(st|ht), s (0)   
+
+> t∼N (0 ,I )
+
+∥uθt (s(τ ) 
+
+> t
+
+) − (st − s(0)  
+
+> t
+
+)∥2 (43) (throughout this proof we omit the explicit flow-time argument τ from the velocity field, writing 
+
+uθt (s(τ ) 
+
+> t
+
+) in place of uθt (s(τ ) 
+
+> t
+
+, τ ), since τ is fixed by the path index of the first argument) is equivalent to the (marginal) flow matching loss up to a constant solely dependent on the dataset distribution 
+
+p(st|ht) and thus independent of ϕ
+
+Lt(ϕ) = Eτ ∼U (0 ,1) Est∼p(st|ht), s (0)   
+
+> t∼N (0 ,I )
+
+∥uθt (s(τ ) 
+
+> t
+
+) − Est∼p(st|s(τ ) 
+
+> t)
+
+[st − s(0)  
+
+> t
+
+]∥2 + C. (44) 24 We denote the target (marginal) velocity field u(s(τ ) 
+
+> t
+
+) and the learned velocity field uθt (s(τ ) 
+
+> t
+
+). Con-sider two samples generated by the two ODEs 
+
+ds (τ )
+
+dτ = u(s(τ ) 
+
+> t
+
+) (45) and dˆs(τ )
+
+dτ = uθt (ˆ s(τ ) 
+
+> t
+
+) (46) while assuming an identical starting point, i.e. ˆs(0)  
+
+> t
+
+= s(0)  
+
+> t
+
+. Then we define the error e(τ ) = 
+
+∥ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+∥2, and assume Lipschitz continuity of the velocity field 
+
+∥uθt (x) − uθt (y)∥ ≤ L∥x − y∥. (47) The time derivative of the error can then be computed as 
+
+ddτ e(τ ) = ddτ ∥ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+∥2 = 2 
+
+*
+
+ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+, dˆs(τ )
+
+> t
+
+dτ − ds (τ )
+
+> t
+
+dτ 
+
++
+
+. (48) Plug in the velocity ODEs 
+
+ddτ e(τ ) = 2 
+
+D
+
+ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+, u θt (ˆ s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)
+
+E
+
+(49) 
+
+= 2 
+
+D
+
+ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+, u θt (ˆ s(τ ) 
+
+> t
+
+) − uθt (s(τ ) 
+
+> t
+
+) + uθt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)
+
+E
+
+(50) 
+
+= 2 
+
+D
+
+ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+, u θt (ˆ s(τ ) 
+
+> t
+
+) − uθt (s(τ ) 
+
+> t
+
+)
+
+E| {z }
+
+> A
+
++ 2 
+
+D
+
+ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+, u θt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)
+
+E| {z }
+
+> B
+
+. (51) Then, use the Cauchy-Schwarz inequality and the Lipschitz assumption (Lipschitz constant L)
+
+A ≤ 2∥ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+∥ · ∥ uθt (ˆ s(τ ) 
+
+> t
+
+) − uθt (s(τ ) 
+
+> t
+
+)∥ ≤ 2L∥ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+∥2 = 2 Le (τ ), (52) and using ⟨a, b ⟩ ≤ ∥ a∥2 + ∥b∥2,
+
+B ≤ ∥ ˆs(τ ) 
+
+> t
+
+− s(τ ) 
+
+> t
+
+∥2 + ∥uθt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)∥2 = e(τ ) + ∥uθt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)∥2. (53) Collect A and B, and we can bound the growth rate of the error 
+
+ddτ e(τ ) ≤ (2 L + 1) e(τ ) + ∥uθt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)∥2. (54) Use the Grönwall lemma, for τ ∈ [0 , 1] , we have 
+
+e(τ ) ≤ e(2 L+1) τ e(0) + 
+
+Z τ
+
+> 0
+
+e(2 L+1)( τ −z)∥uθt (s(z) 
+
+> t
+
+) − u(s(z) 
+
+> t
+
+)∥2dz. (55) With further relaxation on e(2 L+1)( τ −z) ≤ CL, the error at terminal τ = 1 can be bounded 
+
+∥ˆs(1)  
+
+> t
+
+− s(1)  
+
+> t
+
+∥2 ≤ CL
+
+Z 10
+
+∥uθt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)∥2dτ. (56) By the definition of the squared W2 distance, we have 
+
+W 22 (Φ( θt), b t) ≤ Es(0)   
+
+> t∼p(s(0)
+> t)
+
+h
+
+Eˆs(1)        
+
+> t∼ˆp(ˆ s(1)
+> t|ˆs(0)
+> t),s (1)
+> t∼p(s(1)
+> t|s(0)
+> t)
+
+h
+
+∥ˆs(1)  
+
+> t
+
+− s(1)  
+
+> t
+
+∥2ii 
+
+(57) where CL is a constant dependent on the Lipschitz constant of uθt . Note that CL
+
+R 10 ∥uθt (s(τ ) 
+
+> t
+
+) −
+
+u(s(τ ) 
+
+> t
+
+)∥2dτ is integration along the ground truth trajectories, i.e. , the expectation of s(τ ) 
+
+> t
+
+is taken w.r.t. the ground truth probability path p(s(τ )|s(1) ). This connects the W2 distance to the flow matching loss 
+
+W 22 (Φ( θt), b t) ≤ CLEs(0)   
+
+> t∼p(s(0)
+> t)
+
+
+
+Es(τ )    
+
+> t∼p(s(τ)
+> t|s(0)
+> t)
+
+Z 10
+
+∥uθt (s(τ ) 
+
+> t
+
+) − u(s(τ ) 
+
+> t
+
+)∥2dτ 
+
+ 
+
+(58) 
+
+=CL(Lt(ϕ) − C). (59) 25 The squared W2 distance bounds the filtering operator error. Step (1) shows that the conditional flow-matching loss controls the per-step squared W2 between the model belief Φ( θt) and the true posterior bt:
+
+W 22
+
+ Φ( θt), b t
+
+ ≤ CL
+
+ Lt(ϕ) − C, (60) where the right-hand side is CL times the marginal flow-matching loss. It is the optimizable part of Lt that can be driven to zero, and C is the ϕ-independent variance gap between the conditional and marginal flow-matching losses. We refer to the left-hand side as the per-step trajectory error : it quantifies how well the model belief Φ( θt) tracks the true posterior bt at filtering step t.We now lift this trajectory bound to the filtering operator error E(ϕ) defined in Eq. (13). Both arguments of the operator-error W2 are candidate beliefs at the same physical time step t+1 , produced from the same starting point Φ( θt) by two different routes: KΦ( θt) applies the true Bayes filter, while ΦKϕ(θt) = Φ( θt+1 ) applies one step of the learned TTT update. The natural pivot for the triangle inequality is therefore the true step-t+1 posterior bt+1 , which lets us decompose the operator error into a K-discrepancy at step t (term (i)) and a trajectory error at step t+1 (term (ii)). KΦ( θt) is one K-step from the model belief Φ( θt), while ΦKϕ(θt) = Φ( θt+1 ) is the model belief at step t+1 .Inserting the true posterior bt+1 = Kb t as a pivot, the triangle inequality of W2 yields 
+
+W2
+
+ KΦ( θt), ΦKϕ(θt) ≤ W2
+
+ KΦ( θt), Kb t
+
+| {z }  
+
+> (i): K-discrepancy at step t
+
++ W2
+
+ bt+1 , Φ( θt+1 )| {z } 
+
+> (ii): trajectory error at t+1
+
+, (61) where we used Kb t = bt+1 and Kϕ(θt) = θt+1 , abbreviating the new-information arguments 
+
+(ot+1 , a t). Term (ii) is the trajectory error at step t+1 , controlled directly by Eq. (60). Term (i) measures the same operator K applied to two nearby input beliefs, and is contracted back to a trajectory error at step t via the Lipschitz continuity of K on P(X ):
+
+W2
+
+ KΦ( θt), Kb t
+
+ ≤ LK W2
+
+ Φ( θt), b t
+
+. (62) Squaring Eq. (61) and applying the elementary inequality (a + b)2 ≤ 2( a2 + b2) keeps the bound entirely at the level of squared distances: 
+
+W 22
+
+ KΦ( θt), ΦKϕ(θt) ≤ 2 W 22
+
+ KΦ( θt), Kb t
+
+ + 2 W 22
+
+ bt+1 , Φ( θt+1 )
+
+≤ 2L2 
+
+> K
+
+W 22
+
+ Φ( θt), b t
+
+ + 2 W 22
+
+ bt+1 , Φ( θt+1 ), (63) where the second line substitutes Eq. (62). Plugging the trajectory bound Eq. (60) into both squared terms expresses the per-step operator error entirely in flow-matching losses: 
+
+W 22
+
+ KΦ( θt), ΦKϕ(θt) ≤ 2CLL2
+
+> K
+
+ Lt(ϕ) − C + 2 CL
+
+ Lt+1 (ϕ) − C. (64) It remains to take expectations to recover E(ϕ). Applying Et∼U {1: T −1}Eht∼Pdata to both sides of Eq. (64), the left-hand side becomes E(ϕ) by Eq. (13). The right-hand side is controlled by L(ϕ) via the index-range comparison 
+
+Et∼U {1: T −1}[Lt(ϕ)−C] = 1  
+
+> T−1
+> T−1
+
+X
+
+> t=1
+
+ Lt(ϕ)−C ≤ 1 
+
+> T−1
+> T
+
+X
+
+> t=1
+
+ Lt(ϕ)−C = TT −1
+
+ L(ϕ)−C,
+
+(65) where the inequality uses that each summand Lt(ϕ) − C ≥ 0 since Lt(ϕ) − C is the per-step marginal flow-matching loss, which is non-negative (but still optimizable to zero so it does not break the sharpness at zero). Exactly the same bound holds for the index-shifted average Et∼U {1: T −1}[Lt+1 (ϕ) − C] ≤  
+
+> TT−1
+
+(L(ϕ) − C), since the shifted summation PTs=2 (Ls − C) is also bounded by PTt=1 (Lt − C) = 
+
+T (L − C). Choosing E’s averaging range as {1: T − 1} ensures both indices t and t + 1 stay within 
+
+L’s range {1: T }, eliminating any boundary correction. Combining, 
+
+E(ϕ) ≤ 2CL (L2 
+
+> K
+
++ 1) · TT −1
+
+ L(ϕ) − C ≤ A  L(ϕ) − C, A = 4 CL (L2 
+
+> K
+
++ 1) , (66) where the second inequality uses T / (T − 1) ≤ 2 for any T ≥ 2, valid uniformly in the horizon. This is exactly Eq. (15) of Theorem 3.1. The bound is sharp at zero: when L(ϕ) − C = 0 , the trajectory error in Eq. (60) vanishes at every step, both squared terms on the right of Eq. (63) vanish, and so 
+
+E(ϕ) = 0 . Consequently, optimizing the conditional flow-matching loss L(ϕ) implicitly minimizes a sharp upper bound on the filtering operator error. 26 H Data Generation and Preprocessing 
+
+In this section, we elaborate on the data generation process for our benchmark systems. To evaluate the reconstruction performance across diverse physical regimes, we consider a series of one-dimensional (1D) and two-dimensional (2D) fluid systems. These benchmarks range from fundamental nonlinear PDEs to complex flows governed by the Navier-Stokes equations. 
+
+H.1 1D Systems: Burgers’ and Kuramoto-Sivashinsky Equations 
+
+Two representative 1D nonlinear partial differential equations (PDEs) are included, specifically selected to simulate shock formations and chaotic dynamics. These datasets are generated using high-fidelity numerical solvers, with boundary conditions tailored to each system to ensure physical consistency. 
+
+Burgers’ equation. We utilize the viscous Burgers’ equation, 
+
+∂u ∂t + u ∂u ∂x = ν ∂2u∂x 2 + f, (67) to model the emergence and propagation of shocks. Physically, the nonlinear advection term drives the formation of steep gradients, while the diffusion term provides regularization. We use a second-order finite difference scheme [19] for spatial discretization and the explicit Euler method for temporal integration. The system is solved on a spatial domain x ∈ [0 , 1] discretized into 
+
+Nx = 256 grids. We simulate the system for t ∈ [0 , 1] with the time step size dt = 1 × 10 −4, and save Nt = 100 snapshots in the trajectory. For the Burgers’ equation, we enforce homogeneous Dirichlet boundary conditions, u(0 , t ) = 
+
+u(1 , t ) = 0 , by padding the field with zeros during each integration step. We generate ICs to simulate shock wave formation and propagation. The initial condition is constructed as a superposition of two Gaussian pulses with randomized parameters: 
+
+u0(x) = 
+
+> 2
+
+X
+
+> i=1
+
+Ai exp 
+
+
+
+− (x − μi)2
+
+2σ2
+
+> i
+
+
+
+. (68) We introduce a time-varying external forcing term f (x, t ). The force field is generated as a sum of spatiotemporal Gaussian blobs (Random Gaussian Field approximation): 
+
+f (x, t ) = 
+
+> M
+
+X
+
+> j=1
+
+Aj exp 
+
+
+
+− (x − μx,j )2
+
+2σ2
+
+> x
+
+
+
+exp 
+
+
+
+− (t − μt,j )2
+
+2σ2
+
+> t
+
+
+
+, (69) where we set M = 8 . The spatial and temporal centers ( μx, μ t) are sampled uniformly over the domain [0 , L ] × [0 , T ]. This ensures the forcing term varies smoothly but unpredictably across both space and time, preventing the model from overfitting to static boundary constraints. Based on the code implementation, the parameters are sampled uniformly as follows: locations 
+
+μ1 ∼ U [0 .2, 0.4] , μ2 ∼ U [0 .6, 0.8] , amplitudes A1 ∼ U [0 , 2.0] , A2 ∼ U [−2.0, 0] , and widths 
+
+σi ∼ U [0 .05 , 0.15] .
+
+Kuramoto-Sivashinsky (KS) equation. We investigate the Kuramoto-Sivashinsky equation, a paradigmatic model for spatio-temporal chaos [34] in extended systems, governed by the fourth-order nonlinear PDE: ∂u ∂t + u ∂u ∂x + ∂2u∂x 2 + ∂4u∂x 4 = f, (70) The dynamics are characterized by a competition between a large-scale instability induced by the anti-diffusion term uxx and small-scale damping from the hyper-diffusion term uxxxx . Ground truth trajectories are generated using a high-precision pseudo-spectral method combined with a stiffly-stable fourth-order Exponential Time Differencing Runge-Kutta (ETDRK4) [7, 18] scheme. The system is discretized into Nx = 256 Fourier modes and integrated with a fine solver step of 
+
+∆tsolver = 5 × 10 −4 over a total duration of T = 200 . To ensure the system converges to the chaotic 27 attractor and eliminates transient dynamics, we discard the initial evolution phase ( t ∈ [0 , 100] ) and retain the subsequent 100 time units for analysis. To achieve diverse topological coverage, initial conditions u(x, 0) are sampled from a zero-mean Gaussian Process (GP). Crucially, we employ a periodic kernel to strictly enforce the boundary conditions: 
+
+k(x, x ′) = σ2 exp 
+
+
+
+− 2 sin 2(π|x − x′|/L )
+
+ℓ2
+
+
+
+, (71) where the length scale is set to ℓ = 8 .0 and variance σ = 8 .0. The final dataset comprises 12,000 trajectories (10,000 training, 2,000 testing), temporally subsampled at ∆tout = 1 .0 to capture the long-term evolution of coherent structures. 
+
+Sensor placement. We uniformly place Ns = 4 sensors along the spatial domain [0 , L ], with the first and last sensors anchored at the two boundary points. Observations are sampled at a fixed time interval identical to the state snapshot time interval in the dataset. For Burgers’ equation, the two boundary sensors give effectively no information since the boundary values are fixed to zero by the Dirichlet condition, leaving only 2 informative interior measurements; relative to the 
+
+256 -point state grid, this corresponds to a 128 × down-sampling. For the KS equation with periodic boundary conditions, the two boundary sensors coincide, so the four placements collapse to 3 distinct measurement locations, corresponding to an 85 × down-sampling of the 256 -point state grid. The sensor placement and example trajectories are visualized in Figure 9b, 9a, 10a, and 10b. 
+
+H.2 2D System: Navier-Stokes Flow Past Multiple Cylinders 
+
+We introduce a large-scale multi-body flow benchmark to evaluate the model’s capacity for spatial generalization across disconnected flow structures. The system is governed by the 2D incompressible Navier-Stokes equations: 
+
+∂u
+
+∂t + ( u · ∇ )u = −∇ p + 1
+
+Re ∇2u, (72) 
+
+∇ · u = 0 . (73) We configure a computational domain with a spatial resolution of 128 × 128 containing three stationary cylinders, subjected to a uniform inflow velocity uin = (0 , 1) . As the fluid encounters these obstacles, boundary layer separation occurs, leading to the formation of low-pressure wake regions and unsteady Von Kármán vortex streets downstream of each cylinder [36, 26]. A core challenge lies in the localized scale variations, where individually varying cylinder diameters Di induce wakes with distinct spatial scales and shedding frequencies, governed by the Strouhal relationship: 
+
+fs ≈ St · UDi
+
+. (74) Consequently, the model must simultaneously capture these heterogeneous local dynamics, ranging from high-frequency eddies behind small obstacles to slower, large-scale structures behind massive ones, while correctly maintaining a laminar background flow in the void regions. In our current setup, the cylinders are arranged approximately perpendicular to the inflow direction, ensuring that the three wake regions remain spatially independent with negligible mutual interference. We reserve the investigation of strong wake interactions and moving obstacles for future work. To ensure robust generalization over physical and geometric parameters, we construct a large-scale dataset of 10,100 simulation environments using Latin Hypercube Sampling (LHS) [31]. The Reynolds number is sampled uniformly from Re ∼ U [50 , 500] , covering the transition from steady recirculation bubbles to fully developed periodic shedding. To prevent geometric overfitting and force the model to learn the underlying fluid-structure interactions, the positions and diameters 
+
+D ∈ [0 .8, 2.0] of three cylinders are randomized. Ground truth trajectories are generated via the Lily Pad [37] solver using the Boundary Data Immersion Method (BDIM) [38] with a spatial resolution of 128 × 128 and a temporal step of ∆t = 0 .01 . The final dataset consists of sequence lengths of 
+
+T = 50 and is partitioned into 8000 samples for training, 2000 for validation, and a held-out set of 100 samples for testing. 
+
+Sensor placement. We consider two complementary observation regimes for the 2D Navier-Stokes system. The first is a structured sparse setting based on a coarse-grained uniform grid: we downsample 28 0 64 128     
+
+> x
+> 064 128
+> y
+> u
+> Sensors Cylinder
+> 064 128
+> x
+> 064 128
+> y
+> v
+> Sensors Cylinder
+> 064 128
+> x
+> 064 128
+> y
+> p
+> Sensors Cylinder
+> 3
+> 2
+> 1
+> 0123
+> 4
+> 2
+> 024
+> 2.0
+> 1.5
+> 1.0
+> 0.5
+> 0.0 0.5 1.0 1.5
+
+Figure 8: Illustration of the Navier-Stokes uniform 8×8 sensor placement and an example state. the high-resolution spatial domain ( Ω ∈ R128 ×128 ) by a factor of scale = 16 , placing sensors at the centroids of non-overlapping 16 × 16 local patches (with a half-interval spatial offset). This yields 
+
+Nobs = (128 /16) 2 = 64 stationary measurement points, a regular but low-resolution view of the flow dynamics. An illustrative snapshot of the sensor layout is shown in Figure 8. The second is a single-moving-sensor observation mode, designed to test extreme data compression. At each physical time step, a single mobile sensor samples only one scalar from the 128 ×128 velocity field, yielding a staggering 16384 : 1 compression ratio. The sensor follows a deterministic trajectory: a horizontal zig-zag sweep (20-frame period) coupled with a linear vertical descent over the total duration T , bounded by a 10% spatial margin. To ensure fair and consistent evaluation, this identical predefined trajectory is rigidly applied across all test samples. Consequently, we assume an idealized sensor without collision avoidance constraints; the joint optimization of active exploration efficiency and physical safety is left for future work. The scan path and quantitative results are presented in Figure 6 and Appendix J. 29 0 50 100 150 200 250 
+
+Space (x) 
+
+020 40 60 80 100 
+
+> Time (t)
+
+Sensors (64x) 
+
+0 50 100 150 200 250 
+
+Space (x) 
+
+020 40 60 80 100 
+
+> Time (t)
+
+Sensors (32x) 
+
+0 50 100 150 200 250 
+
+Space (x) 
+
+020 40 60 80 100 
+
+> Time (t)
+
+Sensors (16x) 
+
+1.0 
+
+0.5 
+
+0.0 0.5 1.0 1.5 
+
+1.0 
+
+0.5 
+
+0.0 0.5 1.0 1.5 
+
+1.0 
+
+0.5 
+
+0.0 0.5 1.0 1.5 (a) Entire trajectory. 0 50 100 150 200 250 Space (x) 0.2 
+
+0.1 
+
+0.0 0.1 0.2 Value u(x) 
+
+Ground Truth Sensors (64x) 
+
+0 50 100 Space 0.2 
+
+0.1 
+
+0.0 0.1 0.2 Value u(x) (b) Single snapshot. 
+
+Figure 9: Illustration of the Burgers’ equation in the dataset. The four sensors are highlighted in red. 0 50 100 150 200 250 
+
+Space (x) 
+
+020 40 60 80 
+
+> Time (t)
+
+Sensors (64x) 
+
+0 50 100 150 200 250 
+
+Space (x) 
+
+020 40 60 80 
+
+> Time (t)
+
+Sensors (32x) 
+
+0 50 100 150 200 250 
+
+Space (x) 
+
+020 40 60 80 
+
+> Time (t)
+
+Sensors (16x) 
+
+4
+
+3
+
+2
+
+1
+
+01234
+
+4
+
+3
+
+2
+
+1
+
+01234
+
+4
+
+3
+
+2
+
+1
+
+01234
+
+(a) Entire trajectory. 0 50 100 150 200 250 Space (x) 3
+
+2
+
+1
+
+0123Value u(x) 
+
+Ground Truth Sensors (64x) 
+
+0 50 100 Space ( 3
+
+2
+
+1
+
+0123Value u(x) (b) Single snapshot. 
+
+Figure 10: Illustration of the KS equation in the dataset. The four sensors are highlighted in red. 30 H.3 Lorenz-63 System 
+
+The Lorenz-63 system is a classic three-dimensional chaotic ODE, 
+
+˙X = σ(Y − X), ˙Y = X(ρ − Z) − Y, ˙Z = XY − βZ, (75) with the standard parameters (σ, ρ, β ) = (10 , 28 , 8/3) , for which the system exhibits a butterfly-shaped strange attractor. We use it as a stress test for long-horizon recursive filtering: only the Z
+
+coordinate is observed (with additive Gaussian noise, σo = 0 .5), while X and Y remain hidden. Because the Lorenz system is symmetric under the involution (X, Y, Z ) 7 → (−X, −Y, Z ) and the observation only sees Z, the filtering posterior is naturally bimodal in the (X, Y )-plane, providing a clean testbed for distributional accuracy. 
+
+Dataset. Trajectories are integrated with an explicit fourth-order Runge-Kutta scheme at ∆t = 0 .01 .To remove transients and ensure samples lie on the attractor, each trajectory is preceded by a 20 
+
+time-unit burn-in starting from initial states drawn uniformly within [−20 , 20] 3. The dataset consists of 10 4 training trajectories, each of length Ttrain = 100 , yielding ≈ 1.2 × 10 5 lobe-switching events in total, enough to densely cover the chaotic behavior of the attractor. Test trajectories are generated under the same protocol but are extended to Ttest ∈ { 1000 , 4000 }, i.e., 10 × and 40 × the training horizon, to evaluate generalization to far longer recursive inference. 
+
+H.4 Tokamak Plasma Profile Estimation Benchmark What a tokamak is, in one minute. A tokamak is a donut-shaped chamber that confines a hot ionized gas (a plasma) with strong magnetic fields, illustrated in the schematic of Figure 5. To describe its state at any moment, plasma physicists collapse the 3D plasma volume to a 1D radial coordinate 
+
+ρN ∈ [0 , 1] , where ρN = 0 is the hot core at the centre of the donut’s poloidal cross-section and 
+
+ρN = 1 is the cold plasma edge near the chamber wall. The full plasma state is then represented by three 1D profiles defined on this coordinate, the electron temperature Te(ρN ), the electron density 
+
+ne(ρN ), and the magnetic flux ψ(ρN ). Together these three profiles summarise how energy and particles are distributed inside the plasma, and they evolve over time under a system of coupled, stiff, and nonlinear transport partial differential equations that play the role of the system dynamics. 
+
+Mapping the tokamak environment to a filtering problem. Cast in standard filtering terms, the tokamak environment fits cleanly into the partially observable Markov setup used throughout this paper. The state st is the stack of three 1D profiles (Te, n e, ψ ) on ρN . The action at encodes the operator’s external knobs at time t, in particular the heating power and its spatial deposition through electron cyclotron heating. The transition p(st+1 | st, a t) is given by the coupled transport solver described below. The observation ot comes from physical diagnostics mounted outside the chamber, which only report a sparse, often line-integrated, and nonlinear function of the state. The filter never sees the profiles themselves, only what the diagnostics report, and it must reconstruct a posterior over the full state st from this stream of indirect measurements together with the running action sequence. 
+
+Why profile estimation matters in practice. Beyond serving as a clean filtering benchmark, accurate real-time estimation of Te, ne, and ψ is a load-bearing capability for tokamak operation. Heating a plasma efficiently requires knowing where to deposit the heat, which in turn requires knowing how energy is currently distributed across the radial profile. Maintaining stable confinement requires the same information so that operators can react before instabilities have a chance to grow. This will become even more important for next-generation burning-plasma experiments such as ITER and follow-on commercial reactors, where the plasma must reach conditions in which fusion reactions release enough energy to keep the plasma hot on its own, and active control based on accurate profile estimates is needed to sustain these conditions over long pulses. A filter that reconstructs these profiles in real time from the available diagnostics is therefore not just a probabilistic-modelling exercise but also a practical building block for fusion control. 
+
+Why we additionally report the gradient error Egrad on this benchmark. On the tokamak benchmark we report a fourth metric in addition to those defined in Appendix H.5, the channel-averaged gradient relative L2 error 
+
+Egrad = 1
+
+C
+
+> C
+
+X
+
+> c=1
+
+Et
+
+ ∥∂ρbs ct − ∂ρs∗,c t ∥2
+
+∥∂ρs∗,c t ∥2
+
+
+
+, (76) 31 where ∂ρ denotes the radial derivative of the channel-c profile along the normalized coordinate 
+
+ρN ∈ [0 , 1] , computed by finite differences on the discretization grid. The reason for this addition is that, in plasma operation, the radial gradients of Te and ne are physically more important than their absolute values. Heat and particle fluxes are essentially driven by these gradients through transport coefficients, and most stability criteria used by tokamak physicists (such as edge-pedestal stability) are also gradient-driven. A filter whose mean prediction matches the truth in absolute value but smears the gradient out is therefore of limited practical value, since downstream analyses such as transport-coefficient estimation, turbulence diagnosis, and stability assessment all consume the local slope of the profile rather than its level. 
+
+Why this is a hard benchmark for AI filters. Three properties make this task a stress test for posterior estimators that have been trained mainly on PDE-like dynamics. First, the observation operator is highly nonlinear, because the POINT polarimetry channel reports a Faraday-rotation phase 
+
+ψF ∝ R neB∥ dℓ where B∥ is reconstructed from spatial derivatives of ψ, so the mapping is bilinear in the state pair (ne, ψ ), and the ECE channel uses a signal-dependent noise model whose variance scales with the measured value. Second, the line-integrated diagnostics in the POINT system collapse the entire ne profile into a handful of scalar phases, which destroys most of the spatial information and forces the filter to lean heavily on its learned prior. Third, the system is actively controlled, so the filter must condition on the action sequence rather than treat the dynamics as autonomous, which differs from the unforced PDE benchmarks earlier in this paper. The tokamak plasma profile estimation task targets a real-world filtering problem characterized by a highly nonlinear observation operator. The hidden state at each physical step t consists of 1D electron-density ne(ρN ), temperature Te(ρN ), and flux ψ(ρN ) profiles defined on the normalized radial coordinate ρN ∈ [0 , 1] [16]. The evolution of these profiles is governed by coupled transport equations driven by external actions at comprising the electron cyclotron power, deposition location, and width, which the filter must account for. Two types of diagnostics are included: (1) electron cyclotron emission diagnostics with signal-dependent observation noise whose noise level is proportional to the signal, placed at 15 fixed locations on the radial coordinate ρN ; and (2) the POINT system, which consists of 11 horizontal laser chords producing both an interferometry phase and a Faraday-rotation phase. It measures integrated line-of-sight quantities in the (R, Z ) plane, and is inherently nonlinear. 
+
+Dataset Generation. Ground-truth trajectories are produced by a 1D coupled transport solver (state scheme coupled_te_psi ) anchored to the real EAST shot 152444. The flux geometry ψ(R, Z )
+
+and the boundary ρN (R, Z ) map are taken directly from the EFIT g-file of that shot, while the base profiles for Te, ne and ψ are loaded from the same shot’s reconstruction and used as the nominal initial condition. The electron temperature evolves through the Felici-Fable form-factor transport model under an implicit-Euler integrator, while ne is held at its randomized initial profile (electron density evolution is disabled to keep the focus on heat transport). Each trajectory spans 0.1 s of plasma evolution at ∆t = 10 −3 s ( 1 kHz, matching typical tokamak diagnostic rates), and snapshots are saved every 5 solver steps to give ≈ 20 frames per trajectory. Inter-trajectory diversity is induced by two independent randomizations rather than a single global perturbation: (i) six initial-profile parameters (core gain, width, and edge gain for both Te and 
+
+ne) are drawn uniformly from explicit ranges around the shot-152444 base profiles, e.g. Te-core 
+
+∈ [0 .50 , 1.15] , Te-width ∈ [0 .32 , 0.80] , ne-core ∈ [0 .70 , 1.30] ; and (ii) the actuator trace is a piecewise-constant electron-cyclotron-heating (ECH) schedule with K = 4 launchers, where for each segment the deposition radius ρdep ∈ [0 .05 , 0.85] , deposition width wdep ∈ [0 .12 , 0.28] , and injected power Pin ∈ [0 .2, 0.9] MW are resampled, segment durations are drawn uniformly from [25 , 80] ms, and each launcher independently has a 10% probability of remaining off after activation. 
+
+Observation Operator and Noise Model. Two physical diagnostic systems are simulated, yielding three logical observation channels in total. (1) An electron-cyclotron-emission (ECE) array reads Te
+
+at a set of fixed radial locations ρN taken from ECE_Te_shot152444.mat , sampling the current Te
+
+profile at those ρN values directly. (2) A POINT-style polarimetry/interferometry system places 11 
+
+horizontal sight-lines at fixed heights z ∈ {− 0.425 , −0.340 , . . . , +0 .425 } m and integrates ne along each sight-line (after a 512-point Riemann discretization in R) using a fixed ρN (R, Z ) map drawn from the EFIT g-file of shot 152444, which produces an interferometry phase ϕ that is linear in ne
+
+and a Faraday-rotation phase ψF ∝ R ne B∥ dℓ, where B∥ is reconstructed from spatial derivatives of ψ. Because B∥ depends on ψ, the Faraday channel is bilinear in the state pair (ne, ψ ) and is the principal source of nonlinearity in the observation operator. 32 Diagnostic noise is added independently in physical units. ECE follows a signal-dependent Gaussian model y = yclean + ϵ, ϵ ∼ N (0 , σ 2) with σ = pσ2 
+
+> abs
+
++ ( σrel |yclean |)2, σabs = 20 eV and σrel = 0 .03 .POINT phases use additive Gaussian noise of σϕ = 1 .0◦ for the interferometry channel (with an additional shared common-mode contribution of 0.35 ◦ per chord-bundle), and σψF = 0 .1◦
+
+for the Faraday-rotation channel. Given the large scale disparity between physical quantities (e.g. 
+
+ne ∼ 10 20 m−3 vs. Te ∼ 10 4 eV), a per-channel, per-spatial-point mean/std normalization computed from the training set is applied prior to model ingestion. 
+
+H.5 Evaluation Metrics 
+
+A Bayesian filter targets the full posterior, so we evaluate along three complementary axes: mean accuracy , spectral fidelity of individual samples , and calibration of the posterior coverage . Concretely, we report the channel-averaged relative L2 error EL2 , the energy-spectrum error Espec , and the per-pixel Miscalibration Area (MA). 
+
+Relative L2 error ( EL2 ). Let s∗,c t denote the ground-truth state of channel c at time t, and bs ct the filtered mean estimate (sample average over the ensemble). We compute the relative L2 error per channel and then average over channels: 
+
+EL2 = 1
+
+C
+
+> C
+
+X
+
+> c=1
+
+Et
+
+ ∥bs ct − s∗,c t ∥2
+
+∥s∗,c t ∥2
+
+
+
+. (77) 
+
+Energy-spectrum error ( Espec ). A low mean error does not imply that individual samples respect the physical spectrum. We therefore evaluate spectral fidelity at the level of each generated sample ,not the ensemble mean. For sample s(i) 
+
+> t
+
+we compute its energy spectrum E(i)(k) (1D Fourier spectrum for the 1D PDEs and the tokamak profiles, radially binned 2D Fourier spectrum for Navier-Stokes), take its logarithm, and evaluate the mean absolute error against the ground-truth log spectrum on a system-specific wavenumber band [kmin , k max ]:
+
+Espec = Et, i 
+
+"
+
+1
+
+kmax − kmin + 1 
+
+> kmax
+
+X
+
+> k=kmin
+
+log E(i)(k) − log E∗(k)
+
+#
+
+. (78) We fix kmin = 1 throughout and set kmax = 200 (KS), 500 (Burgers’), 85 (Navier–Stokes), and 200 
+
+(tokamak), chosen to cover the resolved physical range of each system while excluding numerical-noise-dominated tails. Evaluating Espec per sample (rather than on the mean) is what distinguishes a probabilistic filter that produces physically realistic posterior draws from one whose mean is accurate but whose samples are over-smoothed or noise-like. 
+
+Per-pixel Miscalibration Area (MA). To quantify whether BFF’s uncertainty aligns with the actual posterior spread, we adopt the miscalibration measure of Chung et al. [6], evaluated independently at every spatial location. Given the observation history ht, at each pixel x we draw an ensemble of 
+
+100 samples from BFF and let bQα(x; ht) denote the empirical α-quantile of the marginal predictive distribution at x obtained from this ensemble. For a target coverage q ∈ [0 , 1] , the central predicted interval at x is 
+
+Qq (x; ht) =   bQ(1 −q)/2(x; ht), bQ(1+ q)/2(x; ht), (79) and the miscalibration at coverage q is the gap between the empirical coverage rate and the promised coverage: 
+
+MC( q; x) = Pr 
+
+> st, h t∼Pdata
+
+ st(x) ∈ Qq (x; ht) − q . (80) Averaging over q yields the per-pixel Miscalibration Area MA( x) = R 10 MC( q; x) d q, which we approximate by uniform discretization over q. We report the value averaged across all pixels and channels. Smaller MA indicates that the predicted intervals are simultaneously well-calibrated at every spatial location, not merely on average. 
+
+## I Baseline Specifications 
+
+In this appendix, we provide the technical specifications of our baselines. 33 We evaluate our method against a comprehensive set of baselines categorized into three distinct paradigms: classical data assimilation, deterministic supervised learning, and score-based generative modeling. Unless otherwise stated, neural baselines are tuned to have comparable parameter counts to our model for fair comparison. 
+
+I.1 Classical Data Assimilation (DA) with Learned Surrogates 
+
+To ensure a fair comparison with deep learning baselines, we strictly exclude analytical governing equations (e.g., Navier-Stokes) from the DA frameworks. Instead, we adopt a data-driven strategy where the system dynamics are learned from the training data. This setup evaluates the filters’ ability to perform inference using imperfect, learned surrogates rather than ground-truth physics. We investigate two distinct data-driven DA approaches: 
+
+EKF. By default, we follow the standard Extended Kalman Filter formulation [17]: the (non-linear) time evolution simulator computes Jacobian ∂f θ /∂ x via automatic differentiation since the corresponding solvers are rewritten in PyTorch with closed form implicit scheme (rather than multiple Picard or Newton iterations), and the full-state covariance is propagated through the linearized dynamics at each step. This vanilla implementation is used for the 1D Burgers’ and KS systems, and the tokamak benchmark, where the ambient state dimension is moderate ( < 1000 D). For the 2D Navier-Stokes benchmark, however, propagating a full ≈ (128 2)2 covariance is com-putationally intractable, so we adopt a reduced-order variant denoted POD-LKF . We first apply Proper Orthogonal Decomposition (POD) [24, 2] to project the state x ∈ R128 2
+
+onto the top r = 30 
+
+energetic modes. The temporal evolution of the latent coefficients z ∈ R30 is then modelled as a global linear system zt+1 = Az t, with A identified by linear least-squares on training trajectories. Inference is carried out by a standard Linear Kalman Filter entirely within this latent space, which tracks the dominant flow features while avoiding any operation on the full ambient state [39]. 
+
+EnKF. By default, we use the standard stochastic Ensemble Kalman Filter [10]: an ensemble of particles is propagated through the simulator to estimate the flow-dependent background covariance, sparse observations are assimilated with perturbed measurements. This configuration is used for the 1D Burgers’ and KS systems and for the tokamak benchmark. For the 2D Navier-Stokes benchmark, we instantiate the same EnKF inference loop with a resolution-invariant deep operator surrogate, and refer to this variant as FNO-EnKF . Specifically, we replace the learned surrogate with a Fourier Neural Operator (FNO) [21] with k = 16 modes and hidden width d = 64 , trained on the full physical state. To mitigate the stability issues common in long-term recursive prediction, the FNO is trained with an autoregressive pushforward strategy [3], unrolling the computation graph for k = 10 steps to explicitly minimize error accumulation. The remaining EnKF hyperparameters ( Ne, σobs , σproc ) are kept identical to the default setting, so that the only change relative to the 1D case is the choice of surrogate. 
+
+I.2 Supervised Learning Baselines 
+
+We include supervised learning baselines to investigate the necessity of probabilistic modeling in current tasks. These deep learning methods learn a deterministic mapping fθ from the observation and action sequences τt to the mean estimation of the posterior state ˆst. We introduce two Transformer-based [35] baselines that share the same temporal encoder architecture but differ in their decoding heads for state reconstruction. We employ a standard Transformer encoder to process the sequence of historical observations 
+
+τt = ( o[1: t], a [1: t−1] ). The temporal dependencies are aggregated into the last token, which serves as a compact latent representation of the current system state. To enable parallel training, we input the entire sequence into the Transformer and compute loss with all tokens’ outputs. ˆst conditions only on past information τt is enforced by the causal attention mask in the Transformer model. Next, we introduce the decoders utilized by the two baselines: 
+
+Transformer-CNN (Transformer). In this baseline variant, we utilize a projection-based residual deconvolution decoder for spatial reconstruction. Specifically, the aggregated latent token is first linearly projected to the initial spatial dimension. Subsequently, the feature map is processed by N
+
+34 layers of 1D transposed convolutions equipped with residual connections to generate the final state estimate. We denote this baseline as “Transformer” in the text for brevity. 
+
+Transformer-FNO (FNO). In this variant, we employ a Fourier Neural Operator (FNO) [21] as the decoding head. The latent token conditions the FNO, which performs global convolutions in the spectral domain to reconstruct the continuous function of the current state directly. We denote this baseline as “FNO” in the text for brevity. 
+
+I.3 Diffusion Generative Model-Based Baselines Score-based diffusion assimilation (SDA). We adopt the trajectory inference framework proposed by Rozet and Louppe [28]. SDA learns a joint score-based prior over state trajectories by approxi-mating the global score with local conditional scores (Markov blankets). This allows the model to approximately capture temporal correlations efficiently. We implement SDA framework using a continuous-time Variance Exploding (VE) SDE, discretized into 100 steps [30]. The model undergoes unconditional pretraining via denoising score matching, optimized using Adam with Exponential Moving Average (EMA) on model weights. During this pretraining stage, the model uses sequences consisting of T = 20 snapshots as training units, where the score function ∇s[1: t] log pt(s[1: t]) is parameterized by a Video U-Net architecture to explicitly capture spatiotemporal correlations and learn the joint distribution. During inference, zero-shot reconstruction is performed using a Predictor-Corrector guidance sampler. Specifically, it utilizes a Langevin Corrector with a signal-to-noise ratio (SNR) of 0.128 and 1 corrector step per iteration. The pre-trained unconditional score is augmented with an analytically approximated likelihood gradient ∇s[1: t] log p(ht|s[1: t]) derived from the observation operator which, in Gaussian noise observation settings, simplifies to ∇s[1: t] ∥ht − H (s[1: t])∥22.This method belongs to the trajectory-level posterior sampling category, modeling the conditional distribution p(s[1: t]|ht) via iterative denoising, representing the state-of-the-art in generative Bayesian inference in physical systems. 
+
+Score-based generative model (S 3GM). S3GM [20] also falls into the category of trajectory-level posterior sampling. It utilizes the same framework including training setup and backbone network as SDA, but balances the temporal consistency and computation effort by training multiple models with shorter time chunks and concatenating the partially denoised samples from adjacent time chunks during inference. To achieve long-horizon sampling, the model generates 10 snapshots per call and constructs the full sequence by setting an overlap of m = 2 snapshots. It concatenates partially denoised samples from adjacent time chunks to execute this process while ensuring sequence consistency. 
+
+Flow-based data assimilation (FlowDAS). FlowDAS [4] is a generative data assimilation frame-work based on stochastic interpolants. It learns a deterministic drift function conditioned on historical states. Consistent with other baselines, we instantiate the FlowDAS drift model using a U-Net architecture and the same sampling strategy as our flow-based BFF. During the autoregressive inference phase, FlowDAS employs conditioning on samples generated in the last step to execute the dynamic propagation step and gradient guidance to conduct posterior sampling on sensor observations. To ensure a strictly fair comparison and avoid granting the baseline an unfair information advantage, we operate FlowDAS in the "observation-only" conditioning mode. Specifically, instead of using the unobserved ground-truth fields to initialize, the initial historical conditioning frames are reconstructed by sampling from the prior distribution, i.e. , the training dataset rather than from the same test trajectory. 
+
+## J Comprehensive Experimental Results 
+
+J.1 Computation Efficiency The dominant cost is ODE integration, not the TTT update. We profile BFF’s inference cost against the vanilla unconditional flow matching (FM) model (Figure 12). Across the commonly used 35 Table 4: Inference time and performance comparison. All methods are benchmarked on a single NVIDIA H800 GPU. We report the update time per physical time step and the relative L2 error ( EL2↓)on the 1D KS equation (4 sensors) and 2D Navier-Stokes ( 8×8 stationary sensors) benchmarks, both under noisy observation conditions ( σ = 0 .1). The performance levels are maintained strictly consistent with the main results presented in Table 1.                              
+
+> Method KS Equation NS Equation
+> EL2↓Time (s) EL2↓Time (s) EKF 1.4186 0.015 0.662 0.016
+> FNO 0.9873 0.008 0.309 0.013
+> S3GM (100 steps) 0.9828 9.92 1.135 11 .30
+> SDA (100 steps) 0.9622 8.51 0.195 8.10
+> BFF (100 steps) 0.9061 0.415 0.165 0.644
+> BFF (2 steps) 0.8819 0.011 0.162 0.023
+
+range of 10 to 200 ODE steps, the TTT layer adds only marginal overhead on top of FM; per-step latency is essentially set by the number of ODE integration steps. The TTT weight update by itself is light: on the tokamak benchmark it accounts for only 5.11 ms per step (top row of Table 5), while a 
+
+50 -step Euler ODE integration on top of it brings the total to 225 .25 ms. Against external baselines (Table 4), BFF at 100 ODE steps is already ∼ 20 × faster than diffusion baselines (S 3GM, SDA), which must sample the full spatio-temporal trajectory at every physical step. Training is not as cheap as inference, since the inner-loop second-order derivative does add nontrivial cost, but the overhead remains moderate, with the additional training-step cost staying within ∼ 30% of vanilla flow matching in a large-batch regime (effective batch size 50 , Figure 11). 
+
+Reducing ODE steps preserves point-estimation accuracy. Because ODE integration dominates inference cost, the natural lever for speedup is reducing the step count. We ablate this systematically on the tokamak benchmark (Table 5): the relative-L2 mean error EL2 is essentially saturated, with even Euler at 5 steps matching the 50 -step setting on EL2 while dropping per-step latency from 
+
+225 ms to 19 ms. The same pattern holds on the 1D KS and 2D Navier–Stokes benchmarks: reducing the ODE steps from 100 to 2 leaves the point-estimation error nearly unchanged (and in some cases slightly improves it, plausibly because fewer ODE steps act as an implicit regularizer that suppresses accumulated sampling noise), bringing the per-step cost to ∼ 11 ms on KS and ∼ 23 ms on Navier– Stokes. For real-time deployments such as tokamak plasma control, whose control loops typically run at ∼ 10 Hz (i.e., ∼ 100 ms per-step budget), this means BFF comfortably fits the latency budget and can additionally be operated at very small step counts to leave headroom for downstream control computation without sacrificing point-estimation quality. 
+
+Calibration is more sensitive, but a higher-order solver recovers it. On the distributional axis the picture is different. On the tokamak benchmark, the Miscalibration Area (MA) degrades sharply when the Euler solver is run with too few steps ( 0.0374 → 0.6219 as the step count drops from 50 
+
+to 2). This is a direct artifact of coarse flow integration: in flow matching, the learned velocity field 
+
+vθ (xt, t ) defines an ODE ˙xt = vθ (xt, t ) that transports a Gaussian prior to the target posterior along a continuous trajectory, and a few large Euler steps systematically under-shoot this trajectory wherever the flow is curved, so the discretized samples contract toward the posterior mean and underestimate its spread. Crucially, this is easy to fix: because the degradation lies in the numerical integrator rather than in BFF itself, simply switching to a midpoint solver, which evaluates the flow at the segment midpoint and absorbs the leading curvature term, fully restores the multi-step MA at a fraction of the cost. At only 5 midpoint steps we obtain MA = 0 .0225 at 36 .92 ms/step, which is better than 50 
+
+Euler steps ( 0.0374 at 225 .25 ms/step) on every metric. We adopt the midpoint solver with 5 ODE steps as the default BFF configuration reported in the main text for the tokamak benchmark, since it delivers the lowest MA across all tested configurations while keeping per-step latency comparable to the small-step Euler runs. 36 10 20 30 40 50 Number of Timesteps (n) 0.2 0.4 0.6 0.8 1.0 Training Time (seconds)     
+
+> 1D Models
+> TTT GRU FM
+> 10 20 30 40 50 Number of Timesteps (n) 0.5 1.0 1.5 2.0 Training Time (seconds)
+> 2D Models
+> TTT GRU FM
+> Training Time Benchmark
+
+Figure 11: Training wall-clock time comparison. BFF, the recurrent hidden state-based (GRU) variant, and the vanilla flow matching (FM) model across different numbers of unrolled timesteps. 10 1 10 2 
+
+> ODE Integration Steps 10 2
+> 10 3
+> Inference Time (ms)
+> 1D Models
+> TTT GRU FM
+> 10 110 2
+> ODE Integration Steps 10 2
+> 10 3
+> Inference Time (ms)
+> 2D Models
+> TTT GRU FM
+> Per-Timestep Inference Time Benchmark
+
+Figure 12: Inference time comparison. BFF, the GRU variant, and the vanilla FM model across different ODE integration steps. 
+
+J.2 Ablation Study: Weight-Space Belief Representation Is Better Than Latent Hidden States 
+
+Vectors in latent space can also encode belief states without the need of a large number of particles. We ablate the TTT block by replacing it with a flow matching model conditioned on a GRU hidden state (“hidden-state-based”), keeping the backbone, training data, and shared hyperparameters identical. As shown in Figure 13, the TTT block significantly improves performance on the complex 2D-flow posterior, exposing an inherent limit of recurrent hidden states: a fixed-dimensional latent cannot encode the full posterior that weight-space memory carries. 
+
+J.3 Full Results on Lorenz-63 System 
+
+As shown in Figure 3, BFF’s posterior remains symmetrically bimodal out to Ttest = 1000 (10 × the training horizon, Figure 15), and the Wasserstein-2 distance to a 10 4-particle bootstrap reference stays bounded out to T = 4000 (40 × training, Figure 14). The absence of error accumulation supports our design choice: As our TTT update is also Markovian, it is compatible with the sequential structure of Bayesian filtering, learning one-step transition correctly produces a stable filter that can operate recursively. Filtering anchors the posterior to fresh observations at every step, and the Markov TTT update re-aligns the weights by construction, so the learned operator Kϕ generalizes rather than overfits. 37 Table 5: Ablation on ODE integration steps and solver choice on the tokamak benchmark. The first row reports the cost of the TTT weight update alone (no ODE integration). Per-step inference latency is measured on a single NVIDIA H800 GPU. Bold denotes the best in each column. 
+
+Solver ODE steps ms/step ↓ EL2 ↓ Egrad ↓ Espec ↓ MA ↓
+
+TTT W update only (no ODE) 5.11 — — — —Euler 50 225.25 0.0193 0.0471 0.0102 0.0374 Euler 10 49.88 0.0193 0.0476 0.0108 0.1233 Euler 5 18.66 0.0193 0.0490 0.0115 0.2529 Euler 2 5.30 0.0197 0.0717 0.0150 0.6219 Midpoint 5 36.92 0.0193 0.0486 0.0101 0.0225 
+
+Midpoint 2 9.61 0.0198 0.0714 0.0095 0.1157 0.2 0.3 0.4 0.5 0.6 Relative  L2 Error     
+
+> TTT-based Hidden State-based 10k 30k 50k 70k 90k Training Steps 0.01 0.02 0.03 0.04 0.05 Spectrum Deviation
+
+Figure 13: Detailed training evolution of the ablation study on 2D Navier-Stokes. The TTT mechanism significantly reduces tracking error and physical inconsistencies compared to standard recurrent architectures. 
+
+Results. Figure 14 reports the Wasserstein-2 distance between BFF’s posterior and a bootstrap particle filter with 10 4 particles, averaged over 10 test trajectories of length T = 4000 . The W2
+
+distance remains bounded over the entire 40 ×-training horizon, with no notable error accumulation, and the inset panels confirm that the posterior shape stays well-aligned with the particle-filter reference at selected times. Figure 15 additionally visualizes the evolving posterior over a Ttest =1000 trajectory: BFF captures the two symmetric posterior modes simultaneously, with one mode consistently tracking the ground truth, and uncertainty correctly inflates near chaotic lobe-switching events, mirroring the system’s local instability. Together, these findings show that the TTT update has internalized the recursive Bayesian operator rather than the training trajectory length: filtering anchors the posterior to fresh observations at every step, and the weight-level correction in BFF re-aligns to each new observation by construction. 
+
+J.4 Trajectory Visualization on the 1D KS Benchmark 
+
+The relative L2 error of BFF on 1D KS is EL2 ≈ 0.91 (Table 1), which in absolute terms looks high and could be misread as the filter not having learned the dynamics. Figure 16 aims to resolve this concern by visualizing the recovered space-time fields against the ground truth. The BFF posterior mean tracks the qualitative KS dynamics, including the locations and orientations of the dominant traveling structures and the spatial scale of the cellular pattern, throughout the rollout. The elevated rel-L2 score is driven by a small number of localized regions where the predicted field is shifted in phase or amplitude relative to the true field, and these regions disproportionately inflate a normalized 38 0 500 1000 1500 2000 2500 3000 3500                                    
+
+> Time Step
+> 0123456
+> W2 Distance
+> (a) W2 Distance: TTT Posterior vs BPF (10 trajs)
+> W2 (TTT vs BPF) Train horizon ( 100)
+> 20 15 10 50510 15 20
+> X20
+> 10
+> 010 20
+> Y
+> 10 20 30 40
+> Z
+> (b) TTT Posterior at t=100
+> X0 (272)
+> X<0 (228) True state Symmetric
+> 20 15 10 50510 15 20
+> X20
+> 10
+> 010 20
+> Y
+> 10 20 30 40
+> Z
+> (c) TTT Posterior at t=2000
+> X0 (254)
+> X<0 (246) True state Symmetric
+> 20 15 10 50510 15 20
+> X20
+> 10
+> 010 20
+> Y
+> 10 20 30 40
+> Z
+> (d) TTT Posterior at t=3000
+> X0 (254)
+> X<0 (246) True state Symmetric
+
+Figure 14: Long-horizon stability on Lorenz-63. We report the Wasserstein-2 distance between the ground-truth filtering posterior (estimated by a bootstrap particle filter with 10 4 particles) and the posterior predicted by BFF as a function of filtering time, extended to T = 4000 , that is, 40 ×
+
+longer than training. Averaged over 10 trajectories. The recursive update does not exhibit notable error accumulation. Inset panels at selected time steps further confirm that BFF’s posterior remains well-aligned with the ground truth. 
+
+L2 norm because KS exhibits sharp, large-amplitude features whose absolute error is amplified. Reading the metric alongside the visualization confirms that the rank ordering across methods is meaningful (BFF is the best EL2 on KS in Table 1), and that the absolute number reflects the difficulty of KS rather than a failure of the filter to capture the underlying flow. 
+
+J.5 Full Results on 2D NS System 
+
+Table 1 includes the Navier-Stokes settings’ results. All observations are corrupted with Gaussian noise ( σ = 0 .1). Beyond quantitative accuracy, we evaluate the physical consistency of the reconstructed fields. As illustrated in Figure 18, the 2D Navier-Stokes flow exhibits a complex turbulent pattern where wakes from multiple cylinders interact. While deterministic mean-prediction methods like FNO produce over-smoothed and non-physical blurring under uncertainty, BFF successfully recovers physically consistent turbulent structures and sharp wake interactions. Furthermore, we investigate the spatial awareness of the model under the challenging single moving sensor setting. As shown in Figure 19, BFF accurately reconstructs the implicit cylinder position and the surrounding flow field purely from sparse moving observations, whereas the Transformer baseline exhibits significant spatial deviation and blurring. To understand the dynamics of this active exploration, we track the binomial entropy and the ensemble standard deviation of the predicted probability maps for the cylinders and their associated wake regions (Figure 20). As the exploration progresses and more informative measurements are assimilated into the belief state, both metrics exhibit a significant decline. This effectively demonstrates that BFF actively reduces spatial ambiguity and precisely localizes the implicit obstacles over time. Beyond structural fidelity, we further validate the probabilistic calibration and temporal stability of BFF. As visualized in Figure 21, we compute the vorticity for each generated sample and extract the standard deviation to form a spatial uncertainty map. This predicted uncertainty tightly correlates with the actual spatial error field, confirming that BFF stably captures the underlying posterior distribution and accurately assigns higher uncertainty to regions with complex, unpredictable wake interactions. 39 20 0 20 State X 0200 400 600 800 1000 Time Steps    
+
+> X
+> Ground Truth Ours Training Length
+> 20 020 State Y
+> Y
+> 20 40 State Z
+> Z
+
+Figure 15: Trajectory visualization on Lorenz-63. 100 samples per step (darker = higher density). BFF captures the two symmetric modes, one consistently tracking ground truth, with uncertainty inflating near lobe switches. Furthermore, we analyze the temporal dynamics of information assimilation in Figure 22. During the initial phase of the filtering process, the state estimation error drops rapidly as historical observations are sequentially accumulated. After approximately 10 time steps, the error stabilizes and maintains a steady plateau. This temporal dependency aligns perfectly with the Markovian nature of the filtering problem: while recent observations effectively reduce the uncertainty of the belief state, highly distant historical information provides diminishing returns, demonstrating that BFF avoids error accumulation and achieves long-term stability 
+
+J.6 Non-Gaussian Posterior on the Tokamak Benchmark 
+
+To complement the multimodal visualizations in the main text, we examine the shape of the posterior on the tokamak plasma profile estimation task, where the observation operator is highly nonlinear (Appendix H.4). Figure 17 shows a pair-plot of the electron-temperature residual Te − bTe at four selected radial coordinates ˆρ ∈ { 0.10 , 0.40 , 0.70 , 0.90 }, aggregated over N = 20 ,000 samples drawn from BFF across trajectories, prediction horizons, and time steps. 40 4     
+
+> 2
+> 024u
+> Rel L2 = 1.0181
+> 4
+> 2
+> 024u
+> Rel L2 = 0.7984
+> 4
+> 2
+> 024u
+> Rel L2 = 0.7367
+> 050 100 150 200 250 Spatial index 4
+> 2
+> 024u
+> Rel L2 = 0.8789
+
+KS 4 sensors    
+
+> Sensor location Ground Truth Ensemble Mean (S=16) Ensemble ±1 std
+
+Figure 16: Trajectory visualization on the 1D KS benchmark. Space-time fields of the ground truth and the BFF posterior mean over a representative test rollout. Despite the rel-L2 score being 
+
+∼ 0.9 in absolute terms, BFF recovers the qualitative dynamics of the KS equation, with the dominant traveling structures and cellular spatial pattern correctly placed. The remaining error is concentrated in where phase or amplitude deviate from the truth, and these regions dominate the normalized L2
+
+score because KS has large-amplitude sharp features. 41 Figure 17: Non-Gaussian posterior structure on the tokamak benchmark. Pair-plot of the electron-temperature residual Te − bTe at four normalized radial coordinates ˆρ ∈ { 0.10 , 0.40 , 0.70 , 0.90 },aggregated over N = 20 ,000 samples (across trajectories, prediction horizons, and time steps). The top strip marks ECE diagnostic locations along ˆρ ∈ [0 , 1] (red triangles). Diagonal: marginal residual distributions with a Gaussian fit (red); the marginals exhibit sharp peaks, heavier tails, and visible skew, deviating clearly from the best-fit Gaussian. Lower triangle: joint scatter plots between residual pairs, revealing nontrivial coupling structure: near independence at the core ( ˆρ = 0 .10 vs. 
+
+ˆρ = 0 .40 ) but strong, nearly collinear dependence near the edge ( ˆρ = 0 .70 vs. ˆρ = 0 .90 ). Upper triangle: Pearson and Spearman correlation coefficients for each pair, summarizing the strength of these dependencies. Together, the marginals and joints confirm that BFF represents a high-dimensional, non-Gaussian belief that a single Gaussian approximation cannot capture. 42 Ground Truth FNO BFF (Ours) 
+
+> 1.0
+> 0.5
+> 0.0 0.5 1.0 1.5 2.0 Vorticity
+
+Figure 18: Qualitative comparison of 2D Navier-Stokes vorticity fields between the ground truth, FNO, and BFF. 
+
+Figure 19: Qualitative comparison of single-sample predictions at the final frame under the moving sensor setting. Final L2 error: BFF ( 0.330 ) vs. Transformer ( 0.769 ). 43 Figure 20: Evolution of spatial uncertainty under the single moving sensor setting. The uncertainty is quantified by tracking the binomial entropy and the ensemble standard deviation of the predicted probability maps for the cylinders and their associated wake regions. Ground Truth Vorticity Reconstructed Vorticity Vorticity Error (First Sample) Uncertainty Map 
+
+> 1.0
+> 0.5
+> 0.0 0.5 1.0 1.5
+> 1.0
+> 0.5
+> 0.0 0.5 1.0 1.5
+> 1.0
+> 0.5
+> 0.0 0.5 1.0
+> 0.2 0.4 0.6 0.8
+
+Figure 21: Qualitative comparison between the spatial error field and the predicted uncertainty map (standard deviation of sample vorticities) for the 2D Navier-Stokes benchmark. 0 10 20 30 40 50 Filtering Time Step 0.1 0.2 0.3 0.4 0.5 Field Relative L2 Error    
+
+> uRel L2 Error
+> vRel L2 Error
+> pRel L2 Error Averaged 0.04 0.06 0.08 0.10 0.12 0.14 0.16 0.18 0.20 Mask Abs Error Mask Abs Error
+
+Figure 22: Temporal evolution of the state estimation error over filtering time steps for the 2D Navier-Stokes system. 44 NeurIPS Paper Checklist 
+
+1. Claims 
+
+Question: Do the main claims made in the abstract and introduction accurately reflect the paper’s contributions and scope? Answer: [Yes] Justification: The abstract and Section 1 state three concrete contributions—weights-as-belief-state perspective, BFF with theoretical guarantees, and empirical validation on 1D/2D PDE and Tokamak benchmarks—each of which is supported by the corresponding method-ological (Sec. 2.3–3.2) and experimental (Sec. 4.1) sections. Guidelines: • The answer [N/A] means that the abstract and introduction do not include the claims made in the paper. • The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A [No] or [N/A] answer to this question will not be perceived well by the reviewers. • The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. • It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 2. Limitations 
+
+Question: Does the paper discuss the limitations of the work performed by the authors? Answer: [Yes] Justification: A dedicated “Limitations” paragraph in the Conclusion enumerates five concrete limitations (finite-capacity gap of the linear fϕ, g ϕ, the deterministic-transition assumption in the proof, 3D scalability, cross-regime/Reynolds-number generalization, and second-order training cost), with further discussion in Appendix B. Guidelines: • The answer [N/A] means that the paper has no limitation while the answer [No] means that the paper has limitations, but those are not discussed in the paper. • The authors are encouraged to create a separate “Limitations” section in their paper. • The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be. • The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated. • The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon. • The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size. • If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness. • While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren’t acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an impor-tant role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations. 45 3. Theory assumptions and proofs 
+
+Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof? Answer: [Yes] Justification: All theoretical results— Proposition 1, Proposition 3, and Theorem 3.1— are stated with explicit assumptions (differentiability, Lipschitz regularity, deterministic transition kernel) and proved in Appendices F and G. Guidelines: • The answer [N/A] means that the paper does not include theoretical results. • All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced. • All assumptions should be clearly stated or referenced in the statement of any theorems. • The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. • Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material. • Theorems and Lemmas that the proof relies upon should be properly referenced. 4. Experimental result reproducibility 
+
+Question: Does the paper fully disclose all the information needed to reproduce the main ex-perimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)? Answer: [Yes] Justification: Section 4 and Appendices H–I fully specify the BFF backbone (DiT), the TTT block design, the surrogate-loss heads, the training/inference procedures (Algorithms 1–2), the data-generation protocols, sensor placements, noise levels, baseline implementations, and ODE step counts; an anonymized code repository is also provided. Guidelines: • The answer [N/A] means that the paper does not include experiments. • If the paper includes experiments, a [No] answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not. • If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable. • Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed. • While NeurIPS does not require releasing code, the conference does require all submis-sions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example (a) If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm. (b) If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully. (c) If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset). 46 (d) We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results. 5. Open access to data and code 
+
+Question: Does the paper provide open access to the data and code, with sufficient instruc-tions to faithfully reproduce the main experimental results, as described in supplemental material? Answer: [Yes] Justification: An anonymized code repository ( https://anonymous.4open.science/r/ BeliefFlow-81D4 ) is released with training/inference scripts, data-generation code for all PDE benchmarks, configuration files, and reproduction instructions; the PDE datasets are simulator-generated and fully reproducible from the documented solver settings in Appendix H. Guidelines: • The answer [N/A] means that paper does not include experiments requiring code. • Please see the NeurIPS code and data submission guidelines ( https://neurips.cc/ public/guides/CodeSubmissionPolicy ) for more details. • While we encourage the release of code and data, we understand that this might not be possible, so [No] is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark). • The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines ( https: //neurips.cc/public/guides/CodeSubmissionPolicy ) for more details. • The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc. • The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why. • At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable). • Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted. 6. Experimental setting/details 
+
+Question: Does the paper specify all the training and test details (e.g., data splits, hyperpa-rameters, how they were chosen, type of optimizer) necessary to understand the results? Answer: [Yes] Justification: Sensor configurations, noise levels, train/val/test splits, optimizer/learning-rate/batch-size choices, ODE-sampling steps, and per-experiment hyperparameters are reported in Appendix D and Appendices H–I, with the remaining details available in the released code. Guidelines: • The answer [N/A] means that the paper does not include experiments. • The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them. • The full details can be provided either with the code, in appendix, or as supplemental material. 7. Experiment statistical significance 
+
+Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments? 47 Answer: [Yes] Justification: While empirical error bars across random seeds are omitted due to the pro-hibitively high computational cost of the coupled physics solver and other Bayesian filters such as S 3GM and SDA, we explicitly report "other appropriate information" regarding statistical significance. Specifically, the inherent Uncertainty Quantification (UQ) of our Bayesian filtering framework provides the posterior variance of the state estimates, which serves as the rigorous and physically meaningful measure of uncertainty and statistical confidence in our SciML setup. Guidelines: • The answer [N/A] means that the paper does not include experiments. • The authors should answer [Yes] if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper. • The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions). • The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.) • The assumptions made should be given (e.g., Normally distributed errors). • It should be clear whether the error bar is the standard deviation or the standard error of the mean. • It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis of Normality of errors is not verified. • For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g., negative error rates). • If error bars are reported in tables or plots, the authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text. 8. Experiments compute resources 
+
+Question: For each experiment, does the paper provide sufficient information on the com-puter resources (type of compute workers, memory, time of execution) needed to reproduce the experiments? Answer: [Yes] Justification: All wall-clock measurements in Table 4 and Figures 11–12 are obtained on a single NVIDIA H800 GPU; per-step training and inference costs (and the ∼ 30% overhead from second-order TTT gradients) are reported in Appendix J. Guidelines: • The answer [N/A] means that the paper does not include experiments. • The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage. • The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. • The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn’t make it into the paper). 9. Code of ethics 
+
+Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines ?Answer: [Yes] Justification: The work uses only simulator-generated PDE data and a Tokamak transport-equilibrium benchmark with no human subjects, no scraped or sensitive data, and no foreseeable dual-use risk; the research conforms to the NeurIPS Code of Ethics. 48 Guidelines: • The answer [N/A] means that the authors have not reviewed the NeurIPS Code of Ethics. • If the authors answer [No], they should explain the special circumstances that require a deviation from the Code of Ethics. • The authors should make sure to preserve anonymity (e.g., if there is a special consid-eration due to laws or regulations in their jurisdiction). 10. Broader impacts 
+
+Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed? Answer: [N/A] Justification: The contribution targets state estimation in physical systems (fluid dynamics, plasma) and is several steps removed from any direct societal-impact deployment; we identify no concrete path from this method to negative social impact. Guidelines: • The answer [N/A] means that there is no societal impact of the work performed. • If the authors answer [N/A] or [No], they should explain why their work has no societal impact or why the paper does not address societal impact. • Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations. • The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate Deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster. • The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology. • If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML). 11. Safeguards 
+
+Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pre-trained language models, image generators, or scraped datasets)? Answer: [N/A] Justification: We do not release pretrained generative models for natural images, language, or other content with misuse potential; the released checkpoints model PDE belief states on scientific filtering benchmarks and pose no high-risk dual-use concern. Guidelines: • The answer [N/A] means that the paper poses no such risks. • Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. • Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images. 49 • We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort. 12. Licenses for existing assets 
+
+Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected? Answer: [Yes] Justification: All third-party assets we build on—DiT [25], FNO [21], SDA [28], S 3GM [20], the LilyPad solver [37], and classical Kalman/EnKF references—are properly cited at the points of use; the PDE datasets are generated by our own solvers under the parameters specified in Appendix H. Guidelines: • The answer [N/A] means that the paper does not use existing assets. • The authors should cite the original paper that produced the code package or dataset. • The authors should state which version of the asset is used and, if possible, include a URL. • The name of the license (e.g., CC-BY 4.0) should be included for each asset. • For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided. • If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, paperswithcode.com/datasets 
+
+has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset. • For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided. • If this information is not available online, the authors are encouraged to reach out to the asset’s creators. 13. New assets 
+
+Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets? Answer: [Yes] Justification: The released anonymized code repository ships with a README, train-ing/inference instructions, configuration files for every benchmark, dataset-generation scripts, and a license file documenting allowed use. Guidelines: • The answer [N/A] means that the paper does not release new assets. • Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. • The paper should discuss whether and how consent was obtained from people whose asset is used. • At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file. 14. Crowdsourcing and research with human subjects 
+
+Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? Answer: [N/A] Justification: The paper does not involve crowdsourcing or research with human subjects; all data come from numerical PDE solvers. Guidelines: 50 • The answer [N/A] means that the paper does not involve crowdsourcing nor research with human subjects. • Including this information in the supplemental material is fine, but if the main contribu-tion of the paper involves human subjects, then as much detail as possible should be included in the main paper. • According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 15. Institutional review board (IRB) approvals or equivalent for research with human subjects 
+
+Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained? Answer: [N/A] Justification: No human-subject research is conducted, so IRB approval is not applicable. Guidelines: • The answer [N/A] means that the paper does not involve crowdsourcing nor research with human subjects. • Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. • We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. • For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review. 16. Declaration of LLM usage 
+
+Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigor, or originality of the research, declaration is not required. Answer: [N/A] Justification: LLMs were not used as a component of the core methodology; any LLM use was limited to writing/editing/formatting and therefore does not require declaration under the NeurIPS LLM policy. Guidelines: • The answer [N/A] means that the core method development in this research does not involve LLMs as any important, original, or non-standard components. • Please refer to our LLM policy in the NeurIPS handbook for what should or should not be described. 51
