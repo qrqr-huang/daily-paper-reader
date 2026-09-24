@@ -1,0 +1,1404 @@
+Title: Relative Discharge Stage (RDS) Classification: A Practical Indicator of Battery Discharge Progress
+
+URL Source: https://arxiv.org/pdf/2609.27986v1
+
+Published Time: Thu, 24 Sep 2026 01:18:49 GMT
+
+Number of Pages: 45
+
+Markdown Content:
+## Relative Discharge Stage (RDS) Classification: A Practical Indicator of Battery Discharge Progress 
+
+Khoa Tran a, Tri Le b, Hung-Cuong Trinh c, Hung Tran-Nam d,e, ∗
+
+> a
+
+Data Science Laboratory, Faculty of Information Technology, Ton Duc Thang University, Ho Chi Minh City, Vietnam, Ho Chi Minh City, 70000, Vietnam 
+
+> b
+
+AIWARE Limited Company, 17 Huynh Man Dat Street, Hoa Cuong Ward, Hai Chau District, Da Nang, 550000, Vietnam 
+
+> c
+
+Natural Language Processing and Knowledge Discovery Research Group, Faculty of Information Technology, Ton Duc Thang University, Ho Chi Minh City, 70000, Vietnam 
+
+> d
+
+Laboratory for Applied and Industrial Mathematics, Institute for Computational Science and Artificial Intelligence, Van Lang University, Ho Chi Minh City, 70000, Vietnam 
+
+> e
+
+Faculty of Basic Sciences, Van Lang University, Ho Chi Minh City, 70000, Vietnam 
+
+Abstract 
+
+Accurate remaining discharge time (RDT) prediction is challenging in real-world battery applications because future load profiles are unknown and highly dynamic. To address the uncertainty of continuous RDT re-gression, this paper introduces Relative Discharge Stage (RDS), a battery-management indicator that represents the remaining discharge condition us-ing five interpretable classes: Normal, Good, Moderate, Low, and Recharge Required. Unlike state of charge (SOC), which reflects the current charge level, RDS characterizes the remaining discharge process without requiring future-current information during inference. A physics-informed RDS classi-fication framework is proposed, combining SOC estimation with lightweight temporal learning. The SOC-estimation component includes second-order ECM state and terminal-voltage prediction, hysteresis and OCV tempera-ture correction, core-temperature estimation, and AEKF state correction, supported by OCV evaluation, online STC-ECM parameter adaptation, and pretrained neural residual-voltage correction. The measured current, termi-
+
+> ∗
+
+Corresponding author: hung.trannam@vlu.edu.vn 
+
+Email addresses: trandinhkhoa@tdtu.edu.vn (Khoa Tran), 
+
+tri.le@aiware.website (Tri Le), trinhhungcuong@tdtu.edu.vn (Hung-Cuong Trinh), 
+
+hung.trannam@vlu.edu.vn (Hung Tran-Nam) 
+
+Preprint submitted to Elsevier September 24, 2026 arXiv:2609.27986v1 [cs.LG] 23 Sep 2026 nal voltage, surface temperature, and estimated SOC are arranged into a sliding observation window and processed by a lightweight temporal convo-lutional network. Experiments on two public lithium-ion battery datasets demonstrate robust RDS classification, with accuracy exceeding 80% under varying load and thermal conditions. 
+
+Keywords: Relative Discharge Stage (RDS), Battery Management System (BMS), Lithium-ion battery, State of Charge (SOC) estimation, Physics-informed machine learning 
+
+1. Introduction 
+
+The global transportation sector is rapidly transforming from petroleum-based internal combustion engine vehicles (ICEVs) to electric vehicles (EVs) to reduce carbon emissions. As reported in [27], road transportation is a ma-jor source of global emissions, accounting for around 37% of global energy-related CO 2 emissions in 2021. These figures highlight the importance of decarbonizing transportation. In this context, the market has gradually shifted from petrol-based vehicles toward cleaner alternatives, with the share of petrol vehicles decreasing from 84 .64% in 2014 to 75 .46% in 2022. During the same period, EV adoption increased significantly, reaching about 10 .02% worldwide and 10 .12% in Asia by 2022. This transition highlights the rapid development of EV adoption and emphasizes the increasing importance of batteries. Among different battery types, Lithium-ion batteries are widely used in EVs due to their high energy density, long cycle life, low self-discharge rate, and reliability [14]. To ensure safe battery operation, battery states are monitored by a bat-tery management system (BMS) [7]. Based on raw sensor signals from bat-teries, such as current, voltage, and temperature, the BMS supports var-ious applications, including life-cycle prognostics, such as state of health (SOH) [24, 13] and remaining useful life (RUL) [20, 21], as well as in-cycle state estimation, such as the commonly studied state of charge (SOC) [12, 25] and the less commonly studied remaining discharge time (RDT) [32, 9]. In-cycle state estimation is important because it provides real-time information about the battery’s current condition and remaining operational capability, enabling users to make informed decisions about recharging and usage. SOC estimation indicates the battery’s current charge level and is widely adopted in BMSs. To enable deployment on embedded devices, [19] proposed 2a lightweight SOC estimation method that combines dual Savitzky–Golay filtering of current, voltage, and temperature signals, BOHB-based hyperpa-rameter optimization, and neural-network pruning to achieve accurate SOC estimation with a reduced model size. [2] addressed the challenges arising from variations in battery chemistry, ambient temperature, and the scarcity of labeled training data by proposing a regression-based unsupervised do-main adaptation framework. Their method transfers knowledge from a la-beled source battery to an unlabeled target battery, enabling accurate SOC estimation across different battery domains. Although many studies have been devoted to SOC estimation, SOC only indicates the battery’s current charge level. While users can estimate when to recharge the battery based on the estimated SOC, it does not directly provide information about the remaining operating time. Therefore, researchers have proposed RDT esti-mation to better support battery usage. Existing RDT estimation methods can generally be classified into two categories: (1) methods that assume fu-ture current profiles are known and (2) methods that estimate RDT without prior knowledge of future current profiles. In terms of RDT estimation with known future current profiles, [5] used an electrochemistry-based model to describe the battery discharge process through physical equations. In this model, the input is the applied current 
+
+iapp , the state vector is defined as x(t) = qs,p qb,p qb,n qs,n V ′ 
+
+> o
+
+V ′ 
+
+> η,p
+
+V ′
+
+> η,n
+
+T ,
+
+and the output is the estimated terminal voltage V at each time step. To esti-mate the state vector at each time step, they used the unscented Kalman filter (UKF) [31], which relies on measured current and voltage signals. Given the estimated state and future input current, the electrochemistry-based model predicts the future voltage at each time step until it falls below the cut-off voltage. This time is determined as the end of discharge (EOD), and the remaining discharge time is calculated as RDT = tEOD − tpresent . In an-other approach, [4] argued that traditional Coulomb-counting-based SOC estimation is inaccurate due to polarization effects. To address this issue, they proposed estimating current SOC through the mapping relationship between open-circuit voltage (OCV) and SOC. The OCV is first estimated online using a particle filter based on measured current and terminal volt-age. Then, the estimated OCV is mapped to SOC, and the future SOC trajectory is predicted using Coulomb counting with the given future current profile. The future terminal voltage is further estimated using an equiva-lent circuit model (ECM), and the RDT is obtained as the time until the 3predicted terminal voltage falls below the cut-off voltage. Overall, previous indirect RDT prediction methods are time-consuming because they require running a battery model to estimate the terminal voltage at each time step until it falls below the cut-off voltage, which is then used to determine the EOD and compute the RDT. This process is expensive when the current SOC is higher than 80%, where the number of remaining simulation steps can exceed 10 ,000. To address this problem, [28] proposed using feedforward neural networks (FNNs) to directly predict the RDT from the physical state variables x(t) = 
+
+h
+
+Vb Vs V1 bTcore Tsurf 
+
+i⊤
+
+, together with the future C-rate 
+
+z and ambient temperature Tamb , thereby reducing the computational cost. Although these methods can achieve high prediction accuracy when future current profiles are known, they depend on information that is often unavail-able in real-world applications. Some methods also incur high computational costs because they repeatedly simulate future battery behavior until the ter-minal voltage reaches the cutoff threshold. Consequently, their practicality is limited in scenarios such as EVs, where future driving behavior and load demand are inherently uncertain and rapid prediction is required. In terms of RDT estimation with unknown future current signals, the proposed methods make the model validation more practical and realistic by predicting the future current. For example, [32] applied a DWT-based future current prediction algorithm using probabilistic equations to estimate future current from recent historical current data. Then, an RC circuit model con-sidering hysteresis was used, with parameters identified by RLS and updated by an unscented particle filter (UPF), to estimate the voltage until it fell be-low the cut-off voltage. The EOD point was then determined, and the RDT was obtained. In another case of predicting future current, [9] proposed a prediction-based remaining discharge energy (RDE) estimation method that combines driving pattern recognition (DPR) with future load prediction. In the offline stage, driving segments are divided into microtrips, and features such as velocity, acceleration, jerk, power, and temperature are extracted. Linear correlation is then used for feature selection, and PCA with K-means clustering is applied to group the driving data into different driving pat-terns. For online operation, the same features are calculated from vehicle sensor data using a moving window and compared with the offline feature in-formation to recognize the current driving pattern. Based on the recognized pattern, the corresponding power-level information and transition probabil-ity matrix (TPM) are selected. Future load states are then predicted using 4Markov modelling, where K-means clustering with Gaussian distribution is used to represent the power levels. The predicted future load is used as the input to a first-order ECM to predict the future terminal voltage until the cut-off voltage is reached. [16] used a hidden Markov model (HMM) to pre-dict the future battery current sequence from recent historical current data. Specifically, a moving sliding window of historical current data is used to learn the HMM parameters, including the initial probabilities, state transi-tion matrix, and observation probability distributions, using the expectation maximization (EM) algorithm. K-means clustering is first used to initialize the Gaussian observation distributions, and the Akaike information criterion (AIC) is used to determine the number of hidden states. Then, the Viterbi algorithm is applied to obtain the optimal hidden-state sequence, from which the future current sequence is generated. Based on the predicted current se-quence, the future SOC sequence is obtained using ampere-hour integration, and the future voltage sequence is predicted using a first-order ECM. The prediction process is continued until the limited SOC at the corresponding temperature is reached. Compared with RDT estimation methods that assume known future cur-rent profiles, methods that operate under unknown future current conditions are more practical for real-world applications. However, future load profiles are inherently uncertain and highly dynamic, making accurate prediction of a single RDT value challenging. To address this limitation, we propose a new concept, termed Relative Discharge Stage (RDS), which, to the best of our knowledge, has not been previously investigated. RDS classification that instead classify estimated future discharge stage to a relative discharge stage depend on the level of serious for the current discharge cycle, reducing er-ror causing confusing for users. Thereby overcoming the limitation of SOC, which only reflects the battery’s current state, and overcome the problem of RDT reduces the uncertainty associated with RDT regression, leading to more reliable predictions under unknown future current conditions. 50 5000 10000 15000      
+
+> Elapsed Discharge Time (s)
+> 02500 5000 7500 10000 12500 15000 17500
+> Remaining Discharge Time (s)
+> (a) Absolute Remaining Discharge Time
+> Profile
+> LA92 IM
+> 020 40 60 80 100
+> Discharge Progress (%)
+> 020 40 60 80 100
+> Relative Remaining Discharge Time (%)
+> Stage 0 Stage 1 Stage 2 Stage 3 Stage 4
+> (b) Relative Discharge-Stage Classification
+> Profile
+> LA92 IM
+> Stage 0: Recharge Required Stage 1: Low Stage 2: Moderate Stage 3: Good Stage 4: Normal
+> (c) Battery Discharge Stages
+> Importance of Relative Discharge-Stage Classification
+
+Figure 1: Illustration of relative discharge-stage classification using two discharge profiles with different absolute durations. 
+
+Figure 1 further illustrates the key idea of the proposed RDS classification. Unlike conventional RDT regression, which predicts an absolute remaining discharge time that varies considerably with future load profiles, RDS nor-malizes the remaining discharge process into a relative percentage and formu-lates the problem as a five-stage classification task. These stages represent the battery’s future discharge condition, ranging from Normal, Good, Mod-erate, and Low to Recharge Required. This formulation provides a unified representation across different discharge profiles, improves interpretability by mapping battery conditions to intuitive discharge stages, and reduces the un-certainty associated with predicting a precise remaining discharge time under unknown future current conditions. The main contributions of this work are summarized as follows: 
+
+• A new BMS indicator: We introduce RDS, a interpretable indicator of the battery’s future discharge condition. Unlike SOC, which reflects only the current charge state, and conventional RDT regression, which is highly sensitive to uncertain future loads, RDS provides practical information about the remaining battery usability without requiring future current measurements during inference. 
+
+• An SOC estimation method: We develop an SOC estimation method comprising four main phases: (1) second-order ECM state and terminal-voltage prediction, which tracks SOC and multi-timescale polarization dynamics; (2) hysteresis and OCV temperature correction, which cap-tures history-dependent voltage behavior and thermal variation in the OCV; (3) core-temperature estimation, which infers the internal ther-mal state from surface-temperature measurements and heat generation; 6and (4) Adaptive Extended Kalman Filter (AEKF) [33] measurement update and state correction, which adaptively corrects the predicted battery states using the measured terminal voltage. These phases are supported by three auxiliary phases: OCV evaluation and SOC sen-sitivity, which provide the open-circuit voltage and measurement Ja-cobian; online SOC–Temperature-Coupled Equivalent Circuit Model (STC-ECM) parameter adaptation, which adjusts the resistance and capacitance parameters according to SOC and core temperature; and pretrained residual-voltage correction, which uses a lightweight neural network to compensate for unmodeled nonlinearities and residual volt-age errors. Together, these components improve battery modeling and SOC estimation under varying load and thermal conditions. 
+
+• A RDS classification model: The measured current, terminal volt-age, and surface temperature are combined with the estimated SOC to construct a physics-informed observation window. A lightweight Tem-poral Convolutional Network (TCN) [18] then extracts local temporal patterns and predicts one of five interpretable RDS classes: Normal, Good, Moderate, Low, and Recharge Required. By incorporating the estimated SOC, the classifier captures both measured operating behav-ior and the underlying battery state while remaining computationally efficient for online inference. 
+
+• Extensive validation across operating conditions: The proposed framework is evaluated on complete discharge profiles from two public battery datasets covering multiple drive cycles, five ambient tempera-tures, and two cell types. The remainder of this paper is organized as follows. Section 2 presents the proposed method and formulates the problem. Section 3 describes the ex-perimental setup. Section 4 presents the experimental results. Section 5 dis-cusses the findings and analyzes the proposed approach. Finally, Section 6 concludes the paper and outlines future research directions. 
+
+2. Proposed Method 
+
+2.1. Overall Framework and RDS Formulation Online Inference Framework. Figure 2 illustrates the online inference frame-work of the proposed RDS classification model. At each sampling instant t,7the measured current It, terminal voltage Vt, and surface temperature Ts,t 
+
+are processed by the proposed online SOC estimation to estimate the battery SOC. The SOC estimation method is represented as 
+
+bSt = Fψ
+
+ It, V t, T s,t , bzt−1|t−1
+
+ , (1) where Fψ(·) denotes the proposed SOC estimation method and bzt−1|t−1 is the posterior battery-state estimate from the preceding sampling instant. A physics-informed observation window of length L is constructed from the measured current, terminal-voltage, and surface-temperature sequences together with the estimated SOC sequence: 
+
+Xt =
+
+h
+
+It−L+1: t, Vt−L+1: t, Ts,t −L+1: t, bSt−L+1: t
+
+i
+
+. (2) Therefore, consecutive windows overlap by L − 1 sampling instants, corre-sponding to a sliding-window stride of one. The online RDS classification model maps the observation window to a posterior probability distribution over K = 5 RDS classes: 
+
+pt = softmax ( gω (Xt)) , pt ∈ R5, (3) where p(c) 
+
+> t
+
+is the predicted probability of class c. The predicted RDS class is 
+
+byt = arg max 
+
+> c∈{ 0,1,2,3,4}
+
+p(c) 
+
+> t
+
+. (4) 8Current 
+
+Surface Temperature 
+
+Terminal Voltage 
+
+Outputs: 
+
+Core-Temperature 
+
+Estimation 
+
+Outputs: 
+
+Hysteresis and OCV 
+
+Temperature Correction 
+
+Outputs: 
+
+AEKF Measurement Update and 
+
+State Correction 
+
+Outputs: 
+
+Online STC-ECM Parameter Adaptation 
+
+Ouputs: 
+
+Surface Temperature Terminal Voltage Current  SOC 
+
+OCV Evaluation and SOC 
+
+Sensitivity 
+
+Outputs: 
+
+Pretrained Residual-Voltage 
+
+Correction 
+
+Outputs: 
+
+ONLINE SOC ESTIMATION 
+
+METHOD 
+
+Stage = 
+
+0
+
+1
+
+2
+
+3
+
+4
+
+Classification head 
+
++
+
+-
+
++
+
+-
+
+Second-Order ECM State and Terminal-Voltage Prediction 
+
+MEASURED SIGNALS 
+
+(at time t) 
+
+PHYSICS-INFORMED OBSERVATION-WINDOW 
+
+CONSTRUCTION 
+
+(length L) 
+
+ONLINE RDS CLASSIFICATION 
+
+MODEL 
+
+ONLINE RDS CLASSIFICATION FRAMEWORK ONLINE RDS CLASSIFICATION FRAMEWORK Figure 2: Overall architecture of the proposed online RDS classification frame-work. 
+
+9RDS Label Construction. To generate the ground-truth RDS labels, the rel-ative remaining discharge ratio at time index t is defined as 
+
+qt = NEOD − tNEOD − Nstart 
+
+, qt ∈ [0 , 1] . (5) A value of qt close to 1 indicates that a large proportion of the discharge process remains, whereas a value close to 0 indicates that the battery is approaching the EOD condition. Instead of directly regressing the contin-uous value qt, the proposed method formulates the problem as a five-stage classification task: 
+
+yt =
+
+
+
+0, 0 ≤ qt < 0.2, Recharge Required ,
+
+1, 0.2 ≤ qt < 0.4, Low ,
+
+2, 0.4 ≤ qt < 0.6, Moderate ,
+
+3, 0.6 ≤ qt < 0.8, Good ,
+
+4, 0.8 ≤ qt ≤ 1.0, Normal .
+
+(6) The label yt is used as the ground-truth target for training the proposed RDS classification model during the offline training. 
+
+2.2. Offline Preparation of the SOC Estimation Model 
+
+Before online deployment, three components are prepared using the train-ing and validation data: (1) OCV–SOC Model Construction, (2) Offline STC-ECM Parameter Identification, and (3) Offline Residual-Voltage Model Training. The complete offline preparation pipeline is illustrated in Fig. 3. First, the OCV–SOC model and the STC-ECM parameters are identified with the residual-voltage correction disabled. The resulting physics-only terminal-voltage residuals, Vt − bVphys ,t , are then used as supervisory targets for training the residual-voltage model. Offline STC-ECM 
+
+> Parameter Identification
+> Offline Residual-
+> Voltage Model Training
+> OCV–SOC Model
+> Construction
+
+Figure 3: Overall offline preparation pipeline. 
+
+10 OCV–SOC Model Construction. The OCV–SOC model is constructed exclu-sively from the training data. Because the investigated trajectories are com-plete discharge profiles, the Coulomb-counting SOC is initialized at Strain 0 = 1 and updated throughout each discharge sequence. The raw samples used for OCV-model construction are expressed as 
+
+Dtrain raw =   Strain  
+
+> t
+
+, V train  
+
+> t
+
+, Itrain 
+
+> t
+
+ Ntrain  
+
+> t=1
+
+, (7) where Strain  
+
+> t
+
+, V train  
+
+> t
+
+, and Itrain  
+
+> t
+
+denote the Coulomb-counting SOC, measured terminal voltage, and measured current of the tth training sample, respec-tively. Since laboratory OCV measurements are unavailable, pseudo-OCV support points are estimated from samples collected under relatively low-current conditions. The current threshold is defined as the first quartile of the absolute training-current distribution: 
+
+Ith = Q0.25 
+
+ Itrain 
+
+> t
+> Ntrain
+> t=1
+
+
+
+. (8) The retained low-current sample set is 
+
+Dtrain low =   Strain  
+
+> t
+
+, V train 
+
+> t
+
+ : Itrain  
+
+> t
+
+≤ Ith . (9) These samples are selected because their measured terminal voltages are less affected by ohmic and polarization voltage drops and therefore provide closer approximations to the OCV. The SOC interval [0 , 1] is divided into B = 30 uniform bins using 31 bin edges: 
+
+ek = kB , k = 0 , . . . , B, (10) and the center of the kth bin is 
+
+ck = ek + ek+1 
+
+2 , k = 0 , . . . , B − 1. (11) For each SOC bin, the SOC support point is assigned to the bin center, while the corresponding pseudo-OCV value is calculated as the median terminal voltage of the retained samples: 
+
+bV OCV ,train  
+
+> k
+
+= median V train  
+
+> t
+
+: ek ≤ Strain  
+
+> t
+
+< e k+1 , Itrain  
+
+> t
+
+≤ Ith . (12) The resulting SOC–OCV support set is therefore 
+
+Dtrain OCV =
+
+n 
+
+ck, bV OCV ,train 
+
+> k
+
+o 
+
+> k∈K
+
+, (13) 11 where K denotes the set of SOC bins. The support pairs are sorted in ascend-ing order of SOC. Let π(j) denote the corresponding sorting permutation. The sorted SOC values are constrained to the physical interval [0 , 1]: 
+
+eStrain  
+
+> j
+
+= clip  Strain  
+
+> π(j)
+
+, 0, 1 , eV train  
+
+> j
+
+= bV OCV ,train  
+
+> π(j)
+
+. (14) Duplicated SOC values are removed to obtain M unique interpolation knots: 
+
+n 
+
+Strain  
+
+> j
+
+, V train 
+
+> j
+
+o Mj=1 
+
+, 0 ≤ Strain 1 < · · · < S train  
+
+> M
+
+≤ 1. (15) To enforce a nondecreasing OCV–SOC relationship, the voltage knots are corrected using a cumulative maximum: 
+
+V mono  
+
+> j
+
+= max  
+
+> 1≤r≤j
+
+V train  
+
+> r
+
+, j = 1 , . . . , M. (16) A shape-preserving piecewise cubic Hermite interpolating polynomial (PCHIP) [23] is then fitted to the monotonic knots. For S ∈ [Strain  
+
+> j
+
+, S train  
+
+> j+1
+
+], the interval width and normalized local coordinate are defined as 
+
+hj = Strain  
+
+> j+1
+
+− Strain  
+
+> j
+
+, ξ = S − Strain 
+
+> j
+
+hj
+
+. (17) The interpolated OCV is expressed as 
+
+VOC (S) = H00 (ξ)V mono  
+
+> j
+
++ H10 (ξ)hj mj
+
++ H01 (ξ)V mono  
+
+> j+1
+
++ H11 (ξ)hj mj+1 , (18) where mj and mj+1 are the shape-preserving derivatives at adjacent interpo-lation knots. The cubic Hermite basis functions are 
+
+H00 (ξ) = 2 ξ3 − 3ξ2 + 1 , H10 (ξ) = ξ3 − 2ξ2 + ξ, H01 (ξ) = −2ξ3 + 3 ξ2, H11 (ξ) = ξ3 − ξ2. (19) The knot derivatives are selected to preserve the local monotonicity of the fit-ted OCV–SOC relationship and avoid artificial oscillations between adjacent knots. The final outputs of the OCV–SOC model-construction phase are the fixed interpolation function VOC (S). During online estimation, it is used by the online OCV evaluation and SOC sensitivity phase. 12 Offline STC-ECM Parameter Identification. The base electrical, hysteresis, and thermal parameters are identified offline by solving a constrained opti-mization problem. The parameter vector is defined as 
+
+θ =
+
+
+
+R0,base 
+
+R1,base 
+
+R2,base 
+
+C1,base 
+
+C2,base 
+
+Mh
+
+γh
+
+Ccore 
+
+Csurface 
+
+Rcore 
+
+Rsurface 
+
+
+
+, (20) where Mh and γh denote the hysteresis magnitude and time constant, respec-tively. The parameters are identified by solving 
+
+θ⋆ = arg min 
+
+> θ∈Ω
+
+Lphys (θ; Dtrain , V OC ) , (21) where Ω denotes the physically admissible parameter space. The physical objective evaluates the STC-ECM response over the selected training se-quences and includes an SOC-related loss term with a weighting coefficient of 0 .1. The bounded problem is solved using the limited-memory Broyden– Fletcher–Goldfarb–Shanno algorithm with box constraints (L-BFGS-B) [37]. The resistance, capacitance, and thermal parameters are initialized at the midpoints of their corresponding search intervals. The hysteresis magnitude and time constant are initialized to 0 .01 V and 30 s, respectively: 
+
+θ0 =
+
+
+
+μ(R0)
+
+μ(R1)
+
+μ(R2)
+
+μ(C1)
+
+μ(C2)0.01 30 
+
+μ(Ccore )
+
+μ(Csurface )
+
+μ(Rcore )
+
+μ(Rsurface )
+
+
+
+, (22) 13 where 
+
+μ([ a, b ]) = a + b
+
+2 . (23) The final output of the offline STC-ECM parameter-identification phase is the optimized parameter vector θ⋆. During online estimation, its parameters are used as the base values for the online STC-ECM parameter adaptation. 
+
+Offline Residual-Voltage Model Training. After the OCV–SOC model con-struction and the STC-ECM parameter identification, the physics-based es-timator is executed on the training trajectories with the residual-voltage correction disabled, i.e., bVres ,t = 0. The corresponding physics-only terminal voltage is calculated as 
+
+bVphys ,t = bVOC ,t + ∆ VOC ,t + ht
+
+− R0,t It − bu1,t |t−1 − bu2,t |t−1. (24) The target residual voltage is defined as the difference between the measured terminal voltage and the physics-only prediction: 
+
+V target res ,t = Vt − bVphys ,t . (25) At each sampling instant, the residual-voltage model receives the feature vector 
+
+ft =
+
+h bSt|t−1 bTcore ,t It ∆It
+
+iT
+
+, ∆It = It − It−1, (26) and predicts the correction 
+
+bVres ,t = Rϕ (ft) , (27) where Rϕ(·) denotes the neural residual-voltage model with parameters ϕ.The residual model is trained by minimizing the mean squared error between the predicted and target residual voltages: 
+
+Lres = 1
+
+Ntrain 
+
+> Ntrain
+
+X
+
+> t=1
+
+
+
+V target res ,t − bVres ,t 
+
+2
+
+. (28) The hybrid terminal-voltage prediction used during validation and testing is therefore bVt|t−1 = bVphys ,t + bVres ,t . (29) The final output of the residual-voltage model-training phase is the pre-trained neural residual-voltage model. During online estimation, this model is used in the pretrained residual-voltage correction phase. 14 2.3. Online SOC Estimation 
+
+This subsection describes the online SOC estimation method illustrated in Fig. 2. At each sampling instant t, the measured current It, terminal volt-age Vt, and surface temperature Ts,t are processed through four main phases: (1) second-order ECM state and terminal-voltage prediction, (2) hystere-sis and OCV temperature correction, (3) core-temperature estimation, and (4) AEKF measurement update and state correction. These phases are sup-ported by three auxiliary phases: OCV evaluation and SOC sensitivity, online STC-ECM parameter adaptation, and pretrained residual-voltage correction. 
+
+Online STC-ECM Parameter Adaptation. To capture changes in battery electrical behavior with SOC and temperature, the ECM resistance and ca-pacitance parameters are adapted at each sampling instant. The online STC-ECM parameter adaptation phase improves the representation of ohmic and polarization dynamics under varying operating and thermal conditions. The centered SOC and core-temperature deviation are defined as 
+
+eSt−1 = clip 
+
+ bSt−1|t−1, 0, 1
+
+
+
+− 0.5, (30) ∆Tt−1 = bTcore ,t −1 − Tref , (31) where Tref = 25 ◦C is the reference temperature. The shared resistance and capacitance scaling factors are defined as 
+
+λR,t = exp 
+
+
+
+βR eSt−1 + αR∆Tt−1
+
+
+
+, (32) 
+
+λC,t = exp 
+
+
+
+βC eSt−1 + αC ∆Tt−1
+
+
+
+. (33) The resistance parameters are adapted as 
+
+Ri,t = sat [Ri, min ,R i, max ] (Ri, base λR,t ) , i ∈ { 0, 1, 2}, (34) whereas the capacitance parameters are adapted as 
+
+Ci,t = sat [Ci, min ,C i, max ]
+
+ Ci, base 
+
+max( λC,t , ε )
+
+
+
+, i ∈ { 1, 2}, (35) where ε = 10 −6 prevents numerical instability and sat [a,b ](·) constrains its argument to the interval [ a, b ]. The exponential formulation guarantees pos-itive scaling factors, whereas the saturation operation prevents physically unrealistic parameter values. 15 The final outputs of the online STC-ECM parameter-adaptation phase are the time-varying electrical parameters R0,t , R 1,t , R 2,t , C 1,t , C 2,t . These adapted parameters are subsequently used in the second-order ECM state prediction and terminal voltage prediction phases. In particular, R1,t , R2,t ,
+
+C1,t , and C2,t determine the RC time constants and polarization-voltage dy-namics, while R0,t is used for terminal voltage prediction and internal heat generation. 
+
+Second-Order ECM State Prediction. To propagate the battery state from the previous sampling instant to the current one, the second-order ECM uses the measured current and the adapted electrical parameters to predict the SOC and polarization voltages before incorporating the terminal-voltage measurement. The electrical state vector is defined as 
+
+zt = St u1,t u2,t 
+
+T , (36) where St denotes the SOC and u1,t and u2,t denote the polarization voltages across the first and second RC branches, respectively. Assuming that positive current represents battery discharge, the prior SOC estimate is calculated through Coulomb counting: 
+
+bSt|t−1 = clip 
+
+bSt−1|t−1 − ηI t∆t
+
+3600 Qn
+
+, 0, 1
+
+
+
+, (37) where η is the Coulombic efficiency, Qn is the nominal battery capacity in ampere-hours, and ∆ t is expressed in seconds. The time constant of the ith RC branch is 
+
+τi,t = Ri,t Ci,t , i ∈ { 1, 2}. (38) Using trapezoidal discretization, the polarization-voltage dynamics are ex-pressed as 
+
+bui,t |t−1 = ai,t bui,t −1|t−1 + bi,t It, i ∈ { 1, 2}, (39) where 
+
+ai,t =1 − ∆t
+
+2τi,t 
+
+1 + ∆t
+
+2τi,t 
+
+, bi,t =∆tCi,t 
+
+1 + ∆t
+
+2τi,t 
+
+, It = It + It−1
+
+2 . (40) 16 The complete prior state estimate is 
+
+bzt|t−1 =
+
+h bSt|t−1 bu1,t |t−1 bu2,t |t−1
+
+iT
+
+. (41) Ignoring the derivative of the clipping operation away from the SOC bound-aries, the state-transition Jacobian is approximated as 
+
+Ft = diag (1 , a 1,t , a 2,t ) . (42) The final outputs of the second-order ECM state-prediction phase are the prior state estimate bzt|t−1 and the state-transition Jacobian Ft. In particular, 
+
+bSt|t−1 is provided to the OCV evaluation and SOC sensitivity phase and to the residual-voltage correction phase, while bu1,t |t−1 and bu2,t |t−1 are used in the core-temperature estimation and terminal-voltage prediction phases. 
+
+OCV Evaluation and SOC Sensitivity. To convert the prior SOC estimate into the corresponding OCV and construct the AEKF measurement Jaco-bian, the fixed OCV–SOC model is evaluated at each sampling instant. This phase provides both the estimated OCV required for terminal-voltage pre-diction and the local OCV sensitivity required to quantify how the predicted voltage changes with SOC during the AEKF measurement update. The prior SOC estimate is first constrained to the physical interval: 
+
+bSclip  
+
+> t|t−1
+
+= clip 
+
+ bSt|t−1, 0, 1
+
+
+
+. (43) The fixed OCV–SOC model then evaluates the corresponding OCV: 
+
+bVOC ,t = VOC 
+
+ bSclip 
+
+> t|t−1
+
+
+
+. (44) The SOC sensitivity required by the AEKF measurement Jacobian is ob-tained from the derivative of the PCHIP interpolant: 
+
+gOCV ,t = ∂V OC (S)
+
+∂S S= bSclip 
+
+> t|t−1
+
+. (45) For S ∈ [Strain  
+
+> j
+
+, S train  
+
+> j+1
+
+], the derivative is calculated as 
+
+∂V OC (S)
+
+∂S = 1
+
+hj
+
+h
+
+H′
+
+> 00
+
+(ξ)V mono  
+
+> j
+
++ H′
+
+> 10
+
+(ξ)hj mj
+
++ H′
+
+> 01
+
+(ξ)V mono  
+
+> j+1
+
++ H′
+
+> 11
+
+(ξ)hj mj+1 
+
+i
+
+, (46) 17 where H′
+
+> 00
+
+(ξ) = 6 ξ2 − 6ξ, H′
+
+> 10
+
+(ξ) = 3 ξ2 − 4ξ + 1 ,H′
+
+> 01
+
+(ξ) = −6ξ2 + 6 ξ, H′
+
+> 11
+
+(ξ) = 3 ξ2 − 2ξ. (47) To avoid zero or negative SOC sensitivity during the AEKF update, the derivative used by the estimator is lower-bounded as 
+
+bgOCV ,t = max  gOCV ,t , 10 −6 . (48) The final outputs of the OCV-evaluation and SOC-sensitivity phase are the estimated open-circuit voltage bVOC ,t and the bounded SOC sensitivity 
+
+bgOCV ,t . bVOC ,t is subsequently used in the terminal-voltage prediction, while 
+
+bgOCV ,t is provided to the AEKF measurement-update phase to construct the measurement Jacobian. 
+
+Core-Temperature Estimation. The measured surface temperature does not directly represent the battery’s internal thermal state. Therefore, the core temperature is estimated using a lumped thermal model that combines the measured surface temperature with the heat generated by the ohmic resis-tance and the two polarization branches. Using the adapted ECM parameters, the internal heat-generation rate is approximated as ˙Qgen ,t = I2 
+
+> t
+
+R0,t + bu 21,t |t−1
+
+R1,t 
+
++ bu 22,t |t−1
+
+R2,t 
+
+. (49) The core-temperature estimate is updated using a lumped thermal model: 
+
+bTcore ,t = bTcore ,t −1 + ∆tCcore 
+
+"
+
+Ts,t − bTcore ,t −1
+
+Rcore 
+
++ ˙Qgen ,t 
+
+#
+
+, (50) where Rcore is the equivalent thermal resistance between the battery core and surface, and Ccore is the equivalent core thermal capacitance. The final output of the core-temperature estimation phase is the updated core-temperature estimate bTcore ,t . This estimate is subsequently used to cal-culate the OCV temperature correction and is provided, together with the prior SOC estimate and measured current, to the pretrained residual-voltage correction phase. It is also retained as bTcore ,t −1 for the online STC-ECM parameter adaptation phase at the next sampling instant. 18 Hysteresis and OCV Temperature Correction. To improve terminal-voltage modeling under dynamic current and thermal conditions, this phase accounts for two effects that are not represented by the basic RC polarization states. The hysteresis model captures the history-dependent voltage response caused by changes in current direction and magnitude, while the OCV temperature-correction term adjusts the open-circuit voltage according to the estimated battery core temperature. The voltage-hysteresis state is updated as 
+
+ht = ρhht−1 + (1 − ρh) Mh tanh 
+
+ It
+
+Iref 
+
+
+
+, (51) where Iref is a reference current used to obtain a dimensionless argument for the hyperbolic tangent. The hysteresis decay factor is 
+
+ρh = exp 
+
+
+
+−∆tγh
+
+
+
+, (52) where γh and Mh denote the hysteresis time constant and maximum hystere-sis magnitude, respectively. The hysteresis state is constrained as 
+
+ht ∈ [−| Mh|, |Mh|] . (53) The temperature-dependent OCV correction is calculated using the current core-temperature estimate: ∆VOC ,t = κT
+
+ bTcore ,t − Tref 
+
+
+
+, (54) where κT is the OCV temperature coefficient. The final outputs of the hysteresis and OCV temperature-correction phase are the updated hysteresis voltage ht and the temperature-dependent OCV correction ∆ VOC ,t . Both quantities are subsequently included in the terminal-voltage prediction. In addition, ht is retained as the previous hysteresis state 
+
+ht−1 at the next sampling instant. 
+
+Pretrained Residual-Voltage Correction. The neural residual-voltage model is pretrained offline and subsequently used during online inference to compen-sate for unmodeled nonlinearities and residual discrepancies in the physics-based ECM prediction. Its input feature vector is defined as 
+
+ft =
+
+h bSt|t−1 bTcore ,t It ∆It
+
+iT
+
+, ∆It = It − It−1. (55) 19 The hidden representation is calculated as 
+
+rt = tanh ( Wr,1ft + br,1) , (56) and the residual-voltage correction is 
+
+bVres ,t = V max res tanh ( Wr,2rt + br,2) , (57) where the hidden dimension was set to 16 based on a grid search over 
+
+{4, 8, 16 }. Hidden dimensions of 4 and 8 resulted in underfitting, whereas 16 provided a better balance between prediction performance and model complexity. The parameter V max res denotes the residual-voltage limit. The final output of the pretrained residual-voltage correction phase is 
+
+bVres ,t . This correction is subsequently provided to the terminal-voltage pre-diction phase. 
+
+Terminal-Voltage Prediction. After all physical and neural correction terms are available, the predicted terminal voltage is calculated as 
+
+bVt|t−1 = bVOC ,t + ∆ VOC ,t + ht + bVres ,t 
+
+− R0,t It − bu1,t |t−1 − bu2,t |t−1. (58) The final output of the terminal-voltage-prediction phase is the prior terminal-voltage estimate bVt|t−1. This estimate is subsequently compared with the measured terminal voltage Vt to calculate the voltage innovation 
+
+νt = Vt − bVt|t−1, which is provided to the AEKF measurement update and state correction phase. 
+
+AEKF Measurement Update and State Correction. To correct the prior SOC and polarization-voltage estimates, the AEKF uses the terminal-voltage in-novation and updates the associated uncertainties for the next sampling in-stant. The prior state covariance is predicted as 
+
+Pt|t−1 = FtPt−1|t−1FT 
+
+> t
+
++ Qt, (59) where Pt|t−1 denotes the prior state covariance and Qt is the process-noise covariance matrix. The measurement Jacobian is defined as 
+
+Ht = bgOCV ,t −1 −1 . (60) 20 The voltage innovation is 
+
+νt = Vt − bVt|t−1. (61) The innovation covariance and Kalman gain are calculated as Σν,t = HtPt|t−1HT 
+
+> t
+
++ σ2
+
+> V,t
+
+, (62) 
+
+Kt = Pt|t−1HT 
+
+> t
+
+Σ−1 
+
+> ν,t
+
+, (63) where σ2 
+
+> V,t
+
+is the adaptively estimated terminal-voltage measurement-noise variance. The posterior state is updated as 
+
+bzt|t = bzt|t−1 + Ktνt. (64) For improved numerical stability, the posterior covariance is updated using the Joseph form: 
+
+Pt|t = ( I3 − KtHt) Pt|t−1 (I3 − KtHt)T
+
++ Ktσ2
+
+> V,t
+
+KT 
+
+> t
+
+, (65) where I3 is the 3 × 3 identity matrix. The process- and measurement-noise statistics are adaptively updated from the voltage innovation using predefined forgetting factors. The corrected state vector is 
+
+bzt|t =
+
+h bSt|t bu1,t |t bu2,t |t
+
+iT
+
+. (66) The final posterior SOC estimate is extracted as 
+
+bSt = bSt|t = 1 0 0 bzt|t. (67) The final outputs of the AEKF measurement-update and state-correction phase are the posterior state estimate bzt|t, the posterior covariance Pt|t, and the posterior SOC estimate bSt. The estimated SOC is combined with the measured current, terminal voltage, and surface temperature to construct the physics-informed observation window for RDS classification. 
+
+2.4. Online RDS Classification 
+
+The posterior SOC estimate is combined with the measured signals to form the physics-informed observation vector: 
+
+xt =
+
+h
+
+It Vt Ts,t bSt
+
+iT
+
+. (68) 21 The observation window of length L is then constructed as 
+
+Xt =
+
+
+
+xT
+
+> t−L+1
+
+xT
+
+> t−L+2
+
+...
+
+xT
+
+> t
+
+ ∈ RL×4. (69) The resulting physics-informed sequence is provided to the RDS classification model to estimate the battery’s relative discharge phase. During online inference, the RDS classification model, implemented as a pretrained lightweight TCN, receives the most recent physics-informed ob-servation window Xt ∈ RL×4 and predicts the current RDS class. The TCN extracts temporal patterns from the measured current, terminal-voltage, surface-temperature, and estimated SOC sequences. For a batch of size B,the input tensor is represented as 
+
+X ∈ RB×L×D, D = 4 , (70) where L is the observation-window length and D is the number of input features. Before temporal convolution, the input is transposed as 
+
+eX ∈ RB×D×L. (71) Let H(0) = eX. Each temporal layer consists of a one-dimensional con-volution (Conv1D) [15], a rectified linear unit (ReLU) activation [1], and Dropout regularization [30]. The output of the ℓth temporal convolutional layer is 
+
+H(ℓ) = Dropout  ReLU  Conv1D ℓ
+
+ H(ℓ−1)  , ℓ = 1 , . . . , M. (72) The first convolutional layer maps the D input channels to H hidden chan-nels, whereas the remaining layers preserve the hidden dimension. In this study, M = 2, H = 64, the kernel size is 3, the dilation factor is 1, and the dropout probability is 0 .3. Symmetric padding is applied to preserve the temporal sequence length. After the final convolutional layer, the representation at the final time step is selected: 
+
+ht = H(M ):,:,−1 ∈ RB×H . (73) 22 The selected representation is processed by a classification head comprising layer normalization (LayerNorm) [34], a fully connected layer, a Gaussian error linear unit (GELU) activation [10], Dropout, and an output layer: 
+
+ot = W2 Dropout [GELU ( W1 LayerNorm ( ht) + b1)] + b2, (74) where ot ∈ RB×K denotes the classification logits and K = 5. The posterior probability of class c is obtained using the softmax function: 
+
+p(c) 
+
+> t
+
+=exp 
+
+
+
+o(c)
+
+> t
+
+
+
+> K−1
+
+X
+
+> j=0
+
+exp 
+
+
+
+o(j)
+
+> t
+
+, c ∈ { 0, 1, . . . , K − 1}. (75) The predicted RDS class at sampling instant t is determined as 
+
+byt = arg max 
+
+> c∈{ 0,...,K −1}
+
+p(c) 
+
+> t
+
+, K = 5 . (76) Before online deployment, the measured current, terminal-voltage, and surface-temperature sequences from the training and validation sets are pro-cessed offline using the online SOC-estimation pipeline employed. The result-ing posterior SOC estimates are combined with the measured signals to con-struct physics-informed observation windows. The training windows are used to optimize the parameters of the lightweight TCN, whereas the validation windows are used for model selection. The proposed classification model’s parameters are optimized by minimizing the categorical cross-entropy loss between the predicted class probabilities and the ground-truth RDS labels: 
+
+LRDS = − 1
+
+B
+
+> B
+
+X
+
+> i=1
+> K−1
+
+X
+
+> c=0
+
+I (yi = c) log p(c) 
+
+> i
+
+, (77) where B is the batch size, K = 5 is the number of RDS classes, yi is the ground-truth label of the ith training sample, and p(c) 
+
+> i
+
+is the predicted prob-ability that this sample belongs to class c. The indicator function I(yi = c)equals one when yi = c and zero otherwise. The following section presents the experimental setup used to validate our proposed RDS classification frame-work. 23 3. Experimental Setup 
+
+3.1. Datasets First Dataset. The first dataset is the public Lithium-Ion Battery Drive Cy-cle Dataset introduced by [35]. It was collected using LG INR21700 M50LT NMC cells with a nominal capacity of 4 .93 Ah, a nominal energy of 18 .2 Wh, and a nominal voltage of 3 .69 V. The dataset contains current, terminal-voltage, surface-temperature, and Coulomb-counting SOC for 12 distinct drive cycles at 5, 15, 25, 35, and 45 ◦C, uniformly resampled to 10 Hz. BCDC, LA92, CSHVC, HWFET, IM, US06, PDTCB, and OCTBC were used for training; HHDDT and FTP-72 for validation; and FTP-75 and PDMHC for testing. The training set covers diverse driving patterns, while the valida-tion and test sets each include light- and heavy-duty profiles to evaluate generalization across different load dynamics. 
+
+Second Dataset. The second dataset is the public commercial 18650-format lithium-ion battery dataset introduced by [3]. It contains measured current, terminal-voltage, surface-temperature, capacity, energy, internal resistance, operating mode, battery identity, and SOC measurements at 5, 15, 25, 35, and 45 ◦C. The training set includes LCO 1, LCO 2, and LCO 3, while LCO 4 is used for validation. LCO 5 and LCO 6 are reserved for testing. Each battery file contains measurements collected at all five temperatures. This cell-independent split enables the model to learn from multiple LCO cells, supports model selection using an unseen cell, and evaluates its gener-alization to separate test cells under different thermal conditions. Table 1 summarizes the main physical characteristics of the two datasets. In this study, only complete discharge profiles are considered, where each profile begins from a fully charged condition and continues until the terminal voltage reaches the cutoff threshold. The first dataset contains only com-plete drive-cycle discharge profiles. In contrast, the second dataset contains both complete and partial discharge profiles. Therefore, only the complete discharge profiles from the second dataset were retained, while all partial profiles were excluded from the experiments. After removing the partial discharge profiles, the retained data from the second dataset cover the tem-perature range of 5–35 ◦C. 24 Table 1: Numerical summary of the datasets used in this study. 
+
+Property First Dataset Second Dataset 
+
+Cell format 21700 18650 Number of chemistries 1 4Nominal capacity 4.93 Ah 1.1–3 .0 Ah Nominal voltage 3.69 V 3.3–3 .6 V Number of ambient temperatures 5 5Temperature range 5–45 ◦C 5–35 ◦CNumber of discharge profiles 12 Up to 5 current levels Maximum discharge condition 30 W 6–30 A Sampling frequency 10 Hz 0.1 Hz 
+
+3.2. Experimental Configuration 
+
+The STC-ECM parameters were identified offline using the training set of each dataset. Table 2 summarizes the parameter search bounds and initializa-tion values used for the two datasets. The search intervals were determined through preliminary experiments to constrain the optimization to regions, while the listed initial values were supplied to the L-BFGS-B optimizer at the beginning of parameter identification. 25 Table 2: Bounds and initial values used for STC-ECM parameter identification in the two datasets. 
+
+Parameter First Dataset Second Dataset Lower Upper Initial Lower Upper Initial 
+
+R0,base (Ω) 0.01 0.08 0.045 0.005 0.05 0.045 
+
+R1,base (Ω) 0.001 0.15 0.0755 0.001 0.08 0.0755 
+
+R2,base (Ω) 0.001 0.15 0.0755 0.001 0.08 0.0755 
+
+C1,base (F) 1000 10000 5500 100 20000 5500 
+
+C2,base (F) 1000 10000 5500 1000 20000 5500 
+
+Mh (V) 0 0.05 0.01 0.002 0.05 0.01 
+
+γh (s) 1 500 30 0.005 500 30 
+
+Ccore (J /K) 40 100 70 28 100 70 
+
+Csurface (J /K) 5 30 17.5 4 30 17.5 
+
+Rcore (K /W) 0.3 4.0 2.15 1.0 3.0 2.15 
+
+Rsurface (K /W) 1.0 20.0 10.5 3.0 20.0 10.5 The bounded parameter-identification problem was solved using the L-BFGS-B algorithm. The function-value and projected-gradient tolerances were set to 10 −10 and 10 −8, respectively. Because the optimization was im-plemented using SciPy, the physical parameter fitting was executed on the CPU. The SOC–temperature coupling coefficients were selected through grid search and fixed during L-BFGS-B optimization. The selected values were 
+
+αR = 0 .01 ◦C−1, αC = −0.005 ◦C−1, βR = 0 .15, βC = 0 .08, and κT =0.001 V /◦C. The V max res was set to 0 .003 V. The initial terminal-voltage measurement-noise variance was 10 −4 V2, while the innovation forgetting factor and process-noise smoothing factor were set to 0 .98 and 0 .995, respec-tively. The lightweight TCN was implemented in PyTorch and trained using the Adam optimizer with a learning rate of 5 × 10 −4. The observation-window length was set to L = 200, and the model was trained for 40 epochs with a batch size of 128. The training samples were shuffled at the beginning of each epoch, whereas the validation and test samples were processed without shuffling. The checkpoint achieving the best validation performance was retained for final testing. All experiments were conducted on a workstation 26 equipped with an NVIDIA GeForce RTX 5060 GPU, an AMD Ryzen 9 9950 processor, and 32 GB of RAM. 
+
+3.3. Baseline Methods SOC Estimation Baselines. The proposed SOC-estimation configuration uses a second-order RC equivalent-circuit model (2RC), an adaptive extended Kalman filter (AEKF), and backward Euler discretization [11]. For compar-ison, alternative ECM structures, state-estimation methods, and discretiza-tion schemes were evaluated. The 2RCH model [17] extends the conventional 2RC structure by incorporating voltage hysteresis, while Split Deterministic Mean Filter (SDMF) [26] was included as an alternative state-estimation method. The AEKF was additionally evaluated with Tustin [36], fourth-order Runge–Kutta (RK4) [22], and exact discretization methods. Tustin uses a trapezoidal bilinear approximation, RK4 numerically integrates the continuous-time state equations using a fourth-order scheme, and the exact method applies the analytical discrete-time solution under the assumed input conditions. 
+
+Temperature-Coupling Baselines. Table 4 compares two temperature-coupling baselines with the proposed hybrid model. The Polynomial Temperature Model represents the thermal effect using a cubic polynomial: 
+
+Tpoly = a0 + a1T + a2T 2 + a3T 3, (78) where T is the measured surface temperature. The Neural Temperature Model instead learns a nonlinear temperature representation using a lightweight feedforward network: 
+
+TNN = W2 ReLU ( W1T + b1) + b2. (79) In both baselines, the resulting temperature representation is used to adapt the ECM resistance and capacitance parameters and to correct the OCV. The proposed Hybrid Model combines the PCHIP-based OCV–SOC model, SOC– temperature-dependent RC adaptation, and the pretrained neural residual-voltage correction. Each model is evaluated under three update configurations. In the RC Update configuration, only the resistance and capacitance parameters are adapted: 
+
+αR = 0 .01 ◦C−1, αC = −0.005 ◦C−1, βR = 0 .15 , βC = 0 .08 , κT = 0 .
+
+(80) 27 In the OCV Update configuration, RC adaptation is disabled and only the OCV temperature correction is applied: 
+
+αR = αC = βR = βC = 0 , κT = 0 .001 V /◦C. (81) The RC + OCV Update configuration jointly applies both mechanisms: 
+
+αR = 0 .01 ◦C−1, αC = −0.005 ◦C−1, βR = 0 .15 , βC = 0 .08 , κT = 0 .001 V /◦C.
+
+(82) 
+
+RDS Classification Baselines. Transformer [29], Long Short-Term Memory (LSTM) [8], Gated Recurrent Unit (GRU) [6], and TCN architectures were used as baselines for the final evaluation of the proposed RDS classification framework. All models were implemented using standard PyTorch modules and configured to predict K = 5 RDS classes. The Transformer used a hidden dimension of 128, two layers, and a dropout rate of 0.2. The LSTM and GRU models used the same hidden dimension, number of layers, and dropout rate. The baseline TCN followed the architecture of the proposed lightweight TCN, using a hidden dimension of 64, two convolutional layers, a kernel size of 3, and a dropout rate of 0.3. However, the baseline models used only the measured current, terminal voltage, and surface temperature as inputs, whereas the proposed method additionally incorporated the SOC estimated by the proposed SOC estimation method. All models were trained and evaluated under the same experimental settings. In the component-wise comparisons, only one component was changed at a time to isolate its contribution and ensure a fair comparison. All configurations were evaluated using the same data splits and experi-mental settings to ensure a fair comparison. 
+
+3.4. Evaluation Metrics 
+
+In the first dataset, as in many real-world applications involving contin-uous discharge profiles, SOC is obtained only through Coulomb counting, which accumulate integration errors over time. Because no independently measured reference SOC labels are available, the proposed SOC estimation method is evaluated indirectly through its terminal-voltage modeling per-formance. Specifically, the predicted terminal voltage, bVt, is compared with the measured terminal voltage, Vt. The prediction performance is quantified using the mean absolute error (MAE), root mean square error (RMSE), and 28 maximum absolute error (MAX), all reported in millivolts (mV): MAE = 1
+
+N
+
+> N
+
+X
+
+> t=1
+
+Vt − bVt , (83) RMSE = 
+
+vuut 1
+
+N
+
+> N
+
+X
+
+> t=1
+
+
+
+Vt − bVt
+
+2
+
+, (84) MAX = max  
+
+> 1≤t≤N
+
+Vt − bVt , (85) where N denotes the total number of evaluated samples. The proposed lightweight TCN for RDS classification is evaluated using accuracy, precision, recall, and F1-score. Let N denote the number of valida-tion samples, yi ∈ { 0, . . . , K −1} the ground-truth label, and byi the predicted label, where K = 5. The classification accuracy is defined as Acc . = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+I (yi = byi) × 100% . (86) For each RDS class c, the precision and recall are calculated as Prec .c = TP c
+
+TP c + FP c
+
+× 100% , Rec .c = TP c
+
+TP c + FN c
+
+× 100% , (87) where TP c, FP c, and FN c denote the numbers of true-positive, false-positive, and false-negative predictions for class c, respectively. The class-wise F1-score is defined as F1 c = 2 Prec .c Rec .c
+
+Prec .c + Rec .c
+
+× 100% . (88) The following section reports and analyzes the experimental results of the proposed RDS classification framework. 
+
+4. Experimental Results 
+
+The first dataset was selected as the primary validation dataset for the proposed method and was used for both the ablation study and model selec-tion because it provides diverse dynamic drive cycles and thermal conditions. Results are reported as mean ± standard deviation over 5, 15, 25, 35, and 45 ◦C. That demonstrates the model’s generalization ability and performance variability across different operating conditions. 29 4.1. Validation of the Proposed SOC Estimation Method on the First Dataset 
+
+Table 3 compares different ECM structures, filters, and discretization methods on the FTP-75 and PDMHC profiles. Overall, the 2RC model combined with the AEKF achieved the best terminal-voltage prediction per-formance. With Backward Euler discretization, it obtained an MAE and RMSE of 0 .6316 ± 0.0150 mV and 4 .6 ± 0.1088 mV, respectively, on FTP-75. On PDMHC, the corresponding errors decreased to 0 .2032 ± 0.0048 mV and 0.9 ± 0.0207 mV, with a maximum error of 37 .3 ± 0.8875 mV. The differences among the Backward Euler, Tustin, RK4, and exact dis-cretization methods were small for the AEKF, indicating that its performance was not highly sensitive to the choice of discretization scheme. However, the 2RCH model generally produced larger errors than the 2RC model under the same filtering conditions. Therefore, the 2RC model with the AEKF and Backward Euler discretization was adopted in the proposed SOC estimation method for all subsequent experiments. 
+
+Table 3: Comparison of terminal-voltage prediction performance for the 2RC and 2RCH models with different filters and discretization methods on the first dataset.                                                                                                                                                                                                                                                                                                          
+
+> ECM Type Filter Discretization FTP-75 PDMHC MAE [mV] RMSE [mV] MAX [mV] MAE [mV] RMSE [mV] MAX [mV]
+> 2RC SDMF Backward Euler 70.2470 ±1.6725 79.7 ±1.8981 280.4 ±6.6769 72.9404 ±1.7367 89.0 ±2.1190 295.1 ±7.0256 Tustin 70.6370 ±1.6818 80.1 ±1.9064 290.9 ±6.9258 72.0061 ±1.7144 88.1 ±2.0979 286.8 ±6.8294 RK4 71.2875 ±1.6973 80.7 ±1.9208 287.1 ±6.8362 75.6083 ±1.8002 92.9 ±2.2109 308.2 ±7.3383 Exact 70.1864 ±1.6711 79.6 ±1.8959 292.3 ±6.9587 74.2855 ±1.7687 90.1 ±2.1460 298.5 ±7.1068 AEKF Backward Euler (Ours) 0.6316 ±0.0150 4.6 ±0.1088 251.2 ±5.9798 0.2032 ±0.0048 0.9 ±0.0207 37.3 ±0.8875
+> Tustin 0.6377 ±0.0152 4.6 ±0.1097 251.9 ±5.9972 0.2047 ±0.0049 0.9 ±0.0209 37.3 ±0.8875 RK4 0.6376 ±0.0152 4.6 ±0.1097 251.9 ±5.9970 0.2046 ±0.0049 0.9 ±0.0209 37.3 ±0.8875 Exact 0.6361 ±0.0151 4.6 ±0.1096 252.0 ±5.9998 0.2041 ±0.0049 0.9 ±0.0209 37.3 ±0.8875 2RCH SDMF Backward Euler 160.6122 ±3.8241 198.5 ±4.7262 475.0 ±11.3101 115.0947 ±2.7404 147.0 ±3.5009 360.1 ±8.5735 Tustin 158.7894 ±3.7807 195.7 ±4.6592 478.3 ±11.3872 117.2528 ±2.7917 149.5 ±3.5599 381.9 ±9.0934 RK4 158.5901 ±3.7760 195.3 ±4.6493 476.1 ±11.3366 118.7165 ±2.8266 150.8 ±3.5895 375.3 ±8.9369 Exact 159.1867 ±3.7902 196.6 ±4.6814 471.1 ±11.2172 116.8722 ±2.7827 149.4 ±3.5577 361.1 ±8.5968 AEKF Backward Euler 2.7054 ±0.0644 11.5 ±0.2729 288.8 ±6.8766 1.5405 ±0.0367 10.3 ±0.2455 290.9 ±6.9272 Tustin 2.7257 ±0.0649 11.5 ±0.2744 288.7 ±6.8748 1.5573 ±0.0371 10.4 ±0.2473 290.8 ±6.9238 RK4 2.7255 ±0.0649 11.5 ±0.2744 288.7 ±6.8748 1.5571 ±0.0371 10.4 ±0.2473 290.8 ±6.9238 Exact 2.7223 ±0.0648 11.5 ±0.2742 288.6 ±6.8721 1.5545 ±0.0370 10.4 ±0.2470 290.8 ±6.9228
+
+Table 4 compares the polynomial temperature model, neural tempera-ture model, and hybrid model under RC Update, OCV Update, and RC– OCV Update configurations. The hybrid model consistently outperformed both temperature-coupling baselines on the FTP-75 and PDMHC profiles. Among the three hybrid configurations, the proposed joint RC–OCV up-date achieved the best overall performance. On FTP-75, it obtained MAE, RMSE, and MAX values of 0 .5189 ± 0.1702 mV, 2 .8153 ± 1.3019 mV, and 30 160 .1664 ± 68 .2927 mV, respectively. On PDMHC, the corresponding values were 0 .3864 ± 0.1093 mV, 2 .6400 ± 0.9642 mV, and 163 .1010 ± 37 .5258 mV. Compared with the best non-hybrid configuration, the proposed joint RC–OCV hybrid model reduced the average MAE by approximately 97 .7% on FTP-75 and 97 .9% on PDMHC. These results demonstrate that combin-ing SOC–temperature-dependent RC adaptation, OCV temperature correc-tion, and data-driven residual-voltage compensation substantially improves terminal-voltage prediction under varying load and thermal conditions. The results also show that jointly updating the RC parameters and OCV is more effective than applying either update mechanism independently. Therefore, the hybrid model with joint RC–OCV updates was selected as the final con-figuration of the proposed SOC estimation method. 
+
+Table 4: Terminal-voltage prediction performance of the polynomial tempera-ture model, neural temperature model, and proposed hybrid model under RC-only, OCV-only, and joint RC–OCV temperature-update configurations on the first dataset.                                                                                                                                                                           
+
+> Model Update Type FTP-75 PDMHC MAE [mV] RMSE [mV] MAX [mV] MAE [mV] RMSE [mV] MAX [mV]
+> Polynomial Temperature Model RC Update 22 .5998 ±3.2050 35 .2476 ±12 .3578 453 .9707 ±67 .9803 18 .7525 ±0.8109 30 .1871 ±2.6568 435 .0426 ±27 .7630 OCV Update 22 .5587 ±2.7928 35 .4468 ±12 .4080 471 .1032 ±62 .6695 18 .4161 ±1.1621 30 .2339 ±3.1373 443 .6866 ±33 .7626 RC + OCV Update 22 .6929 ±2.8454 35 .4646 ±12 .2896 455 .0236 ±70 .8208 18 .8362 ±1.2595 30 .4053 ±2.5976 438 .8881 ±29 .0894 Neural Temperature Model RC Update 25 .2065 ±6.2347 37 .5337 ±14 .1825 411 .0904 ±60 .2398 28 .0822 ±9.9072 39 .9967 ±12 .7434 367 .8225 ±35 .4247 OCV Update 28 .7108 ±10 .3545 40 .4571 ±16 .2769 441 .2209 ±46 .2954 24 .8833 ±6.1156 35 .9754 ±7.9708 410 .1656 ±20 .4329 RC + OCV Update 31 .1028 ±10 .0024 43 .4566 ±15 .9576 380 .7916 ±60 .0008 37 .4592 ±11 .1930 49 .8778 ±14 .1034 327 .7206 ±35 .2477 Hybrid Model RC Update 0.6920 ±0.4180 3.1475 ±1.5638 162 .0635 ±53 .8767 0.5574 ±0.2516 3.1999 ±1.6188 169 .8329 ±39 .8059 OCV Update 0.5258 ±0.2050 2.9078 ±1.2732 168 .3609 ±59 .8809 0.4582 ±0.2542 3.1139 ±1.7071 181 .2592 ±41 .3030 RC + OCV Update (Ours) 0.5189 ±0.1702 2.8153 ±1.3019 160 .1664 ±68 .2927 0.3864 ±0.1093 2.6400 ±0.9642 163 .1010 ±37 .5258
+
+As shown in Fig. 4, the proposed SOC estimation method closely tracks the measured terminal voltage throughout the complete FTP-75 and PDMHC discharge profiles. The model captures both the gradual voltage decline and the transient variations caused by dynamic loads, achieving RMSE values of 0.0264 V and 0 .0376 V, respectively. These results demonstrate its ability to accurately model full discharge trajectories under different load dynamics, with larger deviations occurring mainly near the end-of-discharge region. 31 (a) FTP-75 at 5 ◦C. (b) PDMHC at 5 ◦C.  
+
+> Figure 4: Comparison of the measured and predicted terminal voltages produced by the proposed SOC estimation method. The lower panels show the corresponding voltage-prediction errors.
+
+4.2. Validation of the Proposed RDS Classification Model on the First Dataset 
+
+To assess the relevance of the internal states produced by the proposed SOC estimation method, an XGBoost classifier was trained for the K=5 RDS classification task using the estimated state variables as inputs. Figure 5 reports the corresponding feature-importance scores. The estimated SOC achieves the highest importance score of 0 .2909, followed by R2,t with 0 .1459 and the absolute hysteresis state with 0 .0908. The remaining ECM, thermal, innovation, and noise-related variables contribute smaller but non-negligible importance scores. These results indicate that the estimated SOC is the most informative state variable for RDS classification, which motivates its inclusion in the proposed physics-informed observation window. Neverthe-less, feature importance does not directly quantify the benefit of combining multiple state variables. Therefore, the following experiment further evalu-ates different combinations of estimated states as inputs to the neural RDS classifier. 32 0.0237 0.0905 0.1573 0.2241 0.2909 Feature Importance innov_abs_max R_hat_last innov_abs_mean T_surface C2_last R1_last T_core R0_last C1_last hyst_abs R2_last soc Feature 
+
+> 0.0237 0.0381 0.0399 0.0520 0.0580 0.0591 0.0663 0.0673 0.0679 0.0908 0.1459 0.2909
+> Feature Importance
+
+Figure 5: XGBoost-based feature importance for RDS classification with K = 5 bins. 
+
+Figure 6 further evaluates the contributions of the estimated battery states generated by the proposed SOC estimation method and the neural network architecture to the performance of the proposed RDS classification model. For the input feature ablation, a GRU classifier was used while vary-ing the input combinations. Adding the estimated SOC to the measured current, terminal voltage, and surface temperature produced the highest av-erage accuracy across FTP-75 and PDMHC. Although additional ECM states improved the result under some individual profiles, they did not provide a consistent overall advantage and introduced additional input complexity. Therefore, the feature set {I, V, T s, bS} was selected for the proposed RDS clas-sification model. The architecture ablation compares LSTM, Transformer, GRU, and TCN models using the selected input features. The TCN achieved the strongest overall performance across the two test profiles while maintain-ing a lightweight architecture. Accordingly, the proposed RDS classification method adopts the measured current, terminal voltage, surface temperature, and estimated SOC as inputs to a lightweight TCN. 33 60 70 80 90 100            
+
+> Accuracy (%) Baseline: I,V,T
+> + SOC + SOC, R2, last
+> + SOC, R2, last , hyst abs
+> + All ECM states ECM top-3 only
+> 96.36 ± 1.84 95.40 ± 1.64 94.49 ± 2.73 96.49 ± 0.89 95.47 ± 0.53 90.65 ± 5.52 72.06 ± 2.11 79.26 ± 4.46 79.12 ± 4.62 75.58 ± 3.89 76.69 ± 3.11 63.02 ± 8.07
+> Input Feature Ablation
+> 75 80 85 90 95 100
+> Accuracy (%) LSTM Transformer GRU TCN
+> 95.50 ± 0.81 91.87 ± 4.05 95.40 ± 1.64 95.38 ± 2.55 77.06 ± 3.12 80.87 ± 5.05 79.26 ± 4.46 80.09 ± 4.52
+> Neural Network Architecture Ablation
+> Ablation study of input features and neural-network architectures
+> FTP-75 PDMHC
+
+Figure 6: RDS classification accuracy for the ablation study of input features and neural network architectures. 
+
+Figure 7 presents the ablation study used to determine the final lightweight TCN configuration. The evaluated hyperparameters include the hidden di-mension, number of convolutional layers, kernel size, dropout rate, dilation rate, and observation-window length. The final configuration uses a hidden dimension of 64, two convolutional layers, a kernel size of 3, a dropout rate of 0.3, a dilation rate of 1, and a lookback length of L = 200. These values were selected to provide a suitable balance between prediction performance, stability across the FTP-75 and PDMHC profiles, and computational effi-ciency. Although some larger or alternative configurations achieved slightly higher accuracy under an individual profile, they did not provide a consistent overall improvement and introduced additional model complexity. Therefore, the selected configuration was adopted as the final lightweight TCN for RDS classification. 34 75 80 85 90 95 100 
+
+Accuracy (%) (selected) 64 128 256 
+
+94.12 ± 0.97 95.02 ± 2.38 93.36 ± 2.61 81.48 ± 2.58 80.95 ± 3.98 81.47 ± 4.00 
+
+Hidden dimension 
+
+75 80 85 90 95 100 
+
+Accuracy (%) 1(selected) 2 34
+
+94.70 ± 1.14 94.12 ± 0.97 85.84 ± 1.58 84.93 ± 4.77 80.08 ± 1.74 81.48 ± 2.58 79.30 ± 2.52 81.47 ± 5.96 
+
+Number of layers 
+
+75 80 85 90 95 100 
+
+Accuracy (%) (selected) 3 57
+
+94.12 ± 0.97 94.63 ± 1.61 93.81 ± 1.49 81.48 ± 2.58 79.97 ± 4.13 80.50 ± 0.96 
+
+Kernel size 
+
+75 80 85 90 95 100 
+
+Accuracy (%) 0.1 0.2 (selected) 0.3 0.4 
+
+92.17 ± 1.88 94.12 ± 0.97 95.59 ± 1.35 94.77 ± 1.52 83.10 ± 3.45 81.48 ± 2.58 80.03 ± 1.96 79.96 ± 1.15 
+
+Dropout rate 
+
+75 80 85 90 95 100 
+
+Accuracy (%) (selected) 1 23
+
+95.59 ± 1.35 93.52 ± 2.40 93.62 ± 2.23 80.03 ± 1.96 82.45 ± 4.22 80.66 ± 3.75 
+
+Dilation rate 
+
+75 80 85 90 95 100 
+
+Accuracy (%) 50 100 150 (selected) 200 
+
+95.00 ± 1.07 95.38 ± 0.67 95.30 ± 1.77 95.42 ± 1.25 80.52 ± 1.83 81.23 ± 3.79 79.66 ± 2.13 80.05 ± 2.32 
+
+Lookback length 
+
+Ablation Study of TCN Hyperparameters 
+
+FTP-75 PDMHC Figure 7: TCN hyperparameter ablation results. 
+
+4.3. End-to-End Validation of the Proposed RDS Framework on the First Dataset 
+
+As shown in Table 5, increasing the number of RDS stages from five to ten substantially reduces classification performance, particularly on the more complex PDMHC profile. This suggests that finer discretization produces less separable neighboring stages and increases sensitivity to variations in the discharge trajectory. The Transformer, LSTM, GRU, and baseline TCN 35 use only the measured current, terminal voltage, and surface temperature 
+
+{I, V, T s}, whereas the proposed method additionally incorporates the SOC estimated by the proposed SOC estimation method, resulting in the physics-informed input set {I, V, T s, bS}.Under the proposed five-stage formulation, our method achieves accu-racies of 95 .38% on FTP-75 and 81 .23% on PDMHC. Although the GRU obtains a slightly higher FTP-75 accuracy of 96 .36%, the proposed method substantially outperforms all baselines on PDMHC and achieves the high-est average accuracy across the two test profiles. It also obtains the high-est PDMHC precision, recall, and F1 score, reaching 84 .43%, 81 .25%, and 80 .55%, respectively. These results demonstrate that incorporating the es-timated SOC into the lightweight TCN improves robustness across different load dynamics and supports the selection of the five-stage formulation for the final RDS classification framework. 
+
+Table 5: Classification performance of different temporal models using the ten-stage comparison setting and the proposed five-stage RDS formulation.                                                                                                                                                                                                                                                           
+
+> RDS Setting Model FTP-75 PDMHC Acc. (%) Prec. (%) Rec. (%) F1 (%) Acc. (%) Prec. (%) Rec. (%) F1 (%) 10 stages
+> (comparison) Transformer 86 .5666 ±6.1659 87 .5745 ±5.0526 86 .5698 ±6.1562 86 .4576 ±6.3920 44 .9899 ±6.1409 48 .4544 ±7.7170 45 .1149 ±6.1287 41 .7710 ±6.0582 LSTM 91 .2789 ±3.4453 91 .5088 ±3.4172 91 .2789 ±3.4453 91 .2337 ±3.5328 49 .7452 ±6.2960 55 .3585 ±7.6541 49 .7452 ±6.2960 46 .8187 ±5.6957 GRU 91 .9797 ±3.6782 92 .2341 ±3.5290 91 .9797 ±3.6782 91 .9353 ±3.7455 48 .6459 ±5.9007 54 .2683 ±8.0366 48 .6459 ±5.9007 45 .8862 ±5.5509 TCN 84 .1982 ±3.2090 84 .8908 ±3.0595 84 .2058 ±3.2051 84 .0901 ±3.2577 48 .7276 ±4.6442 55 .3672 ±7.2909 48 .8439 ±4.6358 46 .7069 ±5.3356
+> Ours 90 .3392 ±2.9811 90 .7641 ±2.9754 90 .3430 ±2.9811 90 .3082 ±3.0031 57 .0878 ±2.3146 65 .3274 ±4.2918 57 .1850 ±2.3110 54 .5395 ±3.0134 5 stages (proposed)
+> Transformer 95 .9583 ±1.9841 96 .0330 ±1.9128 95 .9604 ±1.9803 95 .9490 ±2.0153 69 .5056 ±2.6816 73 .3998 ±3.2627 69 .5741 ±2.6754 68 .0365 ±2.7128 LSTM 95 .2785 ±2.2944 95 .3819 ±2.2306 95 .2785 ±2.2944 95 .2507 ±2.3179 73 .9314 ±4.3894 77 .7564 ±6.0516 73 .9314 ±4.3894 72 .9409 ±4.1605 GRU 96 .3635 ±1.8433 96 .3965 ±1.8022 96 .3635 ±1.8433 96 .3514 ±1.8589 72 .0635 ±2.1058 75 .6608 ±3.4200 72 .0635 ±2.1058 70 .9371 ±1.8832 TCN 95 .3601 ±1.8946 95 .4348 ±1.8917 95 .3651 ±1.8920 95 .3328 ±1.9349 71 .8784 ±2.8752 75 .8889 ±4.5663 71 .9417 ±2.8675 70 .7535 ±2.7876
+> Ours 95 .3808 ±0.6689 95 .5533 ±0.6784 95 .3797 ±0.6668 95 .3794 ±0.6781 81 .2306 ±3.7870 84 .4342 ±2.5519 81 .2500 ±3.7816 80 .5512 ±4.2040
+
+Figure 8 presents the temperature-wise confusion matrices of the proposed five-stage RDS classification method for the five classes: Recharge Required (RR), Low, Moderate, Good, and Normal. For FTP-75, most predictions are concentrated along the main diagonal at all five temperatures, indicat-ing consistent classification performance under varying thermal conditions. The remaining misclassifications occur primarily between adjacent discharge stages, particularly between Moderate and Good and between Good and Normal. The PDMHC profile produces greater class overlap because of its more complex and irregular load dynamics. The most frequent errors occur be-tween Recharge Required and Low and between Moderate and Good, whereas the Good and Normal stages remain comparatively well identified. Impor-tantly, most misclassifications occur between adjacent RDS stages rather than distant stages. This result indicates that the proposed classification 36 method generally preserves the ordinal progression of the battery discharge process, even under challenging load and temperature conditions. 
+
+FTP-75 RR Low Moderate Good Normal 
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+99.3% 0.7% 0.0% 0.0% 0.0% 4.0% 96.0% 0.0% 0.0% 0.0% 0.0% 11.1% 88.9% 0.0% 0.0% 0.0% 0.0% 10.1% 87.6% 2.3% 0.0% 0.0% 0.0% 0.2% 99.8% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+100.0% 0.0% 0.0% 0.0% 0.0% 3.2% 96.8% 0.0% 0.0% 0.0% 0.0% 7.2% 92.8% 0.0% 0.0% 0.0% 0.0% 5.1% 94.9% 0.0% 0.0% 0.0% 0.0% 7.2% 92.8% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+99.5% 0.5% 0.0% 0.0% 0.0% 3.7% 96.2% 0.1% 0.0% 0.0% 0.0% 5.2% 94.7% 0.0% 0.0% 0.0% 0.0% 4.1% 95.9% 0.0% 0.0% 0.0% 0.0% 9.3% 90.7% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+92.0% 8.0% 0.0% 0.0% 0.0% 0.8% 97.6% 1.6% 0.0% 0.0% 0.0% 0.5% 99.0% 0.5% 0.0% 0.0% 0.0% 0.0% 99.7% 0.3% 0.0% 0.0% 0.0% 7.3% 92.7% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+95.2% 4.8% 0.0% 0.0% 0.0% 0.5% 99.4% 0.1% 0.0% 0.0% 0.0% 4.3% 95.7% 0.0% 0.0% 0.0% 0.0% 2.6% 97.4% 0.0% 0.0% 0.0% 0.0% 10.1% 89.9% 
+
+020 40 60 80 100 
+
+> Percentage (%)
+
+5 ◦C 15 ◦C 25 ◦C 35 ◦C 45 ◦C
+
+PDMHC RR Low Moderate Good Normal 
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+65.1% 34.9% 0.0% 0.0% 0.0% 22.8% 75.8% 1.4% 0.0% 0.0% 0.0% 0.0% 100.0% 0.0% 0.0% 0.0% 0.0% 9.6% 90.4% 0.0% 0.0% 0.0% 0.0% 5.0% 95.0% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+58.7% 41.3% 0.0% 0.0% 0.0% 0.0% 93.3% 6.7% 0.0% 0.0% 0.0% 0.0% 76.0% 24.0% 0.0% 0.0% 0.0% 0.0% 98.2% 1.8% 0.0% 0.0% 0.0% 0.0% 100.0% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+59.4% 40.6% 0.0% 0.0% 0.0% 0.0% 93.5% 6.5% 0.0% 0.0% 0.0% 0.0% 48.9% 51.1% 0.0% 0.0% 0.0% 0.0% 99.0% 1.0% 0.0% 0.0% 0.0% 0.1% 99.9% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+57.3% 42.7% 0.0% 0.0% 0.0% 0.0% 88.3% 11.7% 0.0% 0.0% 0.0% 0.0% 47.5% 52.5% 0.0% 0.0% 0.0% 0.0% 94.2% 5.8% 0.0% 0.0% 0.0% 0.0% 100.0% 
+
+020 40 60 80 100 
+
+> Percentage (%) RR Low Moderate Good Normal
+
+Predicted Label 
+
+RR Low Moderate Good Normal 
+
+> True Label
+
+59.3% 40.7% 0.0% 0.0% 0.0% 0.0% 94.7% 5.3% 0.0% 0.0% 0.0% 0.0% 44.8% 55.2% 0.0% 0.0% 0.0% 0.0% 91.9% 8.1% 0.0% 0.0% 0.0% 0.0% 100.0% 
+
+020 40 60 80 100 
+
+> Percentage (%)
+
+5 ◦C 15 ◦C 25 ◦C 35 ◦C 45 ◦C
+
+Figure 8: Confusion matrices for RDS classification. 
+
+Figure 9 compares the testing times of the proposed framework with those of the Transformer, LSTM, GRU, and baseline TCN models. The Trans-former requires the longest inference time, reaching 2480 .81 s, whereas the baseline TCN is the fastest at 512 .11 s. The proposed framework completes testing in 703 .27 s, which is comparable to the LSTM (705 .04 s) and sub-stantially faster than the Transformer. Although the proposed framework requires more time than the standalone GRU and TCN because it addition-ally performs physics-based SOC estimation, its testing time remains moder-ate. These results indicate that the proposed framework achieves improved cross-profile RDS classification while maintaining practical computational efficiency. 37 500 1000 1500 2000 2500 3000 
+
+> Testing Time (s) Transformer LSTM GRU TCN Ours 2480.81 s (41.35 min) 705.04 s (11.75 min) 535.55 s (8.93 min) 512.11 s (8.54 min) 703.27 s (11.72 min)
+
+Testing-Time Comparison Figure 9: Testing time comparison. 
+
+4.4. End-to-End Validation of the Proposed RDS Framework on the Second Dataset 
+
+Table 6 evaluates the proposed RDS classification framework on the test-ing set comprising the LCO 5 and LCO 6 cells. The proposed method con-sistently outperformed the Transformer, LSTM, GRU, and baseline TCN across all evaluation metrics. On LCO 5, it achieved an accuracy of 76 .41% and an F1 score of 73 .19%, improving upon the best baseline by approxi-mately 10 .01 and 13 .66 percentage points, respectively. On LCO 6, the pro-posed framework obtained an accuracy of 73 .87% and an F1 score of 70 .80%, corresponding to improvements of approximately 7 .09 and 10 .92 percentage points over the best baseline. These results demonstrate that incorporat-ing the estimated SOC with the measured current, terminal voltage, and surface temperature improves RDS classification and supports the cell-level generalization of the proposed framework to unseen batteries under varying operating conditions. 38 Table 6: Classification performance of different temporal models.                                                                                                                                  
+
+> Model LCO 5 LCO 6 Acc. (%) Prec. (%) Rec. (%) F1 (%) Acc. (%) Prec. (%) Rec. (%) F1 (%)
+> Transformer 65.5246 ±9.3577 68.4855 ±8.3823 62.8449 ±7.6372 58.3107 ±8.4357 65.2170 ±11.0900 67.6326 ±11.2158 62.3460 ±9.6511 58.1104 ±10.0817 LSTM 65.9333 ±9.4291 65.6130 ±9.7408 62.7208 ±9.8691 59.5386 ±10.9525 66.3952 ±9.0338 65.2179 ±11.3722 63.1544 ±9.5571 59.8775 ±10.7441 GRU 66.3954 ±8.8686 68.9481 ±8.6038 62.9364 ±9.2150 58.9520 ±10.2424 66.7877 ±8.4203 67.4157 ±11.9096 63.2802 ±8.8292 59.3958 ±9.6772 TCN 57.8610 ±8.5378 55.4849 ±7.6543 55.3820 ±9.1701 53.1016 ±10.5778 57.9776 ±8.2115 55.1710 ±7.8528 55.4215 ±8.8417 53.4298 ±9.6493
+> Ours 76.4102 ±8.6691 80.6286 ±6.4054 74.2997 ±7.9076 73.1947 ±9.0215 73.8749 ±6.7874 78.1009 ±7.3395 71.9475 ±5.5979 70.7970 ±6.2824
+
+5. Discussion 
+
+The proposed framework was evaluated using complete discharge profiles, in which each battery trajectory begins from a fully charged state and con-tinues until the terminal voltage reaches the cutoff threshold. Although this setting enables a consistent evaluation of the complete discharge process, real-world battery operation may begin from different initial SOC levels and may include partial discharge segments. Future work will therefore evaluate the proposed method on both complete and partial discharge profiles with varying initial SOC conditions. In addition, the current experiments were conducted using public labo-ratory datasets collected from individual battery cells. Future studies will extend the framework to real-world operating data, including electric-vehicle applications and multi-cell battery packs, to further assess its scalability, robustness, and practical applicability in battery-management systems. 
+
+6. Conclusion 
+
+This study introduced RDS as an interpretable battery indicator for rep-resenting the remaining discharge condition under unknown future loads. Unlike conventional RDT regression, which often relies on future current information to achieve reliable performance, the proposed five-stage formu-lation provides practical discharge-state information without requiring future current measurements during inference, while still achieving classification ac-curacy above 80%. To realize this formulation, a physics-guided RDS classification framework was developed by integrating the proposed SOC estimation method with a lightweight RDS classification model. The SOC estimation method consists of four main phases: (1) second-order ECM state and terminal-voltage pre-diction, (2) hysteresis and OCV temperature correction, (3) core-temperature estimation, and (4) AEKF measurement update and state correction. These phases are supported by three auxiliary phases: OCV evaluation and SOC 39 sensitivity, online STC-ECM parameter adaptation, and pretrained residual-voltage correction. The online adaptation phase adjusts the ECM resistance and capacitance parameters according to the estimated SOC and core tem-perature, while the neural residual-voltage model compensates for unmodeled nonlinearities and remaining voltage-prediction errors. Together, these com-ponents improve battery modeling and SOC estimation under varying load and thermal conditions. The resulting SOC estimate is then combined with the measured current, terminal voltage, and surface temperature to construct a physics-informed observation window for the lightweight TCN. Overall, these findings demon-strate that combining physics-informed SOC estimation with lightweight temporal learning provides an effective approach for online RDS classifica-tion. Future work will evaluate the framework on partial discharge profiles, varying initial SOC conditions, additional chemistries, aging conditions, real-world operational data, multi-cell battery packs, and embedded BMS plat-forms. 40 Contact Information 
+
+For access to the code and further information about this proposed sys-tem, please contact AIWARE Limited Company at: https://aiware.website/ Contact 
+
+References 
+
+[1] Abien Fred Agarap. Deep learning using rectified linear units (relu). 
+
+arXiv preprint arXiv:1803.08375 , 2018. [2] M Badfar, M Yildirim, and RB Chinnam. State-of-charge estimation across battery chemistries: A novel regression-based method and in-sights from unsupervised domain adaptation. Journal of Power Sources ,628:235760, 2025. [3] Heather M Barkholtz, Armando Fresquez, Babu R Chalamala, and Sum-mer R Ferreira. A database for comparative electrochemical performance of commercial 18650-format lithium-ion cells. Journal of The Electro-chemical Society , 164(12):A2697–A2706, 2017. [4] Zonghai Chen, Han Sun, Guangzhong Dong, Jingwen Wei, and JI Wu. Particle filter-based state-of-charge estimation and remaining-dischargeable-time prediction method for lithium-ion batteries. Journal of Power Sources , 414:158–166, 2019. [5] Matthew Daigle and Chetan S Kulkarni. End-of-discharge and end-of-life prediction in lithium-ion batteries with electrochemistry-based aging models. In AIAA Infotech@ aerospace , page 2132. 2016. [6] Rahul Dey and Fathi M Salem. Gate-variants of gated recurrent unit (gru) neural networks. In 2017 IEEE 60th international midwest sym-posium on circuits and systems (MWSCAS) , pages 1597–1600. IEEE, 2017. [7] Hossam A Gabbar, Ahmed M Othman, and Muhammad R Abdussami. Review of battery management systems (bms) development and indus-trial standards. Technologies , 9(2):28, 2021. [8] Alex Graves. Long short-term memory. Supervised sequence labelling with recurrent neural networks , pages 37–45, 2012. 41 [9] Ollie Hatherall, Mona Faraji Niri, Anup Barai, Yi Li, and James Marco. Remaining discharge energy estimation for lithium-ion batteries using pattern recognition and power prediction. Journal of Energy Storage ,64:107091, 2023. [10] Dan Hendrycks and Kevin Gimpel. Gaussian error linear units (gelus). 
+
+arXiv preprint arXiv:1606.08415 , 2016. [11] Desmond J Higham and Peter E Kloeden. Strong convergence rates for backward euler on a class of nonlinear jump-diffusion problems. Journal of Computational and Applied Mathematics , 205(2):949–956, 2007. [12] Zhipeng Jiao, Kaiqiang Li, Haodong Meng, Yan Guo, Jiaming Zhou, Caizhi Zhang, and Zongjing Huang. A methodology for lithium-ion battery state of health estimation using random constraints of state of charge. Journal of Energy Storage , 154:121349, 2026. [13] Sai Laung Kham and Nattapol Aunsri. Bayesian filtering techniques for state of charge and state of health estimation in lithium-ion batteries for electric vehicles: Methods, challenges, and future directions. Applied Energy , 417:128015, 2026. [14] Taehoon Kim, Wentao Song, Dae-Yong Son, Luis K Ono, and Yabing Qi. Lithium-ion batteries: outlook on present, future, and hybridized technologies. Journal of materials chemistry A , 7(7):2942–2964, 2019. [15] Serkan Kiranyaz, Turker Ince, Osama Abdeljaber, Onur Avci, and Mon-cef Gabbouj. 1-d convolutional neural networks for signal process-ing applications. In ICASSP 2019-2019 IEEE international conference on acoustics, speech and signal processing (ICASSP) , pages 8360–8364. IEEE, 2019. [16] Xin Lai, Yunfeng Huang, Huanghui Gu, Xuebing Han, Xuning Feng, Haifeng Dai, Yuejiu Zheng, and Minggao Ouyang. Remaining discharge energy estimation for lithium-ion batteries based on future load predic-tion considering temperature and ageing effects. Energy , 238:121754, 2022. [17] Xin Lai, Shuyu Wang, Shangde Ma, Jingying Xie, and Yuejiu Zheng. Parameter sensitivity analysis and simplification of equivalent circuit 42 model for the state of charge of lithium-ion batteries. Electrochimica Acta , 330:135239, 2020. [18] Colin Lea, Michael D Flynn, Rene Vidal, Austin Reiter, and Gregory D Hager. Temporal convolutional networks for action segmentation and detection. In 2017 IEEE conference on computer vision and pattern recognition (CVPR) , pages 1003–1012. IEEE, 2017. [19] Chaoran Li, Lele Li, Qiang Zhang, Shoubin Zhou, Menghan Li, and Zhonghao Rao. Lightweight state of charge estimation of lithium-ion battery based on pruned neural networks. IEEE Transactions on Trans-portation Electrification , 2025. [20] Dexiong Li, Yan Xing, and Xiaopeng Li. Joint state of health and remaining useful life assessment of lithium-ion batteries using a novel attention mechanism-based deep learning model and multi-source opti-mized health indicators. Journal of Energy Storage , 161:121823, 2026. [21] Tian Peng, Zhongzheng Mo, Jie Chen, Chenghao Sun, Zhi Wang, Muhammad Shahzad Nazir, and Chu Zhang. A novel mic-boa-tide fu-sion framework with kernel density estimation for point and probabilistic remaining useful life prediction of lithium-ion batteries. Applied Energy ,410:127570, 2026. [22] MS Priyadarshini, Sid Ahmed El Mehdi Ardjoun, Azem Hysa, Mo-hamed Metwally Mahmoud, Ujjal Sur, and Noha Anwer. Time-domain simulation and stability analysis of a photovoltaic cell using the fourth-order runge-kutta method and lyapunov stability analysis. Buletin Ilmiah Sarjana Teknik Elektro , 7(2):214–230, 2025. [23] CA Rabbath and D Corriveau. A comparison of piecewise cubic hermite interpolating polynomials, cubic splines and piecewise linear functions for the approximation of projectile aerodynamics. Defence Technology ,15(5):741–757, 2019. [24] Zhenxing Ren and Yu Wei. On physics-informed fuzzy neural network for the state of health prediction of lithium-ion batteries. Journal of Energy Storage , 155:121467, 2026. [25] Syed Abbas Ali Shah, Syed Maooz Ali Shah, Shunli Wang, Sajawal Gul Niazi, Ziqiang Xu, Mengqiang Wu, et al. A review of attention-enhanced 43 deep-learning models for state-of-charge estimation in lithium-ion bat-teries: Current progress and future directions. Journal of Energy Stor-age , 154:121207, 2026. [26] Catherine Stamoulis and Rebecca A Betensky. Optimization of signal decomposition matched filtering (sdmf) for improved detection of copy-number variations. IEEE/ACM Transactions on Computational Biology and Bioinformatics , 13(3):584–591, 2015. [27] Raja Rajendra Timilsina, Jingchao Zhang, Dil B Rahut, Kaewupsorn Patradool, and Tetsushi Sonobe. Global drive toward net-zero emissions and sustainability via electric vehicles: an integrative critical review. 
+
+Energy, Ecology and Environment , 10(2):125–144, 2025. [28] Hao Tu, Manashita Borah, Scott Moura, Yebin Wang, and Huazhen Fang. Remaining discharge energy prediction for lithium-ion batteries over broad current ranges: A machine learning approach. Applied En-ergy , 376:124086, 2024. [29] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. [30] Stefan Wager, Sida Wang, and Percy S Liang. Dropout training as adap-tive regularization. Advances in neural information processing systems ,26, 2013. [31] Eric A Wan and Rudolph Van Der Merwe. The unscented kalman filter for nonlinear estimation. In Proceedings of the IEEE 2000 adaptive systems for signal processing, communications, and control symposium (Cat. No. 00EX373) , pages 153–158. Ieee, 2000. [32] Yujie Wang and Zonghai Chen. A framework for state-of-charge and remaining discharge time prediction using unscented particle filter. Ap-plied Energy , 260:114324, 2020. [33] Rui Xiong, Hongwen He, Fengchun Sun, and Kai Zhao. Evaluation on state of charge estimation of batteries with adaptive extended kalman filter by experiment approach. IEEE Transactions on Vehicular Tech-nology , 62(1):108–117, 2012. 44 [34] Jingjing Xu, Xu Sun, Zhiyuan Zhang, Guangxiang Zhao, and Junyang Lin. Understanding and improving layer normalization. Advances in neural information processing systems , 32, 2019. [35] Jiaqi Yao and Julia Kowal. A multi-scale data-driven framework for online state of charge estimation of lithium-ion batteries with a novel public drive cycle dataset. Journal of Energy Storage , 107:114888, 2025. [36] Hao Zhou, Qiaoling He, Yichuan Li, Yangjun Wang, Dongsheng Wang, and Yongliang Xie. Enhanced second-order rc equivalent circuit model with hybrid offline–online parameter identification for accurate soc es-timation in electric vehicles under varying temperature conditions. En-ergies , 17(17):4397, 2024. [37] Ciyou Zhu, Richard H Byrd, Peihuang Lu, and Jorge Nocedal. Al-gorithm 778: L-bfgs-b: Fortran subroutines for large-scale bound-constrained optimization. ACM Transactions on mathematical software (TOMS) , 23(4):550–560, 1997. 45

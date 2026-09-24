@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-24",
+  "date": "2026-09-24",
+  "generated_at": "2026-09-24T22:03:08",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/24/2609.21932v3-joint-remaining-useful-life-prediction-and-capacity-estimation-of-lithium-ion-batteries-using-partial-charging-data",
+      "section": "deep",
+      "title_en": "Joint Remaining Useful Life Prediction and Capacity Estimation of Lithium-Ion Batteries Using Partial-Charging Data",
+      "authors": "Khoa Tran, Ho-Si-Hung Nguyen, Phone Wai Yan Moe, Hung-Cuong Trinh, Thi-Hoang-Giang Tran",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.21932v3",
+      "score": "8.0",
+      "evidence": "基于部分充电数据的锂离子电池RUL和容量联合估计",
+      "tldr": "锂离子电池联合剩余寿命预测与容量估计需同时建模长期退化与近期行为。该文提出基于部分充电数据的跨专家框架，RUL专家捕获30循环历史中的退化趋势，容量专家表征连续10循环的统计特征，并通过特征线性调制融合。在两公共数据集上，RUL均方根误差分别为143.69和161.10循环，容量误差为12.36和7.28 mAh，融合优于单专家。该框架实现最低RUL RMSE，验证了无需完整历史容量的联合预测有效性。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Joint remaining useful life (RUL) prediction and capacity estimation require representations of both gradual degradation and recent battery behavior. This paper presents a cross-expert framework using partial-charging measurements without requiring measured historical full-cycle capacity as an input. The RUL Expert captures long-term degradation from nominal 10-min segments sampled across a 30-cycle history, while the Capacity Expert characterizes recent battery behavior from statistical descriptors of nominal 40-min segments over ten consecutive cycles. Their complementary representations are integrated through feature-wise linear modulation for joint RUL and capacity prediction. A key contribution is a three-stage training strategy that progressively controls frozen and trainable components: supervised representation pretraining, independent expert pretraining, and final fusion training with both experts frozen. This staged optimization preserves expert-specific degradation knowledge while improving the balance between the two prediction tasks, with RUL treated as the primary prognostic objective. On two public battery-aging datasets, the reference configuration achieves mean RUL root-mean-square errors of 143.69 and 161.10 cycles and capacity errors of 12.36 and 7.28 mAh, respectively. On Dataset I, cross-expert fusion reduces both mean errors relative to either standalone expert. The proposed framework achieves the lowest reported RUL RMSE among the compared methods on both datasets while maintaining competitive capacity-estimation accuracy.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/24/2609.27986v1-relative-discharge-stage-rds-classification-a-practical-indicator-of-battery-discharge-progress",
+      "section": "deep",
+      "title_en": "Relative Discharge Stage (RDS) Classification: A Practical Indicator of Battery Discharge Progress",
+      "authors": "Khoa Tran, Tri Le, Hung-Cuong Trinh, Hung Tran-Nam",
+      "date": "2026-09-23",
+      "pdf": "https://arxiv.org/pdf/2609.27986v1",
+      "score": "8.0",
+      "evidence": "结合SOC估计与动态负载条件的放电阶段分类",
+      "tldr": "电池剩余放电时间（RDT）预测因未来负载未知且动态变化而面临很大不确定性，难以精确回归。本文提出相对放电阶段（RDS）分类，用正常、良好、中等、低、需充电五个可解释类别表征剩余放电状态，无需未来电流信息。提出物理信息框架，结合二阶等效电路模型、温度校正、AEKF状态修正与轻量时序卷积网络。在两个公开锂电池数据集上分类准确率超过80%，验证了动态负载与温度条件下的鲁棒性，为电池管理提供实用指标。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Accurate remaining discharge time (RDT) prediction is challenging in real-world battery applications because future load profiles are unknown and highly dynamic. To address the uncertainty of continuous RDT regression, this paper introduces Relative Discharge Stage (RDS), a battery-management indicator that represents the remaining discharge condition using five interpretable classes: Normal, Good, Moderate, Low, and Recharge Required. Unlike state of charge (SOC), which reflects the current charge level, RDS characterizes the remaining discharge process without requiring future-current information during inference. A physics-informed RDS classification framework is proposed, combining SOC estimation with lightweight temporal learning. The SOC-estimation component includes second-order ECM state and terminal-voltage prediction, hysteresis and OCV temperature correction, core-temperature estimation, and AEKF state correction, supported by OCV evaluation, online STC-ECM parameter adaptation, and pretrained neural residual-voltage correction. The measured current, terminal voltage, surface temperature, and estimated SOC are arranged into a sliding observation window and processed by a lightweight temporal convolutional network. Experiments on two public lithium-ion battery datasets demonstrate robust RDS classification, with accuracy exceeding 80% under varying load and thermal conditions.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
