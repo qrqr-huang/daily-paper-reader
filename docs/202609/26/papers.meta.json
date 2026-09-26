@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-26",
+  "date": "2026-09-26",
+  "generated_at": "2026-09-26T22:27:09",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/26/2609.22889v1-distributed-cooperative-control-with-prescribed-performance-of-besss-with-a-unified-discharge-constrain-for-power-allocation-under-dynamic-load",
+      "section": "quick",
+      "title_en": "Distributed Cooperative Control with Prescribed Performance of BESSs with A Unified Discharge Constrain for Power Allocation under Dynamic Load",
+      "authors": "Yalin Zhang, Zhongxin Liucand Fuyong Wang, Zengqiang Chen",
+      "date": "2026-09-19",
+      "pdf": "https://arxiv.org/pdf/2609.22889v1",
+      "score": "6.0",
+      "evidence": "动态负载下电池储能系统分布式SoC均衡估计",
+      "tldr": "电池储能系统（BESS）的SoC平衡与功率分配需实时估计状态，传统方案难以保证性能。本文基于规定性能控制（PPC）与多智能体系统（MASs）设计两个分布式估计器，在动态负载下实时估计功率共享与SoC平衡平均值，实现几乎零误差。动态与稳态性能参数可独立调节，一致性跟踪解耦，增益选择范围更大。通过4个和12个BESS案例验证了有效性、鲁棒性与可扩展性。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Battery energy storage system (BESS) is integrated into the smart grid to enhance scalability, economy, and greenery. And the State-of-Charge (SoC) balance is one of the basic problems of BESSs, which can maximize the utilization of capacity. BESSs with a unified relative variation rate for SoC can be simultaneously filled or empty, while real-time estimation schemes of SoC balance and power sharing states are required in this power allocation scheme. Therefore, the prescribed performance control (PPC) method is applied in this paper to design two distributed estimators based on multi-agent systems (MASs), in order to estimate the power sharing and SoC balance states in real-time under dynamic load driving. In this way, these two average values can ultimately be well estimated with almost zero error performance, and dynamic performance and steady-state performance of the two estimators can be adjusted by different parameters. Similarly, consensus performance and dynamic tracking performance are decoupled. These results provide a broader range for the selection of gains. To verify the effectiveness, robustness and progressiveness of the designed estimators, some cases with a resistance network containing 4 BESSs as load distribution are designed and discussed. Further more, to test scalability, a large-scale system containing 12 BESSs is conducted to the designed scheme.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

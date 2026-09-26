@@ -1,0 +1,56 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-26T22:25:30.557465+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.22889v1",
+      "source": "arxiv",
+      "title": "Distributed Cooperative Control with Prescribed Performance of BESSs with A Unified Discharge Constrain for Power Allocation under Dynamic Load",
+      "abstract": "Battery energy storage system (BESS) is integrated into the smart grid to enhance scalability, economy, and greenery. And the State-of-Charge (SoC) balance is one of the basic problems of BESSs, which can maximize the utilization of capacity. BESSs with a unified relative variation rate for SoC can be simultaneously filled or empty, while real-time estimation schemes of SoC balance and power sharing states are required in this power allocation scheme. Therefore, the prescribed performance control (PPC) method is applied in this paper to design two distributed estimators based on multi-agent systems (MASs), in order to estimate the power sharing and SoC balance states in real-time under dynamic load driving. In this way, these two average values can ultimately be well estimated with almost zero error performance, and dynamic performance and steady-state performance of the two estimators can be adjusted by different parameters. Similarly, consensus performance and dynamic tracking performance are decoupled. These results provide a broader range for the selection of gains. To verify the effectiveness, robustness and progressiveness of the designed estimators, some cases with a resistance network containing 4 BESSs as load distribution are designed and discussed. Further more, to test scalability, a large-scale system containing 12 BESSs is conducted to the designed scheme.",
+      "authors": [
+        "Yalin Zhang",
+        "Zhongxin Liucand Fuyong Wang",
+        "Zengqiang Chen"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-09-19T08:45:22+00:00",
+      "link": "https://arxiv.org/pdf/2609.22889v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "distributed SoC balance estimation for battery energy storage systems under dynamic load",
+      "llm_evidence_cn": "动态负载下电池储能系统分布式SoC均衡估计",
+      "llm_evidence": "动态负载下电池储能系统分布式SoC均衡估计",
+      "canonical_evidence": "动态负载下电池储能系统分布式SoC均衡估计",
+      "llm_tldr_en": "Proposes prescribed performance control based distributed estimators to estimate power sharing and SoC balance states in battery energy storage systems under dynamic load and unified discharge constraints.",
+      "llm_tldr_cn": "电池储能系统在智能电网中面临SoC均衡与功率分配的实时估计问题。本文采用规定性能控制方法，基于多智能体系统设计两个分布式估计器，在统一放电约束下实时估计功率分配与SoC均衡状态。结果表明该方法能使各储能单元同时充满或放空，最大化容量利用率。该工作为电池储能系统的分布式SoC均衡与功率分配提供了实时估计方案。",
+      "llm_tldr": "电池储能系统在智能电网中面临SoC均衡与功率分配的实时估计问题。本文采用规定性能控制方法，基于多智能体系统设计两个分布式估计器，在统一放电约束下实时估计功率分配与SoC均衡状态。结果表明该方法能使各储能单元同时充满或放空，最大化容量利用率。该工作为电池储能系统的分布式SoC均衡与功率分配提供了实时估计方案。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "battery management system state of charge estimation",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

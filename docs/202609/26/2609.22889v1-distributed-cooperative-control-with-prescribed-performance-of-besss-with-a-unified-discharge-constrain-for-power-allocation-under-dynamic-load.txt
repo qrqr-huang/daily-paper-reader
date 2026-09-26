@@ -1,0 +1,555 @@
+Title: Distributed Cooperative Control with Prescribed Performance of BESSs with A Unified Discharge Constrain for Power Allocation under Dynamic Load
+
+URL Source: https://arxiv.org/pdf/2609.22889v1
+
+Published Time: Tue, 22 Sep 2026 00:57:05 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# Distributed Cooperative Control with Prescribed Performance of BESSs with A Unified Discharge Constrain for Power Allocation under Dynamic Load 
+
+## Yalin Zhang 1,2 , Zhongxin Liu 1,2 , Fuyong Wang 1,2* ,Zengqiang Chen 1,2 1* College of Artificial Intelligence, Nankai University, No. 38 Tongyan Road, Tianjin, 300350, Tianjin, China. 
+
+2* Tianjin Key Laboratory of Interventional Brain-Computer Interface and Intelligent Rehabilitation, Nankai University, No. 38 Tongyan Road, Tianjin, 300350, Tianjin, China. *Corresponding author(s). E-mail(s): wangfy@nankai.edu.cn; Contributing authors: zhangyl@mail.nankai.edu.cn; lzhx@nankai.edu.cn; chenzq@nankai.edu.cn; 
+
+Abstract 
+
+Battery energy storage system (BESS) is integrated into the smart grid to enhance scalability, economy, and greenery. And the State-of-Charge (SoC) bal-ance is one of the basic problems of BESSs, which can maximize the utilization of capacity. BESSs with a unified relative variation rate for SoC can be simulta-neously filled or empty, while real-time estimation schemes of SoC balance and power sharing states are required in this power allocation scheme. Therefore, the prescribed performance control (PPC) method is applied in this paper to design two distributed estimators based on multi-agent systems (MASs), in order to esti-mate the power sharing and SoC balance states in real-time under dynamic load driving. In this way, these two average values can ultimately be well estimated with almost zero error performance, and dynamic performance and steady-state performance of the two estimators can be adjusted by different parameters. Sim-ilarly, consensus performance and dynamic tracking performance are decoupled. These results provide a broader range for the selection of gains. To verify the effec-tiveness, robustness and progressiveness of the designed estimators, some cases with a resistance network containing 4 BESSs as load distribution are designed 
+
+1arXiv:2609.22889v1 [eess.SY] 19 Sep 2026 Thermal load Uncontrollable load  
+
+> Electrolytic load AC bus Fig. 1 BESSs in smart grids.
+
+and discussed. Further more, to test scalability, a large-scale system containing 12 BESSs is conducted to the designed scheme.  
+
+> Keywords: Multi-agent systems, distributed dynamic average tracking control, prescribed performance, power allocation, battery energy storage system
+
+# 1 Introduction 
+
+The traditional large thermal power units are gradually being replaced by distributed renewable energy generation, which greatly reduces power generation costs and pro-tects the environment. At the same time, battery energy storage system (BESS) has become an indispensable part of the smart grid to ensure the provision of high-quality uninterrupted power [1–4]. This is mainly because renewable energy generation, as a distributed power source, exhibits intermittency and randomness [2–4]. In addition, BESS can alleviate the power gap between supply and demand, thereby alleviating the electricity shortage in the community [1, 2]. Therefore, BESS, as a backup power source or supplement, is extensively integrated into the smart grid, as shown in Fig. 1, to improve its stability, economy, and greenness [1–3]. However, battery cells in parallel BESSs may waste capacity due to insufficient charging and discharging, which cannot maximize the economic and green efficiency of the power grid. This is due to the State of Charge (SoC) [5–7] imbalance caused by inappropriate power allocation schemes. Therefore, the energy management and power allocation issues of BESS are highly worth studying to achieve SoC balance. At first, in order to achieve SoC balance, scholars designed some centralized or decentralized solutions. Among them, decentralized schemes represented by discharge circuits [8] were designed to consume excess power to ensure that other batteries match the one at the lowest SoC level. This solution resulted in waste of capacity and electricity. And some centralized schemes, such as SoC compensators [9], were designed to effectively achieve SoC balancing. However, centralized methods are often replaced by distributed solutions that have emerged in recent years due to the need for expensive control centers, susceptibility to single point failures, and poor scalability. 2As a typical distributed system, multi-agent systems (MASs) exhibit high effi-ciency, high scalability, and robustness, and are widely used to manage micro-grids/BESSs. Under constant load, some static distributed controllers [10–15] were designed to achieve SoC balance. Therein, some distributed controllers applied for the first-order model based on the ampere hour integration method were designed to directly balance the SoC [11, 15]. Others were designed to be suitable for the second-order integrator model composed of SoC and active power [10, 12–14], in order to achieve SoC balance and power sharing. Based on these two modes, some researchers have developed finite time/fixed time protocols [12, 13], fault tolerance/at-tack resilience protocols [12], etc., in order to improve the dynamic and steady-state performance as well as robustness of the system. In addition, methods such as model free control [16] and sliding mode control [17] were used to improve the static protocol for SoC balance. The application of the above solutions can effectively solve the SoC balance problem under constant load and demonstrate different good performance. However, theoretically speaking, these protocols seem to be ineffective in addressing SoC balance issues under time-varying loads. Recently, some preliminary explorations have been completed in [18–21] to address the SoC balance problem under time-varying loads. BESSs with a unified SoC rela-tive variation rate often achieved simultaneous filling or emptying [18]. This power allocation scheme required real-time estimation of SoC balance and power sharing states, which provided us with vast exploration space and endless inspiration. There-fore, with the help of the distributed control method for MASs, the states of SoC balance and power sharing could be estimated in a distributed manner. An asymptotic distributed estimation scheme was first designed in [18]. Subsequently, an asymptotic scheme with an adjustable steady-state error and a finite time scheme were designed simultaneously in [19]. Furthermore, for the asymptotic scheme with adjustable steady-state error, the parameters of the battery were estimated in [20]. A discrete scheme was designed in [21] to achieve consensus in multiple relative variation rates, thereby achieving SoC balance and power sharing. In [22], a distributed prescribed-time con-sensus scheme was constructed to accelerate convergence. On the basis of [18], some authors have designed a distributed scheme in [23] that can resist DoS attacks. Simi-larly, a distributed scheme to resist random communication failures was developed in [24]. Furthermore, in order to save communication resources, two distributed schemes with event triggered communication mechanisms were developed in [25] and [26], respectively. It is obvious that the asymptotic estimator mentioned above can only adjust steady-state errors [18–20], while finite- [22]/prescribed-time estimators [19] often inevitably exhibit chatting. Therefore, a high-quality estimation scheme that balances dynamic and steady-state performance is urgently needed for BESSs with a unified relative variation rate. Inspired by the above work, for BESSs with unified SoC relative variation rate, in order to design decoupled dynamic and steady-state performance schemes, the con-cept of prescribed performance control (PPC) [27–29] is introduced to improve the asymptotic estimators. Specifically, the main contributions are presented as follows: 31. In the designed scheme, information about the derivative of the load with respect to time is not required. This is different from [19, 22]. 2. The consensus performance and average tracking performance are decoupled due to the application of error modulation technology. In this way, when selecting gains, there is no trade-off between various performances, providing a wider range of choices. 3. Compared to the prescribed-time estimators designed in [22], the scheme adopted exhibits superiority in terms of consensus, average tracking, and steady-state performance. Provide an introduction for the following chapters. Firstly, relevant issues, includ-ing the dynamic of SoC, an unified relative SoC change rate, and control objectives, are described in Section 2. Secondly, some preliminary knowledge, such as algebraic graph theory, PPC method, and dynamical system, is introduced in Section 3. Subse-quently, the constraints of load and SoC, and power sharing and SoC balance states estimators are designed in Section 4. Some cases are designed to validate and test the adopted estimators in Section 5. In the end, a conclusion is drawn in Section 6. 
+
+# 2 Problem Statement 
+
+In this section, the dynamic of the SoC of a battery based on the ampere hour inte-gration method is modified to the active power integration scheme. A discharging rate constraint is introduced to manage batteries to ensure that no battery will exit pre-maturely due to insufficient power. Based on this, the control objective of this article is given. For simplicity, unless necessary, the time variables in all symbols are omitted by default. 
+
+## 2.1 SoC and A Discharge Rate Constraint of A Battery 
+
+For a BESS, the energy storage level of the battery unit is characterized by SoC, and the ampere hour integration method [9, 10, 16, 18, 30, 31], as shown in (1), under different time scales, ˙Ei = − 1TQ i
+
+Ii, (1) is an effective way for calculating SoC by relevant experimental analysis, where Ei
+
+is the SoC of BESS i, Q i is a constant parameter related to the capacity of BESS 
+
+i, T denotes the time scale. Besides, the output power of BESS i is calculated as ˜Pi = V iIi, where V i is the terminal voltage of BESS i. Considering the small change in battery terminal voltage when the SoC is in a large range, define a constant K Ei as KEi = 1QiVi , which is the charge/discharge coefficient and implies that SoC conforming to the dynamic (1) is heterogeneous. And then, the SoC of BESS i for i ∈ { 1, 2, · · · , n}
+
+is subjected to ˙Ei = − KEi
+
+T ˜Pi = − 1T Pi, (2) where Pi = KEi ˜Pi is proportional output power of BESS i [10–15, 17–21]. For simplicity, Pi for i ∈ { 1, 2, · · · , n} is referred to as power in this paper. 4SoC balance           
+
+> estimator
+> Droop
+> control
+> +-,
+> ˆa i EiE
+> Power sharing
+> estimator
+> (4) ,
+> ˆa i PiD,
+> ˆ{}ia j jE,
+> ˆ{}ia j jPFig. 2 Control structure of a BESS under a discharge rate constrain.
+
+SoC balance is one of the key problems in managing parallel BESSs, which ensures that no battery will exit prematurely due to low energy level. In a multi-BESS network, achievement of SoC balance can greatly optimize battery life. Supply and demand balance should be maintained. However, the power of each BESS is often constrained by SoC and is expected to have the same relative SoC change rate [18–21], i.e., 
+
+Pi
+
+Ei
+
+= Pa
+
+Ea
+
+,
+
+where Ea and Pa are the values of the average SoC and the average power of BESS i,and which is rewritten as 
+
+Pi = Pa
+
+Ea
+
+Ei. (3) Here, a theorem is cited to illustrate the impact of a power generation rule as described in (3) on a multi-BESS network. 
+
+Theorem 1. [18–21] For a multi-BESS network containing n BESSs, the simultane-ous depletion of all BESSs can be ensured by (3) . Furthermore, the balance between power supply and demand can be reached if Pa is the average load power. 
+
+Thus, it is necessary to estimate the values of Pa and Ea to allocate power by 
+
+Pi = ˆPa,i 
+
+ˆEa,i 
+
+Ei, (4) where ˆEa,i and ˆPa,i are the real-time estimated values of the average SoC and the average power by BESS i. For a BESS, it is usually determined whether it is in charging mode or discharging mode by defining the numerical sign of its output power. In this paper, a positive output power means it is in discharge mode, while a negative output power means it is in charge mode. The spatial control structures of grid-connected BESSs and isolated BESSs are different. Among them, droop control is suitable for isolated microgrids, while grid-connected microgrids are often controlled by power-quality (PQ) control. Both grid connected and isolated modes require a power reference value when implementing control. Thus, for isolated BESSs, this power allocation scheme is shown in Fig. 2, where each BESS is in discharging mode and droop control is the primary control method. 52.2 Control Objectives 
+
+According to (4), in order to allocate power reasonably so that each BESS can unleash maximum capacity, the average SoC and the average power should be well estimated. The detailed objectives description are organized in Problem 1. 
+
+Problem 1. Consider a multi-BESS network including n BESSs. And the SoC of each BESS is obtained by dynamic (2) , the power can be calculated by (4) . It is intended to design two distributed estimators for each BESS to solve the following problems, 1) The real time power sharing state of each BESS can be well estimated, and the steady-state error can be limited to evolve within a predetermined zone, i.e., 
+
+lim 
+
+> t→+∞
+
+ˆPa,i − Pa ≤ ϵP ,
+
+where i ∈ { 1, 2, · · · , n}, Pa = 1nnP
+
+> i=1
+
+Di, Di is the load that BESS i needs to share, ϵP
+
+is a pre-specified value. 2) The real-time SoC balance state can be well estimated, and the steady-state error can be limited to evolve within a predetermined zone, i.e., 
+
+lim 
+
+> t→+∞
+
+ˆEa,i − Ea ≤ ϵE ,
+
+where Ea = 1nnP
+
+> i=1
+
+Ei, ϵE is a pre-specified value. 
+
+# 3 Preliminaries 
+
+Algebraic graph theory is usually used to explain communication networks such that distributed controllers based on MASs are well designed. The PPC method is applied to regulate the steady-state and dynamic performance of the system. In this section, these two kinds of useful preliminary knowledge for controller design are introduced. In addition, lemmas related to the maximal solution problem of dynamical systems are introduced for stability analysis. 
+
+## 3.1 Graph Theory 
+
+For a multi-BESS network managed by a MAS, agents communicate with each other over a topology G = ( ˜V, E). Therein, V = {vi|i ∈ { 1, 2, · · · , n}} stands for the set embracing n nodes, each of which represents an agent. Meanwhile, E = {(vi, v j )|vi, v j ∈V} is defined as the edge set. If there exists an edge pointing from nodes j to i, it is denoted as ( vi, v j ), and agent j is called as a neighbor of agent i, which means agent i
+
+has access to the information of agent j. Denote Ni = {vj |(vi, v j ) ∈ E} as the neighbor set of agent i.63.2 PPC Method 
+
+The PPC method is implemented to ensure the dynamic and steady-state performance of the system. More specifically, PPC can enable scalar error e(t) to converge to a smaller set of prescribed residuals with a minimum prescribed convergence rate [27, 28]. Once a prescribed performance controller is designed, in this way, the scalar error e(t)strictly evolves within the predetermined region, i.e, 
+
+−ρ(t) < e (t) < ρ (t), ∀t ≥ 0,
+
+where ρ(t), called a performance function, is a function of time and smooth and bounded and required that lim  
+
+> t→+∞
+
+ρ(t) > 0. The commonly used exponential performance function is shown as follows, 
+
+ρ(t) = ( ρ0 − ρ∞)e−λt + ρ∞, (5) where ρ0, ρ∞ and λ are positive constants. Usually, ρ0 is selected as ρ0 > |e(0) |,and ρ∞ is often considered a parameter that characterizes the resolution of measure-ment equipment and is the steady-state error allowed by the system. Besides, λ is the allowable minimum convergence rate of e(t). This indicates that the introduction of performance function ρ(t) constrains the steady-state error of the system and improves its dynamic performance. Define a modulated error ξ(t) = e(t) 
+
+> ρ(t)
+
+, and a strictly increasing, odd and bijective mapping T :( −1, 1) → (−∞ , +∞) with T (0) = 0, shown in below, is employed, 
+
+T (ξ) = 12 ln( 1 + ξ
+
+1 − ξ ), (6) whose Jacobian derivative is found as follows, 
+
+JT (ξ) = dT (ξ)dξ = 11 − ξ2 , (7) such that JT (ξ) > 0. 
+
+Lemma 1. [29] There is an important property on (6) and (7) . That is, there exists a positive constant ¯ϵ such that |T (ξ)| > ¯ϵ, and for any K, F > 0,
+
+−KT (ξ)JT (ξ)ξ + F < 0.
+
+## 3.3 Dynamical systems 
+
+Consider the following initial value problem ˙x = f (t, x ), x (0) = x0 ∈ Ωx, (8) where f : R+ × Ωx → Rn and Ω x ⊂ Rn is an open and nonempty set. Next, it is necessary to give the following definition and conclusions regarding this problem. 7Definition 1. [32] A solution x(t) of (8) is so-called maximal if it cannot be right extended. 
+
+Lemma 2. [32] Consider the initial value problem (8) for x ∈ Ωx. If f (t, x ) is piece-wise continuous and locally integrable on t and locally Lipschitz on x, there exists a maximal solution x(t) ∈ Ωx with ∀t ≥ 0 of (8) .
+
+Lemma 3. [32] Based on Lemma 2, for a finite time interval t ∈ [0 , t max ) with 
+
+tmax < +∞, there must exist a compact subset Ω′ 
+
+> x
+
+⊂ Ωx and a time instant t′ such that x(t′
+
+) /∈ ˆΩ′
+
+> x
+
+.
+
+# 4 Design of Two Distributed Estimators with Prescribed Performance 
+
+In this section, two distributed estimators with prescribed performance are designed to estimate the power sharing and SoC balance states. Firstly, the characteristics of the load and BESS characteristics in the resistor network applicable to the adopted scheme are introduced. Subsequently, a continuous dynamic scheme with prescribed performance is designed, and stability is analyzed. 
+
+## 4.1 Related Descriptions of A Resistive Network 
+
+In this paper, the resistance network adopted here can be either AC or DC. It should be noted that for AC microgrids, the allocation of active power is concerned in this paper. Therefore, Assumption 1 is made for the active load here. 
+
+Assumption 1. Assuming that each bus is equipped with a BESS, then the local load 
+
+Di is schedulable and also continuous, bounded, and has a first derivative. 
+
+Remark 1. Assuming that there exists total load ˜D in a resistive network, BESS i
+
+for i ∈ { 1, 2, · · · , n} shares a certain amount of load Di in steady-state according to certain principles. Specially, a simple method to calculate the load that battery cell i
+
+with i ∈ { 1, 2, · · · , n} should shared proportionally is as follows, 
+
+Di = K Ei ˜Di = 1
+
+Pn 
+
+> j=1 1KEi
+
+˜D. 
+
+Obviously, this method is a centralized calculation in steady-state, which is applied in [18–20]. Hence, Di is continuous, bounded, and has a first derivative. 
+
+## 4.2 Distributed Method to Obtain The SoC Balance State And The Power Sharing State 
+
+Inspired by [33], the distributed SoC balance and load sharing estimators can be designed for each battery unit here, as shown in (9a)-(9d), ˙zPi = −kP 
+
+> r
+
+zPi − kP X
+
+> i∈N i
+
+ρ−1 
+
+> ij
+
+(t)JT ( ˆPa,i − ˆPa,j 
+
+ρij 
+
+)T ( ˆPa,i − ˆPa,j 
+
+ρij (t) ), (9a) 8ˆPa,i = zPi + Di, (9b) ˙zEi = −kE 
+
+> r
+
+zEi − kE X
+
+> j∈N i
+
+ρ−1 
+
+> ij
+
+(t)JT ( ˆEa,i − ˆEa,j 
+
+ρij 
+
+)T ( ˆEa,i − ˆEa,j 
+
+ρij (t) ), (9c) ˆEa,i = zEi + Ei, (9d) where ˆEa,i and ˆPa,i are the estimation of Ea and Pa, zPi and zEi are the designed intermediate states. Here, let initial condition ˆEa,i = Ei, ˆPa,i = Pi, zPi = 0 and zEi = 0 for i ∈ { 1, 2, · · · , n}.In order to facilitate the interpretation of the proof, first define two consensus error vectors, i.e., δE = [ δE 
+
+> 1
+
+, · · · , δ El , · · · , δ E
+
+> m
+
+] and δP = [ δP 
+
+> 1
+
+, · · · , δ Pl , · · · , δ P
+
+> m
+
+], where l and m are the index and the total number of edges of G respectively. Next, define a diagonal matrix R = diag([ ρ1, · · · , ρ m]). After normalizing vector 
+
+δP and δE , they can be obtained that 
+
+ξE = col( δE
+
+> 1
+
+ρ1(t) , · · · , δE
+
+> m
+
+ρm(t) ) = R−1(t)δE ,ξP = col( δP
+
+> 1
+
+ρ1(t) , · · · , δP
+
+> m
+
+(t)
+
+ρm
+
+) = R−1(t)δP .
+
+Applying the (6) and (7), one can get 
+
+T E = col( T (ξE 
+
+> 1
+
+), · · · , T (ξE
+
+> m
+
+)) ,T P = col( T (ξP 
+
+> 1
+
+), · · · , T (ξP
+
+> m
+
+)) ,JET = diag([ JT (ξE 
+
+> 1
+
+), · · · , J T (ξE
+
+> m
+
+)]) ,JPT = diag([ JT (ξP 
+
+> 1
+
+), · · · , J T (ξP
+
+> m
+
+)]) .
+
+Therefore, a theorem and its proof are given as follows, which are on the stability and steady-state performance of the adopted power sharing state estimator scheme. 
+
+Theorem 2. Consider a resistive network containing n BESSs and satisfying Assump-tion 1. Under the estimator (9a) and (9b) and an undirected graph, the average power can be estimated by agent i for all i ∈ { 1, · · · , n} with steady-state error as follows, 
+
+lim  
+
+> t→+∞
+
+| ˆPa,i − Da| ≤ Diam( G)ρ∞
+
+2 , (10) 
+
+where Diam( G) is called the diameter of G.Proof. Dynamics of (9a) and (9b) in a matrix form can be written as ˙ˆPa = ˙D − kr( ˆPa − D) − kB R−1JPT T P , (11) where D = col( D1, · · · , D n), B is a matrix associated with the underlying communi-cation graph G.9By differentiating ξ, one can get ˙ξ = f (t, ξ P ) = R−1(t)( ˙δP − Rξ P )=R−1(t)(B T( ˙D − kr( ˆPa − D) − kB R−1JPT T P ) − R(t)ξP ) (12) where f (t, ξ P ) is piecewise continuous and naturally locally integrable on t, and locally Lipschitz on ξP . Define an open and nonempty set as Ωξ = ( −1, 1) × (−1, 1) · · · × (−1, 1) 
+
+| {z }
+
+> m−times
+
+.
+
+In view of ρ(0) > |e(0) |, ξPl (0) is located in Ω ξ for l ∈ { 1, · · · , m}. Thus, according to Lemma 2, there exists a maximal solution ξP ∈ ΩP .Next, select the following candidate Lyapunov function, 
+
+V = 12 (T P )TT P .
+
+By differentiating V with respect to time, one can obtain that ˙V =( T P )TJPT R−1(t)(B T( ˙D − kr( ˆPa − D) − kB R−1(t)JPT T P ) − ˙P (t)ξδ )= − kr(T P )TJPT R−1(t)B T ˆPa − (T P )TJPT R−1(t) ˙R(t)ξP
+
+− k( T P )TJPT R−1(t)B TBR−1(t)JPT T P + ( T P )TJT R−1(t)B T(k rD + ˙D).
+
+Based on the analysis in Remark 1, one can get (T P )TJT R−1(t)B T(k rD + ˙D) ≤ sup 
+
+> t≥0
+
+(∥krD + ˙D∥)∥(T P )TJPT R−1(t)B T∥,
+
+which is transformed into the following result, according to the Young’s inequality, sup 
+
+> t≥0
+
+(∥krD + ˙D∥)∥(T P )TJPT R−1(t)B T∥≤ sup t≥0(∥krD + ˙D∥)2
+
+4k + k( T P )TJPT R−1(t)B TBR−1(t)JPT T P .
+
+Besides, the performance function (5) has the following property obviously, i.e., 0 < − ˙ρl(t) 
+
+> ρl(t)
+
+< λ . Thus, the result in below is valid, ˙V ≤ − (k r − λ)( T P )TJPT ξP + sup t≥0(∥krD + ˙D∥)2
+
+4k .
+
+Based on Lemma 1 and considering k r > λ , there exists a positive constant ϵ such that ˙V ≤ 0 for all ∥T P ∥ > ¯ϵ. Given this, there is a time point tmax such that 
+
+|Tl(ξP )| ≤ ϵ∗ = max {∥ ξP (0) ∥, ¯ϵ}, ∀l ∈ { 1, · · · , m},
+
+10 within t ∈ [0 , t max ). By taking the inverse of the error transformation function (6), one can obtain 
+
+|ξPl (t)| ≤ ξ∗ = tanh( ϵ∗) < 1,
+
+where tanh( ϵ∗) denotes the hyperbolic tangent function. Next, the proof by contradiction can be used to prove that tmax can be extended to + ∞. For ∀t ∈ [0 , t max ), there exists a nonempty and compact subset of Ω ξ such that ξP (t) ∈ Ω′ 
+
+> ξ
+
+and Ω ′ 
+
+> ξ
+
+⊂ Ωξ , which does not conform to Lemma 3. That is to say, 
+
+|ξPl (t)| < 1, ∀t ≥ 0, l = 1 , · · · , m.
+
+Thus, it can be concluded that |δPl | < ρ l(t). In this way, the steady-state and transient performance of δPl are regulated by the performance function ρl(t). Finally, explain the performance of steady-state error. Define a new variable eP = 
+
+> ¯1T
+> n
+
+( ˆPa − D). Thus, (11) can be derived as ˙eP = −kreP ,
+
+which implies eP converges to 0 with rate k r. Under a connected graph G, the following conclusion holds that consensus error converges to 0 at an exponential rate not less than λ, i.e., lim  
+
+> t→+∞
+
+| ˆPa,i − 1T
+
+n ˆPa| ≤ Diam( G)ρ∞
+
+2 , i = 1 , · · · , n.
+
+Hence, by selecting k r > λ , steady state value of average consensus error is bounded by lim  
+
+> t→+∞
+
+| ˆPa,i − 1T
+
+n D| ≤ Diam( G)ρ∞
+
+2 , i = 1 , · · · , n.
+
+So far, the proof is completed. Based on the results of Theorem 3, a theorem on the SoC balance state estimator is given. 
+
+Theorem 3. Consider a resistive network containing n BESSs, and SoC and power of each BESS is subjected to (2) and (3) respectively. Under the control strategy (9c) and 
+
+(9d) and Theorem 2, the average SoC can be estimated by agent i for all i ∈ { 1, · · · , n}
+
+with steady-state error as follows, 
+
+lim  
+
+> t→+∞
+
+| ˆEa,i − Ea| ≤ Diam( G)ρ∞
+
+2 . (13) Due to the formal similarity between the SoC balance estimator and the power sharing estimator, the proof of Theorem 3 is similar to Theorem 2 and not further elaborated. 
+
+Remark 2. Obviously, (9a) -(9d) are fully distributed, which is because that only the information of neighbors of each agent is utilized to construct the estimators. Further, the average tracking and consensus performance of this scheme, subjected to different parameters, are decoupled. One performance will not deteriorate when adjusting the 
+
+11 Fig. 3 Four BESSs in a resistance network and their communication graph topology. 
+
+other. Specifically, a faster consensus rate is achieved by increasing λ and k, while more accurate consensus can be obtained by decreasing ρ∞. Therefore, there is no compromise between the average tracking and consensus performance when selecting parameters. Besides, from (10) and (13), it can be seen that estimation error can be constrained by ρ∞ under a given communication topology. 
+
+Remark 3. A finite time average state estimation scheme for BESSs is developed in [19], which utilizes the self estimated values and intermediate states communi-cated by neighbors. More advanced in this paper, the data packets transmitted over the communication network only contain the average estimated states, thereby reducing communication overhead. Besides, the harmful phenomenon of chattering can avoid under our scheme. As well, prior knowledge of the derivative of the load is not required. 
+
+# 5 Some Simulation Cases 
+
+In this section, several cases are designed at the hourly scale, i.e., T = 1, to verify the proposed estimators. A resistance network containing 4 BESSs is selected as the load distribution exhibited in Fig. 3, where the communication topology of agents governing BESSs is illustrated. Next, four cases will be studied to illustrate the effectiveness, progressiveness, scalability and robustness of the designed estimators. The effectiveness of the two designed estimators are verified in Cases 1. Compared with [22], the progressiveness of the two designed estimators is illustrated in Case 2. The robustness of the two designed estimators are explained in Case 3. The simula-tion is initially executed according to Case 1, followed by simulating failure of certain node at a certain moment to verify robustness. The scalability of the two designed estimators is explained in Case 4. 8 BESSs are newly added to be simulated. 
+
+## 5.1 Case 1. The Test of Effectiveness 
+
+Driven by a load with bounded first derivative, a simulation is executed under the designed estimators with continuous dynamics (9a)-(9d). The simulation results are shown in Figs. 4-7. From Figs. 4 and 5, it can be concluded that power sharing state and SoC bal-ance state can be well estimated by each agent with almost zero error. Meanwhile, 12 Fig. 4 Evolution of SoC balance estimation and SoC of each BESS in Case 1. 
+
+Fig. 5 Evolution of power sharing estimation and power of each BESS in Case 1. 
+
+13 Fig. 6 Evolution of consensus error in Case 1. 0 2 4 6 8 10 Time (h) 024685.2 5.4 1.6 1.8  
+
+> Fig. 7 Power demand-supply balance in Case 1.
+
+SoC of each battery almost simultaneously decreases to the threshold and remains unchanged thereafter. This indicates that no BESS will exit early due to insufficient power. In addition, consensus errors, as shown in Fig. 6, are limited to evolve within predetermined regions, and supply and demand balance, as shown in Fig. 7, is well ensured. 
+
+## 5.2 Case 2. Comparison with other methods 
+
+To illustrate the progressiveness, we will compare the effect of the estimators designed in [22]. The simulation results of this estimator under the same gains as those in Case 1 are shown in Figs. 8-10. 14 Fig. 8 Evolution of SoC balance estimation and SoC of each BESS in Case 2. 
+
+Comparing the results in Case 1 and Case 2, it can be seen that the estimator designed in this paper can more accurately estimate the power sharing state and SoC balance state in real-time. From the simulation results, it can be seen that under the driving force of the scheme designed in [22], the estimated values of SoC balance state and average power exhibit varying degrees of jitter, which leads to jitter in the output power of each battery. In addition, it can be clearly compared from the local magnified images in the simulation results that the scheme designed in this article has high control accuracy. Furthermore, according to the results of [22], its steady-state performance is affected by gains. However, according to Theorems 2 and 3 and Remark 2 in this paper, the steady-state performance of each designed estimator is preset and decoupled from the gain. 
+
+## 5.3 Case 3. The Test of Robustness 
+
+To test robustness, the simulation under the communication failure of the agent man-aging BESS 3 at t = 5 h is conducted. In this case, resimulate based on Case 1 the estimators adopted in this paper. The simulation results are shown in Figs. 11 and 12. From the simulation results, it can be seen that although the agent managing BESS 3 fails, resulting in it no longer providing power to the resistive network, it has no effect on the estimation of the power sharing state and SoC balance state by other agents. That is to say, while the gain remains unchanged and the estimator does not need to be initialized, the estimation of the power sharing state and SoC balance state 15 Fig. 9 Evolution of power sharing estimation and power of each BESS in Case 2. 0 2 4 6 8 10 Time (h) 024685.2 5.4 1.6 1.8  
+
+> Fig. 10 Power demand-supply balance in Case 2.
+
+by each agent is still effective. In this case, BESSs that are still online will eventually be offline at the same time. That is, the designed estimators robust to agent failure. 
+
+## 5.4 Case 4. Wide Area Microgrid Testing: Scalability 
+
+To meet the needs of the wide area microgrid, two sets of BESSs with the same parameters will be added to Case 1, so that the entire resistance network will have 12 BESSs. Correspondingly, the number of agents has also increased to 12. Under the same parameters as Case 1, the simulation results are shown in Figs. 13 and 14. From the simulation results, it can be seen that under the driving force of the designed scheme, the estimation of the SoC balance state and average power of this 16 0 2 4 6 8 10 00.5 10 2 4 6 8 10 Time (h) 00.5 1Fig. 11 Evolution of SoC balance estimation and SoC of each BESS in Case 3. 0 2 4 6 8 10 0510 15 20 BESS1 BESS2 BESS3 BESS4 Da
+
+0 2 4 6 8 10 Time (h) 0510 15 20 
+
+Fig. 12 Evolution of power sharing estimation and power of each BESS in Case 3. 
+
+17 Fig. 13 Evolution of SoC balance estimation and SoC of each BESS in Case 4. 
+
+wide area system can be well completed, and the consensus error can be limited within the preset area. SoCs almost decrease to 0 at the same time, after which the output power of BESSs will be 0. The balance of power supply and demand can be ensured with sufficient energy storage. Thus, it can be seen that the designed estimators can meet the needs of the wide area microgrid. This is entirely due to the scalability of distributed algorithms for MASs. 
+
+# 6 Conclusions 
+
+In this paper, two distributed estimators with prescribed dynamic and steady-state performance for BESSs with an unified relative discharge rate are designed to ensure that each agent managing BESS can obtain SoC balance and load sharing states. In this way, the consensus and tracking performance of the two estimators are decoupled, thus being constrained by different parameters. However, the continuous communi-cation mechanism used in this article will increase the communication burden. In addition, various forms of cyber attacks that occur from time to time also pose sig-nificant risks to communication security. Therefore, how to achieve a solution with preset performance, intermittent communication, and resilience should be a promising research issue. NOMENCLATURE 
+
+BESS battery energy storage system SoC the State-of-Charge PPC prescribed performance control MAS multi-agent system power proportional output power 18 Fig. 14 Evolution of power sharing estimation and power of each BESS in Case 4. 
+
+Fig. 15 Evolution of consensus error in Case 4. 
+
+19 0 2 4 6 8 10 Time (h) 02468Fig. 16 Power demand-supply balance in Case 4. 
+
+Ei, Ii SoC and output current Qi, V i the capacity and terminal voltage ˜Pi, Pi output power and its proportional value KEi a constant defined as K Ei = 1QiVi
+
+Di, Pa, Ea the proportional load, the average power and SoC ˆPa,i , ˆEa,i the estimated average power and SoC 
+
+ϵE , ϵP the pre-specified values 
+
+G, V, E communication graph, vertex set and edge set 
+
+A, Ni the adjacency matrix of G and the neighbor set 
+
+ρij , ρl, R the performance function and its matrix of power sharing error 
+
+ρ0, ρ∞, λ the initial, final values and decay rate of ρ(t)
+
+ξ(t), ξP , ξE a modulated error and its vector forms 
+
+T (ξ), T P , T E a bijective mapping and the vector forms 
+
+JT , JPT , JET the Jacobian derivative of T (ξ), T P , T E
+
+¯ϵ, K, F some constant defined in Lemma 1 
+
+ϵ∗, ξ∗ some constant defined in the proof a1, a 2 maximum and minimum allowed SoC values 
+
+zPi , zEi the intermediate states of the two estimators 
+
+δEl , δPl consensus errors for estimation 
+
+δE , δP consensus error vectors for estimation Ωξ , Ω ′ 
+
+> ξ
+
+an open and nonempty set and its subset 
+
+V , ˙V a Lyapunov function and its derivative 
+
+eP a tracking error vector m, n number of communication links and of agents 
+
+l, i the index of communication links and agents kP , k P 
+
+> r
+
+the gains of the power sharing state estimator kE , k E 
+
+> r
+
+the gains of the SoC balance state estimator 
+
+Data availability statement. Data sharing is not applicable to this article as no new data were created or analyzed in this study. 20 References 
+
+[1] Hossain Lipu, M.S., Ansari, S., Miah, M.S., Hasan, K., Meraj, S.T., Faisal, M., Jamal, T., Ali, S.H.M., Hussain, A., Muttaqi, K.M., Hannan, M.A.: A review of controllers and optimizations based scheduling operation for battery energy storage system towards decarbonization in microgrid: Challenges and future direc-tions. Journal of Cleaner Production 360 , 132188 (2022) https://doi.org/10.1016/ j.jclepro.2022.132188 [2] Wang, W., Yuan, B., Sun, Q., Wennersten, R.: Application of energy storage in integrated energy systems - a solution to fluctuation and uncertainty of renewable energy. Journal of Energy Storage 52 , 104812 (2022) https://doi.org/10.1016/j. est.2022.104812 [3] Solyali, D., Safaei, B., Zargar, O., Aytac, G.: A comprehensive state-of-the-art review of electrochemical battery storage systems for power grids. International Journal of Energy Research 46 (13), 17786–17812 (2022) https://doi.org/10.1002/ er.8451 [4] Ghanjati, C., Tnani, S.: Optimal sizing and energy management of a stand-alone photovoltaic/pumped storage hydropower/battery hybrid system using genetic algorithm for reducing cost and increasing reliability. Energy & Environment, 0958305–221110529 (2022) https://doi.org/10.1177/0958305X221110529 [5] Zeng, Y., Zhang, Q., Liu, Y., Zhuang, X., Guo, H.: Hierarchical cooperative control strategy for battery storage system in islanded dc microgrid. IEEE Trans-actions on Power Systems 37 (5), 4028–4039 (2022) https://doi.org/10.1109/ TPWRS.2021.3131591 [6] Wang, B., Wang, Y., Xu, Y., Zhang, X., Gooi, H.B., Ukil, A., Tan, X.: Consensus-based control of hybrid energy storage system with a cascaded multiport converter in dc microgrids. IEEE Transactions on Sustainable Energy 11 (4), 2356–2366 (2020) https://doi.org/10.1109/TSTE.2019.2956054 [7] Litjens, G.B.M.A., Worrell, E., Sark, W.G.J.H.M.: Economic benefits of combin-ing self-consumption enhancement with frequency restoration reserves provision by photovoltaic-battery systems. Applied Energy 223 , 172–187 (2018) https: //doi.org/10.1016/j.apenergy.2018.04.018 [8] Baveja, R., Bhattacharya, J., Panchal, S., Fraser, R., Fowler, M.: Predicting temperature distribution of passively balanced battery module under realis-tic driving conditions through coupled equivalent circuit method and lumped heat dissipation method. Journal of Energy Storage 70 , 107967 (2023) https: //doi.org/10.1016/j.est.2023.107967 [9] Cao, Y., Abu Qahouq, J.A.: Hierarchical soc balancing controller for battery 21 energy storage system. IEEE Transactions on Industrial Electronics 68 (10), 9386– 9397 (2021) https://doi.org/10.1109/TIE.2020.3021608 [10] Cai, H., Hu, G.: Distributed control scheme for package-level state-of-charge balancing of grid-connected battery energy storage system. IEEE Transactions on Industrial Informatics 12 (5), 1919–1929 (2016) https://doi.org/10.1109/TII. 2016.2601904 [11] Khazaei, J., Nguyen, D.H.: Multi-agent consensus design for heterogeneous energy storage devices with droop control in smart grids. IEEE Transactions on Smart Grid 10 (2), 1395–1404 (2019) https://doi.org/10.1109/TSG.2017.2765241 [12] Ding, L., Han, Q.-L., Ning, B., Yue, D.: Distributed resilient finite-time secondary control for heterogeneous battery energy storage systems under denial-of-service attacks. IEEE Transactions on Industrial Informatics 16 (7), 4909–4919 (2020) https://doi.org/10.1109/TII.2019.2955739 [13] Hu, J., Lanzon, A.: Distributed finite-time consensus control for heterogeneous battery energy storage systems in droop-controlled microgrids. IEEE Transac-tions on Smart Grid 10 (5), 4751–4761 (2019) https://doi.org/10.1109/TSG.2018. 2868112 [14] Nguyen, D.H., Khazaei, J.: Unified distributed control of battery storage with various primary control in power systems. IEEE Transactions on Sustainable Energy 12 (4), 2332–2341 (2021) https://doi.org/10.1109/TSTE.2021.3091976 [15] Zhang, Y., Song, Y., Fei, S.: A distributed step-by-step finite-time consensus design for heterogeneous battery energy storage devices with droop control. CSEE Journal of Power and Energy Systems 9(5), 1893–1904 (2023) https://doi.org/ 10.17775/CSEEJPES.2020.00030 [16] Hong, Y., Xu, D., Yang, W., Jiang, B., Yan, X.-G.: A novel multi-agent model-free control for state-of-charge balancing between distributed battery energy storage systems. IEEE Transactions on Emerging Topics in Computational Intelligence 
+
+5(4), 679–688 (2021) https://doi.org/10.1109/TETCI.2020.2978434 [17] Zhang, R., Hredzak, B.: Nonlinear sliding mode and distributed control of battery energy storage and photovoltaic systems in ac microgrids with communication delays. IEEE Transactions on Industrial Informatics 15 (9), 5149–5160 (2019) https://doi.org/10.1109/TII.2019.2896032 [18] Xing, L., Mishra, Y., Tian, Y.-C., Ledwich, G., Zhou, C., Du, W., Qian, F.: Distributed state-of-charge balance control with event-triggered signal trans-missions for multiple energy storage systems in smart grid. IEEE Transactions on Systems, Man, and Cybernetics: Systems 49 (8), 1601–1611 (2019) https: //doi.org/10.1109/TSMC.2019.2916152 22 [19] Meng, T., Lin, Z., Shamash, Y.A.: Distributed cooperative control of battery energy storage systems in dc microgrids. IEEE/CAA Journal of Automatica Sinica 8(3), 606–616 (2021) https://doi.org/10.1109/JAS.2021.1003874 [20] Meng, T., Lin, Z., Wan, Y., Shamash, Y.A.: State-of-charge balancing for battery energy storage systems in dc microgrids by distributed adaptive power distribu-tion. IEEE Control Systems Letters 6, 512–517 (2022) https://doi.org/10.1109/ LCSYS.2021.3082103 [21] Wu, H., Chai, L., Tian, Y.-C.: Distributed multirate control of battery energy storage systems for power allocation. IEEE Transactions on Industrial Informatics 
+
+18 (12), 8745–8754 (2022) https://doi.org/10.1109/TII.2022.3153055 [22] Yang, W., Liang, S.-M., Wang, Y.-W., Liu, Z.-W.: Prespecified-time observer-based distributed control of battery energy storage systems. IEEE Transactions on Circuits and Systems II: Express Briefs 70 (3), 1089–1093 (2023) https://doi. org/10.1109/TCSII.2022.3216100 [23] Lu, K., Tian, E., Wang, L.: Distributed secure balancing control for battery energy storage systems subject to random denial-of-service attacks. International Journal of Robust and Nonlinear Control 33 (8), 4636–4653 (2023) https://doi.org/10. 1002/rnc.6633 [24] Zhao, J.-W., Zhang, H.-L., Wang, C.: Distributed state-of-charge and power balance estimation for aggregated battery energy storage systems with EV aggregators. Energy 305 , 132193 (2024) https://doi.org/10.1016/j.energy.2024. 132193 [25] Qian, Y., Meng, T., Lin, Z., Wan, Y., Shamash, Y.A.: Distributed event-triggered algorithms for the management of networked battery systems. International Jour-nal of Robust and Nonlinear Control, 1–16 (2023) https://doi.org/10.1002/rnc. 6828 [26] Xing, L., Xu, Q., Wen, C., Tian, Y.-C., Mishra, Y., Ledwich, G., Song, Y.: Robust event-triggered dynamic average consensus against communication link failures with application to battery control. IEEE Transactions on Control of Network Systems 7(3), 1559–1570 (2020) https://doi.org/10.1109/TCNS.2020.2986515 [27] Bechlioulis, C.P., Rovithakis, G.A.: Robust adaptive control of feedback lineariz-able mimo nonlinear systems with prescribed performance. IEEE Transactions on Automatic Control 53 (9), 2090–2099 (2008) https://doi.org/10.1109/TAC.2008. 929402 [28] Bechlioulis, C.P., Rovithakis, G.A.: Adaptive control with guaranteed transient and steady state tracking error bounds for strict feedback systems. Automatica 
+
+45 (2), 532–538 (2009) https://doi.org/10.1016/j.automatica.2008.08.012 23 [29] Bechlioulis, C.P., Rovithakis, G.A.: Prescribed performance adaptive control for multi-input multi-output affine in the control nonlinear systems. IEEE Trans-actions on Automatic Control 55 (5), 1220–1226 (2010) https://doi.org/10.1109/ TAC.2010.2042508 [30] Chen, J., Zhang, Y., Wu, J., Cheng, W., Zhu, Q.: Soc estimation for lithium-ion battery using the lstm-rnn with extended input and constrained output. Energy 
+
+262 , 125375 (2023) https://doi.org/10.1016/j.energy.2022.125375 [31] Ren, L., Zhu, G., Wang, J.V., Luo, B., Kang, J.: Comparison of robustness of different state of charge estimation algorithms. Journal of Power Sources 478 ,228767 (2020) https://doi.org/10.1016/j.jpowsour.2020.228767 [32] Sontag, E.D.: Mathematical Control Theory. Springer, New York, NY (1998). https://doi.org/10.1007/978-1-4612-0577-7 [33] Stamouli, C.J., Bechlioulis, C.P., Kyriakopoulos, K.J.: Robust dynamic average consensus with prescribed transient and steady state performance. Automatica 
+
+144 , 110503 (2022) https://doi.org/10.1016/j.automatica.2022.110503 24
