@@ -1,0 +1,96 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-27T22:08:19.336902+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 1,
+    "deep_cap": 7,
+    "deep_selected": 1,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [
+    {
+      "id": "2609.28121v1",
+      "source": "arxiv",
+      "title": "An efficient 0D-space conservative and positivity preserving battery model",
+      "abstract": "Embedded software aims to provide the main characteristics of a cell in real time to manage and optimize battery usage. A complete multidimensional model is not tractable with the low computational resources available in-situ. A class of 0D-in-space models is derived from the P2D Doyle-Fuller-Newman system, with additional assumptions about the functions' shape in space, and strongly reduces the complexity while preserving the main characteristics over time. We propose a conservative, positivity-preserving model built from the P2D system based on the statement that the Butler-Volmer source term is constant in each subdomain (anode, separator, cathode). We develop a mathematically rigorous construction that provides the simplified model and design a scheme to solve the system. We highlight that the model guaranties the conservation property together with the positivity of the concentrations. In particular, the diffusion-limited current density that represents the maximum current that can be used while still preserving the positivity of the cation concentration is obtained explicitly.",
+      "authors": [
+        "S. Clain",
+        "M. C. Lucas",
+        "M. T. Malheiro",
+        "C. M. Costa"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA"
+      ],
+      "published": "2026-09-23T13:49:10+00:00",
+      "link": "https://arxiv.org/pdf/2609.28121v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "0D-space battery model derived from P2D for real-time embedded battery management",
+      "llm_evidence_cn": "由P2D导出的0D空间电池模型，用于实时嵌入式电池管理",
+      "llm_evidence": "由P2D导出的0D空间电池模型，用于实时嵌入式电池管理",
+      "canonical_evidence": "由P2D导出的0D空间电池模型，用于实时嵌入式电池管理",
+      "llm_tldr_en": "The paper addresses the computational challenge of using multidimensional P2D models for real-time embedded battery management. It proposes a conservative, positivity-preserving 0D-space battery model based on the assumption of a constant Butler-Volmer source term in each subdomain. The model strongly reduces complexity while preserving main cell characteristics over time, enabling real-time battery usage optimization.",
+      "llm_tldr_cn": "该文针对多维P2D模型计算量大、无法在嵌入式系统实时运行的问题，提出了一种保守且保持正性的0D空间电池模型。该模型基于Butler-Volmer源项在各子域恒定的假设，从P2D系统严格导出，显著降低了计算复杂度，同时保持了电池的主要动态特性。该简化模型适用于实时电池管理系统，可在嵌入式软件中优化电池使用。",
+      "llm_tldr": "该文针对多维P2D模型计算量大、无法在嵌入式系统实时运行的问题，提出了一种保守且保持正性的0D空间电池模型。该模型基于Butler-Volmer源项在各子域恒定的假设，从P2D系统严格导出，显著降低了计算复杂度，同时保持了电池的主要动态特性。该简化模型适用于实时电池管理系统，可在嵌入式软件中优化电池使用。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "battery management system state of charge estimation",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.27506v1",
+      "source": "arxiv",
+      "title": "Conformalized Kalman Filters for State Estimation with Trustworthy Confidence Regions",
+      "abstract": "Kalman-type filters are widely used for tracking dynamic systems, yet the confidence regions commonly derived from their estimated covariances can become unreliable under nonlinearities, non-Gaussian disturbances, and model mismatch. In this work, we develop a conformal prediction (CP) framework for equipping Kalman-type filters with statistically reliable confidence regions. Unlike CP applied to black-box estimators, our approach exploits the recursively estimated first- and second-order moments of the state posterior, which capture the time-varying uncertainty induced by the underlying dynamics. Based on these statistical features, we propose three complementary constructions. The first conformally calibrates Gaussian confidence regions induced by the filter moments. The second employs quantile regression to map the estimated moments into the boundaries of adaptive convex regions, which are subsequently calibrated. The third learns a Gaussian-mixture representation of the posterior and conformalizes the resulting density-based regions, enabling the characterization of multimodal and non-convex uncertainty sets. We establish finite- sample coverage guarantees for both sample-wise confidence, which controls miscoverage at individual time instances, and trajectory- wise confidence, which jointly covers the state sequence over a prescribed horizon. Numerical experiments across diverse linear and nonlinear dynamic systems demonstrate that the proposed methods attain the prescribed coverage while producing tight and informative confidence regions, and highlight the relative merits of the three constructions under different posterior characteristics.",
+      "authors": [
+        "Olga Weisman",
+        "Nir Shlezinger",
+        "Bracha Laufer-Goldshtein"
+      ],
+      "primary_category": "eess.SP",
+      "categories": [
+        "eess.SP"
+      ],
+      "published": "2026-09-23T08:06:07+00:00",
+      "link": "https://arxiv.org/pdf/2609.27506v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Kalman filters for state estimation with conformal confidence regions",
+      "llm_evidence_cn": "使用共形置信区域的卡尔曼滤波器状态估计",
+      "llm_evidence": "使用共形置信区域的卡尔曼滤波器状态估计",
+      "canonical_evidence": "使用共形置信区域的卡尔曼滤波器状态估计",
+      "llm_tldr_en": "Equips Kalman-type filters with statistically reliable confidence regions using conformal prediction, exploiting recursive posterior moments.",
+      "llm_tldr_cn": "针对卡尔曼滤波器在非线性、非高斯和模型失配下置信区域不可靠的问题，提出一种共形预测框架。该方法利用状态后验的递归一阶和二阶矩构造统计可靠的置信区域，提供三种互补构造。实验表明能提供可信的不确定性量化，可用于需要可靠置信度的状态估计任务。",
+      "llm_tldr": "针对卡尔曼滤波器在非线性、非高斯和模型失配下置信区域不可靠的问题，提出一种共形预测框架。该方法利用状态后验的递归一阶和二阶矩构造统计可靠的置信区域，提供三种互补构造。实验表明能提供可信的不确定性量化，可用于需要可靠置信度的状态估计任务。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

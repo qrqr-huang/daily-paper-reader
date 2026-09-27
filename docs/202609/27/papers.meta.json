@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-27",
+  "date": "2026-09-27",
+  "generated_at": "2026-09-27T22:12:08",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/27/2609.28121v1-an-efficient-0d-space-conservative-and-positivity-preserving-battery-model",
+      "section": "deep",
+      "title_en": "An efficient 0D-space conservative and positivity preserving battery model",
+      "authors": "S. Clain, M. C. Lucas, M. T. Malheiro, C. M. Costa",
+      "date": "2026-09-23",
+      "pdf": "https://arxiv.org/pdf/2609.28121v1",
+      "score": "8.0",
+      "evidence": "由P2D导出的0D空间电池模型，用于实时嵌入式电池管理",
+      "tldr": "完整P2D多维电池模型计算量大，难以在嵌入式系统的低计算资源下实时运行。本文从P2D系统出发，推导出0D空间简化模型，核心假设为Butler-Volmer源项在阳极、隔膜、阴极各子域内为常数。模型经数学严谨构造，保证了浓度守恒性与正性，并显式给出了扩散限制电流密度的表达式。该工作为嵌入式电池管理提供了高效、可靠且可证明性质的实时仿真方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Embedded software aims to provide the main characteristics of a cell in real time to manage and optimize battery usage. A complete multidimensional model is not tractable with the low computational resources available in-situ. A class of 0D-in-space models is derived from the P2D Doyle-Fuller-Newman system, with additional assumptions about the functions' shape in space, and strongly reduces the complexity while preserving the main characteristics over time. We propose a conservative, positivity-preserving model built from the P2D system based on the statement that the Butler-Volmer source term is constant in each subdomain (anode, separator, cathode). We develop a mathematically rigorous construction that provides the simplified model and design a scheme to solve the system. We highlight that the model guaranties the conservation property together with the positivity of the concentrations. In particular, the diffusion-limited current density that represents the maximum current that can be used while still preserving the positivity of the cation concentration is obtained explicitly.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/27/2609.27506v1-conformalized-kalman-filters-for-state-estimation-with-trustworthy-confidence-regions",
+      "section": "quick",
+      "title_en": "Conformalized Kalman Filters for State Estimation with Trustworthy Confidence Regions",
+      "authors": "Olga Weisman, Nir Shlezinger, Bracha Laufer-Goldshtein",
+      "date": "2026-09-23",
+      "pdf": "https://arxiv.org/pdf/2609.27506v1",
+      "score": "6.0",
+      "evidence": "使用共形置信区域的卡尔曼滤波器状态估计",
+      "tldr": "卡尔曼型滤波器估计的置信区域在非线性、非高斯扰动和模型失配下常不可靠。本文提出共形预测框架，利用递归后验一阶和二阶矩，构造三种校准方法：高斯置信域校准、分位数回归凸区域、高斯混合密度区域共形化。该方法提供有限样本的逐样本和轨迹级覆盖保证。实验在多种动态系统上达到规定覆盖率且置信区域紧致，增强了状态估计的可信度。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Kalman-type filters are widely used for tracking dynamic systems, yet the confidence regions commonly derived from their estimated covariances can become unreliable under nonlinearities, non-Gaussian disturbances, and model mismatch. In this work, we develop a conformal prediction (CP) framework for equipping Kalman-type filters with statistically reliable confidence regions. Unlike CP applied to black-box estimators, our approach exploits the recursively estimated first- and second-order moments of the state posterior, which capture the time-varying uncertainty induced by the underlying dynamics. Based on these statistical features, we propose three complementary constructions. The first conformally calibrates Gaussian confidence regions induced by the filter moments. The second employs quantile regression to map the estimated moments into the boundaries of adaptive convex regions, which are subsequently calibrated. The third learns a Gaussian-mixture representation of the posterior and conformalizes the resulting density-based regions, enabling the characterization of multimodal and non-convex uncertainty sets. We establish finite- sample coverage guarantees for both sample-wise confidence, which controls miscoverage at individual time instances, and trajectory- wise confidence, which jointly covers the state sequence over a prescribed horizon. Numerical experiments across diverse linear and nonlinear dynamic systems demonstrate that the proposed methods attain the prescribed coverage while producing tight and informative confidence regions, and highlight the relative merits of the three constructions under different posterior characteristics.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

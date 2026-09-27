@@ -1,0 +1,1105 @@
+Title: Conformalized Kalman Filters for State Estimation with Trustworthy Confidence Regions
+
+URL Source: https://arxiv.org/pdf/2609.27506v1
+
+Published Time: Thu, 24 Sep 2026 00:44:28 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+> 1
+
+# Conformalized Kalman Filters for State Estimation with Trustworthy Confidence Regions 
+
+Olga Weisman, Nir Shlezinger, and Bracha Laufer-Goldshtein 
+
+Abstract —Kalman-type filters are widely used for tracking dynamic systems, yet the confidence regions commonly derived from their estimated covariances can become unreliable under nonlinearities, non-Gaussian disturbances, and model mismatch. In this work, we develop a conformal prediction (CP) framework for equipping Kalman-type filters with statistically reliable confidence regions. Unlike CP applied to black-box estimators, our approach exploits the recursively estimated first- and second-order moments of the state posterior, which capture the time-varying uncertainty induced by the underlying dynamics. Based on these statistical features, we propose three complementary constructions. The first conformally calibrates Gaussian confidence regions induced by the filter moments. The second employs quantile regression to map the estimated moments into the boundaries of adaptive convex regions, which are subsequently calibrated. The third learns a Gaussian-mixture representation of the posterior and conformalizes the resulting density-based regions, enabling the characterization of multimodal and non-convex uncertainty sets. We establish finite-sample coverage guarantees for both sample-wise confidence, which controls miscoverage at individual time instances, and trajectory-wise confidence, which jointly covers the state sequence over a prescribed horizon. Numerical experiments across diverse linear and nonlinear dynamic systems demonstrate that the proposed methods attain the prescribed coverage while producing tight and informative confidence regions, and highlight the relative merits of the three constructions under different posterior characteristics. 
+
+I. I NTRODUCTION 
+
+The Kalman filter (KF) and its variants constitute one of the most widely used families of algorithms for tracking dynamic systems [2]. These methods are based on a state space (SS) representation of the underlying dynamics [3]. For linear Gaussian SS models, the classical KF yields the minimum mean squared error (MSE) estimate [4], while extensions such as the extended KF (EKF) [5] and unscented KF (UKF) [6] enable its application to nonlinear settings. In many applications, however, accurate state tracking alone is insufficient. The estimated state is often used by downstream mechanisms for tasks such as detection, control, planning, and decision-making, whose reliability depends not only on the estimated value but also on the uncertainty associated with it. It is therefore important to accompany the state estimate with trustworthy confidence regions ,which characterize the range of plausible state values [7], [8]. 
+
+Parts of this work were presented at the IEEE International Conference on Acoustics, Speech, and Signal Processing (ICASSP) 2026 as the paper [1]. O. Weisman and N. Shlezinger are with the ECE School, Ben-Gurion University of the Negev, Israel (e-mail: olya.weisman@gmail.com; nirshl@bgu.ac.il). B. Laufer-Goldshtein is with the Department of EE, Tel-Aviv University, Israel (email: blaufer@tauex.tau.ac.il). This work was supported by the Israel Science Foundation (ISF) under grant no. 3314/25, by the European Research Council (ERC) under the ERC starting grant nr. 101163973 (FLAIR), and by the Israeli Ministry of Science and Technology. 
+
+Kalman-type algorithms naturally provide a measure of uncer-tainty as they recursively track the first- and second-order mo-ments of the state. Accordingly, confidence regions are commonly constructed from the estimated state covariance under a Gaussian approximation of the posterior distribution [9], [10]. This con-struction is statistically justified for linear Gaussian SS models, which underlie the classical derivation of the KF [4]. Outside this ideal setting, the propagated covariance may not faithfully characterize the estimation error distribution. Nonlinearities, non-Gaussian disturbances, and mismatch between the assumed and actual dynamics may all cause the resulting confidence regions to be miscalibrated, even when the corresponding point estimates re-main accurate [11]. Consequently, conventional Gaussian regions may be either overconfident, failing to attain their prescribed coverage, or excessively conservative and thus uninformative. In recent years, conformal prediction (CP) has emerged as a statistical framework for constructing prediction intervals in a data-driven manner with rigorous coverage guarantees [12]–[14]. The central principle of split CP is to use a separate calibration set to empirically characterize the errors of a given predictive model and onstruct prediction sets around its outputs so that the resulting prediction sets attain a prescribed coverage level. This yields finite-sample, distribution-free guarantees under exchangeability, without requiring an explicit probabilistic model for the prediction error [15]–[17]. Such guarantees make CP particularly appealing when conventional model-based uncertainty estimates may be misspecified. Much of the CP literature is developed for standard classification and scalar regression machine learning (ML) problems, while state estimation generally involves a continuous-valued vector state. Extending CP to multivariate regression requires characterizing joint prediction regions rather than scalar intervals and is therefore considerably more challenging [18]– [26]. Existing approaches construct such regions through, e.g., learned directional quantiles [19] or learned representations of the conditional output distribution [26]. While these methods enable multi-dimensional confidence-region geometries, they typically treat the underlying predictor as a generic regression model, and do not explicitly exploit the structured uncertainty information available in model-based state estimators. A second relevant body of work addresses CP for sequential and non-stationary data [27]–[32]. Online conformal methods adapt their prediction sets as the data distribution evolves, typically by updating the conformal threshold according to the observed coverage of previous predictions. This mechanism is suited to settings in which the target associated with each past prediction is subsequently revealed, but is generally incompatible with state tracking, where the latent state remains unobserved arXiv:2609.27506v1 [eess.SP] 23 Sep 2026 2
+
+after an estimate is produced. Related conformal methodologies have also been considered for trajectory prediction, safe planning, and sequential decision systems [33]–[36]. These works demonstrate how temporal errors can be calibrated, including through aggregation over an entire trajectory, thereby motivating both sample-wise and trajectory-wise notions of coverage. However, they generally conformalize prediction residuals or externally generated trajectory forecasts and do not use the recursively evolving uncertainty to shape the confidence regions. Conformal calibration has further been combined with model-based probabilistic uncertainty in Bayesian learning settings [37], [38]. Such approaches demonstrate that an approximate probabilistic posterior can provide valuable input-dependent information for constructing more informative CP sets, even when the probabilistic model itself is imperfect. Yet, these studies primarily address settings such as Bayesian optimization, where queried outcomes are subsequently observed and can be used for sequential calibration. They do not consider recursive estimation of an unobserved dynamic state, nor the particular statistical information provided by Kalman-type filtering. Thus, existing CP methods either treat state estimation as a generic regression problem, rely on online feedback unavailable in tracking, or exploit model-based uncertainty in substantially different settings. 
+
+Contributions 
+
+In this work, we develop a CP framework tailored to Kalman-type tracking of dynamic systems. Our key observation is that conformalizing a Kalman-type filter differs fundamentally from applying CP on top of a black-box ML estimator, as Kalman-type filters recursively provide estimates of the first- and second-order moments of the state posterior. Although these moments do not necessarily define an accurate Gaussian posterior, their recursive computation accounts for much of the temporal variation of the dynamic system. We therefore leverage these time-varying statisti-cal features to construct calibrated confidence regions, combining the adaptivity and structural information of Kalman filtering with the statistical reliability of CP. Our framework supports confidence regions of varying flexibility, ranging from Gaussian-shaped regions to learned convex and multimodal regions. Our main contributions are summarized as follows:  
+
+> •
+
+Framework: We introduce a framework for augmenting Kalman-type filters with calibrated confidence regions. The framework uses the estimated first- and second-order posterior moments as time-dependent statistical features, thus exploiting the uncertainty information propagated by the filter rather than treating the estimator as a black box.  
+
+> •
+
+Methodology: We propose three complementary construc-tions for deriving confidence regions from these features: 1) Conformalized Gaussian KF (CGKF) , which retains the Gaussian posterior approximation implicit in KFs and uses calibration data to correct the confidence regions induced by its estimated first- and second-order moments. This construction is particularly suitable when the state posterior can be reasonably approximated as Gaussian. 2) Conformalized Quantile KF (CQKF) , which maps the estimated first- and second-order moments into the bound-aries of a convex confidence region, which is subsequently calibrated using held-out trajectories. This construction requires additional training data, but accommodates asymmetric and non-Gaussian posterior distributions, while remaining primarily suited to unimodal distributions due to the convex form of the resulting region. 3) Conformalized Distributional KF (CDKF) , in which a dedicated model maps the moments produced by the Kalman-type filter into the parameters of a Gaussian-mixture approximation of the state posterior. The density-based regions are then conformally calibrated, enabling the representation of multimodal posterior distributions and potentially non-convex confidence regions.  
+
+> •
+
+Theory: We establish statistical coverage guarantees for the proposed confidence regions under both relevant notions of reliability in dynamic state estimation: sample-wise 
+
+coverage, which controls the miscoverage probability at each time instance, and trajectory-wise coverage, which controls the probability that any state along the considered trajectory falls outside its corresponding region.  
+
+> •
+
+Experiments: We evaluate the proposed conformalized KF methods over diverse dynamic systems and operating conditions. Our results demonstrate that the proposed con-structions provide reliable coverage while producing tight and informative confidence regions, and illustrate the relative merits of the Gaussian, quantile-regression, and distribution-based formulations under different characteristics. The rest of this paper is organized as follows: Section II presents the system model. The conformalized KF methods are presented in Section III and evaluated in Section IV, while Section V provides concluding remarks. Throughout this paper, we use boldface lowercase for vectors, e.g., x, and boldface uppercase letters, e.g., M , for matrices. Calligraphic letters, e.g., X , are used for sets. We use R for the set of real numbers and N for the natural numbers. The operations (·)⊤ and ∥ · ∥ are used for transpose and ℓ2 norm, respectively, while N (·, ·) is the Gaussian distribution. II. S YSTEM MODEL AND PRELIMINARIES 
+
+A. State-Space Models 
+
+SS models are statistical representations of dynamic systems. They describe the evolution of a latent state vector st ∈ Rm
+
+and its associated observation vector zt ∈ Rn at each time step 
+
+t ∈ N via equations of the form [3] 
+
+st = ft(st−1) + wt, (1a) 
+
+zt = ht(st) + vt. (1b) In (1), ft : Rm 7 → Rm is the state transition function, and 
+
+ht : Rm 7 → Rn is the observation function. The process noise 
+
+wt and observation noise vt are mutually and temporally independent, with covariance matrices Qt and Rt.
+
+B. KF-Type Tracking of Dynamic Systems 
+
+Kalman-type algorithms are a family of filtering methods which estimate st from current as well as past observations 
+
+z1: t [3]. This is achieved by recursively propagating estimates 3
+
+of the first- and second-order moments of st given z1: t, denoted as ˆst and Σt respectively, in two stages: 
+
+(i) The predict step uses ˆst−1 and Σt−1 to estimate the moments of st and zt given z1: t−1. For instance, in the EKF, the predict step estimates these moments as 
+
+ˆst|t−1 = ft(ˆ st−1), Σt|t−1 = ˆFtΣt−1 ˆF⊤ 
+
+> t
+
++ Qt, (2a) 
+
+ˆzt|t−1 = ht(ˆ st|t−1), St|t−1 = ˆHtΣt|t−1 ˆH⊤ 
+
+> t
+
++ Rt, (2b) where ˆFt and ˆHt are computed by the local linearizations, 
+
+ˆFt = ∇sft(ˆ st−1) and ˆHt = ∇sht(ˆ st|t−1), respectively. 
+
+(ii ) The update step forms a linear filter (the Kalman gain ) Kt,and uses it to obtain ˆst and Σt by balancing the predicted mo-ments with the current observation zt. For example, the EKF sets 
+
+Kt = Σt|t−1 ˆH⊤ 
+
+> t
+
+S−1
+
+> t|t−1
+
+, and updates the posterior moments via 
+
+ˆst = ˆ st|t−1 + Kt(zt − ˆzt|t−1), (3a) 
+
+Σt = Σt|t−1 − KtSt|t−1K⊤ 
+
+> t
+
+. (3b) When ft(·) and ht(·) are linear, the EKF reduces to the standard KF, which is MSE-optimal when the process and observation noises, as well as the initial state s0, are Gaussian. Alternative KF-type algorithms share the above structure, while employing different methods for propagating the moments in (2)-(3). For instance, the UKF [6] replaces the local lineariza-tion of the EKF with the unscented transform, which propagates a set of deterministically chosen sigma points through the nonlinear state-transition and observation functions to approximate the posterior mean and covariance; the cubature Kalman filter [39] employs the cubature rule to approximate the Gaussian-weighted integrals arising in nonlinear Bayesian filtering. 
+
+C. Problem Formulation 
+
+State estimation often requires not only accurate point-wise estimates, but also reliable uncertainty quantification. For linear Gaussian SS models, the posterior state distribution is Gaussian and is thus fully characterized by its first- and second-order mo-ments, which are optimally estimated by the KF. In this setting, confidence regions can be constructed analytically from the poste-rior covariance matrix. When these assumptions do not hold, char-acterizing confidence regions is considerably more challenging. We seek to enhance Kalman-type filters by providing statis-tically valid confidence guarantees, even when the assumptions underlying Gaussian filtering are violated. Specifically, for a user-specified miscoverage level α ∈ (0 , 1) , we aim to construct a con-fidence region Cαt ⊆ Rm that contains the state with high proba-bility while remaining as compact as possible. Depending on the application, the confidence guarantee may be either (i) sample-wise , ensuring coverage independently at each time instant, 
+
+Pr( st /∈ C αt ) ≤ α, (4a) or (ii ) trajectory-wise , ensuring that the entire trajectory is jointly covered with probability at least 1 − α,
+
+Pr  st ∈ C αt , ∀t ∈ { 1, . . . , T } ≥ 1 − α. (4b) We are specifically interested in confidence-region construction mechanisms that satisfy the following requirements: C1 The state transition and observation functions in the underlying SS model may be nonlinear , and the distribution of the process and observation noises may be non-Gaussian .C2 The proposed mechanism should be compatible with a broad family of Kalman-type estimators .C3 The SS model available to the estimator may be a
+
+mismatched approximation of the true system dynamics. To address C1–C3, we assume access to a set of multiple tra-jectories generated by the underlying dynamical system, denoted 
+
+D =  (s(i) 
+
+> t
+
+, z(i) 
+
+> t
+
+) Tt=1 
+
+> |D|
+> i=1
+
+. (5) Our objective is to construct confidence regions that satisfy either the sample-wise and trajectory-wise guarantees while remaining as tight as possible and fully exploiting the information already produced by Kalman-type filters. 
+
+D. Preliminaries: Conformal Prediction 
+
+CP is a statistical method for quantifying uncertainty in predictive ML models [12]–[14]. In the context of multivariate regression, it considers a generic case where data is obtained from an unknown distribution Pr( x, y) over an input-output space X × Y , with the objective of predicting an m-dimensional vector y ∈ Y = Rm from a feature vector x ∈ X ⊆ Rq . Given a trained ML model and a new input x, CP constructs a prediction region Cα(x) ⊆ Y such that the true outcome lies within Cα(x)
+
+with probability at least 1 − α, i.e., Pr( y ∈ C α(x)) ≥ 1 − α.To construct such sets, split CP requires (in addition to an ML model trained on training data Dtrain ), a calibration dataset 
+
+Dcal = {(x(i), y(i))}|D cal | 
+
+> i=1
+
+. Two CP approaches relevant to our setting, illustrated in Fig. 1, are quantile regression [18]–[21], and distribution learning [26], reviewed next. 
+
+1) Quantile Regression: CP methods based on quantile regression aim to directly learn the quantile intervals without imposing a statistical model on the posterior [15], by first training a dedicated quantile regression model using Dtrain ,and then calibrating it using Dcal . For multivariate regression, directional quantile regression (DQR) [18]–[21] is based on characterizing one-dimensional intervals over different projections of Y, using a dedicated deep neural network (DNN) with parameters θ that is trained using Dtrain to map an input 
+
+x and a direction vector u ∈ Rm into the α-quantile interval limit of u⊤y. Specifically, given a set of unit-norm directions 
+
+U ⊂ Rm, DQR trains its DNN ˆμθ : X × U 7 → R to approach 
+
+arg min 
+
+> θ
+
+X
+
+> u∈U
+
+X
+
+> (x,y)∈D train
+
+ρα
+
+ u⊤y, ˆμθ (x, u) , (6) with ρα being the elementwise pinball loss [40], given by 
+
+ρα(y, ˆy) = 
+
+(
+
+α(y − ˆy), y > ˆy, 
+
+(1 − α)(ˆ y − y), otherwise . (7) The calibration set Dcal is used to construct the prediction region by evaluating the directional quantile model on the calibration samples and computing the nonconformity scores 
+
+R(i) = max 
+
+> u∈U
+
+
+
+ˆμθ (x(i), u) − u⊤y(i)
+
+, (8) which measure the largest violation of the predicted directional quantile constraints over all directions. These residuals are then 4y1              
+
+> 3
+> 2
+> 1
+> 0123
+> y2
+> (a) DCP
+> y1
+> y2
+> (b) DQR (| | = 128)
+> 3210123
+> y1
+> 3
+> 2
+> 1
+> 0123
+> y2
+> (c) Mahalanobis
+> 3210123
+> y1
+> y2
+> (d) Naive-Rectangular
+> Estimated Target
+
+Fig. 1: Prediction regions illustrations for m = 2. Upper row: generic density-based CP (DCP) (left) and DQR (right); lower row: special cases of Gaussian (left), which is DCP with K = 1 and rectangular (right), i.e., DQR with 
+
+U = {[±1, 0] ⊤, [0 , ±1] ⊤}. The estimated and target states are shown for reference. used to obtain the prediction region by setting ˆQ1−α to the empirical ⌈(|D cal | + 1) (1 − α)⌉ quantile of {R(i)}, resulting in 
+
+Cα
+
+> DQR
+
+(x) = \
+
+> u∈U
+
+n
+
+y ∈ Rm : u⊤y ≥ ˆμθ (x, u)− ˆQ1−αo
+
+, (9) which is a convex subset of Rm. In the scalar case where m = 1 
+
+and U = ±1, DQR produces a confidence region given by 
+
+Cα
+
+> DQR
+
+(x) = 
+
+h
+
+ˆμθ (x, −1) − ˆQ1−α, ˆμθ (x, 1) + ˆQ1−αi
+
+, (10) specializing scalar conformalized quantile regression (CQR) [15]. 
+
+2) Distributional CP: Distributional methods utilize aconditional density estimator ˆfˆθ (y|x). A notable approach is DCP [26], which constructs prediction regions from a Gaussian mixture model for the posterior, given by 
+
+ˆfˆθ (y|x) = 
+
+> K
+
+X
+
+> k=1
+
+πk(x)N (y; μk(x), Σk(x)) . (11) In (11), {πk(x), μk(x), Σk(x)}Kk=1 denote the mixture weights, means, and covariance matrices. These are obtained from x using a dedicated DNN, trained separately from the CP task using Dtrain .The prediction region is obtained as a superlevel set of the learned conditional density, where the density threshold is determined through conformal calibration. The calibration set 
+
+Dcal is used to construct the prediction region by evaluating the learned conditional density on the calibration samples and computing the nonconformity scores 
+
+R(i) = − log ˆfˆθ
+
+
+
+y(i) x(i)
+
+, (12) where samples assigned higher probability by the predictive model yield smaller residuals. These residuals are then used to obtain the prediction region by setting ˆQ1−α to the empirical 
+
+⌈(|D cal | + 1) (1 − α)⌉ quantile of {R(i)}, resulting in 
+
+Cα
+
+> DCP
+
+(x) = 
+
+n
+
+y ∈ Y : − log ˆfˆθ (y|x) ≤ ˆQ1−αo
+
+, (13) which contains all responses whose nonconformity score does not exceed the calibrated threshold. III. C ONFORMALIZED KALMAN FILTER 
+
+Interpreting the moments produced by a Kalman-type filter as defining a Gaussian posterior is generally unjustified under the nonlinear and non-Gaussian dynamics considered in C1, as well as under the model mismatch considered in C3. Nonetheless, a straightforward application of existing CP methods for multivariate regression is ill-suited to the considered tracking setting. Such methods are typically designed for a fixed regression task, whereas in dynamic systems the state distribution and the associated estimation-error distribution evolve over time. Applying them independently at each time instance would therefore either disregard this temporal variation or require separate prediction models and sufficient training and calibration data for each time index. Our proposed approach combines the complementary strengths of Kalman-type filtering and CP. Rather than treating the estimated first- and second-order moments, i.e., (ˆ st, Σt) in (3), as a complete probabilistic characterization of the state posterior, we interpret them as dynamically adapted statistical features that are informative of this posterior. Since these features are recursively updated from the SS model and the acquired observations, they account for much of the temporal variation of the tracking problem and can consequently serve as inputs to CP mechanisms. Based on this principle, Subsection III-A introduces three conformalized Kalman filter constructions. These differ in the amount of data and learning they require, as well as in the geometry and flexibility of the confidence regions they support: an analytically initialized Gaussian construction, a learned quantile-based construction producing convex regions, and a learned distribution-based construction capable of representing multimodal posteriors. The three constructions share acommon conformal calibration and evaluation procedure, which transforms their initial confidence regions into statistically valid ones. In Subsection III-B, we establish finite-sample guarantees that apply to all considered constructions under exchangeability of the calibration and test trajectories. These results show that each method provides trustworthy confidence regions under both the sample-wise and trajectory-wise notions of coverage, although the resulting regions may differ substantially in their shape, tightness, and data requirements. We conclude the section with a comparative discussion in Subsection III-C. 
+
+A. Conformalized Kalman Filter Methods 
+
+We next present three approaches for applying CP on top of Kalman-type filters. The proposed methods differ in their nonconformity scores (which induce the geometry and flexibility of the confidence regions they construct), as well as in their data requirements. The first approach (CGKF) directly exploits the 5
+
+TABLE I: Summary of conformalized KF methods                 
+
+> Method Construction Dtrain Dcal Region Geometry
+> CGKF Analytical ×✓Gaussian CQKF Learned borders ✓✓General convex CDKF Learned distribution ✓✓Gaussian mixture
+
+moments produced by the filter and does not require learning an additional model, allowing all available labeled trajectories to be used for conformal calibration. The latter two approaches (CQKF and CDKF) follow the ML-aided CP methodologies reviewed in Subsection II-D: they train a dedicated model to construct an initial confidence region from the filter outputs and therefore adopt the split CP paradigm, partitioning the available data into disjoint training and calibration sets. The main characteristics of the three approaches are summarized in Table I. 
+
+1) Common Calibration and Evaluation Procedure: All proposed conformalized Kalman filters share a common two-stage operation, illustrated in Fig. 2. In an offline calibration stage, a selected Kalman-type filter is applied to the trajectories in Dcal 
+
+to obtain the estimated posterior moments {(ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+)}. Based on these moments, the ground-truth states, and the prescribed miscoverage level α, each method computes a method-specific nonconformity score R(i) 
+
+> t
+
+for every calibration trajectory i and time instance t. These scores are then mapped into conformal correction terms according to the desired notion of coverage. We set the conformal order-statistic index to 
+
+k =   |D cal | + 1 (1 − α) . (14) For sample-wise confidence as in (4a), calibration is performed separately at each time instance. Specifically, for every 
+
+t ∈ { 1, . . . , T }, we sort R(1)  
+
+> t
+
+≤ · · · ≤ R(|D cal |) 
+
+> t
+
+and set 
+
+ˆQ1−α(t) = R(k) 
+
+> t
+
+. (15) The resulting time-dependent correction accounts for the evolution of the state and estimation-error distributions along the trajectory. For trajectory-wise confidence as in (4b), each calibration trajectory is instead assigned the aggregate score 
+
+R(i) = max   
+
+> t∈{ 1,...,T }
+
+R(i) 
+
+> t
+
+. (16) After sorting R(1) ≤ · · · ≤ R(|D cal |), we set 
+
+ˆQ1−α(t) ≡ ˆQ1−α = R(k), t ∈ { 1, . . . , T }. (17) Thus, a common correction is used to control the probability that at least one state along the trajectory is not covered. During evaluation, a Kalman-type filter processes the observed sequence and provides the moments (ˆ st, Σt). The selected conformalization method combines these moments with the previously computed correction ˆQ1−α(t) to construct the confidence region Cαt . The specific definitions of the nonconformity score and the resulting region differ among the three proposed methods. A different Kalman-type implementation may be used at evaluation, provided that the underlying SS model is the same as the one used in calibration. 
+
+2) CGKF: The simplest of the three proposed constructions uses the posterior moments (ˆ st, Σt) produced by the Kalman-type filter and does not require training an additional model. Specifically, CGKF retains the ellipsoidal geometry induced by a Gaussian posterior, while using conformal calibration to resize the corresponding confidence region when this posterior approxima-tion is inaccurate. Consequently, all available labeled trajectories can be allocated to calibration, i.e., Dcal is set to D in (5). 
+
+Initial Prediction Region: Under the Gaussian approximation, the posterior distribution of the state is represented as N (ˆ st, Σt).Accordingly, the squared Mahalanobis distance ∥st − ˆst∥2 
+
+> Σt
+
+≜
+
+(st − ˆst)⊤Σ−1 
+
+> t
+
+(st − ˆst) follows a chi-square distribution with 
+
+m degrees of freedom. This yields the initial confidence region 
+
+ˆCαt, G(ˆ st, Σt) = 
+
+n
+
+s ∈ Rm : ∥s − ˆst∥2 
+
+> Σt
+
+≤ F −1
+
+> χ2
+> m
+
+(1 − α)
+
+o
+
+, (18) where F −1
+
+> χ2
+> m
+
+denotes the inverse cumulative distribution function of a chi-square random variable with m degrees of freedom. The resulting ellipsoid adapts its size, orientation, and eccentricity to the uncertainty encoded in Σt. When the posterior is indeed Gaussian, (18) coincides with its (1 − α) highest-density region. 
+
+Nonconformity Score: We apply the underlying Kalman-type filter to each trajectory in Dcal to obtain the corresponding posterior moments {(ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+)}. The nonconformity score is 
+
+R(i) 
+
+> t
+
+= s(i) 
+
+> t
+
+− ˆs(i)
+
+> t
+> 2
+> Σ(i)
+> t
+
+− F −1
+
+> χ2
+> m
+
+(1 − α). (19) Thus, R(i) 
+
+> t
+
+measures the signed deviation of the true state from the boundary of the initial Gaussian region: positive values correspond to states lying outside the region, while negative values indicate states lying inside it. 
+
+Evaluation: At evaluation time, the Kalman-type filter pro-cesses the newly observed sequence and produces (ˆ st, Σt). The CGKF region is obtained by adjusting the Gaussian Mahalanobis threshold according to the calibration quantile, i.e., 
+
+Cαt, G(ˆ st, Σt)=
+
+n
+
+s ∈ Rm : ∥s − ˆst∥2 
+
+> Σt
+
+≤ F −1
+
+> χ2
+> m
+
+(1 −α)+ ˆQ1−α(t)
+
+o
+
+. (20) A positive conformal correction expands the nominal Gaussian region, whereas a negative correction contracts it. In both cases, the shape and orientation of the region remain determined by the covariance propagated by the Kalman-type filter, while its effective radius is calibrated from data. 
+
+3) CQKF: The second method replaces the Gaussian posterior approximation used by CGKF with a learned quantile-based characterization of the state uncertainty. Specifically, the posterior moments (ˆ st, Σt) produced by the Kalman-type filter are treated as input features to a DQR model [19]. This allows the resulting confidence regions to adapt to asymmetric and non-Gaussian posterior distributions without imposing a parametric distributional model. Unlike CGKF, CQKF requires the available data (5) to be divided into disjoint training and calibration sets, denoted Dtrain and Dcal , respectively. 
+
+Initial Prediction Region: We apply the selected Kalman-type filter to each trajectory in Dtrain , obtaining the posterior moments {(ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+)}. Given a finite set of unit-norm pro-jection directions U ⊂ Sm−1, a directional quantile regression 6Calibration 
+
+Evaluation 
+
+UKF EKF DQR  
+
+> {(𝑠௧ ෝ ௜ , Σ ௧௜ )}
+
+split 
+
+DCP  
+
+> 𝒟௧௥௔௜௡ posterior moments
+
+EKF UKF KF      
+
+> 𝒟௖௔௟ posterior moments
+> 𝒟 = 𝑠 ௧௜ , 𝑧 ௧௜, 𝛼 𝑧௧ ୲ୣୱ୲ (𝑠௧ ෝ ୲ୣୱ୲ , Σ௧ ୲ୣୱ୲ )𝑄 ෠ଵିఈ (𝑡) 𝒞୲ ఈ (𝑠௧ ෝ ୲ୣୱ୲ , Σ௧ ୲ୣୱ୲ )
+
+DQR DCP 
+
+𝜃 
+
+DQR DCP 
+
+𝜃 𝑅 ෠௧௜
+
+Calibration 
+
+Initial Prediction Region  
+
+> 𝒞 መ୲ఈ (𝑠௧ ෝ ୲ୣୱ୲ , Σ௧ ୲ୣୱ୲ )
+
+Calculate Conformity Score (Learning-based methods only )
+
+> 𝑄 ෠ଵିఈ (𝑡)
+
+DQR KF 
+
+ℒ𝒟(𝜃) 𝜃 
+
+𝜃 Gaussian Posterior Interval 
+
+𝜃 Gaussian Posterior Interval (a) Training and calibration scheme. (b) Evaluation scheme. 
+
+Fig. 2: High-level illustration of the proposed framework: (a) Training and calibration scheme; (b) Evaluation scheme. DNN ˆμθ (which in our numerical study is set to a multi-layer perceptron (MLP) with two hidden layers) is trained to map the posterior moments to a vector of directional quantiles, where each output dimension corresponds to a fixed direction u ∈ U 
+
+Following the formulation in (6), its parameters ˆθ are trained based on the empirical risk 
+
+arg min 
+
+> θ
+
+X
+
+> i∈D train
+> T
+
+X
+
+> t=1
+
+X
+
+> u∈U
+
+ρα
+
+
+
+u⊤s(i) 
+
+> t
+
+, ˆμθ
+
+ (ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+), u
+
+,
+
+where ρα is defined in (7). For a new pair of posterior moments, the learned directional quantiles define the initial region 
+
+ˆCαt, Q(ˆ st, Σt) = \
+
+> u∈U
+
+s ∈ Rm : u⊤s ≥ ˆμˆθ
+
+ (ˆ st, Σt), u . (21) As an intersection of directional half-spaces, (21) is convex. Its size and geometry vary with the moments produced by the Kalman-type filter and, through data-driven training, can capture asymmetric uncertainty not represented by the Gaussian ellipsoid in (18). 
+
+Nonconformity Score: The Kalman-type filter is applied to each calibration trajectory in Dcal to obtain {(ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+)}. For each state and time instance, the conformity score is defined as the largest violation of the learned directional constraints: 
+
+R(i) 
+
+> t
+
+= max 
+
+> u∈U
+
+n
+
+ˆμˆθ
+
+ (ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+), u − u⊤s(i)
+
+> t
+
+o
+
+. (22) The scores in (22) are mapped into the correction terms ˆQ1−α(t)
+
+using the sample-wise or trajectory-wise calibration procedure. 
+
+Evaluation: At evaluation time, the trained quantile model receives the posterior moments (ˆ st, Σt) produced by the Kalman-type filter. The conformal correction relaxes each directional constraint by ˆQ1−α(t), yielding 
+
+Cαt, Q(ˆ st, Σt)= \
+
+> u∈U
+
+n
+
+s ∈ Rm : u⊤s ≥ ˆμˆθ
+
+ (ˆ st, Σt), u− ˆQ1−α(t)
+
+o
+
+. (23) A positive correction enlarges the initial region by relaxing all its half-space constraints, whereas a negative correction contracts it. The resulting confidence region remains convex, while its boundaries adapt to the state- and time-dependent uncertainty encoded in the moments produced by the Kalman-type filter. 
+
+4) CDKF: CDKF learns a conditional representation of the state posterior from the moments produced by the Kalman-type filter. Specifically, (ˆ st, Σt) are used as input features to a condi-tional density estimator ˆfθ (st | ˆst, Σt), with the corresponding state st serving as the target. In contrast to CQKF, which is restricted to convex confidence regions, the learned density can represent multimodal posterior distributions and consequently in-duce non-convex, and possibly disconnected, confidence regions. As in CQKF, the available data are divided into disjoint training and calibration sets, denoted Dtrain and Dcal , respectively. 
+
+Initial Prediction Region: We apply the selected Kalman-type filter to each trajectory in Dtrain to obtain the posterior moments {(ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+)}. A dedicated DNN with parameters θ
+
+maps these moments into the parameters of a K-component Gaussian mixture model (specifically, in our numerical study we 7
+
+used a mixture density network comprising a three-layered MLP). In particular, the resulting conditional density is expressed as 
+
+ˆfθ (s | ˆst, Σt)=
+
+> K
+
+X
+
+> k=1
+
+πk, θ (ˆ st, Σt) N  s; μk, θ (ˆ st, Σt) , Γk, θ (ˆ st, Σt) ,
+
+where πk, θ , μk, θ , and Γk, θ denote the mixture weight, mean, and covariance of the kth component, respectively, taken from the output of the DNN, with πk, θ ≥ 0 and PKk=1 πk, θ = 1 .The network parameters are trained by maximizing the empirical log-likelihood over Dtrain :
+
+arg max 
+
+> θ
+
+X
+
+> i∈D train
+> T
+
+X
+
+> t=1
+
+log ˆfθ
+
+
+
+s(i) 
+
+> t
+
+ˆs(i) 
+
+> t
+
+, Σ(i)
+
+> t
+
+
+
+.
+
+The learned parameters ˆθ yield a density that defines a nested family of candidate prediction regions, parameterized by a threshold q, as 
+
+ˆCt, D (q; ˆ st, Σt) = 
+
+n
+
+s ∈ Rm : log ˆfˆθ (s | ˆst, Σt) ≥ q
+
+o
+
+. (24) Owing to the Gaussian-mixture representation, its geometry can adapt to asymmetric and multimodal posterior distributions. 
+
+Nonconformity Score: The Kalman-type filter is applied to each calibration trajectory in Dcal to obtain {(ˆ s(i) 
+
+> t
+
+, Σ(i) 
+
+> t
+
+)}.Following the DCP formulation, the nonconformity score is the negative log-likelihood assigned to the true state: 
+
+R(i) 
+
+> t
+
+= − log ˆfˆθ
+
+
+
+s(i) 
+
+> t
+
+ˆs(i) 
+
+> t
+
+, Σ(i)
+
+> t
+
+
+
+. (25) Thus, states assigned high probability by the learned posterior yield small nonconformity scores. The scores in (25) are mapped into ˆQ1−α(t) using the common calibration procedure. 
+
+Evaluation: At evaluation time, the Kalman-type filter produces the moments (ˆ st, Σt), which are mapped by the trained DNN into the parameters of the Gaussian-mixture posterior approximation. The calibrated CDKF region is then given by 
+
+Cαt, D(ˆ st, Σt) = 
+
+n
+
+s ∈ Rm : log ˆfˆθ (s | ˆst, Σt) ≥ − ˆQ1−α(t)
+
+o
+
+.
+
+(26) The resulting region adapts to the posterior representation inferred from the Kalman moments and may consist of multiple disconnected components, allowing it to characterize uncertainty patterns that cannot be represented by the ellipsoidal or convex regions of CGKF and CQKF, respectively. 
+
+B. Theoretical Guarantees 
+
+Although CGKF, CQKF, and CDKF differ in their construction, data requirements, and supported confidence-region geometries, they share the same statistical validity guarantees. These guarantees follow from the common calibration procedure and do not depend on the method-specific nonconformity score. 
+
+1) Exchangeability: We first formalize the exchangeability condition underlying our coverage results. 
+
+Definition 1 (Exchangeability) . Let X(i) ≜   s(i) 
+
+> t
+
+, z(i)
+
+> t
+
+ Tt=1 ,
+
+i = 1, . . . , N , denote a collection of trajectories. The trajectories {X(i)}Ni=1 are said to be exchangeable if their joint distribution is invariant under permutations of the trajectory indices. Namely, for every permutation π of {1, . . . , N },
+
+
+
+X(1) , . . . , X(N ) d
+
+=
+
+
+
+X(π(1)) , . . . , X(π(N )) 
+
+, (27) 
+
+where d
+
+= denotes equality in distribution. 
+
+Exchangeability is weaker than i.i.d. sampling, as every collec-tion of i.i.d. trajectories is exchangeable, while exchangeable tra-jectories need not be mutually independent. Definition 1 concerns exchangeability across trajectories ; it does not impose indepen-dence or stationarity across the time indices within each trajectory, which may exhibit temporal dependencies induced by the underly-ing SS model. For the learning-based CQKF and CDKF methods, the following results are understood conditionally on the disjoint training set Dtrain and on the resulting learned parameters. Thus, the Kalman-type filtering and conformalization mechanisms are fixed before processing the calibration and test trajectories. 
+
+2) Sample-Wise Calibration: We first consider the sample-wise calibration procedure in (15), for which we obtain the following coverage guarantee: 
+
+Theorem 1 (Sample-wise coverage) . Fix one of the proposed conformalization methods and a Kalman-type filter. Let Dcal ∪  st, zt
+
+ Tt=1 , be exchangeable calibration and test trajectories generated by the SS model (1) . For a prescribed miscoverage level α ∈ (0 , 1) , let the correction terms ˆQ1−α(t) be computed according to (15) . Then, the resulting confidence regions satisfy 
+
+Pr  st ∈ C αt
+
+ ˆst, Σt
+
+ ≥ 1 − α, ∀t ∈ { 1, . . . , T }. (28) 
+
+Moreover, if the calibration and test nonconformity scores at time 
+
+t are almost surely distinct, then ∀t ∈ { 1, . . . , T } it holds that 
+
+Pr  st ∈ C αt
+
+ ˆst, Σt
+
+ ≤ 1 − α + 1
+
+|D cal | + 1 . (29) 
+
+Proof: The proof is provided in Appendix A. Theorem 1 follows from the exchangeability of the scores at each fixed time instance. It indicates that all proposed constructions achieve the prescribed marginal coverage, regardless of whether their initial regions are ellipsoidal, convex, or density-based. Furthermore, (29) shows that their finite-sample coverage exceeds the target level by at most 1/(|D cal | + 1) .
+
+3) Trajectory-Wise Calibration: A mechanism calibrated for sample-wise coverage can also provide a trajectory-wise guarantee by tightening its prescribed miscoverage level, as stated in the following corollary: 
+
+Corollary 1 (Trajectory-wise coverage using sample-wise quantiles) . Consider the setting of Theorem 1, and construct the sample-wise regions with ˜α = αT . Then, 
+
+Pr  st ∈ C ˜αt
+
+ ˆst, Σt
+
+, ∀t ∈ { 1, . . . , T } ≥ 1 − α. (30) 
+
+Proof: The proof is provided in Appendix B. 8
+
+Corollary 1 follows by applying Theorem 1 with level ˜α and using the union bound over the T time instances. This approach corresponds to a Bonferroni-type correction [41]. It provides trajectory-wise confidence using the sample-wise calibration mechanism, but may be conservative since every individual region is constructed with the stricter confidence level 1 − α/T .Alternatively, trajectory-wise confidence can be obtained directly using the aggregated scores in (16) and their corresponding quantile in (17), as stated next: 
+
+Theorem 2 (Trajectory-wise coverage) . Under the same setting as in Theorem 1, let the conformal correction be computed using the trajectory-wise calibration procedure in (16) –(17) .Then, the resulting confidence regions satisfy 
+
+Pr  st ∈ C αt
+
+ ˆst, Σt
+
+, ∀t ∈ { 1, . . . , T } ≥ 1 − α. (31) 
+
+Proof: The proof is provided in Appendix C. Theorem 2 follows by treating the maximum nonconformity score of each trajectory as a single exchangeable score. It thus controls the probability that any state along the test trajectory lies outside its corresponding confidence region. Unlike Corollary 1, it uses a single (1 − α) quantile of the trajectory-level scores and does not separately tighten the confidence level at every time instance. It also has a substantially milder calibration-data requirement: selecting a finite (1 − α) conformal quantile requires |D cal | ≥ 1−αα , whereas the Bonferroni construction at level ˜α = α/T requires |D cal | ≥ 1−α/T α/T = Tα − 1. The direct trajectory-wise construction is therefore generally preferable when joint coverage over a complete horizon is required. Nevertheless, neither validity result guarantees that the resulting regions are tight. Their geometry and efficiency depend on the uncertainty representation and the nonconformity scores. 
+
+C. Discussion 
+
+Our conformalized Kalman filtering framework addresses the challenges identified in Subsection II-C. In particular, the confidence regions are not required to coincide with the Gaussian posterior implied by the first- and second-order moments, allowing their coverage to remain valid under nonlinear and non-Gaussian dynamics as in C1, as well as under model mismatch as in C3. The proposed methods retain the recursive statistical information produced by the underlying Kalman-type filter: the moments (ˆ st, Σt) adapt with the evolving dynamics and observations, and thus provide time-dependent features from which the confidence regions are constructed. This also makes the framework largely agnostic to the particular Kalman-type algorithm, addressing C2, as the conformalization operates on its posterior moment estimates rather than on its internal recursion. The three proposed constructions provide different levels of flexibility within this framework: CGKF is most natural when the posterior geometry is reasonably captured by a Gaussian approximation, CQKF accommodates asymmetric and non-Gaussian uncertainty through learned convex regions, while CDKF further supports multimodal distributions and non-convex confidence regions. The validity guarantees of Subsection III-B apply to all three constructions irrespective of these modeling choices; their main effect is therefore on the tightness and geometry of the resulting regions. 
+
+Complexity Analysis: The increased flexibility of our con-structions comes with a computational and data-complexity tradeoff. All methods incur the cost of the underlying Kalman-type filter, while CGKF adds only the computation of a Mahalanobis-type score and its calibrated threshold, and requires no additional training; it is thus the least computationally demanding and allows all available labeled trajectories to be used for calibration. CQKF and CDKF require an additional offline learning stage and divide the available data between training and calibration. For CQKF, the additional inference cost is dominated by evaluating the directional quantile DNN and forming the constraints associated with the directions in 
+
+U; hence, its complexity and the resolution of the resulting convex region both increase with |U| . For CDKF, the DNN predicts the parameters of a K-component Gaussian mixture, and evaluation requires computing the mixture density, with complexity increasing with both K and the state dimension through the covariance matrices. Thus, CGKF offers the lowest-complexity construction at the expense of restricted geometry, while the learning-based CQKF and CDKF trade additional training and inference complexity for more expressive confidence regions. These tradeoffs are quantified numerically in Section IV. 
+
+Extensions: Several extensions of our framework are left for future investigation. First, the guarantees established in Subsec-tion III-B rely on exchangeability between the calibration and test trajectories. While this assumption permits arbitrary temporal dependence within each trajectory, it may be violated when the underlying operating conditions change. Extending conformalized Kalman filtering to distribution shifts or other non-exchangeable settings can potentially be obtained by incorporating weighted, localized, or adaptive conformal mechanisms without assuming access to the true latent state [42]. Second, our calibration procedure is defined over the time horizon T represented in the available trajectories. The sample-wise corrections ˆQ1−α(t)
+
+are characterized for t ∈ { 1, . . . , T }, while the trajectory-wise guarantee also pertains to this prescribed horizon. Providing trustworthy regions when filtering continues beyond the horizon represented in the calibration data requires mechanisms that can extrapolate or otherwise parameterize the temporal evolution of the conformal correction. Finally, the underlying idea of exploiting model-based posterior information as features for calibration is not intrinsically limited to Kalman-type filters. Extending this principle to more general Bayesian filtering methods could enable conformal regions that exploit posterior representations beyond first- and second-order moments. IV. N UMERICAL STUDY 
+
+We numerically evaluate the proposed conformalized Kalman filtering framework in terms of its coverage reliability, statistical efficiency, and computational complexity 1. We consider scalar and multivariate SS models spanning linear Gaussian, non-Gaussian, nonlinear, mismatched, and chaotic dynamics. The study is organized as follows. We first describe the considered models, benchmarks, and evaluation protocol. We then report the scalar-state and multivariate-state results,           
+
+> 1The source code and the hyperparameters can be found online at: https://github.com/OlgaWeisman/CxKF 9
+
+followed by a study of the computational complexity and the effect of the number of directional quantiles used by CQKF. 
+
+A. Experimental Setup 
+
+State-Space Models and Filters: For all considered models, we denote by q2 and r2 the process- and measurement-noise levels associated with Qt and Rt, respectively. We define 
+
+SNR = 10 log 10 
+
+ 1
+
+r2
+
+
+
+[dB] , q2
+
+r2 = 0 .01 , (32) such that the process-to-measurement noise ratio remains fixed as the signal-to-noise ratio (SNR) varies. For linear systems we employ the KF, and for nonlinear ones we use the EKF and UKF, allowing us to evaluate the compatibility of the proposed approach with different Kalman-type filters as required by C2. For the scalar experiments, we consider three settings. The first is the linear Gaussian model ft(s) = 0 .9s and ht(s) = s.The second uses the same linear dynamics with Laplacian rather than Gaussian noise, thus violating the Gaussianity assumption. The third is a nonlinear setting with ft(s) = sin( s)
+
+and ht(s) = s2. In this case, we additionally introduce model mismatch by providing the filter with the approximation 
+
+˜ft(s) = s while generating trajectories according to the true nonlinear transition ft(s) = sin( s).For the multivariate experiments, we consider the physically motivated nonlinear pendulum model from [7], whose state is 
+
+st = [ θt, ˙θt]⊤ and whose transition and observation functions are 
+
+f (st) = 
+
+ θt + ˙θt∆t
+
+˙θt − gℓ sin( θt)∆ t
+
+
+
+, h(st) = 
+
+ℓ cos( θt)
+
+ℓ sin( θt)
+
+
+
+, (33) with ℓ = 1 and ∆t = 0 .02 .Finally, we consider the three-dimensional Lorenz attractor as a challenging chaotic tracking scenario. Its continuous-time dynamics are represented as 
+
+dsτ
+
+dτ = A(sτ )sτ , A(sτ ) = 
+
+−10 10 028 −1 −s1,τ 
+
+0 s1,τ −8/3
+
+ . (34) As in [43], we discretize the dynamics with ∆τ = 0.02 
+
+using st+1 = F (st)st, where F (st) = exp( A(st)∆ τ ) is approximated by a fifth-order Taylor expansion. 
+
+Compared Methods: We evaluate the proposed CGKF, CQKF, and CDKF. As an uncalibrated model-based reference, we use the Gaussian posterior reported by the Kalman-type filter, denoted Gauss for both scalar and multivariate states. For trajectory-wise scalar evaluation, we also consider the Bonferroni variants Gauss-Bonf and CGKF-Bonf , which use the sample-wise level ˜α = α/T .To compare with CP methods that do not exploit the Kalman posterior, we use standard CQR for scalar states, and DQR and DCP for multivariate states. These employ the observations as their predictive features, whereas CQKF and CDKF use the posterior moments (ˆ st, Σt). Thus, these comparisons isolate the benefit of incorporating the statistical information produced by the Kalman-type filter. For scalar trajectory-wise confidence, we additionally compare with the residual-based method of [44], using both its learned time-dependent weighting, denoted 
+
+Residuals-LCP , and its unweighted counterpart, denoted 
+
+Residuals . For multivariate states we further include Rec , which applies scalar CGKF independently to each state coordinate and forms an axis-aligned rectangular region; this serves as a simple reference that does not exploit cross-coordinate dependencies. 
+
+Learning and Evaluation: For DQR-based methods we use an MLP with hidden-layer widths [128 , 128] and |U| = 128 
+
+unit-norm directions, sampled by drawing ˜uj ∼ N (0, I)
+
+and setting uj = ˜ uj /∥˜uj ∥2. Following [19], the directional miscoverage levels used during training are set to α/ 7 and α/ 20 
+
+in two and three dimensions, respectively; conformal calibration itself always uses the nominal level α. For DCP-based methods, we use an MLP with hidden-layer widths [100 , 100] to parameterize a mixture of M = 10 Gaussian components. The DQR networks are trained with the pinball loss (7), whereas the DCP networks are trained by negative log-likelihood. We set the miscoverage level to α = 5% . The scalar experiments use trajectories of length T = 100 and are averaged over 200 trials, each defined by a random 80% –20% 
+
+calibration–test split, at SNR = 0 dB.The Bonferroni variants use a dataset of size |D| = 10 ,000 , whereas the remaining methods use |D| = 1 ,000 . For Residuals-LCP , CQR, and CQKF, 10% of these 1,000 samples are used for learning and the remaining 90% for conformal calibration. The CQR and CQKF networks are trained for 500 epochs. The multivariate experiments use trajectories of length 
+
+T = 50 . Learning-based methods use 1000 trajectories for training, 800 for calibration, and 200 independent trajectories for testing, and are trained for 1000 epochs. The results are averaged over 20 random splits of the available trajectories into calibration, and test sets. Methods that require no training use the combined training and calibration data, i.e., 1800 trajectories, for calibration so as to keep the total amount of available data fixed. We report both per-sample miscoverage and per-trajectory miscoverage . The former is the fraction of individual states lying outside their corresponding regions, while the latter is the fraction of trajectories containing at least one uncovered state. Region efficiency is measured by interval width in the scalar case and by region volume for multivariate states. The latter is estimated using a uniform grid whose limits are determined by the empirical 0.01 and 0.99 quantiles of the training targets with a margin of 2. If Nin of Ngrid grid points belong to the confidence region, we approximate its volume as the Nin 
+
+> Ngrid
+
+portion of the grid volume. We report the values for the interval width/region size normalized by the corresponding values obtained with standard Gaussian modeling. 
+
+B. Scalar-State Results 
+
+The scalar-state results are summarized in Table II. The uncal-ibrated Gauss intervals attain the desired coverage on average in the matched linear Gaussian and linear non-Gaussian settings but exhibit high variability, even in the linear Gaussian setting, and become unreliable when the model assumptions are violated. The conformally calibrated methods attain the prescribed sample-wise or trajectory-wise reliability across the considered scenarios. As expected from the analysis in Subsection III-B, the trajectory-wise constructions achieve the corresponding joint coverage. 10                                                                                                                                         
+
+> Scenario Method Sample-wise Trajectory-wise Per-sample Miscoverage [%] Normalized Interval Width Per-trajectory Miscoverage [%] Normalized Interval Width Lin. Gauss.
+> Gauss 4.96 1.00 /0.08 ––CGKF 4.92 1.01 /0.08 5.03 0.96 /0.04
+> CQR 5.00 1.43 /0.16 4.86 1.47 /0.03
+> CQKF 4.92 1.20 /0.11 4.81 1.16 /0.02
+> Residuals-LCP ––0.37 1.35 /0.23
+> Residuals ––4.93 0.98 /0.00
+> Gauss-Bonf* ––3.42 1.00 /0.07
+> CGKF-Bonf* ––3.11 1.02 /0.09
+> Lin. Non-Gauss.
+> Gauss 4.74 1.00 /0.08 ––CGKF 4.95 1.00 /0.08 4.67 1.16 /0.04
+> CQR 5.07 1.63 /0.34 5.23 1.76 /0.06
+> CQKF 4.92 1.18 /0.11 5.37 1.30 /0.04
+> Residuals-LCP ––0.94 1.78 /0.40
+> Residuals ––4.63 1.17 /0.00
+> Gauss-Bonf* ––13 .79 1.00 /0.07
+> CGKF-Bonf* ––3.16 1.28 /0.08
+> Non-linear (Toy)
+> Gauss 15 .81 1.00 /0.06 ––CGKF 5.03 1.35 /0.08 4.74 1.54 /0.04
+> CQR 4.94 0.87 /0.03 4.68 1.27 /0.01
+> CQKF 4.96 0.81 /0.03 4.93 1.16 /0.02
+> Residuals-LCP ––1.88 1.95 /0.40
+> Residuals ––4.61 1.55 /0.00
+> Gauss-Bonf* ––67 .46 1.00 /0.05
+> CGKF-Bonf* ––4.96 1.54 /0.09
+> Non-linear (Toy) &Mismatch
+> Gauss 90 .75 1.00 /0.02 ––CGKF 4.91 3.13 /0.45 4.82 2.34 /0.01
+> CQR 4.94 1.35 /0.05 4.47 2.00 /0.01
+> CQKF 4.97 1.30 /0.05 4.59 1.80 /0.03
+> Residuals-LCP ––3.36 2.52 /0.39
+> Residuals ––4.71 2.32 /0.00
+> Gauss-Bonf* ––100 .00 1.00 /0.03
+> CGKF-Bonf* ––2.54 2.35 /0.24
+
+TABLE II: Performance comparison for scalar scenarios at SNR = 0 dB. Each normalized interval-width entry reports the average value/STD. For sample-wise evaluation, both quantities are normalized by the mean width of the corresponding Gauss baseline. For trajectory-wise evaluation, they are normalized by the mean width of the corresponding Gauss-Bonf baseline. A value greater than one indicates an interval wider than the corresponding Gaussian-posterior baseline. Methods marked with * use an extended calibration set. Red entries denote failure to meet the required ≤ 5% miscoverage. A dash indicates that the corresponding guarantee is not provided by the method. Among the proposed methods, CGKF yields particularly tight intervals in the matched linear Gaussian setting, where the Gaussian geometry used in its initialization accurately represents the posterior. In the nonlinear setting, CQKF benefits from its ability to construct asymmetric intervals and yields tighter regions, as illustrated in Fig. 3. Moreover, even under model mismatch, CQKF produces narrower intervals than observation-based CQR, demonstrating the benefit of using the time-varying posterior moments as conformal features. The direct trajectory-wise constructions also avoid the substantially larger calibration sets required by the Bonferroni variants. The proposed methods also outperform the residual-based baselines, 
+
+Residuals is disadvantaged by a non-adaptive, constant-width band over time t, while Residuals-LCP further loses efficiency by reserving 10% of the data to train its coefficients. 
+
+C. Multivariate-State Results 
+
+The multivariate results are summarized in Table III. The results demonstrate the importance of conformal calibration: while the nominal Gaussian posterior can provide reasonable sample-wise regions in the matched linear Gaussian setting, its coverage deteriorates markedly for nonlinear and chaotic dynamics. All three proposed constructions largely restore the prescribed coverage, for both sample-wise and trajectory-wise calibration, despite their markedly different region geometries. The results further demonstrate the benefit of exploiting the posterior information generated by the Kalman-type filter. The observation-based DQR and DCP baselines generally require larger regions than their posterior-aware counterparts CQKF and CDKF. In the matched linear Gaussian setting, CGKF provides the most compact regions, as expected from the agreement between its ellipsoidal construction and the true posterior geometry. As the posterior departs from this setting, the learned constructions become increasingly advantageous. In particular, CDKF generally produces the smallest regions among the learned approaches, while CQKF also provides a substantial reduction relative to conventional DQR. The improvement is especially pronounced for the Lorenz attractor, where the greater flexibility of the learned posterior-aware constructions yields considerably more compact regions than either Gaussian or observation-only conformal alternatives. 
+
+D. Complexity and Sensitivity 
+
+We conclude by examining the computational cost associated with the additional flexibility of our constructions. Since model training and conformal calibration are carried out offline, inference latency is particularly relevant for online 11                                                                                                                       
+
+> Scenario Method Sample-wise Trajectory-wise Per-sample Miscoverage [%] Normalized Region Size Per-trajectory Miscoverage [%] Normalized Region Size Linear Gaussian
+> Gauss 4.72 /0.99 1.00 /0.21 ––CGKF 4.91 /0.95 0.99 /0.21 4.83 2.16 /0.46
+> Rec 4.77 /0.82 1.26 /0.27 5.50 3.96 /0.78
+> DQR 4.73 /1.00 2.88 /0.94 6.33 8.13 /2.53
+> CQKF 4.72 /0.96 1.07 /0.24 6.17 2.95 /0.57
+> DCP 4.74 /0.96 2.90 /1.06 6.83 6.78 /2.00
+> CDKF 4.68 /0.87 1.02 /0.22 5.67 2.19 /0.44
+> Pendulum
+> Gauss 14 .11 /11 .07 1.00 /0.27 ––CGKF 4.58 /1.16 1.36 /0.25 5.33 3.71 /1.30
+> Rec 4.63 /1.09 1.43 /0.27 5.33 3.14 /0.93
+> DQR 4.71 /1.31 2.26 /1.11 3.00 4.52 /1.79
+> CQKF 4.80 /1.17 1.13 /0.31 5.33 2.31 /0.49
+> DCP 4.76 /1.19 1.92 /0.75 3.00 3.30 /1.51
+> CDKF 4.77 /1.23 1.10 /0.30 5.00 2.29 /0.51
+> Pendulum (UKF)
+> Gauss 62 .11 /38 .33 1.00 /0.73 ––CGKF 5.14 /0.99 3.17 /0.82 5.67 7.36 /3.66
+> Rec 5.18 /0.96 3.22 /0.79 6.00 7.36 /3.66
+> DQR 5.16 /1.25 2.80 /1.38 4.67 5.72 /2.33
+> CQKF 5.32 /1.25 2.59 /0.82 5.00 3.96 /1.21
+> DCP 5.04 /1.02 2.39 /0.94 4.67 4.16 /1.95
+> CDKF 5.48 /1.01 1.86 /0.51 4.50 3.47 /0.76
+> Lorenz
+> Gauss 41 .52 /33 .62 1.00 /0.23 ––CGKF 4.16 /0.88 7.27 /10 .25 3.75 21 .04 /10 .27
+> Rec 4.33 /0.80 8.91 /10 .75 4.00 22 .24 /11 .98
+> DQR 5.14 /1.22 6.91 /4.26 3.75 22 .71 /14 .14
+> CQKF 4.19 /1.05 2.07 /1.43 6.25 5.92 /2.84
+> DCP 5.28 /1.45 8.96 /8.42 3.75 22 .84 /17 .55
+> CDKF 4.46 /1.20 1.78 /1.03 3.50 6.01 /2.80
+
+TABLE III: Performance comparison for multivariate scenarios at SNR = −15 dB. Each miscoverage entry reports the average value/STD, while each normalized region-size entry reports the normalized average/STD. For both sample-wise and trajectory-wise evaluation, the region-size mean and STD are normalized by the mean region size of the corresponding Gaussian-posterior baseline. Thus, a normalized value greater than one indicates a region larger than the corresponding Gaussian-posterior region. Red entries denote failure to meet the required ≤ 5% miscoverage rate. TABLE IV: Average inference time per sample for the considered methods in the Lorenz attractor simulation.               
+
+> Method Gauss CGKF Rec DQR CQKF DCP CDKF Evaluation [ms] 0.149 0.155 1.075 0.870 0.878 1.830 1.862
+
+tracking. The resulting latencies for the Lorenz experiment, all measured on the same AMD Ryzen AI 9 HX 370 CPU platform, are reported in Table IV. As expected, CGKF incurs essentially no learned-model overhead beyond the Kalman-type filtering operation and the evaluation of the Mahalanobis score. CQKF introduces the evaluation of a directional quantile network but remains substantially less computationally demanding than CDKF. The latter provides the most flexible confidence regions, but its mixture-density representation leads to considerably higher inference times. These results quantify the geometry-complexity tradeoff discussed in Subsection III-C. Throughout the multivariate experiments reported above, we use |U| = 128 . The computational cost of CQKF can further be adjusted through the number of directional constraints |U| .Fig. 4 evaluates this tradeoff for the linear Gaussian model at 
+
+SNR = −15 dB. Increasing |U| yields a finer approximation of the region boundary and reduces the resulting region size, bringing it closer to the ellipsoidal CGKF construction in this setting, at the expense of evaluating more directional quantiles. V. C ONCLUSION 
+
+We proposed a conformalized Kalman filtering framework that leverages the time-varying posterior moments produced by Kalman-type estimators to construct statistically reliable con-fidence regions under nonlinearities, non-Gaussian disturbances, and model mismatch. The proposed CGKF, CQKF, and CDKF constructions provide complementary tradeoffs between compu-tational simplicity and region flexibility, while admitting finite-sample sample-wise and trajectory-wise coverage guarantees. Numerical results across diverse dynamical systems demonstrated that the proposed methods achieve the prescribed coverage while producing informative confidence regions, highlighting the benefit of combining model-based filtering with conformal calibration. REFERENCES [1] O. Weisman, N. Shlezinger, and B. Laufer-Goldshtein, “Conformal prediction aided Kalman filters with confidence intervals,” in IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 2026, pp. 666–670. [2] S. Gannot and A. Yeredor, “The Kalman filter,” Springer Handbook of Speech Processing , pp. 135–160, 2008. [3] J. Durbin and S. J. Koopman, Time series analysis by state space methods .Oxford University Press, 2012. 12 
+
+Fig. 3: One-dimensional prediction intervals obtained by CQKF and CGKF for the linear and nonlinear SS models. | | = 16 | | = 64 | | = 128 | | = 256  
+
+> Number of Directions | |
+> 40 50 60 70 80 Region Size
+> CQKF Elliptical-CGKF Rec-CGKF
+
+Fig. 4: Effect of the number of directions |U| on the prediction-region size for the linear Gaussian scenario at SNR = −15 dB. 
+
+[4] R. E. Kalman, “A new approach to linear filtering and prediction problems,” 
+
+Journal of Basic Engineering , vol. 82, no. 1, pp. 35–45, 1960. [5] S. F. Schmidt, “The Kalman filter-its recognition and development for aerospace applications,” Journal of Guidance and Control , vol. 4, no. 1, pp. 4–7, 1981. [6] S. J. Julier and J. K. Uhlmann, “Unscented filtering and nonlinear estimation,” Proc. IEEE , vol. 92, no. 3, pp. 401–422, 2004. [7] Y. Dahan, G. Revach, J. Dunik, and N. Shlezinger, “Uncertainty quantifica-tion in deep learning based Kalman filters,” in IEEE International Confer-ence on Acoustics, Speech and Signal Processing (ICASSP) . IEEE, 2024. [8] V. Rozenfeld and B. L. Goldshtein, “Conformal prediction for manifold-based source localization with Gaussian processes,” in IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) , 2025. [9] T. Zhou, Y. Jie, Y. Wei, Y. Zhang, and H. Chen, “A real-time prediction interval correction method with an unscented Kalman filter for settlement monitoring of a power station dam,” Scientific Reports , vol. 13, no. 1, p. 4055, 2023. [10] S. Eichstädt, N. Makarava, and C. Elster, “On the evaluation of uncertainties for state estimation with the Kalman filter,” Measurement Science and Technology , vol. 27, no. 12, p. 125009, 2016. [11] J. Uhlmann and S. Julier, “Gaussianity and the Kalman filter: A simple yet complicated relationship,” arXiv preprint arXiv:2405.00058 , 2024. [12] V. Vovk, A. Gammerman, and G. Shafer, Algorithmic learning in a random world . Springer Science & Business Media, 2005. [13] A. N. Angelopoulos and S. Bates, “Conformal prediction: A gentle introduction,” Foundations and Trends in Machine Learning , vol. 16, no. 4, pp. 494–591, 2023. [14] A. N. Angelopoulos, R. F. Barber, and S. Bates, “Theoretical foundations of conformal prediction,” arXiv preprint arXiv:2411.11824 , 2024. [15] Y. Romano, E. Patterson, and E. Candes, “Conformalized quantile regres-sion,” Advances in Neural Information Processing Systems , vol. 32, 2019. [16] J. Lei, M. G’Sell, A. Rinaldo, R. J. Tibshirani, and L. Wasserman, “Distribution-free predictive inference for regression,” Journal of the American Statistical Association , vol. 113, no. 523, pp. 1094–1111, 2018. [17] C. Gupta, A. K. Kuchibhotla, and A. Ramdas, “Nested conformal prediction and quantile out-of-bag ensemble methods,” Pattern Recognition ,vol. 127, p. 108496, 2022. [18] L. Kong and I. Mizera, “Quantile tomography: using quantiles with multivariate data,” Statistica Sinica , pp. 1589–1610, 2012. 13 
+
+[19] S. Feldman, S. Bates, and Y. Romano, “Calibrated multiple-output quantile regression with representation learning,” Journal of Machine Learning Research , vol. 24, no. 24, pp. 1–48, 2023. [20] D. Paindaveine and M. Šiman, “On directional multiple-output quantile regression,” Journal of multivariate analysis , vol. 102, no. 2, pp. 193–212, 2011. [21] P. Boˇ cek and M. Šiman, “Directional quantile regression in r,” Kybernetika ,vol. 53, no. 3, pp. 480–492, 2017. [22] V. Dheur, M. Fontana, Y. Estievenart, N. Desobry, and S. B. Taieb, “A unified comparative study with generalized conformity scores for multi-output conformal regression,” in International Conference on Machine Learning (ICML) , 2025. [23] A. A. Rosenberg, S. Vedula, Y. Romano, and A. M. Bronstein, “Fast non-linear vector quantile regression,” arXiv preprint arXiv:2205.14977 , 2022. [24] S. Vedula, I. Tallini, A. A. Rosenberg, M. Pegoraro, E. Rodola, Y. Romano, and A. Bronstein, “Continuous vector quantile regression,” in ICML Work-shop on New Frontiers in Learning, Control, and Dynamical Systems , 2023. [25] Z. Fang, A. Tan, and J. Huang, “Contra: Conformal prediction region via normalizing flow transformation,” in International Conference on Learning Representations , vol. 2025, 2025, pp. 91 833–91 850. [26] M. Sadinle, J. Lei, and L. Wasserman, “Least ambiguous set-valued classifiers with bounded error levels,” Journal of the American Statistical Association , vol. 114, no. 525, pp. 223–234, 2019. [27] I. Gibbs and E. Candes, “Adaptive conformal inference under distribution shift,” Advances in Neural Information Processing Systems , vol. 34, pp. 1660–1672, 2021. [28] C. Xu and Y. Xie, “Conformal prediction for time series,” IEEE Trans. Pattern Anal. Mach. Intell. , vol. 45, no. 10, pp. 11 575–11 587, 2023. [29] M. Zecchin and O. Simeone, “Localized adaptive risk control,” Advances in Neural Information Processing Systems , vol. 37, pp. 8165–8192, 2024. [30] A. Angelopoulos, E. Candes, and R. J. Tibshirani, “Conformal PID control for time series prediction,” Advances in Neural Information Processing Systems , vol. 36, pp. 23 047–23 074, 2023. [31] B. Wang, M. Zecchin, and O. Simeone, “Online conformal prediction with corrupted feedback,” arXiv preprint arXiv:2605.20515 , 2026. [32] C. Xu, H. Jiang, and Y. Xie, “Conformal prediction for multi-dimensional time series by ellipsoidal sets,” arXiv preprint arXiv:2403.03850 , 2024. [33] S. Su, S. Han, Y. Li, Z. Zhang, C. Feng, C. Ding, and F. Miao, “Collaborative multi-object tracking with conformal uncertainty propagation,” 
+
+IEEE Robotics and Automation Letters , vol. 9, no. 4, pp. 3323–3330, 2024. [34] L. Lindemann, M. Cleaveland, G. Shim, and G. J. Pappas, “Safe planning in dynamic environments using conformal prediction,” IEEE Robotics and Automation Letters , vol. 8, no. 8, pp. 5116–5123, 2023. [35] T. G. Dietterich and J. Hostetler, “Conformal prediction intervals for markov decision process trajectories,” arXiv preprint arXiv:2206.04860 , 2022. [36] L. Lindemann, Y. Zhao, X. Yu, G. J. Pappas, and J. V. Deshmukh, “Formal verification and control with conformal prediction: Practical safety guarantees for autonomous systems,” IEEE Control Syst. Mag. , vol. 45, no. 6, pp. 72–122, 2025. [37] S. Stanton, W. Maddox, and A. G. Wilson, “Bayesian optimization with conformal prediction sets,” in International conference on artificial intelligence and statistics . PMLR, 2023, pp. 959–986. [38] D. Kim, M. Zecchin, S. Park, J. Kang, and O. Simeone, “Robust bayesian optimization via localized online conformal prediction,” IEEE Transactions on Signal Processing , vol. 73, pp. 2039–2052, 2025. [39] I. Arasaratnam and S. Haykin, “Cubature Kalman filters,” IEEE Trans. Autom. Control , vol. 54, pp. 1254–1269, 2009. [40] R. Koenker and G. Bassett Jr, “Regression quantiles,” Econometrica: journal of the Econometric Society , pp. 33–50, 1978. [41] C. Bonferroni, “Teoria statistica delle classi e calcolo delle probabilita,” 
+
+Pubblicazioni del R istituto superiore di scienze economiche e commericiali di firenze , vol. 8, pp. 3–62, 1936. [42] R. F. Barber, E. J. Candes, A. Ramdas, and R. J. Tibshirani, “Conformal prediction beyond exchangeability,” The Annals of Statistics , vol. 51, no. 2, pp. 816–845, 2023. [43] G. Revach et al. , “KalmanNet: Neural network aided Kalman filtering for partially known dynamics,” IEEE Trans. Signal Process. , vol. 70, pp. 1532–1547, 2022. [44] M. Cleaveland, I. Lee, G. J. Pappas, and L. Lindemann, “Conformal pre-diction regions for time series using linear complementarity programming,” in AAAI Conference on Artificial Intelligence , 2024, pp. 20 984–20 992. 
+
+APPENDIX 
+
+A. Proof of Theorem 1 
+
+Fix t ∈ { 1, . . . , T }, and condition on the proper training set used by the considered conformalized Kalman filtering method. Let R(1) (t), . . . , R |D cal |(t) denote the nonconformity scores at time t associated with the calibration trajectories, and let 
+
+Rtest (t) denote the corresponding score of the test trajectory. By the construction of the confidence region, we have (15), 
+
+st ∈ C αt (ˆ st, Σt) iff Rtest (t) ≤ bQ1−α(t),
+
+where bQ1−α(t) is the computed correction from the calibration scores at time t. Since the calibration and test trajectories are exchangeable, the corresponding scores 
+
+{R1(t), . . . , R |D cal |(t), R test (t)} are also exchangeable. Therefore, by the empirical-quantile lemma for exchangeable random variables [15], it holds that 
+
+Pr 
+
+
+
+Rtest (t) ≤ bQ1−α(t)
+
+
+
+≥ 1 − α, 
+
+and thus, 
+
+Pr( st ∈ C αt (ˆ st, Σt)) ≥ 1 − α. 
+
+Moreover, if the calibration and test nonconformity scores at time t are almost surely distinct, the corresponding upper bound of the empirical-quantile lemma in [15] gives 
+
+Pr 
+
+
+
+Rtest (t) ≤ bQ1−α(t)
+
+
+
+≤ 1 − α + 1
+
+|D cal | + 1 ,
+
+and hence 
+
+Pr( st ∈ C αt (ˆ st, Σt)) ≤ 1 − α + 1
+
+|D cal | + 1 .
+
+B. Proof of Corollary 1
+
+The corollary follows from the union bound, as 
+
+Pr 
+
+ [
+
+> 1≤t≤T
+
+{st /∈ C ˜αt (ˆ st, Σt)}
+
+
+
+≤ X
+
+> 1≤t≤T
+
+Pr  st /∈ C ˜αt (ˆ st, Σt)
+
+≤ X
+
+> 1≤t≤T
+
+˜α = α. 
+
+Taking complements proves (30). 
+
+C. Proof of Theorem 2
+
+For any test trajectory, let Rt denote the nonconformity score at time t. By construction, the entire trajectory is covered if and only if all sample-wise scores are below the calibrated threshold, or equivalently, if their maximum is below this threshold. Thus, 
+
+Pr  st ∈ Cαt (ˆ st, Σt) ∀t ∈ { 1, . . . , T } = Pr  Rt ≤ ˆQ1−α ∀t
+
+= Pr   T\
+
+> t=1
+
+{Rt ≤ ˆQ1−α}
+
+= Pr   max  
+
+> 1≤t≤T
+
+Rt ≤ ˆQ1−α.
+
+Since the trajectories are exchangeable, their maximum nonconformity scores are also exchangeable. The standard conformal empirical-quantile argument therefore yields 
+
+Pr   max  
+
+> 1≤t≤T
+
+Rt ≤ ˆQ1−α ≥ 1 − α, 
+
+which establishes the desired trajectory-wise coverage.

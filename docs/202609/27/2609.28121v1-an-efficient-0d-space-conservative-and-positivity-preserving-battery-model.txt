@@ -1,0 +1,2894 @@
+Title: An efficient 0D-space conservative and positivity preserving battery model
+
+URL Source: https://arxiv.org/pdf/2609.28121v1
+
+Published Time: Thu, 24 Sep 2026 01:15:14 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# AN EFFICIENT 0D-SPACE CONSERVATIVE AND POSITIVITY PRESERVING BATTERY MODEL 
+
+ARTICLE 
+
+S. Clain 
+
+Centre of Mathematics, Coimbra University, Largo D. Dinis, 3000-143 Coimbra, Portugal 
+
+clain@mat.uc.pt 
+
+M.C. Lucas 
+
+Organic and Inorganic Chemistry Department, University of the Basque Country UPV/EHU, P.O. Box 644, Bilbao, 48940, Spain 
+
+maria.mourato@ehu.eus 
+
+M.T. Malheiro 
+
+Centre of Mathematics, Campus de Gualtar, 4710-057 Braga, Portugal 
+
+mtm@math.uminho.pt 
+
+C. M. Costa 
+
+Physics Center of Minho and Porto Universities (CF-UM-UP) and Laboratory of Physics for Materials and Emergent Technologies, LapMET, University of Minho, Campus de Gualtar, 4710-057 Braga, Portugal 
+
+cmscosta@fisica.uminho.pt 
+
+ABSTRACT 
+
+Embedded software aims to provide the main characteristics of a cell in real time to manage and optimize battery usage. A complete multidimensional model is not tractable with the low com-putational resources available in-situ. A class of 0D-in-space models is derived from the P2D Doyle-Fuller-Newman system, with additional assumptions about the functions’ shape in space, and strongly reduces the complexity while preserving the main characteristics over time. We propose a conservative, positivity-preserving model built from the P2D system based on the statement that the Butler-Volmer source term is constant in each subdomain (anode, separator, cathode). We develop a mathematically rigorous construction that provides the simplified model and design a scheme to solve the system. We highlight that the model guaranties the conservation property together with the positivity of the concentrations. In particular, the diffusion-limited current density that represents the maximum current that can be used while still preserving the positivity of the cation concentration is obtained explicitly. 
+
+Keywords Li-ion Battery · Modelling · Diffusion-driven intensity · numerical simulations 
+
+1 Introduction 
+
+The growing demand for electrochemical energy storage has shifted battery development from material-level opti-mization toward understanding and controlling complete electrochemical systems. Lithium-ion batteries, in particular, combine high energy and power density with relatively high efficiency and long cycle life, enabling their widespread use in portable electronics, electric vehicles, and stationary energy storage systems [1, 2]. However, the performance of a battery is not determined by a single material or electrochemical reaction. The cell results from the coupling of ionic transport in the electrolyte, electronic conductivity (in the solid phases), lithium diffusion inside the active material, arXiv:2609.28121v1 [math.NA] 23 Sep 2026 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+charge-transfer reactions at the electrolyte–electrode interfaces, and the evolution of temperature and material properties during operation [3, 4]. These phenomena occur over different characteristic length and time scales and are strongly coupled through the local concentration, potential, current density, and reaction rate. From a physical point of view, a rechargeable battery can therefore be regarded as a distributed electrochemical system rather than a simple electrical component. During charge and discharge, the imposed current generates spatial gradients of ionic concentration and electric potential in the electrolyte, while the electrochemical reaction transfers ions and electrons between the electrolyte and active materials. Inside the porous electrodes, the reaction is distributed over a large interfacial area and is coupled with diffusion inside the active particles. Consequently, the terminal voltage measured is only a macroscopic consequence of several internal processes. The description of these requires the simultaneous consideration of mass conservation, charge conservation, species transport, electrochemical kinetics, and thermodynamic equilibrium. This physical complexity explains the early need for mathematical models capable of connecting measurable quantities, such as current and voltage, with the internal states of the cell. The historical development of battery modeling followed this need for quantitative description of internal cell behaviour. The theoretical analysis of porous electrodes established a framework in which current and reaction distribution could be described within a porous electrode rather than treating the electrode as a homogeneous surface [3]. Doyle, Fuller and Newman introduced a physics-based model describing the coupled transport and electrochemical behaviour, followed by the formulation of the dual lithium ion insertion cell [5, 6]. These developments established what is now commonly referred to as the Doyle–Fuller–Newman (DFN), or pseudo-two-dimensional (P2D), framework. The importance of this approach is that the model not only reproduces the terminal voltage but also provides internal quantities. In the last three decades, modeling and numerical simulations have received increasing attention to develop, test, and provide in-depth information on all the complex mechanisms of the cell at any scale. Nowadays, many sophisticated battery models have been developed to address specific issues such as microstructure evolution, multiscale multi-domain coupling, electrochemical effects on the microscale, anisotropic behaviors, or thermal or mechanical degradation [7, 8, 9, 10, 11]. All of these models require significant computational resources and generally do not aim to simulate or monitor batteries as a whole. On the other hand, macro-scale models, initiated with the Doyle-Fuller-Newman (DFN) model [6, 5, 12, 13] describe the whole behavior of the cell by computing essential variables such as concentration, current density, and potential over a one-dimensional domain. It provides fine enough predictions regarding the major properties of the battery: simplified geometry, conductivity, diffusion, and concentration, among many others. Such modeling uses the one-dimensional variable x following the normal vector direction of the cross-section in space together with the time variable t. Additionally, a pseudo-dimension r is added to consider the effect of intercalation, assuming a spherical porous support of the electrodes. To reduce computational cost, we propose a mathematical reduction of the P2D equations to Single Particle Models (SPMe). To sum up, any d-dimensional space model requires an advanced numerical solver based on Finite Element, Finite Difference, or Finite Volume methods equipped with, at least, a robust second-order time integrator. Simulations on modern computers take from a few minutes up to hours of running time and provide in-depth insight about the constituents of the cell. Nevertheless, the computational cost is still important for embedded computational resources, where the cells’ evolution at the micro-nanoscale is not relevant. Modern battery packs feature embedded computing hardware that calculates, monitors, and predicts cell evolution in real time. Such models are fundamental to perform an efficient management of the cells that make up the whole battery. To deploy battery physics onto embedded computing hardware, we cannot use partial differential equation models, even for the less demanding Doyle-Fuller-Newman (DFN) model [14, 15]. They are too computationally demanding, as required by iterative solvers with numerous variables (several thousand). Moreover, fine-detail approximations are, in fact, out of the scope of a model that should handle the fundamental cells’ information and their states. Simplification or Reduced Order Methods (ROM) aim at developing new mathematical and numerical models that reduce the effective time resolution while maintaining a good approximation (at least for the variable of interest). In particular, some critical properties such as conservation or concentration positivity have to be preserved. There exist several ways to reduce the complexity and computational cost using different techniques of ROM [16, 17]. One of them [18, 19] consists of introducing a polynomial representation in space with time-dependent coefficients. The approximation is the summation of separated variables, i.e. functions, for instance, the product of time-dependent coefficients with polynomial functions in space (Galerkin method). The extreme situation corresponds to the consider-ation of a unique polynomial function in each subdomain (anode, cathode, and separator) but with different degrees corresponding to a simplified Galerkin method with only three elements. From another perspective, we employ a collocation technique on each subdomain using average and pointwise values at the interface of the physical quantities to provide a simpler model that enables handling of a few time-dependent unknowns. 2An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+Looking more cautiously at the literature, the choice of polynomials and their characterizations (degree, unknowns) is almost driven by intuition-based simplification [14, 20, 21]. Moreover, most of the 0D models proposed in the literature do not necessarily fulfil fundamental physical properties such as conservation (charge, concentration) or positivity (Li +
+
+concentration). In particular, dealing with a 0D model that just uses average values as unknowns cannot avoid negative cation concentration in the dielectric at the collector’s interface, leading to a non-physical model. In contrast, the simplified 0D model we propose follows a rigorous mathematical development to provide relations that involve average and interface values and respect the basic physical constraints. We apply an averaging procedure connecting mean values and interface values to preserve the conservation property (charge, moles, Kirchhoff law), concentrations’ positivity, and provide an analytical expression of the limit diffusion intensity, i.e. , the maximum intensity such that the cations’ concentration remains non-negative in the electrodes. Moreover, the model introduces the notion of target intensity (the intensity that the user would like to impose on the cell) that we compare with the real intensity (the intensity that the system can really deliver). To this end, we shall make two important statements to elaborate the model: 1. The variables follow a time-parametrized steady-state regime in space, i.e. the time derivatives are skipped, except for the concentrations in the electrodes (intercalated lithium in the anode and oxide-metallic lithium in the cathode). 2. We assume that the Butler-Volmer term is constant in space for each electrode, depending only on the concentrations’ average. The first condition means that, except for some rare short transition situations, the time derivative of the current and the concentrations is neglected. The second condition seems quite restrictive, but the average value is a second-order approximation of a function over a small-sized domain (tens of micrometers). Therefore, we consider that, to deliver a simplified model with relevant accuracy, such a hypothesis is acceptable. One has to face a trade-off between simplicity and accuracy, and our assumption aims to balance the two antagonist objectives. As a result, the model is written as a time-dependent problem using average and pointwise values at the interface with around twenty variables. We prove that the constant (in space) Butler-Volmer source term assumption mathematically leads to a model where all the other variables (concentration, intensity, potential) are polynomials in space. Even better, we prove that the polynomial degree of the variables is not an intuition-based additional assumption, but a consequence of the second statement. 
+
+2 The P2D model 
+
+The standard P2D model [6, 5] consists of two porous electrodes separated by an intermediate layer, an ionically conducting separator, all filled with electrolyte. The negative electrode (anode) corresponds to a domain Ωn =[xcn , x en ] and has length Ln, while the positive electrode (cathode) occupies Ωp = [ xep , x cp ] and has length Lp. The intermediate layer (separator) occupies Ωs = [ xen , x ep ] and has length Ls. We set xcn = 0 , so the total cell length is 
+
+L = Ln + Ls + Lp (see figure 1). In Table 1, we provide the notation and variable names together with their dimension, used throughout the model. Note that i [A m −2] denotes a surface current density, whereas j [A m −3] represents a volume current density. 
+
+2.1 Species conservation 
+
+The P2D model [22, 6, 5, 23] couples macroscopic transport across the cell with microscopic diffusion inside active particles. The coordinate x is the orthogonal direction to the cut-plane of the cell (macro-scale), r is the radial coordinate describing the microscale diffusion effect of the oxidant/reduction component inside the porous electrodes, and t denotes time. Let cn(x, r, t ) [ mol m −3] be the molar concentration of the lithium atom in the negative electrode (usually C 6Li) and let cp(x, r, t ) [ mol m −3] denote the molar concentration of the lithium atom in the positive electrode (for example LiMnO 2, LiCoO 2). For each electrode k ∈ { n, p } and each x ∈ Ωk, the conservation of species of the lithium compound is governed by Fick’s diffusion law in the radial direction r:
+
+∂tck = 1
+
+r2 ∂r
+
+
+
+r2Dk∂r ck
+
+
+
+, r ∈ ]0 , R k[.(1) 3An efficient 0D-space conservative and positivity preserving battery model A P REPRINT Anode Collector Cathode Collector 
+
+Anode/negative electrode Cathode/positive electrode separator 
+
+# cncen cpces cep 
+
+ien 
+
+iep 
+
+in ip
+
+ien ies iep 
+
+bv bv 
+
+## Li +e-
+
+xcn xen xep xcp 0Ln Ls Lp
+
+Figure 1: General design of a Lithium-ion cell during discharge notation dimension name 
+
+cn, cp [mol m −3] molar volume concentration in the negative and positive electrode 
+
+in, ip [A m −2] electronic current surface density in the negative and positive electrode 
+
+cen , cep , ces [mol m −3] molar concentration in the electrolyte 
+
+jBV 
+
+> en
+
+, jBV  
+
+> ep
+
+[A m −3] Butler-Volmer current volume density transfer in the negative and positive electrode 
+
+ien , iep , ies [A m −2] cathodic current surface density of Li + in the electrolyte 
+
+ϕn, ϕp [V ] electric potential in the negative and positive electrode 
+
+Φcn , Φcp [V ] electric potential at the interface xcn and xcp 
+
+ϕen , ϕep , ϕes [V ] ionic potential in the electrolyte 
+
+Φen , Φep [V ] ionic potential at the interfaces xen and xep 
+
+Uen , Uep [V ] open circuit potential of the negative and positive electrode 
+
+ηek , ηek [V ] overpotential of the negative and positive electrode 
+
+I [A] intensity between the positive and negative electrodes 
+
+αn, αp [-] negative and positive electrode transfer coefficients 
+
+an, ap [m−1] active surface: ratio between the specific surface and the specific volume 
+
+εn, εp , εs [-] porosity of the negative, positive electrode and separator 
+
+Dn, Dp [m2 s−1] molar diffusion in the electrodes 
+
+Den , Dep , Des [m2 s−1] molar diffusion of the electrolyte in the three subdomains 
+
+A [m2] orthogonal cut plane area of the apparatus 
+
+σen , σep , σes [S m −1] ionic conductivity in each subdomain Table 1: Notations for the P2D cell model Here, Rk [m] is the characteristic spherical radius of the particle and Dk [m2 s−1] is the lithium diffusion coefficient in the electrode k. The associated boundary conditions are 
+
+Dk∂r ck r=0 
+
+= 0,(2) 
+
+Dk∂r ck r=Rk
+
+= − iBV  
+
+> ek
+
+(x, t )
+
+F = − jBV  
+
+> ek
+
+(x, t )
+
+akF ,(3) where ak = 3 εk/R k [m−1] is the active surface, εk [m3 m−3] is the electrode porosity, and F [C mol −1] is Faraday’s constant. 4An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+The outward normal charge flux is controlled by the charge transfer per unit surface iBV  
+
+> ek
+
+(x, t ) [ Am −2], measured from the electrode toward the electrolyte. We recast it as a charge transfer per volume jBV  
+
+> ek
+
+(x, t ) = ak iBV  
+
+> ek
+
+(x, t ) [ A m −3] given by the Butler-Volmer relation. With this convention, it is positive when Li −−→ Li + (deintercalation), and negative when Li + −−→ Li (intercalation). 
+
+Remark 1. The original Butler-Volmer (BV) relation [24, 25, 14] computes the exchange current density iBV  
+
+> ek
+
+per unit area 
+
+[Am −2]. Indeed, at the pore scale, the BV flux is given by a flux of charge across the interface between the electrode and the electrolyte. In a reduced one-dimensional model (the macroscopic average model), the volumetric current density jBV 
+
+> ek
+
+per unit volume [Am −3] is introduced as a source term in the species conservation equation by the macroscopic averaging (Volume of fluid (VOF) paradigm) used in a porous media system [26]. Consequently, in the literature, two current density versions coexist and may lead to some confusion in the applications. One has to carefully check whether the formulation uses a density current per unit area [24] or per unit volume [27]. 
+
+The conservation equation for Li + in the electrolyte, with concentration cek (x, t ) [ mol m −3], x ∈ Ωk, takes place in the three subdomains Ωk, k ∈ { n, p, s } given by the relations 
+
+εn∂tcen = ∂x
+
+
+
+Den ∂xcen 
+
+
+
++ (1 − t+)
+
+F jBV  
+
+> en
+
+x ∈ Ωn,(4) 
+
+εp∂tcep = ∂x
+
+
+
+Dep ∂xcep 
+
+
+
++ (1 − t+)
+
+F jBV  
+
+> ep
+
+x ∈ Ωp,(5) 
+
+εs∂tces = ∂x
+
+
+
+Des ∂xces 
+
+
+
+x ∈ Ωs.(6) Here, εs [m3 m−3] is the porosity of the separator, t+ [−] is the transfer number, and Dek [m2 s−1] is the effective diffusion of Li + in the electrolyte filling the whole cell Ω.We prescribe that the cation concentration is continuous at the electrode-separator interfaces x = xen and x = xep ,while we state that no cation Li + leaves the cell at the collector interface x = xcn and x = xcp ,
+
+cen (xen , t ) = ces (xen , t ), cep (xep , t ) = ces (xep , t ),(7) 
+
+∂xcen (xcn , t ) = 0 , ∂xcep (xcp , t ) = 0 .(8) 
+
+2.2 Electronic current and potential 
+
+For k ∈ { n, p }, we denote by ik = ik(x, t ), [A m −2] the electronic current density per unit area and ϕk = ϕk(x, t ), [V ]
+
+the potential on the porous electrode Ωk. The potential is described by Ohm’s law, which relates it to the current, while it depends on the electron transfer controlled by the Butler-Volmer source term. 
+
+ik = −σk∂xϕk,(9) 
+
+∂xik = −jBV  
+
+> ek
+
+,(10) with σk [S m −1] the electronic conductivity. Moreover, we assume that no electron moves toward the electrolyte; hence, we prescribe (11) in(xen , t ) = 0 , ip(xep , t ) = 0 .
+
+Integrating (10) and using (11), we deduce the electronic flux at the collectors, 
+
+in(xcn , t ) = +
+
+Z xen 
+
+> xcn
+
+jBV 
+
+> en
+
+(x, t ) dx, (12) 
+
+ip(xcp , t ) = −
+
+Z xcp 
+
+> xep
+
+jBV  
+
+> ep
+
+(x, t ) dx. (13) We define the potential at the collectors by (14) Φcn (t) = ϕn(xcn , t ), Φcp (t) = ϕp(xcp , t ).
+
+By convention, the electric current I [A] is the signed real number, positive when the electrons flow from the anode to the cathode, that is, when Φcn ≤ Φcp . In this case, the electrons move out of Ωn and we have I(t) = A i n(xcn , t ),where A [m2] is the orthogonal cut plane area of the cell. On the other hand, the flux ip(xcp , t ) represents the electronic density moving inward to Ωp. Charge conservation therefore gives I(t) = A i p(xcp , t ). In conclusion, the current is given by (15) I(t) = A i n(xcn , t ) = A i p(xcp , t ).
+
+Remark 2. For a discharging cell, jBV  
+
+> en
+
+> 0 and jBV  
+
+> ep
+
+< 0 means that we have the creation of electrons at the negative electrode, and the electrons are flowing from the anode towards the cathode with I > 0. On the contrary, charging the cell means that jBV  
+
+> en
+
+< 0 and jBV  
+
+> ep
+
+> 0, we have a consumption of electrons at the negative electrode and I < 0.
+
+5An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+2.3 Ionic current and potential 
+
+The cation current density per unit area iek ≡ iek (x, t ) [ Am −2] contains a density current by conduction and a contribution driven by the Li + concentration gradient. In the three subdomains, it is given by 
+
+ien = −σen 
+
+h
+
+∂xϕen + (2 t+ − 1) RT F ∂x
+
+ ln( cen )i
+
+, x ∈ Ωn,(16) 
+
+iep = −σep 
+
+h
+
+∂xϕep + (2 t+ − 1) RT F ∂x
+
+ ln( cep )i
+
+, x ∈ Ωp,(17) 
+
+ies = −σes 
+
+h
+
+∂xϕes + (2 t+ − 1) RT F ∂x
+
+ ln( ces )i
+
+, x ∈ Ωs,(18) with ϕek (x, t ) [ V ], the ionic potential at Ωk, σek [Sm −1] the ionic conductivity in Ωk, R [Jmol −1K−1] is the universal gas constant and T [K] is the temperature. We assume the continuity of flux and potential at the electrode-separator interfaces 
+
+ϕen (xen , t ) = ϕes (xen , t ), ϕep (xep , t ) = ϕes (xep , t ),(19) 
+
+ien (xen , t ) = ies (xen , t ), iep (xep , t ) = ies (xep , t ).(20) On the other hand, we assume that no cation leaves the cell at the collector’s interface, so (21) ien (xcn , t ) = 0 , iep (xcp , t ) = 0 .
+
+Charge conservation for the cation current density then reads (22) ∂xien = jBV 
+
+> en
+
+, ∂xies = 0 , ∂xiep = jBV  
+
+> ep
+
+.
+
+2.4 Butler-Volmer equation 
+
+The Butler-Volmer equation is the critical relation that describes charge transfer at the electrode-electrolyte interface. The equation has an expression with separated variables as jBV  
+
+> ek
+
+= j0 
+
+> ek
+
+· χek , where j0 
+
+> ek
+
+[A m −3], k ∈ { n, p } is the contribution associated with the concentration of reactive compounds, while χek [−] depends only on the potentials. The usual expression of the reaction equation is [6, 24] 
+
+i0 
+
+> ek
+
+= F r k
+
+ ck
+
+αk  cek 
+
+1−αk  cmax k − ck
+
+1−αk , j0 
+
+> ek
+
+= ak i0
+
+> ek
+
+,
+
+with rk the reaction rate of dimension [mol (αk −1) m(4 −3αk )s−1], i0 
+
+> ek
+
+[A m −2] the current density per surface unit and 
+
+j0 
+
+> ek
+
+the corresponding volumetric current density. The parameters αn, α p ∈ [0 , 1] [ −] are the anodic and cathodic transfer coefficients, respectively. An alternative approach is based on a reference state (marked by the symbol ⋆) with concentrations c⋆k, c⋆ek . The corresponding reference current densities are [24] 
+
+i0⋆ek = F r k
+
+ c⋆k
+
+αk  c⋆ek 
+
+1−αk  cmax k − c⋆k
+
+1−αk , j0⋆ek = ak i0⋆ek 
+
+The exchange current density j0 
+
+> ek
+
+is then written as a variation of this reference state (23) j0 
+
+> ek
+
+= j0⋆ek 
+
+ ck
+
+c⋆k
+
+αk  cmax k − ck
+
+cmax k − c⋆k
+
+1−αk  cek 
+
+c⋆ek 
+
+1−αk
+
+.
+
+On the other hand, the density current transfer is also controlled by the overpotential ηek [V ], given by (24) ηek = ϕk − ϕek − Uek ,
+
+where Uek [V ] is the open-circuit potential associated with the intercalation/deintercalation process. To express the function χek compactly, we introduce the b-hyperbolic function bsinh (see section A) and set f = FRT 
+
+χek (ηek ) = exp 
+
+
+
+αkf η ek 
+
+
+
+− exp 
+
+
+
+(αk − 1) f η ek 
+
+
+
+(25) 
+
+= 2 exp 
+
+
+
+2αkf η ek /2
+
+
+
+− exp 
+
+
+
+2( αk − 1) f η ek /2
+
+
+
+2= 2 bsinh (f η ek /2; αk).
+
+Therefore, the volumetric Butler-Volmer current density becomes 
+
+jBV  
+
+> ek
+
+= 2 j0 
+
+> ek
+
+bsinh  f η ek /2; αk
+
+.
+
+6An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+Remark 3. When αk = 1 /2, we recover the hyperbolic sine function and the current density reads 
+
+jBV  
+
+> ek
+
+= 2 j0 
+
+> ek
+
+sinh  f η ek /2.
+
+For α̸ = 1 /2 we define a new class of special functions bsinh (η, β ) and bcosh (η, β ), referred to here as b-hyperbolic trigonometry function, presented and studied in section A. 
+
+3 The average procedure 
+
+The P2D model depends on the spatial variable x and the time t together with an additional variable r to provide a description of the electrode state at a microscopic level. Our objective is to reduce this spatially distributed description to a low-dimensional model. We therefore average the functions regarding r and x, while retaining the function values at specific points (collector–electrode interfaces xcn , xcp and electrode-electrolyte xen , xep ). 
+
+3.1 Electrode species conservation 
+
+We detail the average procedure for the negative electrode, but the same technique applies to the positive one. Integrating equation (1) over [0 , R n] and using the boundary conditions (2)-(3), we get 
+
+∂t
+
+Z Rn
+
+> 0
+
+cn(x, r, t )r2dr = Dn(Rn)2∂r cn(x, R n, t ) = − jBV 
+
+> en
+
+(x, t )
+
+anF (Rn)2.
+
+Furthermore, let cn(x, t ) denote the r-average of the function cn(x, r, t ). We then have 
+
+∂tcn(x, t ) = 34π(Rn)3 × 4π ∂ t
+
+Z Rn
+
+> 0
+
+cn(x, r, t )r2dr 
+
+= − 34π(Rn)3 × 4π jBV 
+
+> en
+
+(x, t )
+
+an F (Rn)2,
+
+= − 3
+
+Rn
+
+jBV 
+
+> en
+
+(x, t )
+
+an F .
+
+Following [27], we take akRk = 3 εk and the r-average equation then reads 
+
+εn∂tcn(x, t ) = − jBV 
+
+> en
+
+(x, t )
+
+F .
+
+The x-average cn(t) comes from the relation over Ωn and dividing by Ln = |Ωn|, we obtain the evolution equation for the spatially averaged concentration 
+
+d c n
+
+dt (t) = 1
+
+Ln
+
+ddt 
+
+Z xen 
+
+> xcn
+
+cn(x, t )dx = 1
+
+Ln
+
+Z xen 
+
+> xcn
+
+∂tcn(x, t )dx = − 1
+
+εnF L n
+
+Z xen 
+
+> xcn
+
+jBV 
+
+> en
+
+(x, t )dx = − 1
+
+εnF ȷBV 
+
+> en
+
+(t),
+
+where ȷBV  
+
+> en
+
+in [A m −3] is the average current transfer in the negative electrode and cn ([mol m −3]) is the corresponding average concentration of lithium. In summary, the variation of the average Lithium concentration in the electrode is given by (26) εn
+
+d c n
+
+dt (t) = − ȷBV 
+
+> en
+
+(t)
+
+F .
+
+Applying the same argument to the positive electrode, we deduce the corresponding species conservation equation in 
+
+Ωp,(27) εp
+
+d c p
+
+dt (t) = − ȷBV  
+
+> ep
+
+(t)
+
+F ,
+
+where cp and ȷBV  
+
+> ep
+
+are the averages of cp and jBV  
+
+> ep
+
+, respectively, in Ωp.
+
+Remark 4. The well-balanced relation between the creation and consumption of Li is then given by 
+
+(28) Ln ȷBV 
+
+> en
+
+(t) + Lp ȷBV  
+
+> ep
+
+(t) = 0 .
+
+7An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+3.2 Electrolyte species conservation 
+
+To obtain the x-average of the function cen (x, t ), we consider the Li + ion conservation law in Ωn, equation (4). Integrating it over the electrode and using the boundary condition (8) gives 
+
+εnLn
+
+d c en 
+
+dt = εn
+
+ddt 
+
+Z xen 
+
+> xcn
+
+cen (x, t ) dx =
+
+Z xen 
+
+> xcn
+
+εn∂tcen (x, t ) dx, 
+
+=
+
+Z xen 
+
+> xcn
+
+∂x
+
+
+
+Den ∂xcen 
+
+
+
+dx +
+
+Z xen 
+
+> xcn
+
+(1 − t+)
+
+F jBV 
+
+> en
+
+dx, 
+
+= Den (∂xcen (xen , t ) − ∂xcen (xcn , t )) + Ln
+
+(1 − t+)
+
+F ȷBV 
+
+> en
+
+(t),
+
+= Den ∂xcen (xen , t ) + (1 − t+)
+
+F LnȷBV 
+
+> en
+
+(t).
+
+Similarly, using the relations (5) and (8), we obtain the relation 
+
+εpLp
+
+d c ep 
+
+dt (t) = −Dep ∂xcep (xep , t ) + (1 − t+)
+
+F LpȷBV  
+
+> ep
+
+(t).
+
+Since there is no source term in the separator, integrating (6) over Ωs gives 
+
+Lsεs
+
+ddt ces = Des ∂xces (xep , t ) − Des ∂xces (xen , t ).
+
+At this stage, since no interfacial accumulation occurs, we assume the continuity of the cation flux at the interface 
+
+x = xen and x = xep given by condition (7), and we get the following 
+
+Des ∂xces (xen , t ) = Den ∂xcen (xen , t ),Des ∂xces (xep , t ) = Dep ∂xcep (xep , t ).
+
+Adding the three relations and using property (28) provides the global conservation of cations Li +
+
+ddt 
+
+
+
+Lnεncen + Lsεsces + Lpεpcep 
+
+
+
+= 0 .
+
+The well-balanced relation between the creation and consumption of cations is then given by (29) Lnεncen (t) + Lsεsces (t) + Lpεpcep (t) = M 0,
+
+with M 0 calculated from the initial condition. 
+
+3.3 Electronic current and potential 
+
+3.3.1 Electronic current in the electrodes 
+
+Let x ∈ Ωn. From equation (10) and the boundary condition (11), integration over [x, x en ] gives (30) in(x, t ) = in(x, t ) − in(xen , t ) = −
+
+Z xen 
+
+> x
+
+∂xin(s, t ) ds = + 
+
+Z xen 
+
+> x
+
+jBV 
+
+> en
+
+(s, t ) ds. 
+
+Similarly, for any x ∈ Ωp we integrate equation (10) over [xep , x ] and the boundary condition (11) yields (31) ip(x, t ) = ip(x, t ) − ip(xep , t ) = 
+
+Z xxep 
+
+∂xip(s, t ) ds = −
+
+Z xxep 
+
+jBV  
+
+> ep
+
+(s, t ) ds. 
+
+In particular, from the relations (12)-(13) we conclude with (15) 
+
+I(t) = +A L n ȷBV 
+
+> en
+
+(t),(32) 
+
+I(t) = −A L p ȷBV  
+
+> ep
+
+(t).(33) 8An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+3.3.2 Electric potential in the electrodes 
+
+The potential is given by equation (9) and we deduce from (30) 
+
+σn∂xϕn(x, t ) = −in(x, t ) = −
+
+Z xen 
+
+> x
+
+jBV 
+
+> en
+
+(s, t ) ds = −
+
+Z xen 
+
+> xcn
+
+λu(s, x )jBV 
+
+> en
+
+(s, t ) ds, 
+
+where λu(s, x ) = 1 if s > x and λu(s, x ) = 0 otherwise. Integrating the last relation over Ωn = [ xcn , x en ] provides the potentials at the extremity of the domain, 
+
+ϕn(xen , t ) − ϕn(xcn , t ) = − 1
+
+σn
+
+Z xen 
+
+> xcn
+
+Z xen 
+
+> xcn
+
+λu(s, x )jBV 
+
+> en
+
+(s, t ) ds dx. 
+
+From definition (14), we deduce the electronic potential at the anode collector, 
+
+Φcn (t) = ϕn(xen , t ) + 1
+
+σn
+
+Z xen 
+
+> xcn
+
+Z xen 
+
+> xcn
+
+λu(s, x )jBV 
+
+> en
+
+(s, t ) ds dx. 
+
+Noting that 
+
+Z xen 
+
+> xcn
+
+λu(s, x ) dx = s − xcn , we deduce (34) Φcn (t) = ϕn(xen , t ) + 1
+
+σn
+
+Z xen 
+
+> xcn
+
+(s − xcn )jBV 
+
+> en
+
+(s, t ) ds. 
+
+Following the same technique and using the relation (9) for the cathode, we deduce 
+
+σp∂xϕp(x, t ) = −ip(x, t ) = 
+
+Z xxep 
+
+jBV  
+
+> ep
+
+(s, t ) ds =
+
+Z xcp 
+
+> xep
+
+λℓ(s, x )jBV  
+
+> ep
+
+(s, t ) ds 
+
+with λℓ(s, x ) = 1 for s < x and zero otherwise. From definition (14), integration over Ωp provides the relation 
+
+Φcp (t) = ϕp(xep , t ) + 1
+
+σp
+
+Z xcp 
+
+> xep
+
+Z xcp 
+
+> xep
+
+λℓ(s, x )jBV  
+
+> ep
+
+(s, t ) ds dx. 
+
+Noting that 
+
+Z xcp 
+
+> xep
+
+λℓ(s, x ) dx = xcp − s, we get (35) Φcp (t) = ϕp(xep , t ) + 1
+
+σp
+
+Z xcp 
+
+> xep
+
+(xcp − s)jBV  
+
+> ep
+
+(s, t ) ds. 
+
+3.4 Ionic current and potential 
+
+From the boundary conditions ien (xcn , t ) = 0 , (see (21)) and ∂xcen (xcn , t ) = 0 , (see (8)), we deduce from equation (16), computed at the point xcn , the boundary condition of the electrolyte potential at the anode collector 
+
+∂xϕen (xcn , t ) = 0 .
+
+Similarly, from the boundary conditions iep (xcp , t ) = 0 (see (21)) and ∂xcep (xcp , t ) = 0 (see (8)), we deduce, using equation (17) at the point xcp , the boundary condition of the electrolyte potential at the cathode collector 
+
+∂xϕep (xcp , t ) = 0 .
+
+Integration of the jBV en conservation equation (22) into Ωn yields 
+
+ien (xen , t ) − ien (xcn , t ) = 
+
+Z xen 
+
+> xcn
+
+jBV 
+
+> en
+
+(x, t ) dx =⇒ A i en (xen , t ) = A L nȷBV 
+
+> en
+
+(t) = + I(t).
+
+Similarly, the iep conservation equation (22) over Ωp yields 
+
+A i ep (xep , t ) = −A L pȷBV  
+
+> ep
+
+(t) = + I(t).
+
+Integrating the conservative equation ∂xies = 0 (see (22)) over Ωs provides the flux conservation 
+
+ies (xen , t ) = ies (xep , t ).
+
+Evaluating the relation (18) at the point xen and xep gives with 
+
+ies (xen , t ) = −σes 
+
+
+
+∂xϕes (xen , t ) + (2 t+ − 1) 
+
+f∂xces (xen , t )
+
+ces (xen , t )
+
+
+
+,ies (xep , t ) = −σes 
+
+
+
+∂xϕes (xep , t ) + (2 t+ − 1) 
+
+f∂xces (xep , t )
+
+ces (xep , t )
+
+
+
+,
+
+with f = FRT [V −1] = [ CJ −1].9An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+4 Towards the 0D model 
+
+The average values of physical quantities, together with pointwise values at the interfaces, lead to a differential-algebraic system coupling average values over the subdomains of current densities, concentrations, or electric potentials at the interfaces. At that stage, we have just derived new relations using strictly mathematical procedures, and no additional assumptions have been introduced. Nevertheless, the system is not closed since no specific information about the shape of the physical variables in space has been defined. To elaborate on the 0D model, we shall prescribe some acceptable approximations in space (linear or quadratic shape), enabling us to close the algebraic-differential system. 
+
+4.1 Some mathematical properties about the approximations 
+
+We first recall some properties of general approximations. Let Λ = [ x1, x 2] be an interval and g(x) = f (u(x)) where f
+
+and u are real functions that are smooth enough in Λ. We recall that the average is given by ¯u = 1
+
+x2 − x1
+
+Z x2
+
+> x1
+
+u(x) dx 
+
+and similarly ¯g the average value of u and g, respectively, over the domain Λ, while m = x1 + x2
+
+2 is the midpoint of Λ.We have the following properties. • Second-order approximation of average and midpoint values. 
+
+u = u(m) + O (x2 − x1)2, g = f (u) + O (x2 − x1)2.
+
+Note that if f is affine, we have the equality g = f (u).• Second-order approximation of a product: for any regular functions u and v, one has 
+
+uv = ( uv )( m) + O (x2 − x1)2 = u v + O (x2 − x1)2.
+
+4.2 The main hypothesis: the Butler-Volmer average 
+
+The principal assumption we make concerns the Butler-Volmer equation. We assume that the rate of produc-tion/consumption over the domains Ωk, k ∈ { n, p }, is approximated by its average to second order in space. This assumption is admissible if the variations of jBV  
+
+> ek
+
+(x, t ) are small with respect to the average values. Consequently, we state 
+
+jBV  
+
+> ek
+
+(x, t ) = ȷBV  
+
+> ek
+
+(t) + O L2
+
+> k
+
+.
+
+The second hypothesis we state is the substitution of the average of a function by the function of the averages, namely (see section 2.4) 
+
+ȷBV  
+
+> ek
+
+= 1
+
+Lk
+
+Z
+
+> Ωk
+
+χek (ηek ) · j0
+
+> ek
+
+(cek , c k) dx = χek (ηek ) · j0
+
+> ek
+
+(cek , c k) + O L2
+
+> k
+
+.
+
+In conclusion, we substitute the original Butler-Volmer relation with the approximation (36) ȷBV  
+
+> ek
+
+= χek (ηek ) · j0
+
+> ek
+
+(cek , c k).
+
+4.3 Approximation of the current density in the electrodes 
+
+Since we assume that the Butler-Volmer source term is approximated by a constant function in space ȷBV  
+
+> ek
+
+(t), the electronic density current in(x, t ) satisfies ∂xin = −ȷBV 
+
+> en
+
+(t) (see (10)) and suggests a linear approximation in space. Taking advantage of the boundary condition in(xen , t ) = 0 and in(xcn , t ) = LnȷBV 
+
+> en
+
+(t) (see (11) and (12))), we deduce 
+
+in(x, t ) = ( xen − x)ȷBV 
+
+> en
+
+(t).
+
+Similarly, the density current for the positive electrode is now given by ∂xip(x, t ) = −ȷBV  
+
+> ep
+
+(t) and, with the boundary condition ip(xep , t ) = 0 , (see (11)) and ip(xcp , t ) = −LpȷBV  
+
+> ep
+
+(t) (see (13)), we deduce the approximation 
+
+ip(x, t ) = ( xep − x)ȷBV  
+
+> ep
+
+(t).
+
+10 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+4.4 Approximation of the electronic potential in the electrodes 
+
+Since the current density is a linear function in space, we deduce that the electric potential is a quadratic function. Using the approximation of the Butler-Volmer term and the potential in the collector of the negative electrode given by (34), 
+
+Φcn (t) = ϕn(xen , t ) + 1
+
+σn
+
+ȷBV 
+
+> en
+
+(t)
+
+Z xen 
+
+> xcn
+
+(s − xcn ) ds, 
+
+and, by integration, provides the equation for the anode potential 
+
+Φcn (t) = ϕn(xen , t ) + (Ln)2
+
+2σn
+
+ȷBV 
+
+> en
+
+(t).
+
+On the other hand, a second-order average approximation of the negative electrode potential is given by the trapezoidal formula 
+
+ϕn(t) = 12
+
+ ϕn(xen , t ) + ϕn(xcn , t )
+
+and we deduce using the relation (32) (37) ϕn(t) = Φ cn (t) − Ln
+
+4A σ n
+
+I(t).
+
+Similarly, on the positive electrode, from the relation (35), we deduce the approximation 
+
+Φcp (t) = ϕp(xep , t ) + (Lp)2
+
+2σp
+
+ȷBV  
+
+> ep
+
+(t).
+
+Using once again the trapezoidal rule together with (14) and (33), we give an approximation of the average of the electric potential in the positive electrode (38) ϕp(t) = Φ cp (t) + Lp
+
+4A σ p
+
+I(t).
+
+Remark 5. Note that the potential difference ∆elec = Φ cp − Φcn corresponds to the voltage between the anode and the cell cathode. 
+
+4.5 Approximation of the ionic density current in the electrolyte 
+
+Since we assume that jBV  
+
+> ek
+
+(x, t ) = ȷBV  
+
+> ek
+
+(t) is constant in space, from (22) and applying (32), the ionic current is given by the equation 
+
+∂xien (x, t ) = I(t)
+
+A L n
+
+.
+
+Therefore, ien (x, t ) is linear in space. Using the boundary condition (21), we get the expression (39) ien (x, t ) = ( x − xcn ) I(t)
+
+A L n
+
+.
+
+We apply a similar procedure for the ionic current density in the positive electrode and, from (33) together with the boundary condition iep (xcp , t ) = 0 , (see (21)) we deduce the linear approximation (40) iep (x, t ) = ( xcp − x) I(t)
+
+A L p
+
+.
+
+Finally, the current conservation equation ∂xies = 0 in Ωs (see (22)) together with the boundary conditions (20), 
+
+ies (xen , t ) = ien (xen , t ) indicates that the density current is approximated by constant values in space and leads to the relation (41) ies (x, t ) = I(t)
+
+A .
+
+11 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+4.6 Approximation of the potential in the electrolyte 
+
+4.6.1 Electrolyte potential in the electrodes 
+
+We now derive the approximation of the electrolyte potential in the subdomains by taking advantage of the previous stages. The construction is achieved in three steps. 
+
+• STEP 1. We recall the original equation (16) for the ionic density current 
+
+ien (x, t ) = −σen 
+
+
+
+∂xϕen (x, t ) + (2 t+ − 1) 
+
+f ∂x ln( cen (x, t )) 
+
+
+
+.
+
+Since ien is a linear function in space given by (39), we get 
+
+(x − xcn ) I(t)
+
+Aσ en Ln
+
+= −∂xϕen (x, t ) − (2 t+ − 1) 
+
+f ∂x ln( cen (x, t )) .
+
+• STEP 2. Integrating over [xcn , x ], we get (42) ϕen (x, t ) = ϕen (xcn , t ) − (x − xcn )2
+
+2Ln
+
+I(t)
+
+Aσ en 
+
+− (2 t+ − 1) 
+
+f ln 
+
+ cen (x, t )
+
+cen (xcn , t 
+
+
+
+.
+
+In particular, for x = xen and denoting Φen (t) = ϕen (xen , t ), we have the ionic potential at the interface between the negative electrode and the separator given by 
+
+Φen (t) = ϕen (xcn , t ) − Ln
+
+2
+
+I(t)
+
+Aσ en 
+
+− (2 t+ − 1) 
+
+f ln 
+
+ cen (xen , t )
+
+cen (xcn , t )
+
+
+
+.
+
+• STEP 3. Finally, we compute an approximation of the average potential using the trapezoidal rule 
+
+ϕen (t) = 12
+
+ Φen (t) + ϕen (xcn , t )
+
+and we get the following (43) ∆en = ϕen (t) − Φen (t) = Ln
+
+4
+
+I(t)
+
+Aσ en 
+
++ (2 t+ − 1) 2f ln 
+
+ cen (xen , t )
+
+cen (xcn , t )
+
+
+
+.
+
+We proceed in a similar way in the positive electrode using the original equation (17) and the linear approximation of 
+
+iep in space (40). Integration over [x, x cp ] gives 
+
+ϕep (x, t ) = ϕep (xcp , t ) + (x − xcp )2
+
+2Lp
+
+I(t)
+
+A σ en 
+
++ (2 t+ − 1) 
+
+f ln 
+
+ cep (xcp , t )
+
+cep (x, t )
+
+
+
+.
+
+At last, using the trapezoidal rule for the average approximation and setting Φep (t) = ϕep (xep , t ), we get (44) ∆ep = ϕep (t) − Φep (t) = − Lp
+
+4
+
+I(t)
+
+Aσ ep 
+
+− (2 t+ − 1) 2f ln 
+
+ cep (xcp , t )
+
+cep (xep , t )
+
+
+
+.
+
+4.6.2 Electrolyte potential in the separator 
+
+From the initial relation (18), together with relation (41) ies (x, t ) = I(t)
+
+A , we deduce (45) I(t)
+
+Aσ es 
+
+= −∂xϕes (x, t ) − (2 t+ − 1) 
+
+f ∂x ln( ces (x, t )) .
+
+Integration over [xen , x ] provides the relation 
+
+ϕes (x, t ) = ϕes (xen , t ) − (x − xen ) I(t)
+
+Aσ es 
+
+− (2 t+ − 1) 
+
+f ln 
+
+ ces (x, t )
+
+ces (xen , t )
+
+
+
+.
+
+We have assumed that the continuity of the potential at the separator interface yields ϕes (xen , t ) = ϕen (xen , t ) = Φ en (t)
+
+and ϕes (xep , t ) = ϕep (xep , t ) = Φ ep (t). We use the last relation at point x = xep and finally, we get the relation (46) ∆es = Φ ep (t) − Φen (t) = − Ls
+
+Aσ es 
+
+I(t) − (2 t+ − 1) 
+
+f ln 
+
+ ces (xep , t )
+
+ces (xen , t )
+
+
+
+.
+
+12 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+4.7 Approximation of Li + concentration 
+
+Constructing an accurate approximation of the Li + concentration is critical for two reasons. On the one hand, we have to assess cen and cep to compute the Butler-Volmer contribution and, on the other hand, we need the Li + concentrations at the interfaces xcn , xen , xep , and xcp to evaluate ∆en , ∆es , and ∆ep .An accurate approach will consist of solving the full parabolic equation, both in time and space. To provide a fully 0D model, we state that the ion concentrations are almost governed by a time-parametrized steady-state equation; thus the time derivative in equations (4), (5), (6) is cancelled. Then we get with (32) and (33), the new system 
+
+−∂x
+
+
+
+Den ∂xcen 
+
+
+
+= (1 − t+)
+
+F jBV  
+
+> en
+
+= (1 − t+)
+
+A F L n
+
+I(t) x ∈ Ωn,(47) 
+
+−∂x
+
+
+
+Dep ∂xcep 
+
+
+
+= (1 − t+)
+
+F jBV  
+
+> ep
+
+= − (1 − t+)
+
+A F L p
+
+I(t) x ∈ Ωp,(48) 
+
+−∂x
+
+
+
+Des ∂xces 
+
+
+
+= 0 x ∈ Ωs,(49) 
+
+Remark 6. Cancelling the time derivative does not mean that the problem is time-independent. We just say that the concentrations of the different species vary sufficiently slowly to consider that the term ∂tce is not significant with respect to the other contributions. However, the parameters, such as the source term, may still depend on time. 
+
+Let C(t) = (1 − t+)
+
+AF I(t), integrating relations (47) in [xcn , x ] and (48) in [x, x cp ], together with the homogeneous flux condition at the collectors, i.e., ∂xcen (xcn , t ) = 0 and ∂xcep (xcp , t ) = 0 , give the following 
+
+Den ∂xcen (x, t ) = − (x − xcn )
+
+Ln
+
+C(t) x ∈ Ωn,Dep ∂xcep (x, t ) = + (x − xcp )
+
+Lp
+
+C(t) x ∈ Ωp,Des ∂xces (x, t ) = Des ∂xces (xm, t ) x ∈ Ωs.
+
+with xm the midpoint of [xen , x ep ]. Flux continuity provides the compatibility condition of the ionic flux. 
+
+Dep ∂xcep (xep , t ) = Den ∂xcen (xen , t ) = Des ∂xces (xm, t ) = −C(t).
+
+Integrating equations (47), (49), (48) twice in space, we obtain the analytical expressions for the three functions (50) 
+
+
+
+cen (x, t ) = cen,c (t) − C(t) (x − xcn )2
+
+2Den Ln
+
+x ∈ Ωn,cep (x, t ) = cep,c (t) + C(t) (x − xcp )2
+
+2LpDep 
+
+x ∈ Ωp,ces (x, t ) = ces,m (t) − C(t) (x − xm)
+
+Des 
+
+x ∈ Ωs,
+
+with cen,c (t) = cen (xcn , t ), ces,m (t) = ces (xm, t ), cep,c (t) = cep (xcp , t ).The continuity in xen , xep (see (7)) reads 
+
+cen,c (t) − C(t) Ln
+
+2Den 
+
+= ces,m (t) + C(t) Ls
+
+2Des 
+
+, cep,c (t) + C(t) Lp
+
+2Dep 
+
+= ces,m (t) − C(t) Ls
+
+2Des 
+
+.
+
+On the other hand, the average values are given by (51) cen (t) = cen,c (t) − C(t) Ln
+
+6Den 
+
+, ces (t) = ces,m (t), cep (t) = cep,c (t) + C(t) Lp
+
+6Dep 
+
+and, using the previous relations, we deduce the continuity relations, 
+
+cen (t) − C(t) Ln
+
+3Den 
+
+= ces (t) + C(t) Ls
+
+2Des 
+
+, cep (t) + C(t) Lp
+
+3Dep 
+
+= ces (t) − C(t) Ls
+
+2Des 
+
+.
+
+Finally, mass conservation of the Li + (29) reads 
+
+εnLncen + εsLsces + εpLpcep = ( εnLn + εsLs + εpLp) c0 
+
+> e
+
+= M 0
+
+13 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+with c0 
+
+> e
+
+denoting the initial concentration of Li +. In conclusion, the average concentrations in the dielectric are given by the linear system (52) 
+
+
+
+cen (t) = ces (t) + C(t)
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+
+
+,cep (t) = ces (t) − C(t)
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+,εnLncen (t) + εsLsces (t) + εpLpcep (t) = M 0.
+
+The linear system (52) shows that the time dependency is only related to the function C(t), that is, the intensity I(t). In conclusion, the average concentrations in the dielectric only explicitly depend on the intensity I through the variable C.Hence, consider the new linear system using (bcen , bces , bcep ) as unknown functions regarded the intensity (53) 
+
+bcen (I) = bces (I) + (1 − t+)
+
+AF 
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+
+
+I, 
+
+bcep (I) = bces (I) − (1 − t+)
+
+AF 
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+I, εnLnbcen (I) + εsLsbces (I) + εpLpbcep (I) = M 0.
+
+We deduce that (54) bcen (I(t)) ≡ cen (t), bcep (I(t)) ≡ cep (t), bces (I(t)) ≡ ces (t).
+
+Analogously, we find that concentrations at the boundaries, cen,c , cep,c , ces,m also explicitly depend directly on the intensity I and and from (51) we have the following (55) bcen,c (I) = bcen (I) + (1 − t+)
+
+AF Ln
+
+6Den 
+
+I, bces,m (I) = bces (I), bcep,c (I) = bcep (I) − (1 − t+)
+
+AF Lp
+
+6Dep 
+
+I. 
+
+and satisfy the chain-rule (56) bcen,c (I(t)) ≡ cen,c (t), bcep,c (I(t)) ≡ cep,c (t), bces,m (I(t)) ≡ ces,m (t),
+
+Remark 7. By construction, the average approximation functions bcen (I), bces (I), bcep (I) together with the values at the interface with the collectors bcen,c (I) and bcen,c (I) are linear in terms of intensity I.
+
+4.8 Overpotential and Butler-Volmer relation 
+
+From section 4.2, we approximate the average of the density current j0
+
+> ek
+
+, k ∈ { n, p }, transfer equation (23), with an approximation only depending on the concentrations’ average and overpotentials. We write it in the form 
+
+ȷ0
+
+> en
+
+(t) = j0∗
+
+> en
+
+ cn(t)
+
+c∗
+
+> n
+
+αn  cmax n − cn(t)
+
+cmax n − c∗
+
+> n
+
+1−αn  cen (t)
+
+c∗
+
+> en
+
+1−αn
+
+,ȷ0
+
+> ep
+
+(t) = j0∗
+
+> ep
+
+ cp(t)
+
+c∗
+
+> p
+
+αp  cmax p − cp(t)
+
+cmax p − c∗
+
+> p
+
+1−αp  cep (t)
+
+c∗
+
+> ep
+
+1−αp
+
+.
+
+On the other hand, the Butler-Volmer source term is assumed to be constant in the porous electrode (see section 4.2); then we have the following 
+
+ȷBV 
+
+> en
+
+(t) = ȷ0
+
+> en
+
+(t) · χen 
+
+ ηen (t),ȷBV  
+
+> ep
+
+(t) = ȷ0
+
+> ep
+
+(t) · χep 
+
+ ηep (t).
+
+Using the special function bsinh (η; β), we deduce from (25) 
+
+χen 
+
+ ηen (t) = 2 bsinh (f η en (t)/2; αn), χep 
+
+ ηep (t) = 2 bsinh (f η ep (t)/2; αp).
+
+Furthermore, we rely on the electric and ionic potentials via the over-potential definition, that is (24), 
+
+ηen (t) = ϕn(t) − ϕen (t) − Uen , ηep (t) = ϕp(t) − ϕep (t) − Uep .
+
+Finally, the positive and negative electrodes are connected via the external circuit (57) Φcp − Φcn = Rext I + Uext 
+
+with Rext [Ω] the user’s external resistance and Uext [V ] the external potential (for instance, when charging the cell). 14 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+5 The time-parametrized model 
+
+In the previous section, we introduced a set of space-independent variables together with relations deriving from the original problem. This section is devoted to the construction of the 0D model by coupling the different sub-systems. 
+
+5.1 The concentration formulation 
+
+Given the intensity I = I(t), we deduce the concentration in the electrodes from (26)-(27) and the relations (32)-(33), (58) εn
+
+dc n
+
+dt (t) = − I(t)
+
+A F L n
+
+, εp
+
+dc p
+
+dt (t) = + I(t)
+
+A F L p
+
+.
+
+On the other hand, from relation (52), we deduce ces (t) with (59) (εnLn + εsLs + εpLp) ces (t) = M 0 + C(t)
+
+
+
+εpLp
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+− εnLn
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+ 
+
+and then the two other average values, cen , c ep , using the linear system (52) (60) cen (t) = ces (t) + C(t)
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+
+
+, cep (t) = ces (t) − C(t)
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+.
+
+Moreover, we have at the interfaces (61) 
+
+cen (xcn , t ) = cen (t) + C(t) Ln
+
+6Den 
+
+, ces (xen , t ) = ces (t) + C(t) Ls
+
+2Des 
+
+,ces (xep , t ) = ces (t) − C(t) Ls
+
+2Des 
+
+, cep (xcp , t ) = cep (t) − C(t) Lp
+
+6Dep 
+
+.
+
+5.2 The potential formulation 
+
+Assuming that the average concentrations are known, we determine the current density and the potential by solving a time-parametrized system. We decompose the potential difference Φcp − Φcn between the two electrodes with 
+
+Φcp − Φcn = (Φ cp − ϕp) + ( ϕp − ϕep ) + ( ϕep − Φep ) + (Φ ep − Φen ) + (Φ en − ϕen ) − (ϕen − ϕn) + ( ϕn − Φcn ).
+
+Using the relations (24), (43), (44), (46), (37) and (38), we rewrite the decomposition in the following form 
+
+Φcp − Φcn = Uep + ηep − Uen − ηen − Rint I − ∆c
+
+where 
+
+Rint =
+
+ Lp
+
+4A σ p
+
++ Lp
+
+4Aσ ep 
+
++ Ls
+
+Aσ es 
+
++ Ln
+
+4Aσ en 
+
++ Ln
+
+4A σ n
+
+
+
+stands for the internal resistance of the cell, and (62) ∆c = 2t+ − 12f
+
+
+
+ln 
+
+ cep (xcp , t )
+
+ces (xep , t )
+
+
+
++ 2 ln 
+
+ ces (xep , t )
+
+ces (xen , t )
+
+
+
++ ln 
+
+ ces (xen , t )
+
+cen (xcn , t )
+
+ 
+
+is the potential drop due to the gradient of the ionic concentration we rewrite 
+
+∆c = 2t+ − 12f ln 
+
+ cep (xcp , t ) ces (xep , t )
+
+ces (xen , t ) cen (xcn , t )
+
+
+
+.
+
+The potential decomposition now reads 
+
+Φcp − Φcn = Uep + ηep − Uen − ηen − Rint I − ∆c,I = +ιn(cn, c en ) bsinh (f η en /2) ,I = −ιp(cp, c ep ) bsinh (f η ep /2) ,
+
+where, (see (32), (33)), 
+
+ιn(cn, c en ) = 2F A L n an rn
+
+ cen 
+
+αn  cn (cmax n − cn)1−αn
+
+,(63) 
+
+ιp(cp, c ep ) = 2F A L p ap rp
+
+ cep 
+
+αp  cp (cmax p − cp)1−αp
+
+.(64) 15 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+On the other hand, we have to fulfill the relation Φcp − Φcn = Rext I + Uext which corresponds to the external circuit, (see (57)). Equating the potential difference between the internal and external circuits provides the non-linear equation for the intensity 
+
+Uep − Uen − Uext − ∆c = g(I, R ext ),
+
+with 
+
+g(I, R ext ) = ( Rext + Rint )I + 2
+
+f
+
+
+
+arg bsinh 
+
+ Iιn
+
+
+
++ arg bsinh 
+
+ Iιp
+
+ 
+
+,
+
+where ιn and ιp are non-negative functions. 
+
+Remark 8. For the particular case αn = αp = 1 /2, we recover the standard hyperbolic functions, and the relation reads 
+
+g(I, R ext ) = ( Rext + Rint )I + 2
+
+f
+
+
+
+arg sinh 
+
+ Iιn
+
+
+
++ arg sinh 
+
+ Iιp
+
+ 
+
+.
+
+Let us define the residual potential (65) Vres (I, R ext ) = Uep − Uen − Uext − ∆c − g(I, R ext ).
+
+The solutions of the cell problem are given by the solution of Vres (I, R ext ) = 0 , that is, we seek I such that Vres = 0 
+
+given the user parameters Rext and Uext and the averaged concentrations. In conclusion, function Vres (I, R ext ) has the following properties: • is continuous, linear in Rext , differentiable in I;• is a strictly decreasing function in order to I since Rext ≥ 0,
+
+lim  
+
+> I→−∞
+
+Vres (I, R ext ) = + ∞, lim  
+
+> I→+∞
+
+Vres (I, R ext ) = −∞ .
+
+Proposition 5.1. For any Rext ≥ 0, there exists a unique intensity ¯I such that Vres ( ¯I, R ext ) = 0 .
+
+5.3 A note about the critical situations 
+
+From a practical point of view, successive charge and discharge cell are carried out to assess the number of cycles that the device may support. To this end, a setup is built to perform the operation under a constant intensity and, in that way, define the number of hours for one cycle. In common language, practitioners deal with charge or discharge under 
+
+constant intensity I0 or target intensity. However, constant intensity is not always feasible, particularly when the cell approaches a fully charged or fully discharged state. These critical situations occur when either ιn or ιp tends to zero because one of the relevant concentrations approaches zero or its maximum admissible value. Consequently, the intensity has to decrease to zero when reaching the limit of the cell capacity. The intensity has to drop, even to zero, when the cell reaches an extreme state, i.e. ιn = 0 or ιp = 0 . This is a critical issue from the modelling point of view, and the numerical method has to be designed to simulate the extreme situations. 
+
+Remark 9. Function g(I, R ext ) also depends on other parameters, such as the average concentrations. We do not mention it explicitly for the sake of simplicity, but when the concentration dependency would be critical, we overload the notation with g(I0, R ext ; cn, c en , c p, c ep ).
+
+In [25, 28] a similar analysis is provided on the behaviour of the current density close to the extreme cases. Basically, reactive material concentrations in the anode, cathode, and electrolyte drive the electrical potential of the cell, while external resistance and electromotive force drive the intensity. The question is to assess whether the cell is in a condition to deliver (or receive) a target intensity I0 prescribed by the user, that is, if it is possible to adjust the resistance Rext to reach the target intensity. Extreme situations occur when ιn(cn, c en ) or ιp(cp, c ep ) go to zero. A non-null intensity I = I0 > 0 cannot be maintained. Indeed, assume for example that cn → 0, then ιn(cn, c en ) → 0 and g(I0, R ext ; cn, c en , c p, c ep ) → +∞.In conclusion, even with Rext = 0 , we no longer achieve the condition Vres (I0; 0) = 0 . Consequently, I has to converge to zero when we reach a critical situation. 
+
+5.4 Charge and discharge computations 
+
+The early-stage analysis consists of determining whether we have a charging or discharging situation, given the open-circuit potentials Uen , Uep , the external counter-electromotive potential Uext (motor or electrical source), and the potential ∆c due to the Li + gradient. To this end, we first compute V00 = Vres (0 , 0) corresponding to the open circuit. We have a charging situation if V00 < 0 and a discharging situation if V00 > 0. In the charging configuration, the target intensity I0 < 0 is mandatory, while I0 > 0 in the discharging configuration. 16 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+5.4.1 Discharging the cell 
+
+Since V00 > 0, the second stage is to determine whether the target intensity I0 > 0 is achievable, so we compute 
+
+V0 = Vres (I0; 0) and reach the following alternatives • if V0 ≥ 0, the external circuit equipped with resistance Rext = V0
+
+I0
+
+satisfies the equilibrium Vres (I0; Rext ) = 0 
+
+by construction. • In contrast, V0 < 0 shows that the target intensity is too high, and the unique solution of Vres ( ¯I; 0) = 0 gives a lower intensity ¯I ≥ 0. In particular, if one of the two components ιn(cn, c en ) or ιp(cp, c ep ) goes to zero, intensity ¯I must go to zero, but the quotient with the arg sinh denominator converges to a limit. 
+
+5.4.2 Charging the cell 
+
+We proceed with the case V00 < 0 where we charge the cell by applying an additional potential Uext of the battery charger. • The target intensity I0 < 0 is achievable if the residual potential V0 = Vres (I0; 0) ≤ 0. In that case, the external resistance is given by Rext = V0
+
+I0
+
+.• In contrast, if V0 ≥ 0, intensity I = I0 < 0 is not possible and we determine ¯I < 0 by solving the non-linear problem Vres ( ¯I; 0) = 0 to recover the equilibrium. 
+
+6 Numerical Methods 
+
+We shall consider two distinct kinds of simulation. On the one hand, we use the steady-state model where, given the concentrations, we compute the potentials and deduce the intensity; in particular, we assess whether we reach the target intensity or a lower intensity with a null external resistance. On the other hand, we consider the non-stationary case (charge and discharge) where the simulations are carried out up to a final time tend . In that case, the experimental time interval [0 , t end ] is uniformly divided into K + 1 sub-steps tk = k∆t, k = 0 , · · · , K , with ∆t = tend /K . The concentrations c(t) are approximated by c[k] ≈ c(tk) at time tk.
+
+6.1 Numerical solution for the concentrations 
+
+We construct numerical solutions for the concentration species assuming that the intensity is given (see subsection 5.1). Let I[k] = I(tk), the given function defined in the interval [0 , t end ], and look for the average concentrations cn[k], cp[k],
+
+cen [k], ces [k], cep [k].
+
+6.1.1 Computation of the concentrations 
+
+We approximate the concentrations in the electrode with a simple forward Euler scheme for cn (see (58)) (66) cn[k] = cn[k − 1] − ∆t I[k]
+
+A F ε n Ln
+
+, cp[k] = cp[k − 1] + ∆ t I[k]
+
+A F ε p Lp
+
+,
+
+with cn[0] , cp[0] given by the initial condition. On the other hand, the electrolyte concentration in the separator is given by (see (59)) (67) (εnLn + εsLs + εpLp) ces [k] = M 0 + C[k]
+
+
+
+εpLp
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+− εnLn
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+ 
+
+.
+
+with C[k] = (1 −t+) 
+
+> AF
+
+I[k] and M 0 = εnLncen [0] + εsLsces [0] + εpLpcep [0] given by the initial conditions. We deduce the average concentrations with (see (60)) (68) cen [k] = ces [k] + C[k]
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+
+
+, cep [k] = ces [k] − C[k]
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+.
+
+17 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+and the concentrations at the interfaces (see (61)) 
+
+cen [k]( xcn ) = cen [k] + C[k] Ln
+
+6Den 
+
+, ces [k]( xen ) = ces [k] + C[k] Ls
+
+2Des 
+
+,ces [k]( xep ) = ces [k] − C[k] Ls
+
+2Des 
+
+, cep [k]( xcp ) = cep [k] − C[k] Lp
+
+6Dep 
+
+.
+
+6.1.2 A major issue: the Diffusion-Limited Current Density 
+
+During a charge or a discharge, and after a short transition, we have a steady-state situation for the ion Li + parameterized by time, i.e. there is no time derivative (see (47), (48), (49)). Therefore, the cation concentration is a decreasing function in space for a discharge and an increasing function in space for the charge; thus, the concentration reaches the extrema at xcn and xcp , given by the values bcen,c (I) and bcep,c (I), respectively (see (56)) as a function of intensity. From the physical point of view, negative concentration is not admissible; we conclude that the intensity has to range in an interval such that both concentrations are non-negative, the null case being the limit leading to the diffusion-limited current density [29]. Two situations arise. • Discharge case (positive intensity): The function bcen,c (I) (see (55)) is a decreasing function in relation to the intensity; therefore, there is an upper limit I+ 
+
+> e
+
+≥ 0 such that bcen,c (I+ 
+
+> e
+
+) = 0 . Any intensity I > I + 
+
+> e
+
+is not eligible; otherwise, we have a negative concentration at the cathode collector. • Charge case (negative intensity): The function bcep,c (I) (see (55)) is an increasing function in relation to the intensity; therefore, there is a lower limit I− 
+
+> e
+
+≤ 0 such that bcen,c (I− 
+
+> e
+
+) = 0 . Any intensity I < I − 
+
+> e
+
+is not eligible; otherwise, we have a negative concentration at the anode collector. Consequently, during the charge or discharge stage, ion diffusion is a limiting factor that yields the condition I ∈
+
+[I− 
+
+> e
+
+, I + 
+
+> e
+
+]. We give an easy way to compute the approximation of the diffusion-limited current density. As noted in remark 7, bcen,c (I) and bcen,c (I) are affine functions of the intensity (see relations (55)), enabling computation of the two bounds I− 
+
+> e
+
+, I + 
+
+> e
+
+. When I = 0 , the solution is the initial concentration c0 
+
+> e
+
+and we have bcen,c (0) = bcep,c (0) = c0
+
+> e
+
+.Taking arbitrarily I = 1 , we compute the values bcen,c (1) and bcep,c (1) by solving the system (53) with I = 1 and the relations (55). Taking advantage that the function is affine, we deduce that the left and right concentrations at the collectors go to zero for 
+
+I− 
+
+> e
+
+= c0
+
+> e
+
+c0 
+
+> e
+
+− bc1
+
+> en,c
+
+< 0, I+ 
+
+> e
+
+= c0
+
+> e
+
+c0 
+
+> e
+
+− bc1
+
+> ep,c
+
+> 0,
+
+respectively. 
+
+Definition 6.1. I+ 
+
+> e
+
+and I− 
+
+> e
+
+are, respectively, the highest and lowest diffusion-limited current densities. They represent the bounds to which the intensity I must belong to guarantee the physical eligibility of the concentration. Their values are closely connected to the diffusion coefficients Dek , k ∈ { n, s, p } and assess the capacity to transport the cation from one electrode to another. Such intensities are a strong limitation on the time required for charging and discharging the cell since they represent a physical limit to the intensity. For example, using the data of Table 2, we compute I+ 
+
+> e
+
+= 7 .0 mA and I− 
+
+> e
+
+= −7.7 mA .
+
+6.2 Numerical solution for the potential 
+
+Assume that the average concentrations cn[k], cp[k], cen [k], ces [k], cep [k] together with the positive ionic concentrations at the positions xcn , xen , xep , xcp are given at time tk. We want to determine the external intensity I[k] and the other electric quantities by solving the steady-state problem under the constraint of the target intensity I0[k] = I0(tk) and the external electromotive potential Uext [k] = Uext (tk).The preliminary stage consists of computing ιn[k] = ιn
+
+ cn[k], c en [k], ιp[k] = ιp
+
+ cp[k], c ep [k], together with (62), 
+
+∆c[k] = 2t+ − 12f ln 
+
+ cep [k]( xcp ) ces [k]( xep )
+
+ces [k]( xen ) cen [k]( xcn )
+
+
+
+.
+
+Moreover, the residual potential is denoted by Vres [k]( I, R ext ) as it depends on average concentrations through ιn[k],
+
+ιp[k] and ∆c[k].In the second stage, we compute V00 [k] = Vres [k](0 , 0) which corresponds to the open-circuit configuration, given the external potential Uext (tk).18 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+1. If V00 [k] < 0 (charging), then by proposition 5.1, there exists a unique solution IM ax [k] < 0 such that 
+
+Vres [k]( IM ax [k], 0) = 0 we determine numerically. Two possibilities arise: (a) If IM ax [k] ≤ I0[k] < 0, set the resistance Rext [k] = Vres [k]( I0[k], 0) 
+
+I0[k] and I[k] = I0[k].(b) On the other hand, we have I0[k] < I M ax [k] < 0, the external resistance Rext [k] is set to zero and we cannot reach the target intensity. The intensity is then I[k] = IM ax [k].2. If V00 [k] > 0 (discharging), proposition 5.1 implies that there is a unique IM ax [k] > 0 such that 
+
+Vres [k]( IM ax [k], 0) = 0 .(a) If 0 < I 0[k] < I M ax [k], we take Rext [k] = Vres [k]( I0[k], 0) 
+
+I0
+
+and set I[k] = I0[k].(b) Otherwise, we cannot reach the target intensity and set Rext [k] = 0 and I[k] = IM ax [k].We propose two numerical examples computed using the data in Table 2. 1. For the discharge case, we assume that the external potential is null ( Uext = 0 ). • Considering the target intensity I0 = 50 mA , we reach it with Rext = 64 .6 Ω and the potential drop 
+
+Φp − Φn of the cell is 3.24 V .• Considering the target intensity I0 = 600 mA , we cannot reach it as the maximum IM ax is 565 mA . The external resistance is Rext = 0 and the potential drop Φp − Φn is almost equal to 0 (short circuit). 2. For the charging case, we assume that the external potential is Uext = 4 .3 V .• Considering the target intensity I0 = −30 mA , we reach it with external resistance Rext = 3 .57 Ω while the potential drop Φp − Φn is 4.19 V .• Considering the target intensity I0 = −50 mA , we cannot reach it, as we have a maximum IM ax equal to −42 .5 mA and a null external resistance ( Rext = 0 ). The potential drop Φp − Φn is precisely 4.3 V ,equal to the assumed counter-electromotive potential Uext .
+
+6.3 Numerical solution for the complete model 
+
+Concentrations and potentials are now fully coupled through intensity I as the leading variable. Now, assuming that all data have been computed at the time tk−1, we seek the solution at the time tk.The problem is not a simple combination of the two previous problems, since several issues may arise, namely negative concentrations if the intensity is too high. We gather the whole implicit problem into two subgroups. 
+
+Group (1): the concentrations 
+
+cn[k] = cn[k − 1] − ∆t I[k]
+
+A F ε n Ln
+
+,cp[k] = cp[k − 1] + ∆ t I[k]
+
+A F ε p Lp
+
+,
+
+(εnLn + εsLs + εpLp) ces [k] = M 0 + (1 − t+)
+
+AF I[k]
+
+
+
+εpLp
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+− εnLn
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+ 
+
+,cen [k] = ces [k] + (1 − t+)
+
+AF I[k]
+
+ Ln
+
+3Den 
+
++ Ls
+
+2Des 
+
+
+
+,cep [k] = ces [k] − (1 − t+)
+
+AF I[k]
+
+ Lp
+
+3Dep 
+
++ Ls
+
+2Des 
+
+
+
+,cen [k]( xcn ) = cen [k] + (1 − t+)Ln
+
+6 A F D en 
+
+I[k],ces [k]( xen ) = ces [k] + (1 − t+)Ls
+
+2 A F D es 
+
+I[k],ces [k]( xep ) = ces [k] − (1 − t+)Ls
+
+2 A F D es 
+
+I[k],cep [k]( xcp ) = cep [k] − (1 − t+)Lp
+
+6 A F D ep 
+
+I[k],
+
+19 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+Group (2): the potentials and intensity 
+
+∆c[k] = 2t+ − 12f ln 
+
+ cep [k]( xcp ) ces [k]( xep )
+
+ces [k]( xen ) cen [k]( xcn )
+
+
+
+,ιn[k] = 2F A L n an rn
+
+
+
+cen [k]
+
+αn 
+
+cn[k] ( cmax n − cn[k]) 
+
+1−αn
+
+,ιp[k] = 2F A L p ap rp
+
+
+
+cep [k]
+
+αp 
+
+cp[k] ( cmax p − cp[k]) 
+
+1−αp
+
+,I[k] = +ιn[k] bsinh  f η en [k]/2,I[k] = −ιp[k] bsinh  f η ep [k]/2,Vres [k] = Uep − Uen − Uext [k] + ηep [k] − ηen [k] − ∆c[k] − (Rext [k] + Rint )I[k],
+
+where Rext [k] is a free parameter of the system. The objective is to determine an eligible intensity I[k] as close as possible to the target intensity I0[k] such that Vres [k] = 0 .
+
+6.3.1 Preliminaries 
+
+In the first step, we determine whether we have a configuration for charging or discharging the cell at time tk as a function of the external potential Uext [k] applied to the circuit. Following the methodology proposed at the beginning of subsection 6.2, we test the model with I = 0 , and from the equations of Group (1), we immediately deduce that 
+
+cn[k] = cn[k − 1] , cp[k] = cp[k − 1] , while the ion concentration is constant in space. On the other hand, from Group (2), we have ∆c = 0 and ηen [k] = 0 , ηep [k] = 0 . Finally, we compute the residual potential V00 [k] and now the rule is • If V00 [k] < 0, we are dealing with a charge configuration and I[k] is non-positive, • If V00 [k] > 0, we are dealing with a discharge configuration, and I[k] is non-negative. However, the diffusion-limited current densities are independent of time step and depend only on the initial concentration of Li + and the diffusion coefficients. We then have the constraints • charge case: eligible intensity has to satisfy I[k] ∈ [I− 
+
+> e
+
+, 0] ;• discharge case: we must have I[k] ∈ [0 , I + 
+
+> e
+
+].
+
+6.3.2 Case I0[k] ∈]I− 
+
+> e
+
+, I + 
+
+> e
+
+[
+
+If I0[k] is eligible we compute Group (1) with I0[k] and then compute V0[k] = Vres [k]( I0[k], 0) .• If V0[k] and V00 [k] have the same sign, then we reach the target intensity I[k] = I0[k] and define the external resistance Rext [k] = V0[k]
+
+I0[k] ;• Otherwise, V0[k] and V00 [k] have opposite signs, and we cannot reach the target values. The proposition 5.1 states that there exists a unique intensity IM ax [k] such that Vres [k]( IM ax [k], 0) = 0 . We then take 
+
+I[k] = IM ax [k] and Rext [k] = 0 . Note that IM ax [k] is also eligible since I0[k] is assumed admissible. 
+
+Remark 10. Note that taking I[k] = I+ 
+
+> e
+
+or I[k] = I− 
+
+> e
+
+is impossible, since we get a null concentration. Consequently, 
+
+∆c[k] is not defined (the logarithmic function ln requires the argument to belong to ]0 , +∞[). 
+
+6.3.3 Case I0[k] /∈]I− 
+
+> e
+
+, I + 
+
+> e
+
+[
+
+This is a difficult situation because the target intensity I0[k] is too high and causes negative concentrations. We have to find a lower intensity I[k] ∈ [I− 
+
+> e
+
+, I + 
+
+> e
+
+] and an external resistance Rext [k] that preserve the electrical balance, i.e. 
+
+Vres [k] = 0 , together with non-negative concentrations. We first treat the discharge case, that is, we have V00 [k] > 0, I0[k] ≥ I+ 
+
+> e
+
+> 0. To achieve an approximation of I[k] and 
+
+Rext [k], we propose a dichotomy-like method that provides a bounded interval of the intensity. We detail hereafter the method and skip index k for the sake of readability. We create a sequence of intervals Iℓa, I ℓb
+
+ that we initialize with 
+
+I0 
+
+> a
+
+= 0 and I0 
+
+> b
+
+= I+ 
+
+> e
+
+. The algorithm is as follows: 1. Take Iℓc = Iℓa + Iℓb
+
+2 .20 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+2. Compute the associated concentrations (they are all strictly positive since Iℓc < I + 
+
+> e
+
+). 3. Compute ∆ℓc, ιℓn, ιℓp and then deduce ηℓen , ηℓep .4. Compute V ℓ 
+
+> 0
+
+= V ℓres (Iℓc , 0) .5. If V ℓ 
+
+> 0
+
+> 0 (the intensity is too low) we take Iℓ+1  
+
+> a
+
+= Iℓc and Iℓ+1  
+
+> b
+
+= Iℓb , otherwise (intensity is too high) we take Iℓ+1  
+
+> b
+
+= Iℓc and Iℓ+1  
+
+> a
+
+= Iℓa.6. Repeat until |V ℓres | ≤ tol and |Iℓ+1  
+
+> a
+
+− Iℓ+1  
+
+> b
+
+| ≤ tol where tol is a given tolerance. At the end of the algorithm, we take the intensity I[k] = Iℓc < I + 
+
+> e
+
+that guarantees all positive concentrations and 
+
+Vres (Iℓc , 0) ≈ 0. Consequently, we take Rext [k] = 0 and I[k] = Iℓc .For the charge case, the algorithm is very similar by taking I0 
+
+> a
+
+= I− 
+
+> e
+
+and I0 
+
+> b
+
+= 0 . We reach an approximation 
+
+I− 
+
+> e
+
+< I [k] = Iℓc < 0 such that Vres (Iℓc , 0) ≈ 0 and Rext [k] = 0 .
+
+7 Simulations 
+
+A battery composed of an anode and a cathode with constant open-circuit potential (no intercalation versus plating is considered in the example) separated by a porous medium is analysed with the numerical simulator. Data are given in Table 2. 
+
+parameter dimension name 
+
+A = 10 −4 [m2] cross area of the cell 
+
+Ln = 80 . 10 −6, Ls = 25 . 10 −6, Lp = 100 . 10 −6 [m] length of the domains 
+
+an = 885000 , ap = 723000 [m−1] specific interfacial area of the electrodes 
+
+εn = 0 .36 , εs = 0 .30 , εp = 0 .36 [m3 m−3] porosity 
+
+F = 96487 [C mol −1] Faraday constant 
+
+f = FRT = 38 .68 [C J −1] inverse thermal potential 
+
+t+ = 0 .364 [−] transfer number 
+
+σn = 100 , σp = 0 .5 [S m −1] effective electronic conductivity in electrode 
+
+αn = 0 .5, αp = 0 .5 [−] electrodes transfer coefficients 
+
+Den = 1 .65 10 −11 , Des = 2 .0 10 −10 , Dep = 4 .15 10 −11 [m2s−1] cation diffusivity 
+
+σen = 0 .1, σes = 0 .1, σep = 0 .1 [S m −1] effective ionic conductivity 
+
+cmax n = 50000 , cmax p = 30000 [mol m −3] maximum mole concentration in the electrodes 
+
+rn = 2 .7 10 −11 , rp = 1 .8 10 −12 [m5/2mol −1/2s−1] electrochemical reaction rate constant 
+
+c0∗ 
+
+> en
+
+= 10 3, c0∗ 
+
+> ep
+
+= 10 3 [mol m −3] reference cation mole concentration 
+
+c∗ 
+
+> n
+
+= 25000 , c∗ 
+
+> p
+
+= 15000 [mol m −3] reference reduced material 
+
+i0∗ 
+
+> en
+
+= 2 .06 , i0∗ 
+
+> ep
+
+= 0 .082 [A m −2] reference current surface density 
+
+j0∗ 
+
+> en
+
+= 1 .82 10 6, j0∗ 
+
+> ep
+
+= 5 .96 10 4 [A m −3] reference current volume density 
+
+Uen = 0 .0, Uep = 3 .8 [V ] open circuit potential of anode and cathode 
+
+Table 2: Parameters for the benchmarking We consider three different situations by modifying the dielectric diffusion coefficients. • Experiment ONE is the reference case using the dielectric diffusion coefficients given in Table 2. • Experiment HALF consists of using the same diffusion coefficients but divided by two (low diffusion case). • Experiment THREE uses three times the values of the diffusion coefficients (high diffusion case). The purpose of the simulation is to show the impact of dielectric diffusion in the charging and discharging processes. More specifically, we highlight the current limitation due to diffusion of the cations in the cell. 21 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+In Figure 2, we plot the target intensity together with the external potential that we would like to achieve during the 3600 s simulation. Note that the 1C rate configuration of a total charge of 4.3418 Coulomb corresponds to the constant intensity I = 1 .2 mA , required to transfer the whole charge in one hour. The scenario is as follows ( I0 being the target intensity): • t ∈ [0 , 900] , discharge 5C rate, (I0 = 6 mA ) and Uext = 0 ,• t ∈ [900 , 1200] , charge 5C rate, (I0 = −6 mA ) and Uext = 4 .2,• t ∈ [1200 , 1500] , open circuit and cell at rest, • t ∈ [1500 , 1800] , discharge 15 C rate, (I0 = 18 mA ) and Uext = 0 ,• t ∈ [1800 , 2400] , charge 15 C rate, (I0 = −18 mA ) and Uext = 4 .5,• t ∈ [2400 , 3600] , discharge with 5C rate, (I0 = 6 mA ) and Uext = 0 ,-20 -10 010 20 0 600 1200 1800 2400 3000 3600 012345      
+
+> target intensity extern potential
+> Intensity mA Potential  Vtime (s) target intensity and external potential
+
+Figure 2: Target intensity and external potential for the numerical simulation as a function of time In Figure 3, we plot the intensity across the cell together with the I+ 
+
+> e
+
+(red line) and I− 
+
+> e
+
+(blue line) during the simulation for the three scenarios. We observe that the intensity strictly remains between the two constraints. For high diffusion coefficients (left panel), the cell intensity is not subject to the non-negative concentration constraints. Moreover, in some situations, we do not reach the target intensity, as shown by the zero external resistance in Figure 4 (left panel). A lower dielectric diffusion coefficient makes the intensity eligibility more restrictive, and we observe in scenario ONE that a 15C intensity is not possible due to the concentration constraint resulting from the dielectric diffusion coefficients. The scenario HALF confirms the deep impact of the concentrations’ positivity (and consequently, of the diffusion coefficients). Most of the time, the intensity is bounded by the diffusion-limited intensity, and the cell is not able to deliver a high current. As a direct consequence of the intensity, the mass transfer between the electrodes is strongly limited when dealing with a low diffusion coefficient, as shown in Figure 5. We managed to reach full depletion of the anode for scenarios ONE and THREE with a 5C intensity, when t ∈ [900 , 1200] , but the scenario HALF limits the maximum intensity to around a 4C discharge and keeps the cell from transferring the whole charge in less than 15 minutes. To highlight the positive concentration issue, we plot the concentration at the collector interfaces in Figure 6. We recall that for I = I− 
+
+> e
+
+, the concentration in the anode collector is almost null (charging case), whereas the concentration in the cathode collector is close to zero when I = I+ 
+
+> e
+
+(discharging case). For high diffusion coefficients, positivity does not lead to a limitation of the current (left panel), but a 15C charge, when t ∈ [1800 , 2400] , is not achievable for scenario ONE (middle panel). Similarly, the current corresponding to the 5C charge, when t ∈ [900 , 1200] , is impossible to achieve with the diffusion coefficients used in scenario HALF (right panel). 22 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT -20 -10 010 20 0 600 1200 1800 2400 3000 3600                  
+
+> I-diffusion (+) I-diffusion (-) cell intensity
+> Intensity  (mA) time (s) Cell intensity -20 -10 010 20 0600 1200 1800 2400 3000 3600
+> I-diffusion (+) I-diffusion (-) cell intensity
+> Intensity  (mA) time (s) Cell intensity -20 -10 010 20 0600 1200 1800 2400 3000 3600
+> I-diffusion (+) I-diffusion (-) cell intensity
+> Intensity  (mA) time (s) Cell intensity
+
+Figure 3: Cell intensity together with the upper and lower diffusion-limited intensity. Scenario THREE (left panel), scenario ONE (middle panel), and scenario HALF (right panel) 0123450 600 1200 1800 2400 3000 3600 0400 800 1200                    
+
+> cell potential external resistance
+> Cell potential (V) external resistance (Ohm) time (s) Cell potential and External resistance 0123450600 1200 1800 2400 3000 3600 0400 800 1200
+> cell potential external resistance
+> Cell potential (V) external resistance (Ohm) time (s) Cell potential and External resistance 0123450600 1200 1800 2400 3000 3600 0400 800 1200
+> cell potential external resistance
+> Cell potential (V) external resistance (Ohm) time (s) Cell potential and External resistance
+
+Figure 4: Cell potential and the associated external resistance. Scenario THREE (left panel), scenario ONE (middle panel) and scenario HALF (right panel) Finally, in Figure 7 we report the overpotentials and ∆c for the three scenarios. We notice that the potential ∆c has a strong impact on the HALF scenario since very low concentrations occur at the interfaces, which leads to a significant amount of potential regarding the potential difference of the whole cell. In contrast, a high diffusion coefficient makes 
+
+∆c less than 1 h.
+
+8 Conclusions 
+
+We have mathematically developed a time-dependent model based on average variables and their values at the interface. Particular attention was paid to conservation and positivity, leading to the notion of diffusion-driven intensity that represents the major constraint on the range where the intensity is eligible. We presented a numerical method for the simulation and a representative example where the choice of the diffusion strongly modifies the capacity of the cell. 
+
+Funding 
+
+S. Clain was financially supported by the Fundação para a Ciência e a Tecnologia (Portuguese Foundation for Science and Technology) under the scope of the projects UID/00324/2025 
+
+https://doi.org/10.54499/UID/00324/2025 (Centre for Mathematics of the University of Coimbra). M. T. Malheiro was financially supported by the Fundação para a Ciência e a Tecnologia (Portuguese Foundation for Science and Technology) under the scope of the project UID/00013/2025 (https://doi.org/10.54499/UID/00013/2025). C. M. Costa was financially supported by the Fundação para a Ciência e a Tecnologia (Portuguese Foundation for Science and Technology) under the scope of the project UID/PRR/4650/2025 and UID/PRR2/04650/2025. S. Clain and M.T. Malheiro acknowledge the financial support of the Portuguese Foundation for Science and Technology (FCT) via a national funding for projects IC&DT with the reference 2023.16854.ICDT. 23 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 010000 20000 30000 40000 50000 0 600 1200 1800 2400 3000 3600                    
+
+> negative electrode positive electrode
+> Concentration (mol/m 3)time (s) concentrations in electrodes 010000 20000 30000 40000 50000 0600 1200 1800 2400 3000 3600
+> negative electrode positive electrode
+> Concentration (mol/m 3)time (s) concentrations in electrodes 010000 20000 30000 40000 50000 0600 1200 1800 2400 3000 3600
+> negative electrode positive electrode
+> Concentration (mol/m 3)time (s) concentrations in electrodes
+
+Figure 5: Concentration in the electrodes. Scenario THREE (left panel), scenario ONE (middle panel) and scenario HALF (right panel) 0500 1000 1500 2000 2500 0 600 1200 1800 2400 3000 3600                    
+
+> xcn
+> xs
+> xcp
+> Concentration (mol/m 3)time (s) Collectors and separator concentrations 0500 1000 1500 2000 2500 0600 1200 1800 2400 3000 3600
+> xcn
+> xs
+> xcp
+> Concentration (mol/m 3)time (s) Collectors and separator concentrations 0500 1000 1500 2000 2500 0600 1200 1800 2400 3000 3600
+> xcn
+> xs
+> xcp
+> Concentration (mol/m 3)time (s) Collectors and separator concentrations
+
+Figure 6: Electrolyte concentration at the collectors. Scenario THREE (left panel), scenario ONE (middle panel), and scenario HALF (right panel) 
+
+References 
+
+[1] Michel Armand and Jean-Marie Tarascon. Building better batteries. Nature , 451(7179):652–657, 2008. [2] Naoki Nitta, Feixiang Wu, Jung Tae Lee, and Gleb Yushin. Li-ion battery materials: present and future. Materials Today , 18(5):252–264, 2015. [3] John S. Newman and Charles W. Tobias. Theoretical analysis of current distribution in porous electrodes. Journal of The Electrochemical Society , 109(12):1183–1191, 1962. [4] Venkatasailanathan Ramadesigan, Paul W. C. Northrop, Sumitava De, Shriram Santhanagopalan, Richard D. Braatz, and Venkat R. Subramanian. Modeling and simulation of lithium-ion batteries from a systems engineering perspective. Journal of The Electrochemical Society , 159(3):R31–R45, 2012. [5] T. F. Fuller, M. Doyle, and J. Newman. Simulation and optimization of the dual lithium ion insertion cell. J. Electrochem. Soc. , pages 1–9, 1994. [6] M. Doyle, T. F. Fuller, and J. Newman. Modeling of galvanostatic charge and discharge of the lithium/polymer/insertion. J. Electrochem. Soc. , pages 1526–1533, 1993. [7] F Brosa Planella, W Ai, A M Boyce, A Ghosh, I Korotkin, S Sahu, V Sulzer, R Timms, T G Tranter, and M Zyskin. A continuum of physics-based lithium-ion battery models reviewed. Progress in Energy , page 042003, 2022. [8] L. Zhao, Y. Song, and X. Zhang. 3d electrochemical-thermal-mechanical coupled modeling of lithium-ion batteries under rapid charging. Energy , page 124312, 2022. [9] Christoph P. Schmidt, Stephan Sinzig, Volker Gravemeier, and Wolfgang A. Wall. A three-dimensional finite element formulation coupling electrochemistry and solid mechanics on resolved microstructures of all-solid-state lithium-ion batteries. Computer Methods in Applied Mechanics and Engineering , 417:116468, 2023. [10] H. Ahmad, R. Prabakaran, and S.C Kim. Electrochemical–thermal coupled modeling of lithium-ion batteries: a comprehensive review of mechanisms, methods, and applications. J Therm Anal Calorim , page 5889–5928, 2026. [11] Wenxin Mei, Zhixiang Cheng, Chenrui She, Chaoshi Liu, Jinhua Sun, and Qingsong Wang. Electrochemical-mechanical-thermal modeling for lithium-ion batteries. The Innovation , page 101472, 2026. [12] Marc Doyle and John Newman. The use of mathematical modeling in the design of lithium/polymer battery systems. Electrochimica Acta , 40(13):2191–2196, 1995. International symposium on polymer electrolytes. 24 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT -200 -100 0100 200 0 600 1200 1800 2400 3000 3600                   
+
+> ηen
+> ηep
+> ∆c
+> Potential  (mV) time (s) Overpotentials and ∆c-200 -100 0100 200 0600 1200 1800 2400 3000 3600
+> ηen
+> ηep
+> ∆c
+> Potential  (mV) time (s) Overpotentials and ∆c-200 -100 0100 200 0600 1200 1800 2400 3000 3600
+> ηen
+> ηep
+> ∆c
+> Potential  (mV) time (s) Overpotentials and ∆c
+
+Figure 7: Over-potential and ∆c. Scenario THREE (left panel), scenario ONE (middle panel), and scenario HALF (right panel) [13] Alessandro Innocenti, Isaac Álvarez Moisés, Jean-François Gohy, and Stefano Passerini. A modified Doyle-Fuller-Newman model enables the macroscale physical simulation of dual-ion batteries. Journal of Power Sources ,580:233429, 2023. [14] T.-S. Dao, C. P. Vyasarayani, and J. McPhee. Simplification and order reduction of lithium-ion battery model based on porous-electrode theory. Journal of Power Sources , page 329–337, 2012. [15] G. Fan, X. Li, and M. Canova. A reduced-order electrochemical model of li-ion batteries for control and estimation applications. IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY , (1), 2018. [16] G. Fan, K. Pan, and M. Canova. A comparison of model order reduction techniques for electrochemical characterization of lithium-ion batteries. In 2015 54th IEEE Conference on Decision and Control (CDC) , pages 3922–3931, 2015. [17] Y. Li, D. Karunathilake, D. M. Vilathgamuwa, Y. Mishra, T. W. Farrell, S. S. Choi, and C. Zou. Model order reduction techniques for physics-based lithium-ion battery management: A survey. IEEE Industrial Electronics Magazine , 16(3):36–51, 2022. [18] V. R. Subramanian, V. Boovaragavan, and V. D. Diwakar. Toward real-time simulation of physics based lithium-ion battery models. Electrochemical and Solid-State Letters , (11):A255–A260, 2007. [19] V. R. Subramanian, V. Boovaragavan, V. Ramadesigan, and M. Arabandi. Mathematical model reformulation for lithium-ion battery simulations: Galvanostatic boundary conditions. Journal of The Electrochemical Society ,(4):A260–A271, 2009. [20] Z. Deng, L. Yang, H. Deng, Y. Cai, and D. Li. Polynomial approximation pseudo-two-dimensional battery model for online application in embedded battery management system. Energy , pages 838–850, 2018. [21] L. Yang, K. Dulmini, V. D. Mahinda, M. Yateendra, F.W. Troy, C. San Shing, and Z. Changfu. Model order reduction techniques for physics-based lithium-ion battery management: A survey. IEEE Industrial Electronics Magazine , 16(3):36–51, 2022. [22] J. Newman and W. Tiedemann. Porous electrode theory with battery applications. AIChE Journal , pages 25–41, 1975. [23] Zhiqiang Chen, Dmitri L. Danilov, Rüdiger-A. Eichel, and Peter H. L. Notten. Porous electrode modeling and its applications to li-ion batteries. Adv. Energy Mater. , page 2201506, 2022. [24] E. J.F. Dickinson and A. J. Wain. The Butler-Volmer equation in electrochemical theory: Origins, value, and practical application. Journal of Electroanalytical Chemistry , page 114145, 2020. [25] G. W. Richardson, J. M. Foster, R. Ranom, C. P. Please, and M. Ramos. Charge transport modelling of lithium-ion batteries. European journal of Applied Mathematics , pages 983–1031, 2022. [26] A. Q. Raeini, Blunt M. J., and B. Bijeljic. Modelling two-phase flow in porous media at the pore scale using the volume-of-fluid method. Journal of Computational Physics , page 5653–5668, 2012. [27] L. Xia, E. Najafi, H.J. Bergveld, and M.C.F. Donkers. A computationally efficient implementation of an electrochemistry-based model for lithium-ion batteries. IFAC PapersOnLine , page 2169–2174, 2017. [28] J. I. Díaz, D. Gómez-Castro, and Angel M. Ramos. On the well-posedness of a multiscale mathematical model for lithium-ion batteries. Adv. Nonlinear Anal. , page 1132–1157, 2019. [29] J. Newman and K.E. Thomas-Alyean. Electrochemical Systems, 3rd Edition . Wiley-Interscience, New York, 2004. 25 An efficient 0D-space conservative and positivity preserving battery model A P REPRINT 
+
+A b-hyperbolic functions 
+
+The Butler-Volmer relation involves the expression χ(η) = exp( βf η ) − exp(( β − 1) f η ) and the inverse function is required in the algorithm to provide η as a function of r. To this end, the present section concerns the development of special functions associated with the Butler-Volmer relation, we call the b-hyperbolic functions. 
+
+Definition A.1. Let β ∈ [0 , 1] , we define the b-hyperbolic sine and cosine functions with bsinh (x, β ) = exp(2 βx ) − exp(2( β − 1) x)2 , bcosh (x, β ) = exp(2 βx ) + exp(2( β − 1) x)2 .
+
+Such function are well-defined, and differentiable on R and one has χ(η) = 2 bsinh (η f / 2; β).The functions have several properties we list hereafter. 
+
+Proposition A.1. We have the algebraic relations 
+
+bsinh (x, β ) = exp((2 β − 1) x) sinh( x), bcosh (x, β ) = exp((2 β − 1) x) cosh( x),
+
+bsinh (x, 1 − β) = −bsinh (−x, β ), bcosh (x, 1 − β) = bcosh (−x, β ).
+
+Moreover, the derivatives read 
+
+bsinh ′(x, β ) = (2 β − 1) bsinh (x, β ) + bcosh (x, β )
+
+bcosh ′(x, β ) = (2 β − 1) bcosh (x, β ) + bsinh (x, β )
+
+In practice we need the inverse function of bsinh hence we have to determine the domain where the reciprocal function is well-defined and differentiable. 
+
+Theorem A.2. For any β ∈ [0 , 1] , the application x → y = bsinh (x, β ) is a bijection from R onto R and we denote by 
+
+y → x = arg bsinh (y, β ) the inverse function. 
+
+PROOF . The derivative reads bsinh ′(x, β ) = (2 β − 1) bsinh (x, β ) + bcosh (x, β )= exp((2 β − 1) x)
+
+h
+
+(2 β − 1) sinh( x) + cosh( x)
+
+i
+
+= exp((2 β − 1) x)
+
+h
+
+β exp( x) + (1 − β) exp( −x)] 
+
+Hence we have a convex combination of two positive functions and conclude that bsinh ′(x, β ) > 0 for all x ∈ R. Since bsinh (x, β ) is a strictly increasing function from R onto R, it admits an inverse function y → x = arg bsinh (y, β ) from 
+
+R onto R, which is differentiable with strictly positive derivative. □
+
+Numerical computation of the inverse function 
+
+Let y ∈ R, we seek x ∈ R such that y = bsinh (x, β ). Introducing X = exp( x), the equation reads 
+
+2yX = X2β h
+
+X − 1
+
+X
+
+i
+
+⇐⇒ 2y = Xα+1 − Xα−1
+
+with α = 2 β − 1 ∈ [−1, 1] . After algebraic manipulations, we seek X(y) > 0 such that 
+
+G(X(y); α) = Xα+1 − 2y − Xα−1 = 0 .
+
+Note that we recover the classical arg sinh if β = 1 /2 ( α = 0 ) since the expression turns to a quadratic polynomial. For α̸ = 0 , the solution has to be determined numerically, and we use a simple Newton method. Let Xp a sequence be given by Xp+1 = Xp − G(Xp; α)/∂ X G(Xp; α) and read 
+
+Xp+1 = Xp − Xα+1  
+
+> p
+
+− 2y − Xα−1
+
+> p
+
+(α + 1) Xα − (α − 1) Xα−2 .
+
+= Xp
+
+"
+
+1 − Xα+1  
+
+> p
+
+− 2y − Xα−1
+
+> p
+
+(α + 1) Xα+1 − (α − 1) Xα−1
+
+#
+
+.
+
+The approximations converge towards the unique solution X(y) in a few iterations up to a prescribed tolerance while we take X0 = 1 for the initialization. 26
