@@ -1,0 +1,1219 @@
+Title: Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter
+
+URL Source: https://arxiv.org/pdf/2609.32640v1
+
+Published Time: Tue, 29 Sep 2026 01:31:08 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter 
+
+Min Kim, Lianghao Cao, Soon-Jo Chung, Andrew M. Stuart 
+
+Abstract — We present Schur-Neural KF (SN-KF), a learning-based correction to the extended Kalman filter (EKF) that preserves the probabilistic conditioning interpretation of the EKF. The method perturbs the predictive state–measurement cross-covariance and the Cholesky factor of the measurement noise covariance so that the resulting joint predictive covariance is always positive semidefinite. The positive semidefiniteness is ensured by a Schur complement-based parametrization. We instantiate the parametrization with a recurrent neural archi-tecture whose matrix outputs are modulated by amplitude gates. We prove that incorporating a measurement does not increase the filter’s state uncertainty, and show that no measurement can induce an arbitrarily large state correction relative to its statistical surprise. We also present a perturbative analy-sis suggesting SN-KF’s structural strength in the data-scarce regime. We provide two numerical experiments to illustrate the practical benefits of SN-KF. In a two-radar experiment, enforcing Schur-consistency provides a much broader failure-free hyperparameter region and reduces RMSE for small training subsets, consistent with our theoretical analysis in the data-scarce regime. In the unicycle experiment, SN-KF achieves the best precision, recall, false alarm rate, and gated RMSE under innovation-based sensor-fault rejection. 
+
+I. INTRODUCTION State estimation for nonlinear stochastic systems is acore problem in control. When the underlying models are approximately known and the nonlinearities are moderate, the extended Kalman filter (EKF) remains one of the most widely used online estimators because of its computational simplicity. In practice, however, EKF performance can de-grade substantially under model mismatch and lineariza-tion errors. This has motivated growing interest in learned Kalman-style estimators that use data to compensate for this performance degradation while retaining some of the structure of classical filtering. Recent work has introduced learning or data-driven approaches into Kalman-style filtering in several ways. KalmanNet [1] and KalmanFormer [2] learn the Kalman gain directly from data using recurrent and transformer architectures, respectively. Split-KalmanNet [3] computes the gain using the measurement Jacobian together with two recurrent networks that learn a priori state covariance and inverse innovation covariance. Cholesky-KalmanNet [4] aug-ments the RNNs of Split-KalmanNet with Cholesky-based output layers, thereby ensuring the positive definiteness of the learned matrices; triangular square-root factors for state covariance appear in the classical literature [5]. Recursive                
+
+> The authors are with the California Institute of Technology (Cal-tech), Pasadena, CA 91125 USA. e-mail:
+
+{mink, lianghao, sjchung, astuart }@caltech.edu 
+
+KalmanNet [6] further augments this line of work by using two recurrent networks: one for the Kalman gain and the other for a noise covariance term, which are used for estimating the posterior state covariance. A-KIT [7] uses a set-transformer to adapt the process noise covariance online within an EKF. Bayesian KalmanNet [8] samples from a probabilistic ensemble of KalmanNet architectures, thereby directly estimating the posterior state covariance. Learned components have also been incorporated into the ensemble Kalman filter [9]. Finally, related work on learning state-space models includes deep Markov models [10] and Neural EKF [11]. These developments show that learned Kalman-style es-timators can be effective, but they also leave open a more structural question: whether learning can be introduced while preserving a valid conditioning interpretation of the Kalman update. This paper addresses that question through learned 
+
+Schur-consistent corrections to the EKF. Our architecture, called the Schur-Neural KF (SN-KF), introduces learning at the level of the predictive joint state–measurement co-variance rather than modifying the state-space model or directly learning the Kalman gain. A Schur complement construction guarantees that the corrected joint covariance remains positive semidefinite. The contributions of this paper are threefold. (i) We for-mulate learning-augmented EKF updates at the level of the predictive joint state–measurement covariance and derive a complete Schur complement parametrization that guarantees its positive semidefiniteness. We realize this parametrization by a recurrent architecture with learned amplitude gates; (ii) 
+
+we establish key theoretical properties of SN-KF: its poste-rior covariance is bounded above by the predictive covariance in the PSD order, and its state update cannot be arbitrarily large compared to the measurement’s statistical surprise. A perturbation result further suggests that, under a nondegen-eracy condition, our Schur complement construction exhibits reduced error in the data-scarce regime. Also, an explicit sur-rogate conditioning interpretation of the SN-KF and a finite-horizon closeness result to the nominal EKF are proved; 
+
+(iii) we evaluate SN-KF on two nonlinear benchmarks. In the two-radar task, it exhibits enhanced numerical stability by broadening the failure-free hyperparameter region, and achieves the lowest mean state-estimation error in the small-training-set experiment. In the unicycle task, it successfully calibrates the projected normalized innovation squared (NIS), and achieves the best precision, recall, false alarm rate, and gated RMSE under innovation-based sensor-fault rejection. To explain the underlying idea, recall that the nominal 
+
+> © 2026 IEEE. Personal use of this material is permitted. Permission from IEEE must be obtained for all other uses, in any current or future media, including reprinting/republishing this material for advertising or promotional purposes, creating new collective works, for resale or redistribution to servers or lists, or reuse of any copyrighted component of this work in other works. Accepted to the 65th IEEE Conference on Decision and Control (CDC 2026). arXiv:2609.32640v1 [eess.SY] 26 Sep 2026
+
+EKF update can be interpreted as conditioning a joint Gaus-sian approximation of the stacked vector [x⊤ 
+
+> t
+
+, z⊤ 
+
+> t
+
+]⊤, where 
+
+xt is the state and zt is the measurement. From this view-point, the update is determined by second-order predictive quantities, in particular the predictive covariance Pt|t−1, the predictive state–measurement cross-covariance ¯Ct|t−1, and the innovation covariance ¯ St , where the overbar denotes the nominal EKF quantity before learned correction. When these quantities are modified by learned terms, it is natural to require them to still assemble into a positive semidefinite joint predictive covariance. This requirement is stronger than directly learning a correction gain in isolation, but it preserves the conditioning interpretation underlying the EKF update. This structural constraint is also relevant for sensor-fault detection. Classical innovation-based fault detection often uses statistical properties of the Kalman filter innova-tions [12]; more broadly, model-based fault detection is often framed as residual generation followed by decision making based on the generated residuals [13]. Accordingly, when learning is introduced into the update step, we seek to retain a well-defined innovation covariance so that downstream innovation-based monitoring and gating remain statistically coherent. Motivated by these considerations, we propose learned 
+
+Schur-consistent corrections to the EKF. Rather than per-turbing the nominal Kalman gain ¯Kt = ¯Ct|t−1 ¯S−1 
+
+> t
+
+directly, we perturb the nominal predictive state–measurement cross-covariance ¯Ct|t−1 and learn a measurement-side factor in a way that guarantees positive semidefiniteness of the predic-tive covariance of (xt , zt ) through a Schur complement con-struction. The corrected quantities define a joint predictive covariance (7) which is positive semidefinite, so that the corrected innovation covariance and the corrected Kalman gain remain interpretable as Kalman quantities. The resulting method, which we refer to as Schur-Neural KF (SN-KF) ,keeps the EKF prediction step intact and learns correction terms only for the update step. 
+
+Notation. Throughout this paper, an overbar denotes the 
+
+nominal EKF quantity before learned correction, while the corresponding unbarred symbol denotes the corrected quan-tity after learned perturbation. Vector norms are Euclidean norms, and matrix norms are spectral norms. Sn denotes the vector space of all n-by-n real symmetric matrices, and Sn
+
+> ++
+
+denotes its subset of all positive definite matrices. II. S CHUR -N EURAL KALMAN FILTER (SN-KF) SN-KF keeps the EKF prediction step unchanged and learns only the update step. At time t, a recurrent network outputs two corrections, ∆Ct and ∆Lt , which induce a cor-rected joint predictive covariance for (xt , zt ), from which the innovation covariance and Kalman gain are obtained. The joint covariance is ensured to be positive semidefinite by a Schur complement construction. We first present the resulting update equations (10), (12) and then describe the recurrent architecture that parametrizes the corrections in Section II-B. 
+
+A. SN-KF Parametrization and Update Equations 
+
+Consider the discrete-time nonlinear state-space model 
+
+xt = f (xt−1, ut−1) + wt−1, (1) 
+
+zt = h(xt ) + vt , (2) with f : Rnx+nu → Rnx and h : Rnx → Rnz , where xt ∈ Rnx is the state, zt ∈ Rnz is the measurement, ut ∈ Rnu is a known input, and wt and vt are zero-mean Gaussian noises with covariances Qt ⪰ 0 and Rt ≻ 0, respectively. Let ˆ xt|t−1 and 
+
+Pt|t−1 denote the EKF predictive mean and covariance, and let 
+
+Ft−1 ≜ ∂ f
+
+∂ x ˆxt−1|t−1,ut−1
+
+, (3) 
+
+Ht ≜ ∂ h
+
+∂ x ˆxt|t−1
+
+, (4) where we assumed f (·, ut−1) and h are differentiable. The EKF prediction step, which is left unchanged in SN-KF, is ˆxt|t−1 = f ( ˆxt−1|t−1, ut−1), (5) 
+
+Pt|t−1 = Ft−1Pt−1|t−1F⊤ 
+
+> t−1
+
++ Qt−1. (6) We define the joint predictive covariance of the stacked pair (xt , zt ) as 
+
+Σt|t−1 ≜
+
+Pt|t−1 Ct|t−1
+
+C⊤ 
+
+> t|t−1
+
+St
+
+
+
+, (7) where Ct|t−1 and St are the corrected cross-covariance and innovation covariance. Our notion of Schur-consistency is precisely that 
+
+Σt|t−1 ⪰ 0. (8) Assuming Pt|t−1 ≻ 0, the Schur complement characterization implies that (7) is positive semidefinite if and only if 
+
+St −C⊤
+
+> t|t−1
+
+P−1
+
+> t|t−1
+
+Ct|t−1 ⪰ 0. (9) This motivates the following learned parametrization for SN-KF, in which ∆Ct and ∆Lt are the learned components: 
+
+Ct|t−1 = ¯Ct|t−1 + ∆Ct , (10a) 
+
+Lt = ¯Lt + ∆Lt , (10b) 
+
+St = C⊤
+
+> t|t−1
+
+P−1
+
+> t|t−1
+
+Ct|t−1 + Lt L⊤ 
+
+> t
+
+. (10c) Here, ¯ Lt is the Cholesky factor of Rt ≻ 0, ∆Lt is lower-triangular, and the nominal EKF predictive covariances are given by ¯Ct|t−1 = Pt|t−1H⊤ 
+
+> t
+
+, (11a) ¯St = Ht Pt|t−1H⊤ 
+
+> t
+
++ Rt = ¯C⊤
+
+> t|t−1
+
+P−1 
+
+> t|t−1
+
+¯Ct|t−1 + Rt . (11b) Because Lt L⊤ 
+
+> t
+
+⪰ 0, the Schur complement in (9) is positive semidefinite. Hence, (7) is automatically Schur-consistent. Moreover, the parametrization is complete in the sense that it could parametrize any (Ct|t−1, St ) for which the assembled 
+
+Σt|t−1 is positive semidefinite. The SN-KF update step is ˆxt|t = ˆxt|t−1 + Kt νt , (12a) 
+
+Pt|t = Pt|t−1 − KtC⊤ 
+
+> t|t−1
+
+−Ct|t−1K⊤ 
+
+> t
+
++ Kt St K⊤
+
+> t
+
+= Pt|t−1 −Ct|t−1S−1 
+
+> t
+
+C⊤
+
+> t|t−1
+
+=
+
+
+
+I − KtC⊤
+
+> t|t−1
+
+P−1
+
+> t|t−1
+
+
+
+Pt|t−1
+
+
+
+I − KtC⊤
+
+> t|t−1
+
+P−1
+
+> t|t−1
+
+⊤
+
++ Kt Lt L⊤ 
+
+> t
+
+K⊤ 
+
+> t
+
+,
+
+(12b) where the innovation is defined as 
+
+νt ≜ zt − h( ˆxt|t−1) (13) and the Kalman gain associated with the learned joint co-variance is defined as 
+
+Kt ≜ Ct|t−1S−1 
+
+> t
+
+. (14) In implementation, we make Lt non-singular by clamping so that St ≻ 0 and Kt is well-defined. 
+
+A learned gain correction baseline. 
+
+For comparison, we define a learned gain correction base-line that predicts an additive correction to the nominal EKF gain: ¯Kt = ¯Ct|t−1 ¯S−1 
+
+> t
+
+, (15) 
+
+Kt = ¯Kt + ∆Kt , (16) followed by the state update (12a) and the standard Joseph form covariance update equation: 
+
+Pt|t = ( I − Kt Ht )Pt|t−1(I − Kt Ht )⊤ + Kt Rt K⊤ 
+
+> t
+
+. (17) Unlike (10a)–(10c), the learned gain correction baseline does not explicitly enforce that the learned correction arises from a positive semidefinite joint predictive covariance of 
+
+(xt , zt ), so a valid conditioning interpretation is not built into the parametrization. 
+
+B. Neural Architecture 
+
+The proposed architecture keeps the EKF prediction step unchanged and uses a recurrent neural network only to parametrize the perturbations ∆Ct and ∆Lt . At time t, the encoder receives a history vector 
+
+ψt ≜
+
+
+
+νt−1
+
+ˆzt−1|t−2
+
+ut−1
+
+ , ˆzt−1|t−2 ≜ h( ˆxt−1|t−2), (18) and updates a latent feature through a gated recurrent unit (GRU) [14], 
+
+rt = GRU (ψt , rt−1). (19) This recurrent state summarizes recent innovations, predicted measurements, and controls. For t = 0, the previous-step quantities are initialized as r−1 = 0, ν−1 = 0, ˆ z−1|− 2 = 0, and u−1 = 0. 
+
+SN-KF: The Schur-consistent model uses two neural heads driven by the shared recurrent feature rt . Each head uses separate multilayer perceptrons for its matrix output and gate vector, with spectral normalization applied to each MLP’s last linear layer. First, the cross-covariance head outputs a raw matrix 
+
+M(C) 
+
+> t
+
+∈ Rnx×nz together with a gate vector g(C) 
+
+> t
+
+∈ Rnz . We define 
+
+∆Ct = M(C) 
+
+> t
+
+diag 
+
+
+
+αC σ (g(C) 
+
+> t
+
+)
+
+
+
+, (20) where σ (·) is the standard logistic function and αC > 0 is a trainable correction scale. The diagonal gate controls the per-measurement amplitude. Second, the innovation-factor head outputs a vector of 
+
+nz(nz + 1)/2 entries together with a gate vector g(L) 
+
+> t
+
+∈ Rnz ;the former is reshaped into a lower-triangular matrix M(L) 
+
+> t
+
+∈
+
+Rnz×nz . We use the same idea: 
+
+∆Lt = M(L) 
+
+> t
+
+diag 
+
+
+
+αL σ (g(L) 
+
+> t
+
+)
+
+
+
+, (21) with a trainable positive scale αL. The effective factor is then 
+
+Lt = ¯Lt + ∆Lt . (22) In implementation, we additionally clamp the diagonal en-tries of the lower-triangular matrix Lt from below by a small positive constant (specifically, we use 10 −4). This alters the final ∆Lt value and makes the final Lt non-singular, which implies St ≻ 0; hence Kt = Ct|t−1S−1 
+
+> t
+
+is well-defined. The amplitude gates in (20) and (21) partially separate the directions of the corrections from their column-wise amplitudes. 
+
+Learned gain correction baseline: To compare against direct residual learning of the Kalman gain, we use the same recurrent encoder but replace the Schur-consistent heads by a single gain head . This head outputs a raw matrix M(K) 
+
+> t
+
+∈
+
+Rnx×nz and a gate vector g(K) 
+
+> t
+
+∈ Rnz , and defines 
+
+∆Kt = M(K) 
+
+> t
+
+diag 
+
+
+
+αK σ (g(K) 
+
+> t
+
+)
+
+
+
+, (23) 
+
+Kt = ¯Kt + ∆Kt , (24) where αK > 0 is again a trainable positive scale. Each of the global correction scales, αC, αL, and αK is parametrized as the softplus of a scalar trainable parameter and is frozen after offline training. III. T HEORETICAL PROPERTIES OF SN-KF We begin by showing that the learned corrections preserve positive semidefiniteness of the joint predictive covariance. 
+
+Proposition 1: Assume Pt|t−1 ≻ 0. For any matrices ∆Ct
+
+and ∆Lt , define Ct|t−1 and St by (10a)–(10c). Then Σt|t−1 ⪰ 0. Consequently, the updated covariance 
+
+Pt|t = Pt|t−1 −Ct|t−1S−1 
+
+> t
+
+C⊤ 
+
+> t|t−1
+
+(25) is also positive semidefinite whenever St ≻ 0. Finally, the parametrization (10) is rich enough to parametrize any (Ct|t−1, St ) for which the assembled Σt|t−1 is positive semidefinite. Proof: Using (10c), 
+
+St −C⊤
+
+> t|t−1
+
+P−1
+
+> t|t−1
+
+Ct|t−1 = Lt L⊤ 
+
+> t
+
+⪰ 0. (26) Hence the Schur complement of the upper-left block in (7) is positive semidefinite, which implies Σt|t−1 ⪰ 0. The conditional covariance formula (25) is the Schur complement of St . The final claim follows from the fact that any real A ⪰ 0has a decomposition of the form A = LL ⊤ for some L real and lower-triangular. The next result analyzes the SN-KF update equations to show that these updates remain reasonable. Concretely, the posterior mean update in normalized coordinates is bounded by a suitably normalized innovation vector; moreover, the posterior covariance remains no greater than the predictive covariance. 
+
+Theorem 2: Assume Pt|t−1 ≻ 0 and let Lt ∈ Rnz×nz be non-singular. For every innovation vector νt ∈ Rnz ,
+
+∥P−1/2 
+
+> t|t−1
+
+Kt νt ∥ ≤ min 
+
+ 12 ∥L−1 
+
+> t
+
+νt ∥,
+
+q
+
+ν⊤ 
+
+> t
+
+S−1 
+
+> t
+
+νt
+
+
+
+. (27) Also, 0 ≺ Pt|t ⪯ Pt|t−1. (28) 
+
+Proof: Write P ≜ Pt|t−1, C ≜ Ct|t−1, L ≜ Lt , S ≜ St ,
+
+K ≜ Kt , and define M ≜ P−1/2CL −T . We have C = P1/2ML ⊤,and hence S = L(I + M⊤M)L⊤. Therefore, we have 
+
+P−1/2KL = P−1/2CS −1L = M(I + M⊤M)−1.
+
+Now let M = UΣV ⊤ be a singular value decomposition of 
+
+M. Then 
+
+M(I + M⊤M)−1 = U Σ(I + Σ⊤Σ)−1V ⊤.
+
+Therefore, each singular value of P−1/2KL is at most 1/2, because x/(1 + x2) ≤ 1/2 for all x ≥ 0. Combined with K⊤P−1K = S−1 − S−1LL ⊤S−1 ⪯ S−1, this proves the first assertion. For the second assertion, note that Pt|t =
+
+P1/2 I − M(I + M⊤M)−1M⊤ P1/2 = P1/2(I + MM ⊤)−1P1/2,where the second equality comes from the Woodbury matrix identity. Pre-multiplying and post-multiplying the symmetric matrix P1/2 to 0 ≺ (I + MM ⊤)−1 ⪯ I gives (28). 
+
+Remark 1 (Comparison to direct gain-learning): In the scalar case nx = nz = 1 with Pt|t−1 = 1, Ht = 1, Rt = 1, suppose a direct gain-learning architecture outputs an arbitrary scalar gain kt . The Joseph form covariance update becomes Pt|t = 1 − 2kt + 2k2 
+
+> t
+
+. Therefore, Pt|t > Pt|t−1
+
+whenever kt < 0 or kt > 1, and Pt|t → ∞ as |kt | → ∞.We now give a heuristic explanation for why SN-KF may be beneficial in the data-scarce regime. Fix a time t, and denote P = Pt|t−1 ≻ 0, L = Lt , where L is non-singular. Let 
+
+C† ∈ Rnx×nz be a reference (“ground-truth”) cross-covariance, and define S† ≜ C†⊤P−1C† + LL ⊤, K† ≜ C†(S†)−1. For a fixed perturbation direction H ∈ Rnx×nz and an ε > 0, let 
+
+Cε ≜ C† + εH.We compare the SN-KF gain KSN ≜
+
+Cε
+
+ C⊤ 
+
+> ε
+
+P−1Cε + LL ⊤−1 with KTD ≜ Cε (S†)−1, calculated using the true denominator S†. For any K ∈ Rnx×nz , define the normalized gain error 
+
+E (K) ≜ P−1/2(K − K†)( S†)1/2 2 
+
+> F
+
+.
+
+Proposition 3: We have E  KSN  = E  KTD  − ε2∆(H) + 
+
+o(ε2) as ε → 0+, where ∆(H) ≥ 0. If C†⊤P−1H +
+
+H⊤P−1C†̸ = 0, we have ∆(H) > 0. 
+
+Remark 2 (Connection to the data-scarce regime): 
+
+Suppose that the learned cross-covariance error has the typical scale Ct|t−1 − C† ∼ N−1/2, where N is the training set size. Heuristically, identifying ε with N−1/2 gives a reduction in the gain error of order N−1, which could be significant in the small-N regime. 
+
+Proof: Set W ≜ (S†)−1 and Γ ≜ C†⊤P−1H + H⊤P−1C†.Define the SN-KF gain map K (C) ≜ C(C⊤P−1C + LL ⊤)−1.From the product rule, we have the following directional derivative: 
+
+D ≜ DK (C†)[ H] = HW −C†W ΓW.
+
+Hence, KSN = K† + εD + o(ε), whereas KTD = K† + εHW .Therefore, 
+
+E  KSN  = ε2 P−1/2D(S†)1/2 2 
+
+> F
+
++ o(ε2),
+
+E  KTD  = ε2 P−1/2H(S†)−1/2 2 
+
+> F
+
+,
+
+where the first equality comes from Cauchy–Schwarz. Define ∆(H) ≜ L⊤W ΓW 1/2 2 
+
+> F
+
+≥ 0. Since Γ = Γ⊤ and 
+
+C†⊤P−1C† = S† − LL ⊤, one can check that 
+
+P−1/2D(S†)1/2 2 
+
+> F
+
+= tr (P−1HW H ⊤) − tr (LL ⊤W ΓW ΓW )= P−1/2H(S†)−1/2 2 
+
+> F
+
+− ∆(H).
+
+This completes the proof. Our fourth result gives a probabilistic interpretation of the SN-KF parametrization. The SN-KF update arises as conditioning in an explicit surrogate Gaussian model. 
+
+Proposition 4 (Surrogate Gaussian interpretation): Fix t,and condition on all information available before assimilating 
+
+zt . Assume Pt|t−1 ≻ 0 and that Lt is non-singular. Define auxiliary random vectors (ext ,ezt ) by 
+
+ext ∼ N ( ˆxt|t−1, Pt|t−1), (29) 
+
+ezt = h( ˆxt|t−1) + C⊤
+
+> t|t−1
+
+P−1
+
+> t|t−1
+
+ ext − ˆxt|t−1
+
+ + ηt , (30) 
+
+ηt ∼ N (0, Lt L⊤ 
+
+> t
+
+), (31) with ηt independent of ext . Then the following hold. 1) (ext ,ezt ) is jointly Gaussian with covariance Σt|t−1 from (7). 2) For every z ∈ Rnz ,
+
+ext | (ezt = z) ∼ N
+
+
+
+ˆxt|t−1 + Kt
+
+ z − h( ˆxt|t−1), Pt|t
+
+
+
+. (32) In particular, at z = zt , the conditional mean is (12a), and the conditional covariance is (12b). 3) If pezt denotes the probability density function of ezt ,then, evaluated at the actual measurement zt ,
+
+− log pezt (zt ) = 12 ν⊤ 
+
+> t
+
+S−1 
+
+> t
+
+νt + 12 log det St + nz
+
+2 log (2π).
+
+(33) 4) Let 
+
+q− 
+
+> t
+
+= N ( ˆxt|t−1, Pt|t−1),
+
+and let q+ 
+
+> t
+
+(· | z) be the Gaussian law in (32). Then 
+
+EDKL 
+
+ q+ 
+
+> t
+
+(· | ezt ) ∥ q−
+
+> t
+
+ = 12 log det Pt|t−1
+
+det Pt|t
+
+= 12 log det St
+
+det (Lt L⊤ 
+
+> t
+
+) ,
+
+(34) where the expectation is with respect to ezt .
+
+Proof: Write P ≜ Pt|t−1, C ≜ Ct|t−1, L ≜ Lt , S ≜ St , and 
+
+Σ ≜ Σt|t−1. First, note that 
+
+ext
+
+ezt
+
+
+
+=
+
+ I 0
+
+C⊤P−1 I
+
+  ext
+
+ηt
+
+
+
++
+
+ 0
+
+h( ˆxt|t−1) −C⊤P−1 ˆxt|t−1
+
+
+
+,
+
+so (ext ,ezt ), being an affine image of a jointly Gaussian vector, is jointly Gaussian; its covariance is given by 
+
+ I 0
+
+C⊤P−1 I
+
+  P 00 LL ⊤
+
+  I P−1C
+
+0 I
+
+
+
+= Σ.
+
+This proves item 1. For item 2, note that S ≻ 0, and use the Gaussian conditioning formula [15, Proposition 3.13]. Item 3 immediately follows from noting that the marginal law of 
+
+ezt is N (h( ˆxt|t−1), S).For item 4, first note that P ≻ 0 and S −C⊤P−1C = LL ⊤ ≻
+
+0 imply Σ ≻ 0. In particular, the Schur complement of S in 
+
+Σ, i.e., P −CS −1C⊤ = Pt|t is also positive definite. Applying the Gaussian KL divergence formula [16] gives 
+
+DKL 
+
+ q+ 
+
+> t
+
+(· | ezt ) ∥ q−
+
+> t
+
+
+
+= 12
+
+
+
+tr 
+
+
+
+P−1(P −CS −1C⊤)
+
+
+
+− nx + log det P
+
+det (P −CS −1C⊤)
+
+
+
++ 12
+
+ ezt − h( ˆxt|t−1)⊤ S−1C⊤P−1CS −1  ezt − h( ˆxt|t−1) .
+
+Now we take expectations with respect to ezt . Recall that 
+
+E
+
+h
+
+(ezt − h( ˆxt|t−1))( ezt − h( ˆxt|t−1)) ⊤i
+
+= S,
+
+and hence 
+
+E
+
+h ezt − h( ˆxt|t−1)⊤ S−1C⊤P−1CS −1  ezt − h( ˆxt|t−1)i
+
+= E
+
+h
+
+tr 
+
+
+
+S−1C⊤P−1CS −1  ezt − h( ˆxt|t−1)   ezt − h( ˆxt|t−1)⊤i 
+
+= tr 
+
+
+
+S−1C⊤P−1C
+
+
+
+.
+
+On the other hand, tr 
+
+
+
+P−1(P −CS −1C⊤)
+
+
+
+− nx = − tr 
+
+
+
+P−1CS −1C⊤
+
+.
+
+By the cyclic invariance of trace, the expected KL divergence simplifies to 
+
+E DKL 
+
+ q+ 
+
+> t
+
+(· | ezt ) ∥ q−
+
+> t
+
+ = 12 log det P
+
+det (P −CS −1C⊤)= 12 log det Pt|t−1
+
+det Pt|t
+
+.
+
+It remains to prove the second equality in (34). Since P and 
+
+S are invertible, the Schur complement determinant formula gives det Σ = det (P) det  S −C⊤P−1C = det (P) det (LL ⊤) and also det Σ = det (S) det  P − CS −1C⊤. Comparing these two expressions for det Σ, we obtain det (P) det (LL ⊤) = det (S) det (P −CS −1C⊤).
+
+Rearranging the terms completes the proof. When ∆Ct = 0 and ∆Lt = 0 for all t, SN-KF reduces to the nominal EKF. Our final theorem states that, over a fixed finite horizon, small correction terms lead to trajectories that remain close to the nominal EKF trajectory. 
+
+Theorem 5 (Finite-horizon closeness to nominal EKF): 
+
+Fix T ≥ 0, a measurement sequence {zt }Tt=0, an input sequence {ut }T −1 
+
+> t=0
+
+, and a common Gaussian prior with mean ˆx0|− 1 and covariance P0|− 1 ≻ 0. Let {( ¯xt|t , ¯Pt|t )}Tt=0 denote the nominal EKF trajectory, and let {( ˆxt|t , Pt|t )}Tt=0 denote the corresponding SN-KF trajectory with corrections ∆Ct
+
+and ∆Lt .Assume that: 1) for each t = 0, . . . , T − 1, the map x 7 → f (x, ut ) is C2,and h is C2;2) there exist constants q, r > 0 such that Qt ⪰ qI for t =
+
+0, . . . , T − 1 and Rt ⪰ rI for t = 0, . . . , T .Define 
+
+εC ≜ max  
+
+> 0≤t≤T
+
+∥∆Ct ∥, εL ≜ max  
+
+> 0≤t≤T
+
+∥∆Lt ∥.
+
+Then there exist constants ε0 > 0 and cT > 0, independent of the particular correction sequence ∆Ct and ∆Lt , such that whenever εC + εL ≤ ε0, the SN-KF recursion is well-defined up to time t = T and satisfies max 
+
+> 0≤t≤T
+
+
+
+∥ ˆxt|t − ¯xt|t ∥ + ∥Pt|t − ¯Pt|t ∥
+
+
+
+≤ cT (εC + εL). (35) 
+
+Proof: Define the norm ∥(x, P)∥∗ ≜ ∥x∥ + ∥P∥ for 
+
+(x, P) ∈ Rnx × Snx . Denote the nominal EKF predicted and posterior pairs by ¯X− 
+
+> t
+
+≜ ( ¯xt|t−1, ¯Pt|t−1), ¯X+ 
+
+> t
+
+≜ ( ¯xt|t , ¯Pt|t ), t = 0, . . . , T.
+
+We first note that all nominal EKF covariances are positive definite. First, P0|− 1 ≻ 0 by assumption. For each t ≥ 0, if ¯Pt|t−1 ≻ 0 then ¯St ⪰ rI ≻ 0 so the EKF update is well-defined. Moreover, by the Woodbury matrix identity, ¯Pt|t =
+
+ ¯P−1 
+
+> t|t−1
+
++ ¯H⊤ 
+
+> t
+
+R−1 
+
+> t
+
+¯Ht
+
+−1
+
+, where ¯Ht denotes the Jacobian ∂ h 
+
+> ∂x
+
+evaluated at the EKF’s predicted state at time t. Hence, ¯Pt|t ≻ 0. Also, for each t ≥ 0, ¯ Pt|t ≻ 0 implies ¯ Pt+1|t ⪰ qI ≻ 0. By induction, all nominal predicted and posterior covariances are positive definite. Therefore, there exists ρ > 0 such that each closed ρ-ball in Rnx × Snx centered at ¯ X± 
+
+> t
+
+is contained in the open set Rnx ×Snx
+
+> ++
+
+. Denote the union of all these balls as Nρ , and note that this set is compact. For each t = 0, . . . , T −1, define the prediction map (which is used for both the nominal EKF and SN-KF) 
+
+Φt (x, P) ≜
+
+
+
+f (x, ut ), F(x, ut ) P F (x, ut )⊤ + Qt
+
+
+
+,
+
+where F(x, ut ) ≜ ∂ f  
+
+> ∂x
+
+(x, ut ). Since x 7 → f (x, ut ) is C2, the map 
+
+Φt is C1. For each t = 0, . . . , T , define the SN-KF update map 
+
+Ut (x, P, ∆C, ∆L) ≜ (x+, P+)
+
+where 
+
+H(x) ≜ ∂ h
+
+∂ x (x), ¯C(x, P) ≜ PH (x)⊤,
+
+C = ¯C(x, P) + ∆C, L = ¯Lt + ∆L,
+
+S = C⊤P−1C + LL ⊤, K = CS −1,
+
+x+ = x + K zt − h(x), P+ = P − KC ⊤ −CK ⊤ + KSK ⊤.
+
+The natural domain of Ut is characterized by the inequal-ities P ≻ 0 and S ≻ 0, hence is an open set; note that Ut is 
+
+C1 on this set. Now, define the closed set 
+
+B ≜ (∆C, ∆L) : ∥∆C∥ + ∥∆L∥ ≤ √r/2 .
+
+Suppose (∆C, ∆L) ∈ B. Then, for each unit-norm vector x,we have ∥ ¯L⊤ 
+
+> t
+
+x∥2 = x⊤Rt x ≥ r, so that ∥L⊤x∥ ≥ ∥ ¯L⊤ 
+
+> t
+
+x∥ − ∥∆L⊤x∥ ≥ √r − ∥ ∆L∥ ≥ √r/2. Therefore, x⊤LL ⊤x =
+
+∥L⊤x∥2 ≥ r 
+
+> 4
+
+for all unit-norm x. Hence, we have LL ⊤ ⪰
+
+(r/4)I and S = C⊤P−1C + LL ⊤ ⪰ r 
+
+> 4
+
+I ≻ 0; therefore the domain of Ut contains the compact set Nρ × B.As C1 maps are Lipschitz on compact sets, there exist constants LΦ, LU > 0 such that for all relevant t,
+
+∥Φt (X) − Φt (Y )∥∗ ≤ LΦ∥X −Y ∥∗, (36) 
+
+∥Ut (X, ∆) −Ut (Y, 0)∥∗ ≤ LU (∥X −Y ∥∗ + ∥∆C∥ + ∥∆L∥) ,
+
+(37) for all X,Y ∈ Nρ and all ∆ = ( ∆C, ∆L) ∈ B.Now let X− 
+
+> t
+
+≜ ( ˆxt|t−1, Pt|t−1) and X+ 
+
+> t
+
+≜ ( ˆxt|t , Pt|t ) for t =
+
+0, . . . , T denote the SN-KF predicted and posterior pairs, respectively. Define d− 
+
+> t
+
+≜ ∥X− 
+
+> t
+
+− ¯X− 
+
+> t
+
+∥∗, d+ 
+
+> t
+
+≜ ∥X+ 
+
+> t
+
+− ¯X+ 
+
+> t
+
+∥∗.Recursively define the following constants ai:
+
+a−1 ≜ 0, at ≜ LU (LΦ at−1 + 1), t = 0, . . . , T,
+
+and set 
+
+cT ≜ max 
+
+
+
+{at : 0 ≤ t ≤ T } ∪ { LΦat : 0 ≤ t ≤ T − 1}
+
+
+
+.
+
+Finally, choose ε0 ≜ min 
+
+n √r 
+
+> 2
+
+, ρ
+
+> cT
+
+o
+
+> 0. Now, we prove by induction that if ε ≜ εC + εL ≤ ε0, then for all t = 0, . . . , T ,
+
+d− 
+
+> t
+
+≤ LΦat−1ε, X− 
+
+> t
+
+∈ Nρ , (38) and 
+
+d+ 
+
+> t
+
+≤ at ε, X+ 
+
+> t
+
+∈ Nρ . (39) At t = 0, we have X− 
+
+> 0
+
+= ¯X− 
+
+> 0
+
+, so d− 
+
+> 0
+
+= 0 and X− 
+
+> 0
+
+∈ Nρ . Also, 
+
+∥∆C0∥ + ∥∆L0∥ ≤ ε ≤ 
+
+> √r
+> 2
+
+, so ∆0 ≜ (∆C0, ∆L0) ∈ B. Hence, by (37), 
+
+d+ 
+
+> 0
+
+= ∥U0(X− 
+
+> 0
+
+, ∆0) −U0( ¯X− 
+
+> 0
+
+, 0)∥∗ ≤ LU ε = a0ε.
+
+Since ε ≤ ρ/cT ≤ ρ/a0, this also implies X+ 
+
+> 0
+
+∈ Nρ . There-fore, both (38) and (39) hold for t = 0. Now, assume both (38) and (39) hold for some t ∈{0, . . . , T − 1}. Because X+ 
+
+> t
+
+, ¯X+ 
+
+> t
+
+∈ Nρ , we may apply (36) to obtain 
+
+d− 
+
+> t+1
+
+= ∥Φt (X+ 
+
+> t
+
+) − Φt ( ¯X+ 
+
+> t
+
+)∥∗ ≤ LΦd+ 
+
+> t
+
+≤ LΦat ε.
+
+Since ε ≤ ρ/cT ≤ ρ/(LΦat ), it follows that X− 
+
+> t+1
+
+∈ Nρ . This proves (38) for t + 1. Next, we have ∥∆Ct+1∥ + ∥∆Lt+1∥ ≤ √r/2, so ∆t+1 ≜
+
+(∆Ct+1, ∆Lt+1) ∈ B. Because both X− 
+
+> t+1
+
+and ¯X− 
+
+> t+1
+
+lie in 
+
+Nρ , we may apply (37) to get d+ 
+
+> t+1
+
+= ∥Ut+1(X−
+
+> t+1
+
+, ∆t+1) −
+
+Ut+1( ¯X−
+
+> t+1
+
+, 0)∥∗ ≤ LU (d− 
+
+> t+1
+
++ ε) ≤ LU (LΦat ε + ε) = at+1ε.Since ε ≤ ρ/cT ≤ ρ/at+1, we also obtain X+ 
+
+> t+1
+
+∈ Nρ . There-fore, (39) holds for t + 1, completing the induction. Therefore, for all t = 0, . . . , T , we have d+ 
+
+> t
+
+≤ at (εC + εL) ≤
+
+cT (εC + εL), and we conclude that the claim (35) holds. IV. E XPERIMENTAL RESULTS 
+
+We next evaluate two practical consequences of Schur-consistency: training robustness and reliability of the result-ing innovation statistics. The two-radar experiment examines numerical stability across correction scale initializations and state estimation accuracy in the data-scarce regime. The unicycle experiment asks whether a Schur-consistent learned joint covariance improves NIS calibration and downstream fault-gated estimation. 
+
+A. Experimental Setup 
+
+We compare SN-KF with a capacity-matched no-Schur 
+
+ablation, learned gain correction, and an inflation-tuned EKF. SN-KF and no-Schur use the same neural architecture (hence the same number of parameters) and neural network initial-ization method; no-Schur omits the coupling of the corrected cross-covariance into the innovation covariance: 
+
+SNS  
+
+> t
+
+= Ht Pt|t−1H⊤ 
+
+> t
+
++ Lt L⊤ 
+
+> t
+
+, KNS  
+
+> t
+
+= Ct|t−1(SNS  
+
+> t
+
+)−1. (40) SN-KF uses the last equality in (12b), and no-Schur uses the Joseph form covariance update PNS  
+
+> t|t
+
+= ( I − KNS  
+
+> t
+
+Ht )Pt|t−1(I −
+
+KNS  
+
+> t
+
+Ht )⊤ + KNS  
+
+> t
+
+Lt L⊤ 
+
+> t
+
+(KNS  
+
+> t
+
+)⊤. All neural methods use full backpropagation through the filtering recursion, gradient clipping at one, and then an AdamW update; they are initial-ized so that ∆Ct , ∆Lt , ∆Kt are all zero, and are trained and selected using state MSE. Within each benchmark, they share the peak learning rate, learning rate schedule, weight decay, and mini-batch size. The first epoch warms the learning rate from 1% to 100% of its peak, followed by cosine decay to 1%. SN-KF and no-Schur have the same number of neural parameters; compared to these, the learned gain correction baseline has a parameter count differing by less than 0.2%. For the inflation-tuned EKF, we rescale the predictive covariance by Pt|t−1 ← γ2Pt|t−1 before computing the in-novation covariance and Kalman gain, with γ > 0 selected using validation state MSE. In the two-radar experiment, this rescaling is applied only when measurements are available. 
+
+B. Two Radars: Correction Scale Tuning and Training Sta-bility 
+
+We consider a 5-dimensional constant-turn-rate vehicle model observed by two fixed range–bearing radars with intermittent sensing. Measurements are jointly available from both radars with probability 25% at each of the 40 fil-tering steps. The state is xt = [ px,t , py,t , vx,t , vy,t , ωt ]⊤, and the radar locations are (−20 , −5) and (20 , −5). The time step for discretization is ∆t = 0.35. The dynamics have no control input. In this benchmark, all neural methods replace 
+
+ut−1 in (18) with the current measurement-availability flag 
+
+mt ∈ { 0, 1}. The GRU is updated at every step; when measurements are unavailable, the innovation input to the GRU at the next time step is set to zero. The initial state is Gaussian with mean [0, 0, 1, 0, 0.05 ]⊤ and covariance 
+
+P0 = diag (0.32, 0.32, 0.15 2, 0.15 2, 0.02 2). We use noise co-variances Q = diag (0.32, 0.03 2, 0.52, 0.05 2, 0.002 2) and R =
+
+diag (0.52, 0.0175 2, 0.12, 0.0175 2), with measurement order 
+
+[r1, θ1, r2, θ2]. For t ≥ 1, the pairs (wt−1, vt ) are i.i.d. Gaussian with cross-covariance N = Q1/2BR 1/2, where B ∈ R5×4 has entries B11 = −0.49, B13 = B31 = 0.85, and B33 = 0.49, with all other entries being zero. All filters use the true dynamics and measurement functions, the true initial distribution, Q,and R, but assume N = 0. We first use 700 training and 175 validation trajectories to select the initial global correction scale hyperparameters. We report results on 1,000 test trajectories. The validation and test sets are common throughout the two-radar exper-iment. SN-KF and no-Schur are evaluated on the same initial 36-point grid αC ∈ { 0.001 , 0.01 , 0.1, 1, 10 , 100 } and 
+
+αL ∈ { 0.001 , 0.01 , 0.1, 1, 10 , 100 } using three random seeds, hence 36 × 3 = 108 training runs per method. For the no-Schur ablation, 42 out of 108 training runs numerically failed (“Initial Succ.” in Table I). Learned gain correction is evaluated on 11 αK candidates in {0.01 , 0.03 , 0.1, 0.3,
+
+1, 3, 10 , 30 , 100 , 300 , 1000 }, and hence 11 × 3 = 33 training runs are performed. All neural methods use the same peak learning rate 5 × 10 −3. After this 15-epoch grid search, we further refine the chosen hyperparameters using 30 epochs per run, selecting (αC, αL) = ( 0.316228 , 1) for both SN-KF and no-Schur and αK = 0.547723 for learned gain correction. Refinement comprises 93 runs over 31 configurations for each of SN-KF/no-Schur and 18 runs over 6 gain correction configurations. SN-KF and no-Schur share all evaluated configurations throughout the refinement. We then evaluate hyperparameter robustness with respect to a fixed, small training set (last two columns in Table I). Around each selected setting, we evaluate nine nearby con-figurations on a fixed 30-trajectory subset of the original 700 training trajectories using three fresh random seeds: a 3 × 3grid for SN-KF and no-Schur, and nine nearby αK values for                                                           
+
+> TABLE I NUMERICAL STABILITY OF TRAINING FOR THE TWO -RADAR BENCHMARK . “I NITIAL SUCC .” COUNTS SUCCESSFUL RUNS OVER THE INITIAL GRIDS BEFORE REFINEMENT . F OR NEURAL METHODS , “V AL .RMSE” AND “T EST RMSE” ARE THREE -SEED MEANS AT THE FINAL SELECTED SCALES ,TRAINED USING 30 TRAINING EPOCHS . A LOCAL CONFIGURATION IS VALID ONLY IF ALL THREE 30-EPOCH RUNS COMPLETE SUCCESSFULLY . T HE EKF USES VALIDATION -SELECTED INFLATION γ=0.905.
+> Method Initial Succ. Val. RMSE Test RMSE Local Succ. Valid SN-KF 108/108 1.5393 1.7006 27/27 9/9
+> No-Schur 66/108 1.5359 1.6913 7/27 0/9 Gain correction 18/33 1.6222 1.7708 19/27 2/9 EKF (infl.-tuned) –1.7993 1.9045 ––
+> TABLE II RESULTS FROM TRAINING ON 100 DIFFERENT SMALL SUBSETS .PARENTHESES IN “T EST RMSE” GIVE THE SAMPLE STANDARD DEVIATION . T HE EKF IS FIXED ACROSS SUBSETS ,SO THE CORRESPONDING STANDARD DEVIATION IS ZERO .
+> Method Success Test RMSE Worst RMSE SN-KF 100/100 1.873(30) 1.952 No-Schur 48/100 1.908(43) 2.017 Gain correction 61/100 1.909(20) 2.023 EKF (infl.-tuned) –1.904(0) 1.904
+
+learned gain correction. All nine local configurations remain valid for SN-KF. No-Schur has no valid local configurations, while gain correction has two. Finally, to test state estimation performance in the data-scarce regime, we form one hundred 30-trajectory training subsets from the original training set and train each method once per subset for 30 epochs (Table II). For each neural method, we report the mean test RMSE over the successful runs. “Worst RMSE” is the largest test RMSE among such runs. In conclusion, Schur-consistency makes training sub-stantially more reliable, while SN-KF remains competitive in terms of the state estimation performance throughout this experiment, achieving the lowest test RMSE in the small-training-set experiment. 
+
+C. Unicycle: NIS Calibration and Fault-Gated Estimation 
+
+We consider a 4-dimensional unicycle with state vector 
+
+xt = [ px,t , py,t , θt , v f ,t ]⊤, where v f ,t denotes forward velocity. Each measurement consists of three range–bearing pairs from three fixed beacons, hence is six-dimensional. The ground-truth system and all filters share the same dynamics and measurement models. The only model mismatch hidden from the filters is a nonzero process–measurement noise cross-covariance N. We generate the process and measure-ment noises as wt−1 = Gξt + εt and vt = Dξt + ηt , where 
+
+ξt ∼ N (0, I2), εt ∼ N (0, Q − GG ⊤), and ηt ∼ N (0, R −
+
+DD ⊤) are mutually independent. Note that Cov (wt−1) = Q,Cov (vt ) = R, and N ≜ Cov (wt−1, vt ) = GD ⊤̸ = 0. We use 128/128 train/validation trajectories of length 50. All neural methods use a peak learning rate of 3 ×
+
+10 −4. The validation set was used to choose the ini-tial values of the global correction scales by minimizing the mean best validation MSE over three random seeds, with 15 epochs per tuning run. The selected initial values TABLE III PROJECTED NIS OVER ALL 50 STEPS OF HEALTHY TRAJECTORIES . T HE 
+
+χ22 REFERENCE VALUES ARE 2/0.95 /0.99.                
+
+> Method Proj. NIS C95 C99 SN-KF 1.945 0.9539 0.9912
+> No-Schur 1.330 0.9866 0.9984 Gain correction 1.419 0.9832 0.9975 EKF (infl.-tuned) 1.493 0.9808 0.9972
+
+TABLE IV INNOVATION -BASED GATING FOR [9, 11 ]σ COMMON BEARING FAULTS , 
+
+> WHERE
+
+σ = 0.03 RAD ; FAR = F ALSE ALARM RATE . G ATED RMSE IS COMPUTED OVER THE FULL 50-STEP TRAJECTORY .              
+
+> Method Precision Recall FAR Gated RMSE SN-KF 0.808 0.937 0.0249 0.2104
+> No-Schur 0.534 0.692 0.0677 0.2523 Gain correction 0.523 0.814 0.0829 0.2800 EKF (infl.-tuned) 0.713 0.839 0.0377 0.2229
+
+are (αC, αL) = ( 0.166667 , 1.83333 ) for SN-KF, (αC, αL) = (0.433333 , 1.16667 ) for no-Schur, and αK = 3.22222 for gain correction; the selected EKF inflation is γ = 1.02. Then, each neural method is trained from scratch for 30 epochs using five fresh random seeds, with its global correction scales initialized to the previously selected values. 
+
+a) NIS Calibration: We report NIS proj  
+
+> t
+
+=(U⊤νt )⊤(U⊤StU)−1(U⊤νt ), whose reference distribution is χ22 . Here, U ∈ R6×2 consists of orthonormal columns spanning the two-dimensional column space of D. On a 1500-trajectory test set, SN-KF attains NIS 1.945 with empirical 95%/99% coverages 0.9539 /0.9912, closely matching the references 2 /0.95 /0.99 without any further recalibration (Table III). 
+
+b) Fault-Gated Estimation: We next test the filters under common bearing faults. At a faulty time step, we add the same angular offset to all three bearing measurements, while leaving the three range measurements unchanged. At each of the remaining 45 time steps after the first 5 steps, a fault occurs with probability 0.1. After accepting the first five updates, each filter computes the NIS using the six measurement components, and accepts the measurement update only when NIS t is no greater than the 99th percentile of χ26 . If the NIS exceeds this threshold, the filter skips that measurement update. For testing, we use 1500 test trajectories, which are the corrupted-measurement versions of the test set used for the projected NIS experiment. SN-KF has the highest precision and recall, together with the lowest FAR and gated RMSE (Table IV). Relative to no-Schur, it improves precision, recall, and FAR by 27.44, 24.49, and 4.28 percentage points, respectively, and reduces gated RMSE by 16.63%. The unicycle experiments suggest that SN-KF successfully maintains a coherent statistical meaning of the Kalman innovation vector, which is useful for sensor-fault detection and downstream fault-gated state estimation. V. CONCLUSIONS We presented SN-KF, a structured perturbation to the update step of the extended Kalman filter. By learning corrections to the predictive joint covariance of the state– measurement pair, the method retains a coherent Gaussian-conditioning interpretation together with an explicit innova-tion covariance. Theoretical analysis shows that SN-KF has many desirable properties: incorporating a measurement does not increase the filter’s state uncertainty, and no measurement can induce an arbitrarily large state correction relative to its statistical surprise. Also, a perturbative argument suggests that SN-KF exhibits reduced error in the data-scarce regime. Finally, we prove a surrogate Gaussian model interpretation of SN-KF and also a closeness theorem relative to the nominal EKF. The two experiments expose practical benefits of SN-KF. In the two-radar study, SN-KF provides a much broader failure-free tuning region and reduced RMSE for data-scarce training sets. In the unicycle study, SN-KF attains the best precision, recall, false alarm rate, and gated RMSE under the theoretical χ26 NIS gate. These results suggest that SN-KF makes learned Kalman updates both more reliable to train and more trustworthy for innovation-based decisions. REFERENCES [1] G. Revach, N. Shlezinger, X. Ni, A. Escoriza, R. van Sloun, and Y. Eldar, “KalmanNet: Neural network aided Kalman filtering for partially known dynamics,” IEEE Trans. Signal Process. , vol. 70, pp. 1532–1547, 2022. [2] S. Shen, J. Chen, G. Yu, Z. Zhai, and P. Han, “KalmanFormer: using transformer to model the Kalman gain in Kalman filters,” Frontiers in Neurorobotics , vol. 18, 2025. [3] G. Choi, J. Park, N. Shlezinger, Y. C. Eldar, and N. Lee, “Split-KalmanNet: A robust model-based deep learning approach for state estimation,” IEEE Trans. Veh. Technol. , vol. 72, no. 9, pp. 12 326– 12 331, 2023. [4] M. Ko and A. Shafieezadeh, “Cholesky-KalmanNet: Model-based deep learning with positive definite error covariance structure,” IEEE Signal Process. Lett. , vol. 32, pp. 326–330, 2025. [5] N. A. Carlson, “Fast triangular formulation of the square root filter,” 
+
+AIAA Journal , vol. 11, no. 9, pp. 1259–1265, 1973. [6] H. Mortada, C. Falcon, Y. Kahil, M. Clavaud, and J.-P. Michel, “Recursive KalmanNet: Deep learning-augmented Kalman filtering for state estimation with consistent uncertainty quantification,” in 33rd European Signal Processing Conference , 2025, pp. 885–889. [7] N. Cohen and I. Klein, “Adaptive Kalman-informed transformer,” 
+
+Engineering Applications of Artificial Intelligence , vol. 146, p. 110221, Apr. 2025. [8] Y. Dahan, G. Revach, J. Dunik, and N. Shlezinger, “Bayesian Kalman-Net: Quantifying uncertainty in deep learning augmented Kalman filter,” IEEE Trans. Signal Process. , vol. 73, pp. 2558–2573, 2025. [9] E. Bach, R. Baptista, E. Calvello, B. Chen, and A. Stuart, “Learning enhanced ensemble filters,” Journal of Computational Physics , vol. 547, p. 114550, 2026. [10] R. G. Krishnan, U. Shalit, and D. Sontag, “Structured inference networks for nonlinear state space models,” in AAAI , 2017. [11] W. Liu, Z. Lai, K. Bacsa, and E. Chatzi, “Neural extended Kalman filters for learning and predicting dynamics of structural systems,” 
+
+Structural Health Monitoring , vol. 23, no. 2, pp. 1037–1052, 2024. [12] R. Mehra and J. Peschon, “An innovations approach to fault detection and diagnosis in dynamic systems,” Automatica , vol. 7, no. 5, pp. 637–640, 1971. [13] E. Chow and A. Willsky, “Analytical redundancy and the design of robust failure detection systems,” IEEE Trans. Autom. Control , vol. 29, no. 7, pp. 603–614, 1984. [14] K. Cho, B. van Merri¨ enboer, C. Gulcehre, D. Bahdanau, F. Bougares, H. Schwenk, and Y. Bengio, “Learning phrase representations using RNN encoder–decoder for statistical machine translation,” in Pro-ceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP) , Doha, Qatar, 2014, pp. 1724–1734. [15] M. L. Eaton, Multivariate Statistics: A Vector Space Approach . In-stitute of Mathematical Statistics, 2007. [16] D. Sanz-Alonso, A. Stuart, and A. Taeb, Inverse Problems and Data Assimilation , ser. London Mathematical Society Student Texts. Cambridge University Press, 2023.

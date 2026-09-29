@@ -7,21 +7,25 @@
 
 ## 每次日报
 - 最新运行日期：2026-09-29
-- 运行时间：2026-09-29 00:11:10 UTC
+- 运行时间：2026-09-29 22:52:53 UTC
 - 运行状态：成功
-- 本次总论文数：0
+- 本次总论文数：1
 - 精读区：0
-- 速读区：0
+- 速读区：1
 
 ### 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
+今日速读一篇 7 分论文，用神经网络为扩展卡尔曼滤波器学习 Schur 一致性校正。  
+最值得关注的方向是把学习型校正约束在 Schur 一致性框架下，有望提升非线性状态估计的稳定性与精度。  
+建议对机器人定位或状态估计感兴趣的读者去精读原文，并尝试复现其校正模块。
 - 详情：[/202609/29/README](/202609/29/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-- 本次无速读推荐。
+1. [Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter](/202609/29/2609.32640v1-schur-neural-kf-learned-schur-consistent-corrections-to-the-extended-kalman-filter)  
+   标签：评分：7.0/10、query:lfp-soc
+   evidence：对扩展卡尔曼滤波的学习型Schur一致校正，可用于自适应卡尔曼滤波SOC估计
 
 
 <div class="dpr-home-promo-card">

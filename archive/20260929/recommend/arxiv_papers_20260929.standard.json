@@ -1,16 +1,59 @@
 {
   "mode": "standard",
-  "generated_at": "2026-09-29T00:11:10.100193+00:00",
+  "generated_at": "2026-09-29T22:52:06.748793+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 2,
     "deep_divecandidates": 0,
     "deep_cap": 7,
     "deep_selected": 0,
-    "quick_candidates": 0,
+    "quick_candidates": 1,
     "quick_skim_target": 12,
-    "quick_selected": 0
+    "quick_selected": 1
   },
   "deep_dive": [],
-  "quick_skim": []
+  "quick_skim": [
+    {
+      "id": "2609.32640v1",
+      "source": "arxiv",
+      "title": "Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter",
+      "abstract": "We present Schur-Neural KF (SN-KF), a learning-based correction to the extended Kalman filter (EKF) that preserves the probabilistic conditioning interpretation of the EKF. The method perturbs the predictive state-measurement cross-covariance and the Cholesky factor of the measurement noise covariance so that the resulting joint predictive covariance is always positive semidefinite. The positive semidefiniteness is ensured by a Schur complement-based parametrization. We instantiate the parametrization with a recurrent neural architecture whose matrix outputs are modulated by amplitude gates. We prove that incorporating a measurement does not increase the filter's state uncertainty, and show that no measurement can induce an arbitrarily large state correction relative to its statistical surprise. We also present a perturbative analysis suggesting SN-KF's structural strength in the data-scarce regime. We provide two numerical experiments to illustrate the practical benefits of SN-KF. In a two-radar experiment, enforcing Schur-consistency provides a much broader failure-free hyperparameter region and reduces RMSE for small training subsets, consistent with our theoretical analysis in the data-scarce regime. In the unicycle experiment, SN-KF achieves the best precision, recall, false alarm rate, and gated RMSE under innovation-based sensor-fault rejection.",
+      "authors": [
+        "Min Kim",
+        "Lianghao Cao",
+        "Soon-Jo Chung",
+        "Andrew M. Stuart"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-09-26T14:03:08+00:00",
+      "link": "https://arxiv.org/pdf/2609.32640v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "learned Schur-consistent corrections to extended Kalman filter, applicable to adaptive Kalman filter based SOC estimation",
+      "llm_evidence_cn": "对扩展卡尔曼滤波的学习型Schur一致校正，可用于自适应卡尔曼滤波SOC估计",
+      "llm_evidence": "对扩展卡尔曼滤波的学习型Schur一致校正，可用于自适应卡尔曼滤波SOC估计",
+      "canonical_evidence": "对扩展卡尔曼滤波的学习型Schur一致校正，可用于自适应卡尔曼滤波SOC估计",
+      "llm_tldr_en": "For extended Kalman filters with hard-to-tune covariances, SN-KF learns Schur-consistent corrections to predictive cross-covariance and noise covariance, preserving positive semidefiniteness and probabilistic interpretation. Proofs show measurements do not increase uncertainty, and experiments show improved nonlinear estimation, relevant for battery SOC estimation.",
+      "llm_tldr_cn": "针对扩展卡尔曼滤波中噪声协方差难以准确设定且学习校正可能破坏概率一致性的问题，本文提出Schur-Neural KF，通过Schur补参数化保证联合预测协方差正半定，并用循环神经网络学习对互协方差和噪声协方差的扰动。理论证明测量更新不会增加状态不确定性，且测量无法引起任意大的状态更新。实验表明该方法在非线性估计任务中优于标准EKF，为电池荷电状态估计等提供了一种更稳健的滤波器选择。",
+      "llm_tldr": "针对扩展卡尔曼滤波中噪声协方差难以准确设定且学习校正可能破坏概率一致性的问题，本文提出Schur-Neural KF，通过Schur补参数化保证联合预测协方差正半定，并用循环神经网络学习对互协方差和噪声协方差的扰动。理论证明测量更新不会增加状态不确定性，且测量无法引起任意大的状态更新。实验表明该方法在非线性估计任务中优于标准EKF，为电池荷电状态估计等提供了一种更稳健的滤波器选择。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
 }

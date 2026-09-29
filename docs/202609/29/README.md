@@ -1,20 +1,20 @@
 # 日报 · 2026-09-29
 
-- 生成时间：2026-09-29 00:11:10 UTC
-- 当次推荐总数：0
+- 生成时间：2026-09-29 22:52:53 UTC
+- 当次推荐总数：1
 - 精读区：0
-- 速读区：0
+- 速读区：1
 
 ## 今日简报（AI）
-> 今日无新推荐，系统未产出可展示论文。
-
-> 本次触发没有产出可推荐论文。
+- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
+- 速读：《Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter》（7.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
 
 ## 精读区
 - 本次无精读推荐。
 
 ## 速读区
-- 本次无速读推荐。
+1. [Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter](/202609/29/2609.32640v1-schur-neural-kf-learned-schur-consistent-corrections-to-the-extended-kalman-filter) （7.0/10）
 
 ---
 使用键盘方向键可在日报/论文之间快速切换。

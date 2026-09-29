@@ -1,8 +1,24 @@
 {
   "label": "2026-09-29",
   "date": "2026-09-29",
-  "generated_at": "2026-09-29T00:11:10",
-  "count": 0,
-  "papers": [],
+  "generated_at": "2026-09-29T22:53:08",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/29/2609.32640v1-schur-neural-kf-learned-schur-consistent-corrections-to-the-extended-kalman-filter",
+      "section": "quick",
+      "title_en": "Schur-Neural KF: Learned Schur-Consistent Corrections to the Extended Kalman Filter",
+      "authors": "Min Kim, Lianghao Cao, Soon-Jo Chung, Andrew M. Stuart",
+      "date": "2026-09-26",
+      "pdf": "https://arxiv.org/pdf/2609.32640v1",
+      "score": "7.0",
+      "evidence": "对扩展卡尔曼滤波的学习型Schur一致校正，可用于自适应卡尔曼滤波SOC估计",
+      "tldr": "扩展卡尔曼滤波在非线性场景下精度有限，学习型校正易破坏协方差半正定性。Schur-Neural KF通过Schur补参数化扰动预测互协方差与测量噪声Cholesky因子，保证联合协方差半正定并保留概率解释。理论证明测量更新不增加状态不确定性且校正幅度受统计惊讶约束，微扰分析表明数据稀缺优势。双雷达与独轮车实验显示，该方法在小样本下降低RMSE、扩大无失效超参数区域，并在传感器故障拒绝中取得最佳指标。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "We present Schur-Neural KF (SN-KF), a learning-based correction to the extended Kalman filter (EKF) that preserves the probabilistic conditioning interpretation of the EKF. The method perturbs the predictive state-measurement cross-covariance and the Cholesky factor of the measurement noise covariance so that the resulting joint predictive covariance is always positive semidefinite. The positive semidefiniteness is ensured by a Schur complement-based parametrization. We instantiate the parametrization with a recurrent neural architecture whose matrix outputs are modulated by amplitude gates. We prove that incorporating a measurement does not increase the filter's state uncertainty, and show that no measurement can induce an arbitrarily large state correction relative to its statistical surprise. We also present a perturbative analysis suggesting SN-KF's structural strength in the data-scarce regime. We provide two numerical experiments to illustrate the practical benefits of SN-KF. In a two-radar experiment, enforcing Schur-consistency provides a much broader failure-free hyperparameter region and reduces RMSE for small training subsets, consistent with our theoretical analysis in the data-scarce regime. In the unicycle experiment, SN-KF achieves the best precision, recall, false alarm rate, and gated RMSE under innovation-based sensor-fault rejection.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
   "errors": []
 }
