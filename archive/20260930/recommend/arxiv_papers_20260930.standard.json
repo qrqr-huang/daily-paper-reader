@@ -1,0 +1,55 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-30T22:52:16.679876+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.31338v1",
+      "source": "arxiv",
+      "title": "Modeling dependent degradation data considering inherent causal relationships for reliability analysis and remaining useful life prediction",
+      "abstract": "Accurate modeling of dependent degradation processes is essential for credible reliability assessment and remaining useful life (RUL) prediction in complex systems. Existing dependent degradation models usually describe dependence using correlation-based methods with symmetric characteristics. However, they ignore inherent causal directionality between degradation paths, which may lead to biased reliability evaluation and RUL predictions when physical causality exists. To address this issue, this paper proposes a causality-driven framework for modeling dependent degradation data. Firstly, univariate degradation models with multi-source uncertainties are established for each performance indicator based on the Wiener process. Then, the stable Peter-Clark algorithm is employed to uncover inherent causal relationships between degradation processes, and an uncertainty-aware neural network is employed to quantify causal effects considering uncertainties. Next, univariate degradation predictions and causal predictions are integrated within a Bayesian framework to construct a causally dependent degradation model, and the corresponding loss function is derived for model training. Finally, system reliability and RUL predictions are derived via Monte Carlo simulation. The proposed methodology is validated on the C-MAPSS dataset. Results show that considering inherent causal directionality between degradation processes helps eliminate physically unrealistic degradation behaviors, yielding more accurate degradation and RUL predictions than independent and correlation-based dependent degradation models.",
+      "authors": [
+        "Shi-Shun Chen",
+        "Xiao-Yang Li"
+      ],
+      "primary_category": "stat.AP",
+      "categories": [
+        "stat.AP"
+      ],
+      "published": "2026-09-25T14:43:03+00:00",
+      "link": "https://arxiv.org/pdf/2609.31338v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Causality-driven modeling of dependent degradation data for RUL prediction supports SOH estimation",
+      "llm_evidence_cn": "面向剩余寿命预测的因果关系驱动退化建模，支持电池健康状态估计",
+      "llm_evidence": "面向剩余寿命预测的因果关系驱动退化建模，支持电池健康状态估计",
+      "canonical_evidence": "面向剩余寿命预测的因果关系驱动退化建模，支持电池健康状态估计",
+      "llm_tldr_en": "This paper proposes a causality-driven framework for modeling dependent degradation processes to improve reliability analysis and remaining useful life prediction, overcoming the limitations of symmetric correlation-based models.",
+      "llm_tldr_cn": "针对相关退化过程建模中忽视因果方向性导致可靠性评估与剩余寿命预测偏差的问题，本文提出一种因果关系驱动的框架。首先为各性能指标建立含多源不确定性的单变量退化模型，再利用因果发现刻画退化路径间的固有因果结构，从而改进多变量退化建模。实验表明该方法能够更准确地揭示退化路径间的因果机制，提高可靠性评估和剩余寿命预测的可信度。该工作为复杂系统状态健康管理提供了新的建模工具。",
+      "llm_tldr": "针对相关退化过程建模中忽视因果方向性导致可靠性评估与剩余寿命预测偏差的问题，本文提出一种因果关系驱动的框架。首先为各性能指标建立含多源不确定性的单变量退化模型，再利用因果发现刻画退化路径间的固有因果结构，从而改进多变量退化建模。实验表明该方法能够更准确地揭示退化路径间的因果机制，提高可靠性评估和剩余寿命预测的可信度。该工作为复杂系统状态健康管理提供了新的建模工具。",
+      "llm_tags": [
+        "query:soc-soh"
+      ],
+      "matched_query_tag": "query:soc-soh",
+      "matched_query_text": "state of health characterization and estimation",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

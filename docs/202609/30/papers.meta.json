@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-30",
+  "date": "2026-09-30",
+  "generated_at": "2026-09-30T22:53:46",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/30/2609.31338v1-modeling-dependent-degradation-data-considering-inherent-causal-relationships-for-reliability-analysis-and-remaining-useful-life-prediction",
+      "section": "quick",
+      "title_en": "Modeling dependent degradation data considering inherent causal relationships for reliability analysis and remaining useful life prediction",
+      "authors": "Shi-Shun Chen, Xiao-Yang Li",
+      "date": "2026-09-25",
+      "pdf": "https://arxiv.org/pdf/2609.31338v1",
+      "score": "7.0",
+      "evidence": "面向剩余寿命预测的因果关系驱动退化建模，支持电池健康状态估计",
+      "tldr": "复杂系统退化过程间往往存在物理因果关系，但现有依赖退化模型仅用对称相关性描述，忽略因果方向性，导致可靠性评估和剩余寿命预测偏差。本文提出因果驱动建模框架，基于Wiener过程建立单变量退化模型，结合稳定PC算法和不确定性感知神经网络量化因果效应，并在贝叶斯框架下整合构建因果依赖退化模型。在C-MAPSS数据集验证表明，该方法能消除物理上不现实的退化行为，预测精度显著优于独立模型和相关性依赖模型。研究成果为考虑因果关系的退化建模与剩余寿命预测提供了新思路。",
+      "tags": "query:soc-soh",
+      "abstract_en": "Accurate modeling of dependent degradation processes is essential for credible reliability assessment and remaining useful life (RUL) prediction in complex systems. Existing dependent degradation models usually describe dependence using correlation-based methods with symmetric characteristics. However, they ignore inherent causal directionality between degradation paths, which may lead to biased reliability evaluation and RUL predictions when physical causality exists. To address this issue, this paper proposes a causality-driven framework for modeling dependent degradation data. Firstly, univariate degradation models with multi-source uncertainties are established for each performance indicator based on the Wiener process. Then, the stable Peter-Clark algorithm is employed to uncover inherent causal relationships between degradation processes, and an uncertainty-aware neural network is employed to quantify causal effects considering uncertainties. Next, univariate degradation predictions and causal predictions are integrated within a Bayesian framework to construct a causally dependent degradation model, and the corresponding loss function is derived for model training. Finally, system reliability and RUL predictions are derived via Monte Carlo simulation. The proposed methodology is validated on the C-MAPSS dataset. Results show that considering inherent causal directionality between degradation processes helps eliminate physically unrealistic degradation behaviors, yielding more accurate degradation and RUL predictions than independent and correlation-based dependent degradation models.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
