@@ -6,26 +6,22 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-09-30
-- 运行时间：2026-09-30 22:53:30 UTC
+- 最新运行日期：2026-10-01
+- 运行时间：2026-10-01 23:48:24 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：0
 - 精读区：0
-- 速读区：1
+- 速读区：0
 
 ### 今日简报（AI）
-- 今日共生成 1 篇推荐（精读 0 篇，速读 1 篇）
-- 速读：《Modeling dependent degradation data considering inherent causal relationships for reliability analysis and remaining useful life prediction》（7.0/10）
-- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
-- 详情：[/202609/30/README](/202609/30/README)
+> 今日无新推荐，系统未产出可展示论文。
+- 详情：[/202610/01/README](/202610/01/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Modeling dependent degradation data considering inherent causal relationships for reliability analysis and remaining useful life prediction](/202609/30/2609.31338v1-modeling-dependent-degradation-data-considering-inherent-causal-relationships-for-reliability-analysis-and-remaining-useful-life-prediction)  
-   标签：评分：7.0/10、query:soc-soh
-   evidence：面向剩余寿命预测的因果关系驱动退化建模，支持电池健康状态估计
+- 本次无速读推荐。
 
 
 <div class="dpr-home-promo-card">
