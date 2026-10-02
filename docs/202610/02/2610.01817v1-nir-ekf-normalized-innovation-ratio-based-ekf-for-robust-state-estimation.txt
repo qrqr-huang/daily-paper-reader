@@ -1,0 +1,610 @@
+Title: NIR-EKF: Normalized Innovation Ratio-Based EKF for Robust State Estimation
+
+URL Source: https://arxiv.org/pdf/2610.01817v1
+
+Published Time: Fri, 02 Oct 2026 01:53:11 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+## Sensor signals processing 
+
+# NIR-EKF: Normalized Innovation Ratio-Based EKF for Robust State Estimation 
+
+## Talha Nadeem 1, Khurram Ali 2, and Muhammad Tahir 1
+
+> 1
+
+Department of Electrical Engineering, Lahore University of Management Sciences, Lahore 54792, Pakistan 
+
+> 2
+
+Department of Electrical, Computer Engineering, COMSATS University Islamabad, Lahore 54000, Pakistan 
+
+> *
+
+Senior Member, IEEE 
+
+Abstract—Sensors deployed in real-world conditions often produce measurements corrupted by outliers due to model uncertainties, changes in the surrounding environment, and/or data loss. As a result, managing these outliers becomes crucial for state estimation to avoid inaccurate estimations and a reduction in the reliability of results. To address this issue, we introduce a novel form of extended Kalman filter (EKF) based on the maximum a posteriori (MAP) principle for scenarios where outliers simultaneously occur in multiple dimensions. For detecting outliers during the filtering process, we introduce a novel variant of the normalized innovation ratio (NIR) test and embed it within the EKF framework. Our approach enhances the estimation accuracy and computational efficiency of state estimation process even when data from several sensors simultaneously contain outliers. 
+
+Index Terms—Sensor signal processing, extended Kalman filter (EKF), maximum a posteriori (MAP), normalized innovation ratio (NIR), outliers, reduced sequential maximum a posteriori-based (RSMAP), sensors signal processing, state estimation. 
+
+I. INTRODUCTION 
+
+State estimation is a critical problem in engineering and statistics, fundamental to the operation and control of systems in diverse domains, such as power systems [1], robotics [2], and target tracking [3], [4]. At the heart of this problem lies the challenge of accurately predicting system states, a task for which the Kalman filter (KF) and its nonlinear version, the extended Kalman filter (EKF) [5], [6], have been widely adopted. These filters operate under the assumption that noise and system dynamics can be modeled as Gaussian processes, making them exceptionally effective under linear conditions or when nonlinearities can be adequately linearized. However, real-world use of the KF family faces challenges from outliers, i.e., measurements that are significantly different from expected distribution due to sensor issues, environmental disruptions, malicious activities, or data errors [7]–[9]. These anomalies can drastically affect state estimation algorithms, resulting in inaccurate predictions. Outliers may distort data from a single sensor or simultaneously across multiple sensors. Therefore, the strategies for outlier mitigation fall into two categories as well. Some of the initial works, which aim toward managing outliers occurring in a single dimension, are based on robust M-Estimation methods. These methods were developed to mitigate outlier effects by adjusting their influence during the estimation process [10], [11]. Concurrently, 𝑙 1 norm filters approach outlier handling through optimization strategies [12], although their performance can be limited in dynamic environments. Another family of methods, 𝐻 ∞ filtering, aims at ensuring robustness against extreme scenarios [13], yet it may introduce a conservative bias. The main limitation of these methods is their mitigation of outliers in only one dimension. Progressing from these foundational approaches, recent research works have explored non-Gaussian models to represent outliers. These methods mainly deal with outliers occurring in multiple dimensions but had other major drawbacks. As an example, some of the works use the Monte Carlo method [14] and Student-t distributions [15], which require precise parameter tuning for optimal performance despite offering enhanced flexibility. Variational-Bayes (VB) techniques address the identification of outliers in multiple sensors through a probabilistic framework, although with challenges, such as slow convergence and high computational needs, due to iterative optimization per step for VB [16], [17]. The evolution of outlier mitigation, incorporating advanced filtering, such as the enhanced EKF [18] and robust variational Bayesian filter [19], has improved robustness, however, these methods, while effective in multiple dimension outlier rejection, often struggle with the balance between computational efficiency and the risk of discarding valid data. Techniques, such as regression-based exclusion [20] and the cubature Kalman filter [21], also face similar tradeoffs, emphasizing the ongoing challenge in outlier detection and mitigation in both single and multiple dimensions of measurement vector. In this letter, we propose a novel robust filtering method where we use an explicit model for outlier occurrence in measurement dimensions followed by maximum a posteriori (MAP)-based infer-ence. In order to handle all measurement dimensions, the estimator is modified to evaluate only two probabilities per dimension, which reduces the computational cost significantly. Further, for detection of outliers, we derive an equivalence between the normalized innovation ratio (NIR) test [12], [22] and our proposed MAP-based estimator, providing us a very simple rule to detect the presence of outliers. We call our method the NIR-EKF because it uses an NIR-based threshold for outlier detection within the proposed MAP-based EKF. We further evaluate our algorithm against robust filters for accuracy and computational efficiency. Our approach has the following key advantages over prior works. 1) It is fast and has extremely low computational cost. 2) It handles the outliers in multiple dimensions. 3) It is robust to outliers. 4) It is easy to implement and straightforward to apply. 
+
+II. PROPOSED METHOD - NIR-EKF 
+
+Consider the following dynamical system: 
+
+x𝑘 = f (x𝑘 −1) + q𝑘 −1 (1) arXiv:2610.01817v1 [eess.SP] 1 Oct 2026 y𝑘 = h(x𝑘 ) + r𝑘 + v𝑘 (2) where x𝑘 ∈ R𝑛 is the state vector at the time instant 𝑘 , and y𝑘 ∈ R𝑚 
+
+is the measurement vector. The functions f (.) : R𝑛 → R𝑛 and 
+
+h(.) : R𝑛 → R𝑚 define the process dynamics and observation equations, respectively, and the vectors q𝑘 −1 and r𝑘 are the state and process noise vectors, respectively, modeled by multivariate normal distributions with covariances Q𝑘 ∈ R𝑛 ×𝑛 and R𝑘 ∈ R𝑚 ×𝑚 .In addition to the process noise in the measurement vector, we model measurements corrupted with outliers by adding the vector v𝑘 .
+
+A. MAP-EKF 
+
+If we treat v𝑘 as a multimodal Gaussian distribution as 
+
+𝑝 (v𝑘 ) =
+
+> 𝑚
+
+∑︁ 
+
+> 𝑖 =0
+
+𝑝 (v𝑘 |𝐼 𝑖 ) 𝑝 (𝐼 𝑖 ) (3) 
+
+𝑝 (v𝑘 |𝐼 0) = 𝛿 (v𝑘 ) (4) 
+
+𝑝 (v𝑘 |𝐼 𝑖 ) = N ( v𝑘 ; 0𝑖 𝑘 , 𝚺 𝑖 ) (5) Expressing v𝑘 as in (3)–(5) captures different measurement scenarios, such as the presence or absence of outliers. The event 𝐼 0 represents no outliers in any dimension as modeled by (4) implying no additional noise from outliers in the measurement, while 𝐼 𝑖 modeled by (5) highlights an outlier in the 𝑖 𝑡 ℎ dimension. The vector 0𝑖 𝑘 is a mean vector with all zero elements except the 𝑖 𝑡 ℎ element, which is set to 0𝑖 . The covariance matrix 𝚺 𝑖 features a nonzero entry only on the 𝑖 𝑡 ℎ diagonal, increasing the variance for the 𝑖 𝑡 ℎ dimension’s measurement in the filtering process. Moreover, the symbol 
+
+N ( x; 𝝁 , 𝚺 ) = 1√︁ 
+
+|𝚺 |( 2𝜋 )𝑛 exp 
+
+
+
+− 12 (x − 𝝁 )⊤𝚺 −1 (x − 𝝁 )
+
+
+
+represents the standard multinomial Gaussian. Using the law of total probability, we obtain 
+
+𝑝 (v𝑘 ) = 𝜋 0 𝛿 (v𝑘 ) + 
+
+> 𝑚
+
+∑︁ 
+
+> 𝑖 =1
+
+𝜋 𝑖 N ( v𝑘 ; 0𝑖 𝑘 , 𝚺 𝑖 ) (6) where 𝜋 0 denotes the prior probability corresponding to the event 𝐼 0,while 𝜋 𝑖 is the prior probability for the event 𝐼 𝑖 . Under this model, we can obtain the state posterior, accounting for all 𝐼 𝑖 events where 
+
+𝑖 ∈ { 0, 1, . . . , 𝑚 }, as follows [23] 
+
+𝑝 (x𝑘 = 𝝁 𝑖 𝑘 |y1: 𝑘 ) ∝ 
+
+> 𝑚
+
+∑︁ 
+
+> 𝑖 =0
+
+N ( x𝑘 ; 𝝁 𝑖 𝑘 , P𝑖 𝑘 )N ( y𝑘 ; ¯y𝑖 , S𝑖 𝑘 )𝜋 𝑖 (7) where 𝝁 − 
+
+> 𝑘
+
+= f ( 𝝁 +
+
+> 𝑘 −1
+
+), 𝝁 𝑖 𝑘 = 𝝁 − 
+
+> 𝑘
+
++ K𝑖 𝑘 (y𝑘 − ¯y− 
+
+> 𝑘
+
+), ¯y− 
+
+> 𝑘
+
+= h( 𝝁 − 
+
+> 𝑘
+
+), S𝑖 𝑘 =
+
+H( 𝝁 − 
+
+> 𝑘
+
+)P− 
+
+> 𝑘
+
+H𝑇 ( 𝝁 − 
+
+> 𝑘
+
+) + R𝑘 + 𝚺 𝑖 , C𝑘 = P− 
+
+> 𝑘
+
+H𝑇 ( 𝝁 − 
+
+> 𝑘
+
+), K𝑖 𝑘 = C𝑘 S−1 
+
+> 𝑘
+
+and 
+
+P𝑖 𝑘 = P− 
+
+> 𝑘
+
++ K𝑖 𝑘 S𝑖 𝑘 K𝑖 𝑇  
+
+> 𝑘
+
+. Moreover, the event 𝐼 0 denotes no outlier in any of the measurements; therefore, 𝚺 0 = [0]𝑚 ×𝑚 . This zero matrix indicates no additional variability from outliers, aligning with the definition of 𝐼 0. This process results in a set of candidate estimates for the state vector {𝝁 0 
+
+> 𝑘
+
+, 𝝁 1 
+
+> 𝑘
+
+, 𝝁 2 
+
+> 𝑘
+
+, . . . , 𝝁 𝑚 𝑘 }.For time step 𝑘 , the Maximum A Posteriori (MAP) estimator selects the estimate with the highest posterior probability from index 
+
+𝑗 as 𝑗 = arg max 𝑖 𝑝 (x𝑘 = 𝝁 𝑖 𝑘 |y1: 𝑘 ), where 𝝁 + 
+
+> 𝑘
+
+is set to 𝝁 𝑗 𝑘 , P+ 
+
+> 𝑘
+
+is updated to P𝑗 𝑘 , and the estimated state ˆx𝑘 becomes 𝝁 + 
+
+> 𝑘
+
+.
+
+B. Exhaustive MAP-EKF 
+
+We need to remodel the decomposition of the distribution of v𝑘 
+
+for the independent occurrence of outliers in the measurements. Let 
+
+Γ denote all the possible subsets of sensors of an agent. All the elements of Γ are mutually exclusive, but Γ is an exhaustive set of all the 2𝑚 possible distinct subsets of sensors that can have outliers. Hence, we can rewrite (3)–(5) as 
+
+𝑝 (v𝑘 ) =∑︁ 
+
+> 𝛾 ∈Γ
+
+𝑝 (v𝑘 |𝐼 𝛾 ) 𝑝 (𝐼 𝛾 ) (8) 
+
+𝑝 (v𝑘 |𝐼 𝛾 ) = N ( v𝑘 ; 0𝛾 , 𝚺 𝛾 ) (9) 
+
+𝑝 (v𝑘 ) =
+
+Ö
+
+> 𝛾 ∈Γ
+
+𝜋 𝛾 N ( 0𝛾 , 𝚺 𝛾 ) (10) In (8)–(10), 𝐼 𝛾 signifies an outlier in sensor subset 𝛾 , where 0𝛾 and 
+
+𝚺 𝛾 ’s diagonal hold nonzero values only at indices for sensors within 
+
+𝛾 . For inference, an eventual improvement to the MAP-EKF is an exhaustive MAP-EKF (EMAP-EKF), which checks for all possible combinations of the outliers in measurements, i.e., 2𝑚 . It considers 
+
+2𝑚 scenarios for 𝑚 measurements to produce {𝝁 0 
+
+> 𝑘
+
+, 𝝁 1 
+
+> 𝑘
+
+, 𝝁 2 
+
+> 𝑘
+
+, . . . , 𝝁 2𝑚  
+
+> 𝑘
+
+}
+
+estimates. Similar to the MAP-EKF, the EMAP-EKF uses a MAP estimator to select the most appropriate estimate. 
+
+C. Sequential MAP-EKF 
+
+The EMAP-EKF’s major downside is its O( 2𝑚 ) computational cost. To reduce this cost, we introduce an alternative estimator that handles 𝑚 measurements, requiring two assessments each (as outlier or nonoutlier), leading to a O( 𝑚 ) time complexity. This estimator sequentially processes the measurement vector y𝑘 , where each element 
+
+𝑦 𝑖 𝑘 informs the prediction for the next, using two filters per dimension to accommodate possible outliers. This approach yields a pair of estimates {𝝁 𝑖 
+
+> 0
+
+, 𝝁 𝑖 𝐶 } per dimension, from which the MAP estimator selects the most likely. This modifies the process previously described by (7). 
+
+𝑝 ( 𝝁 𝑖 𝑗 |𝑦 𝑖 𝑘 ) ∝N ( 𝝁 𝑖 𝑗 ; 𝝁 𝑖 
+
+> 0
+
+, P𝑖 
+
+> 0
+
+)N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 0 
+
+> 𝑘
+
+)𝜋 0
+
++ N ( 𝝁 𝑖 𝑗 ; 𝝁 𝑖 𝐶 , P𝑖 𝐶 )N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 𝐶 𝑘 )𝜋 𝐶 (11) The selection of the estimate is determined by the value of 𝑐 as determined by 𝑐 = arg max  
+
+> 𝑗 ∈{ 0,𝐶 }
+
+𝑝 ( 𝝁 𝑖 𝑗 |𝑦 𝑖 𝑘 ), after which 𝝁 𝑖 is set to 𝝁 𝑖 𝑐 and 
+
+P𝑖 is updated to P𝑖 𝑐 . Here, 𝜋 0 and 𝜋 𝐶 denote the prior probabilities for 
+
+𝐼 0 
+
+> 𝑖
+
+and 𝐼 𝐶 𝑖 , respectively. The term ¯𝑦 𝑖 𝑘 = ℎ𝑖 ( 𝝁 𝑖 −1), where ℎ𝑖 ( 𝝁 𝑖 −1) is the 𝑖 𝑡 ℎ component of ℎ( 𝝁 𝑖 −1). To account for increased variance when an outlier is present, we use 𝑆 𝐶 𝑘 = 𝑆 0 
+
+> 𝑘
+
++ Σ𝐶 . The updated estimate is given by x+ 
+
+> 𝑘
+
+= 𝝁 𝑚 . As this method processes the measurement vector in a sequential manner, we call it the sequential MAP-EKF (SMAP-EKF). In this filter, the MAP estimator makes a choice between the following two probabilities: 
+
+𝑝 ( 𝝁 𝑖  
+
+> 0
+
+|𝑦 𝑖 𝑘 ) ∝N ( 𝝁 𝑖 
+
+> 0
+
+; 𝝁 𝑖 
+
+> 0
+
+, P𝑖 
+
+> 0
+
+)N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 0 
+
+> 𝑘
+
+)𝜋 0
+
++ N ( 𝝁 𝑖 
+
+> 0
+
+; 𝝁 𝑖 𝐶 , P𝑖 𝐶 )N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 𝐶 𝑘 )𝜋 𝐶 (12) 
+
+𝑝 ( 𝝁 𝑖 𝐶 |𝑦 𝑖 𝑘 ) ∝N ( 𝝁 𝑖 𝐶 ; 𝝁 𝑖 
+
+> 0
+
+, P𝑖 
+
+> 0
+
+)N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 0 
+
+> 𝑘
+
+)𝜋 0
+
++ N ( 𝝁 𝑖 𝐶 ; 𝝁 𝑖 𝐶 , P𝑖 𝐶 )N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 𝐶 𝑘 )𝜋 𝐶 . (13) D. Reduced SMAP-EKF 
+
+Assuming both 𝜋 0 and 𝜋 𝐶 in (12) and (13) equal to 0.5, the key de-terminant between two probabilities lies in comparing N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 0 
+
+> 𝑘
+
+)
+
+with N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 𝐶 𝑘 ). If N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 0 
+
+> 𝑘
+
+) > N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 𝐶 𝑘 ), indicating that 𝑦 𝑖 𝑘 closely matches nominal characteristics, the MAP estimator selects 𝝁 𝑖 
+
+> 0
+
+, otherwise 𝝁 𝑖 𝐶 . This method, we term as reduced SMAP-EKF (RSMAP-EKF), performs two evaluations per measurement ( 𝑚 )and has a computational cost of O( 𝑚 ). The RSMAP-EKF is faster than the SMAP-EKF due to its simplified probability function and assumptions. 
+
+E. NIR-EKF 
+
+Now, we further built on RSMAP-EKF to determine a way of detecting the outlier implicitly. For this purpose, we establish an equivalence relationship between the MAP estimator in the RSMAP-EKF and the NIR test [22] for the sensor measurements. The NIR test detects outliers by normalizing the difference between actual and predicted measurements. Our proposed method flags and discards measurements exceeding a set threshold, ensuring robustness. For instance, a faulty factory temperature sensor’s readings are compared to predicted values; significant deviations are flagged and ignored. We start with the assertion that in the scenario where no outlier is present, the following condition must be met: 
+
+N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 0 
+
+> 𝑘
+
+) > N ( 𝑦 𝑖 𝑘 ; ¯ 𝑦 𝑖 𝑘 , 𝑆 𝐶 𝑘 ) (14) 
+
+1√︃ 
+
+2𝜋𝑆 0
+
+> 𝑘
+
+𝑒 − 12     
+
+> (𝑦 𝑖 𝑘 −¯𝑦 𝑖 𝑘 )2
+> 𝑆 0
+> 𝑘
+
+> 1√︃ 
+
+2𝜋𝑆 𝐶 𝑘 
+
+𝑒 − 12     
+
+> (𝑦 𝑖 𝑘 −¯𝑦 𝑖 𝑘 )2
+> 𝑆 𝐶 𝑘
+
+(15) 
+
+=⇒√︄ 𝑆 0 
+
+> 𝑘
+
++ Σ𝐶 
+
+𝑆 0
+
+> 𝑘
+
+> 𝑒        
+
+> 12(𝑦 𝑖 𝑘 −¯𝑦 𝑖 𝑘 )2
+> 
+> 1
+> 𝑆 0
+> 𝑘
+> −1
+> 𝑆 0
+> 𝑘 +Σ𝐶
+> 
+
+(16) 
+
+ln (1 + 𝜙 𝑘 ) > (𝑦 𝑖 𝑘 − ¯𝑦 𝑖 𝑘 )2
+
+ 𝜙 𝑘 
+
+𝑆 0 
+
+> 𝑘
+
+(1 + 𝜙 𝑘 )
+
+
+
+(17) where 𝜙 𝑘 = Σ𝐶 
+
+> 𝑆 0
+> 𝑘
+
+is the innovation ratio coefficient. It can be inferred that the 𝑖 𝑡 ℎ measurement dimension is outlier-free if 
+
+(𝑦 𝑖 𝑘 − ¯𝑦 𝑖 𝑘 )2
+
+𝑆 0
+
+> 𝑘
+
+< ln (1 + 𝜙 𝑘 )
+
+
+
+1 + 1
+
+𝜙 𝑘 
+
+
+
+(18) The proposed method employs this test for identifying outliers in the measurement vector and is therefore named the NIR-EKF. The estimator singularly processes measurements to detect outliers, ensuring a computational cost of O( 𝑚 ). Using a simple outlier detection test instead of multiple hypotheses per measurements speeds up the process, making NIR-EKF more computationally efficient than other estimators, as shown in the next section. 
+
+III. SIMULATION RESULTS 
+
+We compare our proposed estimators with leading outlier robust methods: robust EKF (R-EKF) [24], selective observation rejection EKF (SOR-EKF) [25], and recursive outlier robust EKF (ROR-EKF) [26], using the EKF as the common inference tool for a fair comparison with MAP-based methods. The reference methods are state of the art and have specifically been developed for catering the problems of outliers in sensor measurements. We consider a target tracking example with process dynamics as [25] 
+
+x𝑘 =
+
+©«
+
+1 Δ𝑇 0 00 1 0 00 0 1 Δ𝑇 
+
+0 0 0 1
+
+ª®®®®¬
+
+x𝑘 −1 + q𝑘 −1 . (19) The state vector x𝑘 = [𝑎 𝑘 , ¤𝑎 𝑘 , 𝑏 𝑘 , ¤𝑏 𝑘 ]𝑇 has position coordinates 
+
+(𝑎 𝑘 , 𝑏 𝑘 ) and the velocity coordinates ( ¤ 𝑎 𝑘 , ¤𝑏 𝑘 ). Δ𝑇 is the sampling period, which is set equal to 1. Moreover, q𝑘 −1 ∼ N ( 0, Q𝑘 ) and 
+
+Q𝑘 = 0.1I𝑛 ×𝑛 , where I𝑛 ×𝑛 is the identity matrix of size 𝑛 × 𝑛 . The selection of value of 𝜙 𝑘 is crucial: a higher 𝜙 𝑘 increases the detection threshold, possibly missing subtle outliers, while a lower 𝜙 𝑘 makes the method more sensitive, potentially flagging normal variations as outliers. Consequently, we set 𝜙 𝑘 = 10 6.Rewriting (2), 
+
+y𝑘 = s𝑘 + o𝑘 + r𝑘 ,
+
+where 
+
+s𝑘 =
+
+h
+
+𝑠 𝜃 1 
+
+> 𝑘
+
+, 𝑠 𝜌 1 
+
+> 𝑘
+
+, 𝑠 𝜃 2 
+
+> 𝑘
+
+, 𝑠 𝜌 2 
+
+> 𝑘
+
+, . . . , 𝑠 𝜃 𝑚  
+
+> 2
+> 𝑘
+
+, 𝑠 𝜌 𝑚 
+
+> 2
+> 𝑘
+
+i𝑇 
+
+.
+
+The entries of s𝑘 , 𝑠 𝜃 𝑗  
+
+> 𝑘
+
+, and 𝑠 𝜌 𝑗  
+
+> 𝑘
+
+correspond to 𝑗 th bearing and range sen-sors, respectively, and are calculated as 𝑠 𝜃 𝑗  
+
+> 𝑘
+
+= atan2 (𝑏 𝑘 −𝑏 𝜃 𝑗 , 𝑎 𝑘 −𝑎 𝜃 𝑗 )
+
+and 𝑠 𝜌 𝑗  
+
+> 𝑘
+
+=  (𝑎 𝑘 − 𝑎 𝜌 𝑗 )2 + ( 𝑏 𝑘 − 𝑏 𝜌 𝑗 )2  12 , where the angle readings are provided at coordinate (𝑎 𝜃 𝑗 = 350 ( 𝑗 − 1), 𝑏 𝜃 𝑗 = 350 ( 𝑗 mod 2 )) 
+
+and range readings are obtained at (𝑎 𝜌 𝑖 = 350 ( 𝑗 − 1), 𝑏 𝜌 𝑖 =
+
+350 (( 𝑗 − 1) mod 2 )) .Also, 
+
+o𝑘 =
+
+h
+
+𝑜 𝜃 1 
+
+> 𝑘
+
+𝐹 (𝜆 ), 𝑜 𝜌 1 
+
+> 𝑘
+
+𝐹 (𝜆 ), . . . , 𝑜 𝜃 𝑚  
+
+> 2
+> 𝑘
+
+𝐹 (𝜆 ), 𝑜 𝜌 𝑚  
+
+> 2
+> 𝑘
+
+𝐹 (𝜆 )
+
+i𝑇 
+
+,
+
+where 𝐹 (𝜆 ) represents a Bernoulli distribution with parameter 𝜆 
+
+signifying the probability of an outlier present in the reading. 
+
+𝐹 (𝜆 ) equals 1 when probability is equal to 𝜆 and zero otherwise. Additionally, o𝑘 ∼ N ( 0𝑚 , 𝛼 R𝑘 ), where 0𝑚 denotes an 𝑚 × 1 zero vector, and 𝛼 is a scalar, signifying the strength of the outlier introduced. Also, r𝑘 ∼ N ( 0𝑚 , R𝑘 ), with R𝑘 being a diagonal matrix having entries 𝑟 𝜃 = 10 −3 and 𝑟 𝜌 = 5. Our system starts with an initial state defined as x0 = [300 , 50 , 100 , 10 ]𝑇 . We run the simulation for 100 Monte Carlo runs ( 𝐿 = 100 ), 1000 time steps ( 𝑇 = 1000 ), and 
+
+𝛼 = 800 . The comparison parameters are time-average root mean-squared error (TRMSE) and elapsed time. TRMSE is calculated by the following formula: TRMSE = 1
+
+𝑇 
+
+> 𝑇
+
+∑︁ 
+
+> 𝑘 =1
+
+vut 1
+
+𝐿 
+
+> 𝐿
+
+∑︁ 
+
+> 𝑙 =1
+
+(x𝑙 𝑘 − ˆx𝑙 𝑘 )𝑇 (x𝑙 𝑘 − ˆx𝑙 𝑘 ). (20) where x𝑙 𝑘 represents the true value of the state vector at time-step 𝑘 
+
+during the 𝑙 𝑡 ℎ MC run and ˆx𝑙 𝑘 represents the corresponding estimate from the state estimation algorithm. Initial simulations with 𝑚 ∈ { 2, 4, 6, 8, 10 } shown in Fig. 1 boxplots that EMAP-EKF has the lowest TRMSE values among all other methods, with SMAP-EKF, RSMAP-EKF, and NIR-EKF performing similarly. We can also observe that the performance of the MAP-based estimation techniques is comparable to the other estimation methods for all values of 𝜆 .TRMSE 
+
+> = 0.0 = 0.2 = 0.4 = 0.6 = 0.8
+
+Fig. 1. TRMSE versus different values of 𝜆 for 𝑚 ∈ { 2, 4, 6, 8, 10 }.2 3 4 5 6 7 8 9 10 -5 0510 Time Elapsed (log-scale) 
+
+> EMAP-EKF SMAP-EKF RSMAP-EKF NIR-EKF
+> R-EKF SOR ROR
+
+Fig. 2. Log-scale computational time versus 𝑚 .
+
+Fig. 2 shows the computational times for all algorithms per run, emphasizing the EMAP-EKF’s unsuitability for computation-limited applications. A comparison of MAP-based methods with other estimators reveals differences in running times. TRMSE 
+
+> = 0.0 = 0.2 = 0.4 = 0.6 = 0.8
+
+Fig. 3. TRMSE versus different values of 𝜆 for 𝑚 ∈{200 , 400 , 600 , 800 , 1000 }.
+
+Further analysis from another simulation with 𝑚 ∈{200 , 400 , 600 , 800 , 1000 } (shown in Fig. 3) and results with 
+
+𝜆 ∈ { 0.0, 0.2, 0.4, 0.6, 0.8}, i.e., Fig. 4, indicates that our methods match the performance of other robust techniques but with less computational demand, as evidenced by the lower times in Fig. 4. This confirms that our MAP-based methods are efficient yet effective alternatives to state-of-the-art, robust techniques. 
+
+IV. CONCLUSION 
+
+In this letter, we introduce MAP-based EKFs for robust state estimation by efficiently handling outliers in sensor data occurring simultaneously in multiple dimensions, leading to the development of NIR-EKF. This estimator demonstrates greater accuracy and enhanced computational efficiency than other estimators and state-of-the-art, robust filters. The simulation results highlight a significant 200 300 400 500 600 700 800 900 1000 Number of Sensors (m) 020 40 60 80 100 120 Time Elapsed (s) 
+
+> SMAP-EKF RSMAP-EKF NIR-EKF
+> R-EKF SOR ROR
+
+Fig. 4. Elapsed time versus different values of 𝑚 for 𝜆 ∈{0, 0.2, 0.4, 0.6, 0.8}.
+
+improvement in the state estimation quality, emphasizing the significance of our contributions in managing multidimensional outliers. 
+
+REFERENCES 
+
+[1] A. Paul, I. Kamwa, and G. Joos, “Centralized dynamic state estimation using a federation of extended kalman filters with intermittent pmu data from generator terminals,” IEEE Transactions on Power Systems , vol. 33, no. 6, pp. 6109–6119, 2018. [2] T. D. Barfoot, State estimation for robotics . Cambridge University Press, 2017. [3] Y. Gu, L.-T. Hsu, and S. Kamijo, “Gnss/onboard inertial sensor integration with the aid of 3-d building map for lane-level vehicle self-localization in urban canyon,” 
+
+IEEE Transactions on Vehicular Technology , vol. 65, no. 6, pp. 4274–4287, 2016. [4] R. Ivanov, “State estimation filters,” Department of Computer and Infomation Science, Philadelphia , 2015, [Online]. Available: https://scholar.google.com/pk/scholar?q=State+estimation+filters+R.+Ivanov. [5] R. Faragher, “Understanding the basis of the kalman filter via a simple and intuitive derivation [lecture notes],” IEEE Signal processing magazine , vol. 29, no. 5, pp. 128–132, 2012. [6] S. Liu, G. Wei, Y. Song, and Y. Liu, “Extended kalman filtering for stochastic nonlinear systems with randomly occurring cyber attacks,” Neurocomputing , vol. 207, pp. 708–716, 2016. [7] H. Fang, M. A. Haile, and Y. Wang, “Robustifying the kalman filter against measurement outliers: An innovation saturation mechanism,” in 2018 IEEE Conference on Decision and Control (CDC) . IEEE, 2018, pp. 6390–6395. [8] X. Li, Z. Wang, C. Zhang, D. Du, and M. Fei, “A novel dynamic watermarking-based ekf detection method for fdias in smart grid,” IEEE/CAA Journal of Automatica Sinica , vol. 9, no. 7, pp. 1319–1322, 2022. [9] Y. Li, L. Shi, and T. Chen, “Detection against linear deception attacks on multi-sensor remote state estimation,” IEEE Transactions on Control of Network Systems ,vol. 5, no. 3, pp. 846–856, 2018. [10] Z. M. Durovic and B. D. Kovacevic, “Robust estimation with unknown noise statistics,” IEEE Transactions on Automatic Control , vol. 44, no. 6, pp. 1292– 1296, 1999. [11] J.-A. Ting, E. Theodorou, and S. Schaal, “A kalman filter for robust outlier detection,” in 2007 IEEE/RSJ International Conference on Intelligent Robots and Systems . IEEE, 2007, pp. 1514–1519. [12] M. C. Graham, J. P. How, and D. E. Gustafson, “Robust state estimation with sparse outliers,” Journal of Guidance, Control, and Dynamics , vol. 38, no. 7, pp. 1229–1240, 2015. [13] X. Li, J. Lam, H. Gao, and J. Xiong, “H ∞ and h2 filtering for linear systems with uncertain markov transitions,” Automatica , vol. 67, pp. 252–266, 2016. [14] G. Kitagawa, “Monte carlo filter and smoother for non-gaussian nonlinear state space models,” Journal of computational and graphical statistics , vol. 5, no. 1, pp. 1–25, 1996. [15] Q. Li, Y. Ben, S. M. Naqvi, J. A. Neasham, and J. A. Chambers, “Robust student’s 𝑡 -based cooperative navigation for autonomous underwater vehicles,” 
+
+IEEE Transactions on Instrumentation and Measurement , vol. 67, no. 8, pp. 1762–1777, 2018. [16] H. Wang, H. Li, J. Fang, and H. Wang, “Robust gaussian kalman filter with outlier detection,” IEEE Signal Processing Letters , vol. 25, no. 8, pp. 1236–1240, 2018. [17] H. Li, D. Medina, J. Vilá-Valls, and P. Closas, “Robust variational-based kalman filter for outlier rejection with correlated measurements,” IEEE Transactions on Signal Processing , vol. 69, pp. 357–369, 2021. [18] H.-Q. Mu and K.-V. Yuen, “Novel outlier-resistant extended kalman filter for robust online structural identification,” Journal of Engineering Mechanics , vol. 141, no. 1, p. 04014100, 2015. [19] W. Huang, H. Fu, and W. Zhang, “A novel robust variational bayesian filter for unknown time-varying input and inaccurate noise statistics,” IEEE Sensors Letters ,vol. 7, no. 3, mar 2023, art. no. 7001104. [20] D. De Palma and G. Indiveri, “Output outlier robust state estimation,” International Journal of Adaptive Control and Signal Processing , vol. 31, no. 4, pp. 581–607, 2017. [21] T. Zhang, H. Fu, and Y. Cheng, “Minimum mixture error entropy-based robust cubature kalman filter for outlier-contaminated measurements,” IEEE Sensors Letters , vol. 6, no. 12, pp. 1–4, 2022. [22] J. Qi, A. F. Taha, and J. Wang, “Comparing kalman filters and observers for power system dynamic state estimation with model uncertainty and malicious cyber attacks,” IEEE Access , vol. 6, pp. 77 155–77 168, 2018. [23] A. H. Chughtai, U. Akram, M. Tahir, and M. Uppal, “Dynamic state estimation in the presence of sensor outliers using map-based ekf,” IEEE Sensors Letters ,vol. 4, no. 4, pp. 1–4, 2020. [24] H. Fang, M. A. Haile, and Y. Wang, “Robust extended kalman filtering for systems with measurement outliers,” IEEE Transactions on Control Systems Technology ,vol. 30, no. 2, pp. 795–802, 2022. [25] A. H. Chughtai, M. Tahir, and M. Uppal, “Outlier-robust filtering for nonlinear systems with selective observations rejection,” IEEE Sensors Journal , vol. 22, no. 7, pp. 6887–6897, 2022. [26] R. Piché, S. Särkkä, and J. Hartikainen, “Recursive outlier-robust filtering and smoothing for nonlinear systems using the multivariate student-t distribution,” in 
+
+2012 IEEE International Workshop on Machine Learning for Signal Processing .IEEE, 2012, pp. 1–6.

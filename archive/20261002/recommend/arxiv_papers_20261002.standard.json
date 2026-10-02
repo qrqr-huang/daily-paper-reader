@@ -1,0 +1,56 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-02T22:49:32.931817+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2610.01817v1",
+      "source": "arxiv",
+      "title": "NIR-EKF: Normalized Innovation Ratio-Based EKF for Robust State Estimation",
+      "abstract": "Sensors deployed in real-world conditions often produce measurements corrupted by outliers due to model uncertainties, changes in the surrounding environment, and/or data loss. As a result, managing these outliers becomes crucial for state estimation to avoid inaccurate estimations and a reduction in the reliability of results. To address this issue, we introduce a novel form of extended Kalman filter (EKF) based on the maximum a posteriori (MAP) principle for scenarios where outliers simultaneously occur in multiple dimensions. For detecting outliers during the filtering process, we introduce a novel variant of the normalized innovation ratio (NIR) test and embed it within the EKF framework. Our approach enhances the estimation accuracy and computational efficiency of state estimation process even when data from several sensors simultaneously contain outliers.",
+      "authors": [
+        "Talha Nadeem",
+        "Khurram Ali",
+        "Muhammad Tahir"
+      ],
+      "primary_category": "eess.SP",
+      "categories": [
+        "eess.SP"
+      ],
+      "published": "2026-10-01T14:51:42+00:00",
+      "link": "https://arxiv.org/pdf/2610.01817v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "robust EKF with outlier detection is relevant to adaptive/robust SOC estimation methods",
+      "llm_evidence_cn": "带异常值检测的鲁棒EKF与自适应鲁棒SOC估计方法相关",
+      "llm_evidence": "带异常值检测的鲁棒EKF与自适应鲁棒SOC估计方法相关",
+      "canonical_evidence": "带异常值检测的鲁棒EKF与自适应鲁棒SOC估计方法相关",
+      "llm_tldr_en": "Proposes NIR-EKF, a MAP-based extended Kalman filter variant that detects outliers using a normalized innovation ratio test to improve state estimation accuracy under noisy real-world sensor measurements. This robust filtering approach can be transferred to battery SOC estimation under non-ideal conditions.",
+      "llm_tldr_cn": "针对传感器测量中异常值导致状态估计精度下降的问题，提出基于最大后验原理的扩展卡尔曼滤波改进方法，引入归一化新息比检验检测多维异常值。实验表明该方法提升估计精度和计算效率。该鲁棒滤波方法可迁移用于电池荷电状态估计中的非理想测量场景。",
+      "llm_tldr": "针对传感器测量中异常值导致状态估计精度下降的问题，提出基于最大后验原理的扩展卡尔曼滤波改进方法，引入归一化新息比检验检测多维异常值。实验表明该方法提升估计精度和计算效率。该鲁棒滤波方法可迁移用于电池荷电状态估计中的非理想测量场景。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

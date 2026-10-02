@@ -1,0 +1,24 @@
+{
+  "label": "2026-10-02",
+  "date": "2026-10-02",
+  "generated_at": "2026-10-02T22:50:18",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202610/02/2610.01817v1-nir-ekf-normalized-innovation-ratio-based-ekf-for-robust-state-estimation",
+      "section": "quick",
+      "title_en": "NIR-EKF: Normalized Innovation Ratio-Based EKF for Robust State Estimation",
+      "authors": "Talha Nadeem, Khurram Ali, Muhammad Tahir",
+      "date": "2026-10-01",
+      "pdf": "https://arxiv.org/pdf/2610.01817v1",
+      "score": "6.0",
+      "evidence": "带异常值检测的鲁棒EKF与自适应鲁棒SOC估计方法相关",
+      "tldr": "现实传感器常因模型不确定性、环境变化或数据丢失产生异常值，且往往多个维度同时出现，导致状态估计精度下降。本文提出基于最大后验估计原理的NIR-EKF，通过引入归一化创新比检验的变体，在EKF滤波过程中实时检测并处理多维异常值。实验表明，即使多个传感器数据同时包含异常值，该方法仍能保持较高的估计精度，并显著提升计算效率。该工作为复杂环境下鲁棒状态估计提供了有效且高效的解决方案。",
+      "tags": "query:lfp-soc",
+      "abstract_en": "Sensors deployed in real-world conditions often produce measurements corrupted by outliers due to model uncertainties, changes in the surrounding environment, and/or data loss. As a result, managing these outliers becomes crucial for state estimation to avoid inaccurate estimations and a reduction in the reliability of results. To address this issue, we introduce a novel form of extended Kalman filter (EKF) based on the maximum a posteriori (MAP) principle for scenarios where outliers simultaneously occur in multiple dimensions. For detecting outliers during the filtering process, we introduce a novel variant of the normalized innovation ratio (NIR) test and embed it within the EKF framework. Our approach enhances the estimation accuracy and computational efficiency of state estimation process even when data from several sensors simultaneously contain outliers.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
