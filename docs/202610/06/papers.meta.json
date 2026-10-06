@@ -1,24 +1,8 @@
 {
   "label": "2026-10-06",
   "date": "2026-10-06",
-  "generated_at": "2026-10-06T00:57:36",
-  "count": 1,
-  "papers": [
-    {
-      "paper_id": "202610/06/2609.39125v1-lbdu-vio-learned-bias-dynamics-and-uncertainty-for-visual-inertial-odometry-with-unreliable-vision",
-      "section": "quick",
-      "title_en": "LBDU-VIO: Learned Bias Dynamics and Uncertainty for Visual-Inertial Odometry with Unreliable Vision",
-      "authors": "Qizhi Guo, Junning Lyu, Defu Lin, Shaoming He",
-      "date": "2026-09-30",
-      "pdf": "https://arxiv.org/pdf/2609.39125v1",
-      "score": "6.0",
-      "evidence": "学习增强的卡尔曼滤波器，具有学习的偏置动力学和IMU不确定性模型",
-      "tldr": "本文针对视觉信息不可靠时传统多状态约束卡尔曼滤波器（MSCKF）采用随机游走偏置假设和固定噪声参数导致鲁棒性受限的问题，提出LBDU-VIO，一种学习增强的MSCKF。该方法使用神经常微分方程建模连续时间偏置动力学，并预测运动自适应的IMU测量噪声协方差。实验表明该方法能提升视觉惯性里程计在退化视觉条件下的状态估计精度，其自适应滤波思路可迁移至电池SOC估计等状态估计任务。",
-      "tags": "query:lfp-soc",
-      "abstract_en": "Visual-inertial odometry (VIO) for aerial robots relies on high rate inertial measurement unit (IMU) propagation between visual updates. However, conventional multi state constraint Kalman filters (MSCKFs) use random walk bias assumptions and fixed noise parameters, which can limit robustness when visual information is unreliable. To address this problem, we propose LBDU-VIO, a learning-augmented MSCKF with learned continuous time bias dynamics and an IMU uncertainty model. A neural ordinary differential equation (ODE) models continuous time bias dynamics to propagate the filter's bias states, replacing their random walk model. The IMU uncertainty model predicts motion adaptive measurement noise covariances for covariance propagation. Both models are trained with pose supervision without direct labels. Experiments on real world EuRoC and TUM-VI benchmarks show lower errors than representative visual-inertial baselines, including a 25.1% reduction in mean relative position error compared with S-MSCKF on EuRoC sequences with 10s visual outage.",
-      "source": "arxiv",
-      "selection_source": "fresh_fetch"
-    }
-  ],
+  "generated_at": "2026-10-06T23:32:12",
+  "count": 0,
+  "papers": [],
   "errors": []
 }
