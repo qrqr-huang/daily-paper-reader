@@ -1,0 +1,57 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-06T00:56:16.243198+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 2,
+    "deep_divecandidates": 0,
+    "deep_cap": 7,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 12,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.39125v1",
+      "source": "arxiv",
+      "title": "LBDU-VIO: Learned Bias Dynamics and Uncertainty for Visual-Inertial Odometry with Unreliable Vision",
+      "abstract": "Visual-inertial odometry (VIO) for aerial robots relies on high rate inertial measurement unit (IMU) propagation between visual updates. However, conventional multi state constraint Kalman filters (MSCKFs) use random walk bias assumptions and fixed noise parameters, which can limit robustness when visual information is unreliable. To address this problem, we propose LBDU-VIO, a learning-augmented MSCKF with learned continuous time bias dynamics and an IMU uncertainty model. A neural ordinary differential equation (ODE) models continuous time bias dynamics to propagate the filter's bias states, replacing their random walk model. The IMU uncertainty model predicts motion adaptive measurement noise covariances for covariance propagation. Both models are trained with pose supervision without direct labels. Experiments on real world EuRoC and TUM-VI benchmarks show lower errors than representative visual-inertial baselines, including a 25.1% reduction in mean relative position error compared with S-MSCKF on EuRoC sequences with 10s visual outage.",
+      "authors": [
+        "Qizhi Guo",
+        "Junning Lyu",
+        "Defu Lin",
+        "Shaoming He"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-09-30T06:57:26+00:00",
+      "link": "https://arxiv.org/pdf/2609.39125v1",
+      "tags": [
+        "keyword:lfp-soc",
+        "keyword:soc-soh",
+        "query:lfp-soc",
+        "query:soc-soh"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "learning-augmented Kalman filter with learned bias dynamics and IMU uncertainty model",
+      "llm_evidence_cn": "学习增强的卡尔曼滤波器，具有学习的偏置动力学和IMU不确定性模型",
+      "llm_evidence": "学习增强的卡尔曼滤波器，具有学习的偏置动力学和IMU不确定性模型",
+      "canonical_evidence": "学习增强的卡尔曼滤波器，具有学习的偏置动力学和IMU不确定性模型",
+      "llm_tldr_en": "Addressing unreliable vision in VIO, this paper proposes LBDU-VIO, a learning-augmented MSCKF with neural ODE bias dynamics and adaptive IMU noise covariance. It improves robustness of visual-inertial state estimation, offering adaptive Kalman filtering techniques transferable to SOC estimation.",
+      "llm_tldr_cn": "本文针对视觉信息不可靠时传统多状态约束卡尔曼滤波器（MSCKF）采用随机游走偏置假设和固定噪声参数导致鲁棒性受限的问题，提出LBDU-VIO，一种学习增强的MSCKF。该方法使用神经常微分方程建模连续时间偏置动力学，并预测运动自适应的IMU测量噪声协方差。实验表明该方法能提升视觉惯性里程计在退化视觉条件下的状态估计精度，其自适应滤波思路可迁移至电池SOC估计等状态估计任务。",
+      "llm_tldr": "本文针对视觉信息不可靠时传统多状态约束卡尔曼滤波器（MSCKF）采用随机游走偏置假设和固定噪声参数导致鲁棒性受限的问题，提出LBDU-VIO，一种学习增强的MSCKF。该方法使用神经常微分方程建模连续时间偏置动力学，并预测运动自适应的IMU测量噪声协方差。实验表明该方法能提升视觉惯性里程计在退化视觉条件下的状态估计精度，其自适应滤波思路可迁移至电池SOC估计等状态估计任务。",
+      "llm_tags": [
+        "query:lfp-soc"
+      ],
+      "matched_query_tag": "query:lfp-soc",
+      "matched_query_text": "adaptive Kalman filter for SOC estimation",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

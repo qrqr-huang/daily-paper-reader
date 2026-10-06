@@ -1,0 +1,1874 @@
+1
+LBDU-VIO: Learned Bias Dynamics and
+Uncertainty for Visual-Inertial Odometry with
+Unreliable Vision
+Qizhi Guo, Junning Lyu, Defu Lin, Shaoming He
+Abstract—Visual-inertial odometry (VIO) for aerial robots
+relies on high rate inertial measurement unit (IMU) prop-
+agation between visual updates. However, conventional multi
+state constraint Kalman filters (MSCKFs) use random walk
+bias assumptions and fixed noise parameters, which can limit
+robustness when visual information is unreliable. To address
+this problem, we propose LBDU-VIO, a learning-augmented
+MSCKF with learned continuous time bias dynamics and an
+IMU uncertainty model. A neural ordinary differential equation
+(ODE) models continuous time bias dynamics to propagate the
+filter’s bias states, replacing their random walk model. The
+IMU uncertainty model predicts motion adaptive measurement
+noise covariances for covariance propagation. Both models are
+trained with pose supervision without direct labels. Experiments
+on real world EuRoC and TUM-VI benchmarks show lower
+errors than representative visual-inertial baselines, including a
+25.1% reduction in mean relative position error compared with
+S-MSCKF on EuRoC sequences with 10s visual outage.
+Index Terms—Localization, visual-inertial state estimation,
+IMU correction, deep learning methods
+I. INTRODUCTION
+Visual-inertial odometry (VIO) is widely used in aerial
+robots, where cameras and inertial measurement units (IMUs)
+provide lightweight and complementary sensing for state esti-
+mation [1, 2]. In a typical VIO pipeline, visual measurements
+correct accumulated drift at a relatively low rate, while high-
+rate IMU propagation maintains the state estimate between
+consecutive visual updates [3, 4]. This propagation becomes
+especially important when visual information is unreliable,
+such as under motion blur, low texture environments, or tem-
+porary camera outage. In these cases, the estimator must rely
+more heavily on inertial measurements, and IMU modeling
+errors can quickly accumulate into large estimation drift [5–
+7]. Therefore, the reliability of a VIO system largely depends
+on how accurately the IMU bias is modeled and estimated.
+Conventional VIO estimators model gyroscope and ac-
+celerometer bias evolution as random walks with fixed noise
+parameters [8]. This efficient formulation predicts a constant
+bias between measurement updates and uses prescribed noise
+statistics for covariance propagation [9]. However, low cost
+This work was supported by the National Natural Science Foundation of
+China under Grant 52302449.
+Authors’ addresses: Qizhi Guo, Junning Lyu, Defu Lin, and Shaoming
+He are with the School of Aerospace Engineering and the Beijing Key
+Laboratory of UAV Autonomous Control, Beijing Institute of Technology, Bei-
+jing 100081, China, E-mail: (qizhi.guo@bit.edu.cn; 3120215027@bit.edu.cn;
+lindf@bit.edu.cn; shaoming.he@bit.edu.cn). (Corresponding authors: Defu
+Lin; Shaoming He.)
+ 
+ 
+Poor Visual Features
+Low Texture
+Motion Blur
+Conventional VIO
+Proposed Method
+Drift
+Reliable Vision
+Vision Recovered Time
+Gyroscope
+Accelerometer
+IMU
+Proposed Method
+Conventional VIO
+Fig. 1. Conceptual illustration of VIO under unreliable vision. The proposed
+LBDU-VIO aims to reduce drift during visual degradation and visual recovery
+after temporary tracking failure.
+IMUs often exhibit errors that are not captured by these as-
+sumptions [10]. The resulting model mismatch can affect both
+state prediction and uncertainty estimation. Recent learning-
+based inertial methods predict discrete IMU corrections from
+fixed measurement windows [11, 12]. During UAV flight,
+biases vary with motion excitation within a window. A con-
+stant bias estimate can accumulate residual errors that increase
+inertial drift, while fixed noise covariances fail to capture mo-
+tion dependent uncertainty. This motivates combining learned
+continuous time bias dynamics with an IMU uncertainty model
+to improve inertial propagation when vision is unreliable.
+To this end, we augment MSCKF with learned continuous
+time bias dynamics and an IMU uncertainty model to improve
+inertial propagation. The resulting method termed LBDU-VIO
+targets the scenarios illustrated in Fig. 1. A neural ordinary
+differential equation models the continuous time evolution of
+IMU biases, while an uncertainty model predicts motion adap-
+tive measurement noise covariances. on. We evaluate LBDU-
+VIO on real world VIO benchmarks, including sequences with
+degraded images and periods without visual updates. The main
+contributions are summarized as follows:
+1) We develop LBDU-VIO, a learning-augmented MSCKF
+that couples learned continuous time IMU bias dynamics
+with visual updates. Compared with assigning a single
+bias estimate for IMU measurements within a time win-
+dow, our formulation models bias evolution to improve
+inertial propagation.
+2) We introduce an IMU uncertainty model that predicts
+arXiv:2609.39125v1  [cs.RO]  30 Sep 2026
+
+
+2
+motion adaptive gyroscope and accelerometer measure-
+ment noise covariances from raw IMU data. These
+predictions replace fixed noise parameters in covariance
+propagation at every IMU sample.
+3) We validate LBDU-VIO on real world EuRoC and
+TUM-VI benchmarks, and compare it with represen-
+tative inertial and visual-inertial baselines. The results
+show improved state estimation under both nominal and
+unreliable visual conditions.
+The remainder of this paper is organized as follows. Sec-
+tion II reviews related work. Section IV presents the contin-
+uous time IMU bias model and the IMU uncertainty model,
+along with their training and integration into MSCKF. Sec-
+tion V reports experimental results, and Section VI concludes
+the paper.
+II. RELATED WORK
+Learning-based IMU processing is increasingly applied to
+visual-inertial navigation. The field can be organized by what
+is learned and how it enters the estimator. Early work learns a
+motion output directly from raw IMU sequences. A comple-
+mentary line targets the IMU error sources, while a further
+question is how to couple these learned quantities to the
+estimator.
+A. Learning Inertial Motion Models
+Recent learning-based inertial methods take raw IMU se-
+quences as the network input and regress motion directly.
+The motion refers to a kinematic quantity such as velocity,
+displacement, and orientation.
+One group of methods predicts these motion states at each
+time step. IONet [13] uses a recurrent network to map a
+fixed length inertial window to a displacement and heading
+change, bypassing the classical strapdown integration entirely.
+RoNIN [14] regresses body frame velocity in a heading agnos-
+tic frame for pedestrian inertial navigation, while TLIO [15]
+extends this to a three-dimensional displacement increment to-
+gether with its uncertainty. AirIO [16] also predicts body frame
+velocity with the current attitude as an additional network
+input. However, it regresses the motion output directly without
+modeling the underlying IMU bias, so the learned correction
+cannot be reused by the state estimator. OriNet [17] targets the
+orientation channel alone, learning a drift-reduced orientation
+estimate from raw gyroscope sequences. The second group
+of methods learns a relative motion increment over a finite
+window rather than a per step estimate. RNIN-VIO [18]
+uses a recurrent network to predict a relative pose change
+and its uncertainty from a short IMU window. Learned IMU
+preintegration [19] applies the same idea over a longer interval,
+replacing the classical preintegration of angular velocity and
+acceleration [20] with a learned method. Both methods fold
+an entire window into a single increment, so the sensor errors
+are absorbed into the output rather than modeled explicitly.
+These methods span a range of motion outputs. In every
+case, the network is supervised to reproduce a motion output
+rather than the underlying IMU error process. Such an end-to-
+end mapping generalizes poorly across motion regimes and is
+hard to interpret, since it never exposes the time-varying bias
+and measurement noise that cause inertial drift. This motivates
+a complementary line of work that models the IMU bias and
+noise terms explicitly.
+B. Learning Inertial Bias and Noise Models
+Inertial measurements enter a visual-inertial estimator
+through a fixed error model, in which the IMU biases follow
+random walks and the measurement noise is white Gaussian,
+both calibrated offline [21, 22]. This treatment underlies a
+broad range of aerial visual-inertial navigation systems, from
+interacting-multiple-model filters for micro aerial vehicles [23]
+to sliding window estimators that fuse structural line priors
+for UAV inspection [3]. The model is convenient for filter
+design but motion-invariant. It inflates the bias covariance at a
+fixed rate regardless of the actual excitation. It also keeps the
+measurement noise constant even though the noise of a low
+cost IMU varies with motion and vibration.
+Currently, widely used learning-based methods address the
+IMU error as a single correction, without separating bias from
+measurement noise. The network takes a sequence of raw
+inertial readings and outputs debiased measurements that are
+used directly for integration. Brossard et al. [11] train a dilated
+convolutional network to denoise the raw gyroscope measure-
+ments for open loop attitude estimation. However, it corrects
+only the gyroscope, leaving the accelerometer error and the
+translational drift it induces unaddressed. Zhang et al. [24]
+extend this idea to the full IMU, using a recurrent network to
+correct both the gyroscope and accelerometer readings before
+they enter a visual-inertial estimator. Steinbrener et al. [25]
+compare recurrent and attention-based architectures for the
+same denoising task, finding recurrent models more effective
+for high-rate inertial data. Yuan et al. [26] further remove the
+need for ground-truth labels by introducing a self-supervised
+denoising objective evaluated on both the EuRoC and TUM-
+VI benchmarks. These methods reduce integration drift, but
+the learned term is an implicit, window level correction that
+blurs the systematic bias together with the stochastic noise. It
+leaves no separate bias state for the estimator to carry forward.
+To recover such a state, several works model the IMU
+bias explicitly as a time varying term, distinct from the
+measurement noise. Altawaitan et al. [27] predict the bias
+at keyframe rate, while Yi et al. [28] learn a plug-and-play
+bias factor at the window level. In both cases the prediction
+is intermittent, so between updates the bias reverts to the
+random walk model. Buchanan et al. [29] achieve continuous
+inference with a recurrent network whose hidden state persists
+across windows, but training requires ground truth bias labels
+from auxiliary sensor fusion. Liu et al. [30] model the bias
+evolution in continuous time, producing a bias trajectory at
+the full IMU rate. However, their method focuses on bias
+correction, without learning to propagate uncertainty through
+the bias dynamics. On the uncertainty side, AirIMU [31]
+jointly predicts IMU corrections and per sample uncertainty
+for differentiable preintegration and covariance propagation,
+while TLIO [15] regresses displacement covariance at the
+window level. AirIMU does not model continuous time dy-
+namics for the filter’s bias states, while our method integrates
+
+
+3
+these dynamics with learned IMU uncertainty in MSCKF
+propagation.
+C. Estimator Integration of Learned Inertial Models
+Learned inertial models have usually been coupled to esti-
+mators through interfaces around, rather than inside the IMU
+propagation step. At the preprocessing level, denoising [11]
+and debiasing [32] methods correct the raw IMU stream before
+it enters a conventional pipeline [33, 34]. This refinement
+provides cleaner inertial inputs to the estimator, but does not
+modify the internal bias dynamics. Operationally, the learned
+module is integrated as an upstream measurement layer. A
+tighter coupling is achieved at the factor level, where learned
+bias factor [28] and learned preintegration [19] explicitly
+incorporate the learned inertial term into the optimization
+objective. In this formulation, the learned prediction enters the
+factor graph as a constraint over the relevant keyframe states.
+Nevertheless, such formulations introduce the learned inertial
+term only through keyframe level, rather than during each IMU
+integration interval. Adaptive covariance methods [35, 36]
+go one step further by adjusting the fusion weight itself,
+but they modify the measurement confidence rather than the
+inertial propagation model. In all three cases the learned
+measurement remains outside the IMU rate integration, and
+the state evolution is still driven by a random walk bias model
+and fixed noise covariances [37].
+Our method instead incorporates both the learned bias
+dynamics and the learned IMU uncertainty model into the
+IMU rate state update. The learned bias dynamics replace the
+filter’s random walk bias model, while the predicted gyroscope
+and accelerometer noise covariances replace the fixed values
+in covariance propagation. These learned inertial quantities
+therefore shape both the predicted mean and covariance before
+any visual update is applied.
+III. PROBLEM STATEMENT
+Since direct use of visual measurements is vulnerable to vi-
+sual degradation, a robust approach is to refine the underlying
+inertial propagation. We seek a model that enhances both the
+propagated state and its uncertainty. This section begins with
+the IMU kinematics and measurement models, and leads to a
+formulation of the estimation problem.
+A. Preliminaries
+Consider a UAV equipped with an IMU and a camera. The
+IMU supplies high rate state prediction, while visual features
+provide lower rate corrections. The continuous time strapdown
+kinematics of the UAV are described by
+˙R(t) = R(t)ω(t)×
+˙v(t) = R(t)a(t) + g
+˙p(t) = v(t)
+(1)
+where the rotation matrix R(t) ∈SO(3) denotes the transfor-
+mation from the body frame to the world frame. The velocity
+v(t) ∈R3 and position p(t) ∈R3 are expressed in the
+world frame. The gravity vector in the world frame is defined
+as g =
+0
+0
+−gT . The notation (·)× : R3 →so(3)
+represents the skew symmetric operator. These dynamics are
+driven by the angular velocity ω(t) and specific force a(t),
+both expressed in the body frame. The corresponding IMU
+measurements are modeled as
+˜ω(t) = ω(t) + bg(t) + ng(t)
+˜a(t) = a(t) + ba(t) + na(t)
+(2)
+Here, ˜ω(t) and ˜a(t) denote the corresponding IMU mea-
+surements, bg(t) and ba(t) represent the gyroscope and ac-
+celerometer biases, respectively. Furthermore, the associated
+measurement noises, denoted by ng(t) and na(t), are zero-
+mean with covariance matrices Qng and Qna. We collect the
+orientation, velocity, and position in the navigation state
+X(t) =
+
+
+R(t)
+v(t)
+p(t)
+0
+1
+0
+0
+0
+1
+
+∈SE2(3)
+(3)
+Augmenting this navigation state with the IMU biases gives
+the current IMU state used for inertial propagation
+x(t) =
+ X(t), b(t)
+
+∈SE2(3) × R6
+(4)
+where b(t) =
+
+bg(t)T , ba(t)T T stacks the gyroscope and
+accelerometer biases. Propagating x(t) requires both the nav-
+igation dynamics in (1) and a model for the evolution of b(t).
+B. Problem Formulation
+Our overall goal is to estimate the navigation state from
+IMU measurements and visual observations, including periods
+of unavailable vision. To support this goal, we combine learned
+IMU bias dynamics with an IMU uncertainty model for state
+and covariance propagation. Methods that assign a single bias
+estimate to each time window may fail to capture the complex
+behavior of a low cost IMU, particularly bias variations
+within the window. We therefore model the gyroscope and
+accelerometer biases as deterministic state variables governed
+by learned continuous time dynamics
+˙b(t) = f
+
+b(t), ˜u(t), ˙˜u(t)
+
+(5)
+where f is a learned nonlinear vector field describing IMU
+bias evolution. For notational convenience, let
+˜u(t)
+≜
+˜ω(t)T , ˜a(t)T T denote the measured IMU input. The input
+derivative ˙˜u(t) is obtained from the interpolated IMU mea-
+surements. IMU uncertainty model is constructed separately
+through the covariance matrices Qng and Qna associated with
+ng and na in (2). Accordingly, we seek to estimate the IMU
+state through inertial propagation and visual updates using
+these learned models.
+Problem 1: Given an initial state estimate, use IMU mea-
+surements and available visual observations to estimate the
+current IMU state as
+ˆxk = F(˜u0:k, Z≤tk)
+(6)
+where ˆxk estimates the IMU state defined in (4), and Z≤tk
+contains the visual observations available up to tk. The esti-
+mator F combines learned IMU bias dynamics and an IMU
+uncertainty model within MSCKF for state and covariance
+propagation under unreliable visual observations.
+
+
+4
+System Overview
+Learned IMU Modeling
+1) Learned Continuous Time Bias Dynamics
+Bias Neural ODE 
+ODE
+Integration
+2) Learned IMU Uncertainty Model
+VIO State Estimation
+ESKF Propagation
+State Propagation
+Covariance Propagation
+with Learned Cov
+MSCKF Update
+Multi State Constraint
+VIO State Output
+Visual Inputs
+•••
+IMU Inputs
+Gyroscope 
+Accelerometer
+Gyro NN
+Accel NN
+g
+f
+a
+f
+Predicted
+Biases
+ˆ
+ˆ
+,
+g
+a
+b
+b
+IMU
+Debiasing
+ˆ
+ˆ
+ˆ
+ˆ
+g
+a
+b
+a
+a b
+
+
+
+
+
+
+Temporal Encoder
+Causal 
+Hermite
+Spline
+IMU 
+Window
+(Length = T)
+CNN
+GRU
+Covariance
+Decoder
+Predicted 
+Noise 
+Covariances
+ˆ
+ˆ
+,
+ng
+na
+Q
+Q
+
+a
+Fig. 2. LBDU-VIO system pipeline. A learning based multi state constraint Kalman filter that combines learned IMU bias dynamics and uncertainty with
+visual updates. Instead of modeling IMU biases as random walks and using fixed noise parameters, LBDU-VIO corrects raw IMU measurements with bias
+estimates from a neural ODE and uses measurement noise covariances predicted by an uncertainty model in covariance propagation.
+IV. METHODOLOGY
+LBDU-VIO implements the estimator in (6) by integrating
+the learned models into MSCKF, as shown in Fig. 2. The filter
+propagates its state and covariance from raw gyroscope and
+accelerometer measurements using learned bias dynamics and
+adaptive measurement noise covariances. It then uses visual
+measurements for multi state constraint updates.
+A. Learned Continuous Time Bias Dynamics
+We parameterize the vector field in (5) with a neural network
+fθ, where θ denotes its trainable parameters. This formulation
+learns continuous time bias dynamics to capture variation
+within each window, rather than assigning a single constant
+estimate, as shown in Fig. 3. A neural ordinary differential
+Window 1
+Window 2
+Window 3
+Discrete bias
+Continuous bias
+Fig. 3.
+Schematic comparison of bias representations. Learned continuous
+time dynamics describe bias evolution within each window, whereas a single
+estimate per window gives a piecewise constant bias.
+equation models continuous state dynamics by parameterizing
+the right-hand side of an ODE with a neural network. For a
+generic state χ(t), the canonical autonomous form is
+˙χ(t) = fϑ(χ(t)) ,
+χ(tT ) = χ(t0) +
+Z tT
+t0
+fϑ(χ(t)) dt
+(7)
+Here, fϑ is a neural network with trainable parameters ϑ that
+maps the current state χ(t) to its time derivative ˙χ(t), and
+t is the integration variable over [t0, tT ]. In our setting, the
+bias serves as the neural ODE state, while its vector field also
+depends on the external IMU input. This input is sampled at
+discrete times, it must be interpolated for the ODE solver to
+evaluate the dynamics between samples. Therefore, we use
+a causal cubic Hermite spline S˜u(t) to interpolate {˜uk}N
+k=0,
+with S˜u(tk) = ˜uk. We model the stacked bias dynamics using
+the spline and its derivative
+˙b(t) = fθ
+
+b(t), S˜u(t), ˙S˜u(t)
+
+(8)
+where fθ stacks the gyroscope and accelerometer vector fields
+fg and fa, which are separate residual multilayer perceptrons.
+We learn the parameters θ from integrated motion errors,
+as detailed in Section IV-C. The spline derivative captures
+how the IMU measurements change over time, providing
+local temporal context for predicting bias evolution. We set
+˙S˜u(t0)
+=
+0 and compute subsequent knot slopes using
+backward differences. Integrating the bias dynamics in (8) over
+[t0, tT ] produces the continuous bias trajectory
+b(tT ) = b0 +
+Z tT
+t0
+fθ(b(t), t) dt
+= ODESolve(b0, fθ, t0, tT ; θ)
+(9)
+Here, fθ(b, t) is shorthand for the vector field in (8), with the
+spline and its derivative evaluated at time t. The ODE solver
+obtains this continuous trajectory by numerically integrating
+the learned dynamics. In our implementation, we use explicit
+Euler integration at the IMU rate
+bk+1 = bk + fθ(bk, tk) ∆tk
+(10)
+which is a numerical approximation of (9). The sampling
+interval is ∆tk = tk+1 −tk. At each IMU sample, we subtract
+the estimated biases from the raw measurements to obtain
+ˆωk = ˜ωk −ˆbg,k and ˆak = ˜ak −ˆba,k. The bias and state
+dynamics are integrated jointly, yielding one updated bias
+estimate per IMU sample during online inference.
+B. Learned IMU Uncertainty Model and Differentiable Co-
+variance Propagation
+To estimate gyroscope and accelerometer noise covariances,
+we encode a local IMU measurement window into a shared
+feature hk = E( ˜Uk) for both sensors. Here, ˜Uk denotes the
+local window of raw IMU measurements ˜u associated with
+
+
+5
+sample k, and E is the trainable temporal encoder. The encoder
+consists of a convolutional front end followed by two gated
+recurrent unit layers. The shared feature is then decoded into
+gyroscope and accelerometer noise covariance estimates at
+each IMU sample
+Qng,k = diag(exp(Dg(hk)))
+Qna,k = diag(exp(Da(hk)))
+(11)
+where Qng,k and Qna,k are the continuous time noise co-
+variance matrices for the gyroscope and accelerometer, re-
+spectively. The decoders Dg and Da are separate multilayer
+perceptrons mapping hk to three axis noise variances. The exp
+operation maps the outputs of the trainable decoders Dg and
+Da to positive values, and diag assembles these values into
+diagonal covariance matrices. We supervise the uncertainty
+model with motion errors through differentiable preintegration
+and covariance propagation. Assuming IMU inputs keep con-
+stant within each sampling interval, the preintegration updates
+are
+∆Rk+1 = ∆Rk Exp(ˆωk∆tk)
+∆vk+1 = ∆vk + ∆Rk¯ak∆tk
+∆pk+1 = ∆pk + ∆vk∆tk + 1
+2∆Rk¯ak∆t2
+k
+(12)
+Here, ∆Rk, ∆vk, and ∆pk denote the rotation, velocity, and
+position increments accumulated from the fixed window start
+ti to the current time tk. They are expressed in the body frame
+at ti. The estimated linear acceleration is ¯ak = ˆak+ ˆRT
+k g. The
+current orientation ˆRk = ˆRi∆Rk is obtained by composing
+the initial orientation ˆRi with the accumulated relative rotation
+∆Rk. The increments are initialized as ∆Ri = I3, ∆vi = 03,
+and ∆pi = 03. To quantify the uncertainty in these motion
+increments, we propagate the associated error covariance at
+each IMU step as
+Σk+1 = AkΣkAT
+k + BkQkBT
+k
+(13)
+Here, Σk is the IMU preintegration error covariance, initial-
+ized as Σi = 09×9. The accumulated preintegration error is
+modeled as ξk = [δϕT
+k , δvT
+k , δpT
+k ]T ∼N(09×1, Σk), where
+δϕk, δvk, and δpk denote the zero mean rotation, velocity, and
+position errors, respectively. The matrix Ak is the linearized
+error transition matrix, and Bk = [Bg,k Ba,k] is the noise
+injection matrix. The discrete measurement noise covariance
+is Qk = diag(Qng,k, Qna,k)/∆tk. Since the gravity term
+does not contribute to the attitude error Jacobian, the transition
+matrix in (13) is
+Ak =
+
+
+∆RT
+k,k+1
+0
+0
+−∆Rkˆa×
+k ∆tk
+I
+0
+−1
+2∆Rkˆa×
+k ∆t2
+k
+I∆tk
+I
+
+
+(14)
+Here, ∆Rk,k+1 = Exp(ˆωk∆tk) is the rotation increment from
+tk to tk+1. The gyroscope and accelerometer components of
+Bk are
+Bg,k =
+
+
+Jk
+r∆tk
+0
+0
+
+,
+Ba,k =
+
+
+0
+∆Rk∆tk
+1
+2∆Rk∆t2
+k
+
+
+(15)
+where Jk
+r = Jr(ˆωk∆tk) denotes the SO(3) right Jacobian
+evaluated at the nominal rotation increment at time step k.
+C. Hierarchical Training Strategy
+We train our model in three stages using integrated motion
+residuals for supervision. The rotation residual is eR,k =
+Log (RT
+k ˆRk), where Log maps a rotation in the Lie group
+to the vector representation of Lie algebra in R3. The velocity
+and position residuals are ev,k = RT
+i (ˆvk −vk) and ep,k =
+RT
+i (ˆpk −pk), respectively. Here, RT
+i expresses both residuals
+from the world frame to the body frame at the window start ti.
+1) Stage 1: Gyroscope Bias Dynamics: We train the gyro-
+scope bias dynamics model fg using orientation supervision,
+with the pose supervision mean squared error (MSE) and
+regularized objective defined as
+LR = 1
+N
+N
+X
+k=1
+∥eR,k∥2
+2 + λgLg
+curv
+(16)
+Here, k = 1, . . . , N indexes the N supervised states along the
+integrated trajectory. The coefficient λg controls the strength
+of the gyroscope bias curvature regularization term. This
+regularization is defined for both bias types as
+Li
+curv =
+1
+N −1
+N−1
+X
+k=1
+ ˙bi,k+1 −˙bi,k
+
+2
+2 ,
+i ∈{g, a}
+(17)
+It penalizes differences between consecutive bias derivatives
+to discourage unnecessarily rapid variations in the learned
+dynamics.
+2) Stage 2: Accelerometer Bias Dynamics: We freeze fg
+and train the accelerometer bias dynamics model fa using
+velocity and position supervision. We also use an MSE loss
+and regularized objective
+Lv,p = 1
+N
+N
+X
+k=1
+
+∥ev,k∥2
+2 + ∥ep,k∥2
+2
+
++ λaLa
+curv
+(18)
+where La
+curv is the accelerometer bias curvature regularization
+term defined in (17) with i = a, and λa is its weight. The
+derivatives defined in (8) are jointly integrated with the inertial
+dynamics, allowing the loss functions to supervise the resulting
+motion without ground truth bias labels.
+3) Stage 3: IMU Uncertainty Model: We freeze both bias
+models and train the uncertainty model on supervised IMU
+segments. We use the mean negative log likelihood as the
+uncertainty loss
+Lcov =
+1
+2N
+N
+X
+k=1
+X
+c
+ eT
+c,k(Σc
+k)−1ec,k + ln(det Σc
+k)
+
+(19)
+where c ∈{R, v, p} indexes the rotation, velocity, and position
+components. At each supervised time tk, we sum the compo-
+nent losses over c and then average the resulting losses over k.
+The diagonal matrix Σc
+k contains the corresponding variances
+from the preintegration error covariance Σk propagated by
+(13). The quadratic term weights the residuals by their inverse
+covariance, while the log determinant term penalizes large
+predicted variances. We backpropagate this loss through the
+covariance recursion to update the temporal encoder and
+covariance decoders.
+
+
+6
+D. LBDU-VIO Formulation
+We integrate the learned bias dynamics and IMU uncer-
+tainty model into an error state MSCKF. For the IMU state
+x(t) defined in (4), the filter uses the local error δx =
+[δθT , δvT , δpT , δbT
+g , δbT
+a ]T ∈R15, with R = ˆRExp(δθ×)
+and additive errors for the Euclidean components. Linearizing
+the error dynamics about the current state estimate yields the
+error model
+˙δx(t) = F(t)δx(t) + G(t)n(t)
+(20)
+Here, n = [nT
+g , nT
+a , wT
+bg, wT
+ba]T stacks the measurement and
+bias process noises. The state and noise Jacobians are F(t) =
+∂˙δx/∂δx and G(t) = ∂˙δx/∂n. They are computed from the
+nonlinear error dynamics at zero error and noise. The learned
+dynamics defined in (8) replace the bias random walks. The
+corresponding gyroscope and accelerometer blocks of F are
+Fbg(t) = ∂fg
+∂bg
+ˆbg
+,
+Fba(t) = ∂fa
+∂ba
+ˆba
+(21)
+The filter propagates its bias estimate according to (10). The
+corrected IMU measurements drive the navigation dynamics in
+(1) to propagate the attitude, velocity, and position estimates.
+The error state covariance is propagated between consecutive
+IMU samples as
+P−
+k+1 = ΦkP+
+k ΦT
+k + Qd,k
+Φk = exp(Fk∆tk)
+Qd,k = GkQc,kGT
+k ∆tk
+(22)
+where P is the error state covariance, Φk is the state tran-
+sition matrix, and Qd,k is the discrete process noise covari-
+ance. The continuous time process noise covariance matrix
+is Qc,k = blkdiag(Qng,k, Qna,k, Qbg, Qba). The uncertainty
+model provides Qng,k and Qna,k according to (11), while Qbg
+and Qba are fixed bias process noise covariances. We apply
+the MSCKF visual update [33] to the IMU state as
+c
+δxk = Kkrk
+ˆx+
+k = ˆx−
+k ⊞c
+δxk
+P+
+k = P−
+k −KkSkKT
+k
+(23)
+where rk is the visual residual after eliminating landmark
+errors, and Kk contains the rows of the MSCKF Kalman
+gain corresponding to the IMU error state δx. The matrix Sk
+is the visual innovation covariance and ⊞applies the local
+correction. The updated IMU state estimate ˆx+
+k and covariance
+P+
+k initialize the next propagation step.
+V. EXPERIMENTS
+We evaluate the proposed method on public visual-inertial
+benchmarks. Section V-A describes the experimental setup.
+Section V-B presents visual-inertial estimation results on Eu-
+RoC and TUM-VI under nominal conditions. Section V-C
+evaluates visual outage on EuRoC and provides an addi-
+tional three-dimensional trajectory comparison on TUM-VI.
+Section V-D evaluates visual distortion on EuRoC, and Sec-
+tion V-E reports ablation studies of the learned bias and
+uncertainty models.
+A. Experimental Setup
+1) Datasets: Experiments are conducted on EuRoC MAV
+and TUM-VI, whose sensor characteristics and data splits are
+summarized in Table I. EuRoC MAV dataset [38] comprises 11
+indoor sequences acquired in a machine hall and a Vicon room.
+The sensor platform records synchronized stereo 752 × 480
+global shutter images at 20 Hz and inertial measurements at
+200 Hz. We use six sequences for training and five for testing.
+TABLE I
+DATASETS AND TRAIN–TEST SPLITS
+Dataset
+IMU
+Rate
+Env.
+Train / Test
+EuRoC MAV
+ADIS16448
+200 Hz
+Indoor
+6 / 5
+TUM-VI
+BMI160
+200 Hz
+In/Outdoor
+3 / 3
+TUM-VI dataset [39] provides indoor and outdoor sequences
+recorded with a BMI160 IMU at 200 Hz. We use the six indoor
+room sequences with full ground truth coverage, split into
+three training and three test sequences.
+2) Implementation Details: Each bias dynamics model, fg
+or fa, comprises two residual blocks with Tanh activations
+and a maximum hidden layer width of 512. The bias states
+are integrated at the IMU rate by first order explicit Euler
+integration with ∆tk = 5 ms. Training follows the three stage
+curriculum described in Sec. IV-C. Stages 1 and 2 use N = 16
+sample integration intervals and a batch size of 1000, with each
+stage trained for 1600 epochs.
+TABLE II
+IMU NOISE DENSITY PARAMETERS FOR EUROC AND TUM-VI
+Parameter
+Symbol
+EuRoC
+TUM-VI
+Unit
+Gyro. white noise
+σg
+1.70×10−4
+1.60×10−4
+rad/s/
+√
+Hz
+Accel. white noise
+σa
+2.00×10−3
+2.80×10−3
+m/s2/
+√
+Hz
+Gyro. bias diffusion
+σbg
+1.94×10−5
+2.20×10−5
+rad/s2/
+√
+Hz
+Accel. bias diffusion
+σba
+3.00×10−3
+8.60×10−4
+m/s3/
+√
+Hz
+Stage 1 learns fg from attitude supervision. Stage 2 freezes
+fg and learns fa from velocity and position supervision. The
+curvature regularization weights in (16) and (18) are set to
+λg = 10−10 and λa = 10−12, respectively. Both stages
+use Adam with a learning rate of 5×10−3 on one NVIDIA
+RTX 4060 Laptop GPU. In Stage 3, we train the uncertainty
+model using 40 sample windows and a batch size of 64
+with Adam. It is initialized at a learning rate of 10−3 and
+trained for at most 500 epochs. We next describe the estimator
+configuration. The estimator maintains up to W = 10 camera
+poses and performs visual updates at 20 Hz on both datasets.
+Table II lists the manufacturer specified continuous time noise
+densities. Without the uncertainty model, the measurement
+noise covariances are fixed as Qng = σ2
+gI3 and Qna = σ2
+aI3.
+The uncertainty model replaces these matrices with Qng,k and
+Qna,k, while the bias process covariances Qbg = σ2
+bgI3 and
+Qba = σ2
+baI3 remain fixed at their datasheet values.
+3) Evaluation Metrics: We assess global trajectory accu-
+racy and local drift using absolute and relative errors, respec-
+tively. For global accuracy, the estimated trajectory is first
+aligned to the ground truth in SE(3) [42]. We then report the
+
+
+7
+TABLE III
+VIO ACCURACY ON THE EUROC AND TUM-VI TEST SEQUENCES UNDER NOMINAL VISUAL CONDITIONS
+S-MSCKF [40]
+MSCEqF [41]
+VIO-IPNet [28]
+Brossard [11]
+LBDU-VIO
+Dataset
+Sequence
+APE
+AOE
+APE
+AOE
+APE
+AOE
+APE
+AOE
+APE
+AOE
+EuRoC
+MH 02
+0.141
+1.860
+0.639
+3.117
+0.166
+1.721
+0.196
+2.334
+0.232
+2.221
+MH 04
+0.355
+2.243
+0.499
+1.818
+0.325
+1.790
+0.300
+1.701
+0.215
+1.194
+V1 01
+0.090
+1.276
+0.132
+6.185
+0.086
+0.938
+0.098
+1.151
+0.055
+0.470
+V1 03
+0.247
+6.911
+0.167
+2.106
+0.095
+2.514
+0.093
+2.299
+0.089
+3.155
+V2 02
+0.163
+3.097
+0.208
+3.149
+0.098
+1.839
+0.129
+1.955
+0.076
+1.412
+Mean
+0.199
+3.077
+0.329
+3.275
+0.154
+1.760
+0.163
+1.888
+0.133
+1.690
+TUM-VI
+room2
+0.144
+6.296
+0.224
+2.879
+0.094
+2.259
+0.094
+2.407
+0.088
+2.187
+room4
+0.096
+3.165
+0.270
+6.080
+0.041
+1.969
+0.522
+4.730
+0.028
+1.116
+room6
+0.140
+2.078
+0.211
+3.435
+0.101
+2.222
+0.072
+2.551
+0.064
+1.651
+Mean
+0.127
+3.846
+0.235
+4.131
+0.079
+2.150
+0.229
+3.229
+0.060
+1.651
+root mean square angular and position errors as the absolute
+orientation error (AOE) and absolute position error (APE)
+AOE =
+v
+u
+u
+t 1
+N
+N
+X
+k=1
+∥Log( ˆRT
+k Rgt
+k )∥2
+2
+APE =
+v
+u
+u
+t 1
+N
+N
+X
+k=1
+∥ˆpk −pgt
+k ∥2
+2
+(24)
+Here, N is the number of associated poses. AOE and ROE
+are reported in degrees. We assess local trajectory drift over
+fixed length path segments using the relative orientation error
+(ROE) and relative position error (RPE), defined as
+ROE = 1
+D
+D
+X
+s=1
+∥Log(Re,s)∥2 , RPE = 1
+D
+D
+X
+s=1
+∥pe,s∥2 (25)
+Here, D is the number of evaluated ground truth segments,
+each with a fixed path length d. For segment s, Re,s and
+pe,s are the rotation and translation components of the relative
+pose error Te,s = ∆T−1
+s ∆ˆTs. The increments ∆Ts and
+∆ˆTs represent the ground truth and estimated relative poses
+in SE(3) over the same segment, respectively. APE and RPE
+are reported in meters.
+4) Comparison Methods: We evaluate the proposed in-
+tegrated VIO system against four representative baselines.
+Among the filter-based baselines, S-MSCKF [40] uses syn-
+chronized stereo feature tracks in MSCKF updates to im-
+prove robustness while retaining computational efficiency.
+MSCEqF [41] is a monocular equivariant filter that embeds
+navigation and camera calibration states in a unified symmetry
+group to improve consistency under large estimation errors.
+Among the learning-based baselines, VIO-IPNet [28] restruc-
+tures the IMU bias prediction paradigm and proposes an end-
+to-end average bias regression network, whereas Brossard et
+al. [11] denoise the gyroscope stream using a dilated convo-
+lutional network. Both learned baselines are retrained on the
+corresponding EuRoC and TUM-VI training splits and coupled
+with unmodified OpenVINS framework. MSCEqF and S-
+MSCKF are evaluated using their released implementations,
+with S-MSCKF operating in stereo. The implementation of
+our proposed system extends the error state Kalman filter with
+learned bias dynamics, an uncertainty model, and the standard
+MSCKF visual updates. The common platform comparisons
+control differences in visual processing.
+B. VIO Evaluation Under Nominal Conditions
+This experiment evaluates the proposed method accuracy
+under continuous 20 Hz visual updates, with the learned
+bias dynamics and inertial measurement uncertainty modules.
+Table III reports APE and AOE on EuRoC and TUM-VI,
+where lower values indicate better accuracy. All systems use
+monocular input except the stereo S-MSCKF. On EuRoC, the
+complete proposed system ranks first in both overall metrics,
+with 0.133 m mean APE and 1.690◦mean AOE. Relative to
+VIO-IPNet, the strongest baseline for both metrics, it reduces
+mean APE by 13.6% and mean AOE by 4.0%. This advantage
+is also reflected at the sequence level, with the lowest APE on
+four of five sequences and the lowest AOE on three. MH 04
+sequence provides a representative joint gain, as APE and AOE
+decrease by 28.3% and 29.8%, respectively, against the best
+baseline for each metric. However, the sequence level gains
+do not hold uniformly across both metrics. On MH 02, S-
+MSCKF retains the lowest APE, whereas VIO-IPNet retains
+the lowest AOE. On V1 03, the proposed system leads APE,
+but its AOE remains 49.8% above the MSCEqF minimum.
+Table III therefore supports an overall system level advantage
+rather than superiority across all sequences. Local translational
+drift is evaluated under the same nominal visual conditions
+to complement the absolute errors, as shown in Fig. 4. The
+relative translational drift percentage plotted on the vertical
+axis is et,s(d) = ∥pe,s∥2
+d
+× 100%. We compute et,s(d) for all
+sub trajectories of length d and the boxplot shows the statistical
+distribution of these errors. For each sequence, the target sub-
+trajectory length d is set to 2.5%, 5%, 7.5%, and 10% of the
+total ground truth path length, with the corresponding distances
+shown on the horizontal axis. Each box spans the 25th to
+75th percentiles, with whiskers extending to the 10th and 90th
+percentiles.
+Across four more complexed path lengths, the proposed
+system achieves the lowest mean RPE among all methods
+at each evaluated path length. MH 02 forms the exception,
+where the proposed system leads at the two shorter lengths
+and VIO-IPNet leads at the two longer lengths. The relatively
+mild motion in this sequence may limit the benefit of nonlinear
+
+
+8
+2.1
+4.2
+6.2
+8.3
+Distance traveled [m]
+0
+2
+4
+6
+Trans. Err. [%]
+V2_02
+2.0
+3.9
+5.9
+7.9
+0.0
+2.5
+5.0
+7.5
+Trans. Err. [%]
+V1_03
+1.5
+2.9
+4.4
+5.8
+0
+2
+4
+6
+Trans. Err. [%]
+V1_01
+2.3
+4.6
+6.9
+9.2
+0
+5
+10
+Trans. Err. [%]
+MH_04
+1.8
+3.7
+5.5
+7.3
+0
+5
+10
+Trans. Err. [%]
+MH_02
+S-MSCKF
+MSCEqF
+Mean
+VIO-IPNet
+Proposed
+Fig. 4. Relative translation drift on the five EuRoC test sequences.
+bias learning. The local drift advantage therefore covers most
+sequences but weakens as path length increases on MH 02.
+On TUM-VI, the proposed monocular system ranks first in
+both metrics on room2, room4, and room6. Relative to VIO-
+IPNet, the closest monocular baseline with complete results,
+it reduces mean APE by 24.1% and mean AOE by 23.2%.
+The proposed system lowers mean APE by 74.5% and mean
+AOE by 60.0% compared with MSCEqF. Its advantage over
+Brossard is similarly clear, with mean APE and AOE reduced
+by 73.8% and 48.9%, respectively, while room4 APE falls
+from 0.522 m to 0.028 m. These results demonstrate the effec-
+tiveness of jointly integrating the learned bias and uncertainty
+modules within the proposed method. Despite using monocular
+input, the proposed system reduces mean APE and AOE by
+52.8% and 57.1% relative to the stereo S-MSCKF.
+C. Robustness Under Visual Outage
+1) Effect of Outage Duration on EuRoC: This experiment
+examines whether the proposed method limits drift during a
+temporary loss of vision and remains accurate after visual
+measurements return. We insert one outage into each of the
+five EuRoC test sequences. The outage starts 50 s after the
+beginning of the sequence and lasts 1, 2, 3, 5, or 10 s. Every
+method is evaluated with the same outage start and end times.
+During the outage, all camera messages used by that method
+are removed, while the IMU stream is left unchanged. When
+the outage ends, visual measurements resume and the estimator
+TABLE IV
+MEAN RPE AND ROE ACROSS THE FIVE EUROC TEST SEQUENCES AT
+EACH VISUAL-OUTAGE DURATION. THE BEST BASELINE IS SELECTED
+SEPARATELY FOR EACH METRIC AND DURATION. BEST VALUES ARE
+SHOWN IN BOLD.
+Outage
+RPE (m)
+ROE (◦)
+Best
+Baseline
+Proposed
+Reduction
+Best
+Baseline
+Proposed
+Reduction
+1 s
+0.052
+0.044
+15.4%
+0.304
+0.275
+9.5%
+2 s
+0.053
+0.046
+13.2%
+0.308
+0.273
+11.4%
+3 s
+0.060
+0.044
+26.7%
+0.308
+0.254
+17.5%
+5 s
+0.079
+0.058
+26.6%
+0.306
+0.259
+15.4%
+10 s
+0.187
+0.140
+25.1%
+0.320
+0.306
+4.4%
+1 2 3
+5
+10
+Outage duration (s)
+0
+2
+4
+6
+8
+APE (m)
+7.61
+3.55
+2.74
+1 2 3
+5
+10
+Outage duration (s)
+0
+0.5
+1
+1.5
+1 s RPE (m)
+1.388
+0.775
+0.413
+40
+50
+60
+70
+80
+90
+Time (s)
+0
+5
+10
+15
+Position error (m)
+Vision off
+Local recovery (62 s)
+(a) Trajectory APE
+(b) recovery RPE
+(c) Position error with 10s outage
+VIO-IPNet
+Brossard
+LBDU-VIO
+Fig. 5. Visual outage and recovery on EuRoC MH 04 difficult sequence. (a)
+Trajectory APE after global SE(3) alignment. (b) Recovery RPE denotes 1 s
+relative translation RMSE over the first 10 s after images resume. (c) Position
+error with pre outage alignment. Shading marks the 50-60 s outage and red
+dotted lines indicate local recovery near 62 s.
+continues to the end of the sequence. This protocol tests
+both IMU-only propagation during the outage and the system
+behavior after vision returns.
+Table IV reports the mean RPE and ROE across the five
+sequences at each outage duration. Both metrics are computed
+over fixed 1 m path increments on the complete output trajec-
+tory. They therefore reflect the combined effects of drift during
+the outage and estimation after visual updates resume. The best
+baseline is selected separately for each duration and metric as
+the baseline with the lowest across sequence mean. For RPE,
+this baseline is VIO-IPNet at 1-3 s and S-MSCKF at 5-10 s. For
+ROE, it is MSCEqF at every duration. The summary shows a
+consistent overall advantage for the proposed system. Proposed
+achieves the lowest across-sequence mean RPE and ROE at
+every tested outage duration. Relative to the best baseline
+in each condition, the RPE reduction ranges from 13.2% to
+26.7%, and the ROE reduction ranges from 4.4% to 17.5%.
+Because the reference baseline is chosen independently in each
+column, these reductions are measured against the strongest
+
+
+9
+−2
+0
+2
+x (m)
+−1
+0
+1
+y (m)
+XY RMSE: 0.122 m
+LBDU-VIO
+0.66 m
+−2
+0
+2
+x (m)
+−1
+0
+1
+y (m)
+XY RMSE: 0.191 m
+VIO-IPNet
+1.00 m
+−2
+0
+2
+x (m)
+−1
+0
+1
+y (m)
+XY RMSE: 0.385 m
+MSCEqF
+1.22 m
+−2
+0
+2
+x (m)
+−1
+0
+1
+y (m)
+XY RMSE: 0.926 m
+Brossard
+1.76 m
+−1.5
+0.0
+1.5
+x (m)
+−1
+0
+1
+y (m)
+1.0
+1.5
+z (m)
+(a)
+(b)
+Ground truth
+MSCEqF
+LBDU-VIO
+Brossard
+VIO-IPNet
+50 s
+60 s
+Fig. 6.
+Trajectories on TUM-VI room4 with a 10 s visual outage. (a) XY
+projections over 20-110 s, with planar RMSE reported above each plot. Thick
+segments show the outage, and connected squares mark XY errors at 60 s. (b)
+Three dimensional trajectories during the outage. Circles and squares mark 50
+and 60 s. Each method shows the run with median APE among three repeats.
+baseline result for that duration and metric. The size of the
+gain changes with outage duration. At 1-2 s, Proposed reduces
+mean RPE by 15.4% and 13.2%, and mean ROE by 9.5%
+and 11.4%, respectively. The joint translation and rotation
+advantage is largest at 3-5 s. The RPE reduction is 26.7%
+and 26.6%, while the ROE reduction is 17.5% and 15.4%.
+At 10 s, mean RPE increases to 0.140 m, but remains 25.1%
+below the best baseline value of 0.187 m. In contrast, the ROE
+margin narrows to 4.4%, with 0.306◦for Proposed and 0.320◦
+for the best baseline. The translational advantage therefore
+remains clear at the longest outage, whereas the smaller
+orientation margin shows that long IMU-only propagation
+remains challenging.
+Fig. 5 compares LBDU-VIO, VIO-IPNet, and Brossard
+across five outage durations on the EuRoC MH 04 sequence.
+In Fig. 5(a), LBDU-VIO achieves the lowest trajectory APE
+at 1, 2, 5, and 10 s, while Brossard has lower APE at 3 s.
+For the 10 s outage, LBDU-VIO achieves an APE of 2.74 m,
+compared with 3.55 m for Brossard and 7.61 m for VIO-IPNet.
+This corresponds to a 22.9% reduction relative to the stronger
+baseline. Fig. 5(b) complements trajectory APE by measuring
+relative translation accuracy during the first 10 s after images
+resume. LBDU-VIO achieves the lowest recovery RPE at four
+of the five outage durations, with Brossard leading at 2 s. For
+the 10 s outage, its 1 s recovery RPE is 0.413 m, compared with
+0.775 m for Brossard and 1.388 m for VIO-IPNet. The 46.7%
+reduction relative to Brossard shows improved relative motion
+accuracy alongside the lower trajectory APE. Fig. 5(c) shows
+the position error for the 50–60 s outage. All three methods
+exhibit small position errors before the outage, followed by
+increasing errors during IMU only propagation. By the end of
+the outage, LBDU-VIO has the lowest position error among
+the three methods. After images resume, its position error
+remains approximately 5–6 m from 63 to 90 s. At 90 s, LBDU-
+VIO has a position error of 5.33 m, compared with 6.78 m
+for Brossard and 15.77 m for VIO-IPNet. These results show
+lower accumulated position error at the end of the outage and
+limited further error growth after visual updates resume.
+2) Trajectory
+Comparison
+on
+TUM-VI:
+We
+compare
+LBDU-VIO, VIO-IPNet, MSCEqF, and Brossard on TUM-VI
+room4 using monocular images, with three runs per method.
+We remove camera measurements during 50-60 s and retain all
+IMU samples. We compute translational APE after one global
+SE(3) alignment per run, using ground truth timestamps over
+20-110 s. Fig. 6 shows XY projections and three dimensional
+outage trajectories for the run with median APE from each
+method. In the XY view, LBDU-VIO follows the reference
+path more closely than the baselines. Just before visual updates
+resume, its XY position error is 0.66 m, compared with 1.00 m
+for VIO-IPNet. The corresponding errors for MSCEqF and
+Brossard are 1.22 m and 1.76 m, respectively. LBDU-VIO
+achieves the lowest mean APE of 0.1349 m, compared with
+0.1920 m for VIO-IPNet, 0.4316 m for MSCEqF, and 1.2348 m
+for Brossard. This is a 29.8% reduction relative to VIO-IPNet,
+the strongest baseline in this experiment. LBDU-VIO also
+achieves lower APE than all three baselines in every run.
+D. Robustness Under Visual Distortion
+This experiment compares estimation accuracy under re-
+peated visual distortion. We use the EuRoC V2 02 medium
+sequence and apply a horizontal pixel shift ramp to the
+monocular cam0 stream. The distortion starts at 15 s and
+lasts for 5 s every 15 s, leaving a 10 s normal image interval
+between consecutive windows. Within each window, the shift
+increases linearly from zero to 10 px. For a horizontal focal
+length of 458.654 px, the maximum shift corresponds to an
+angular displacement of approximately 1.25◦. We compare
+LBDU-VIO with MSCEqF, Brossard, and VIO-IPNet using
+the same distorted monocular images and IMU measurements
+for all methods. We run each method three times under visual
+distortion. All trajectories are restricted to their common time
+interval, from 4 to 116 s. Each trajectory is then independently
+aligned to the ground truth with one SE(3) transform estimated
+over this interval.
+Table V summarizes estimation accuracy under visual dis-
+tortion. LBDU-VIO achieves the lowest median AOE and
+
+
+10
+TABLE V
+ESTIMATION ACCURACY UNDER INTERMITTENT VISUAL DISTORTION ON
+EUROC V2 02 MEDIUM. VALUES ARE MEDIAN RMSES AND BOLD
+INDICATES THE LOWEST VALUE IN EACH COLUMN.
+Method
+AOE RMSE (◦)
+APE RMSE (m)
+MSCEqF
+2.619
+0.175
+Brossard
+1.779
+0.194
+VIO-IPNet
+2.181
+0.152
+LBDU-VIO
+1.378
+0.101
+0
+10
+Shift (px)
+0.0
+1.5
+3.0
+Orientation error (°)
+(a)
+20
+40
+60
+80
+100
+Time (s)
+0.0
+0.2
+0.4
+0.6
+Position error (m)
+(b)
+LBDU-VIO
+MSCEqF
+Brossard
+VIO-IPNet
+Fig. 7.
+Orientation (a) and position (b) errors under intermittent visual
+distortion on EuRoC V2 02 medium. The upper track shows the imposed
+horizontal image shift. Lines show the median error at each timestamp, and
+shaded bands span the minimum and maximum errors across three runs.
+APE RMSEs across three runs. Under visual distortion, its
+median AOE RMSE is 1.378◦, compared with 1.779◦for
+Brossard. This corresponds to a 22.5% reduction relative
+to the best orientation baseline. Its median APE RMSE is
+0.101 m, compared with 0.152 m for VIO-IPNet. This cor-
+responds to a 33.3% reduction relative to the best position
+baseline. Fig. 7 shows how orientation and position errors
+evolve across repeated distortion cycles. LBDU-VIO maintains
+lower orientation errors than MSCEqF, although Brossard and
+VIO-IPNet have lower errors at some timestamps. Its position
+error is lower than those of all three baselines for most of
+the sequence. Across the three runs, LBDU-VIO achieves a
+maximum orientation error of 2.524◦, compared with 3.455◦
+for MSCEqF, the best baseline on this metric. Its maximum
+position error is 0.212 m, compared with 0.297 m for VIO-
+IPNet, the best baseline on this metric.
+E. Evaluation and Ablation of the Learned Components
+We evaluate the learned components in stages, beginning
+with the bias model in isolation. To exclude the effects
+of visual updates, filter correction, and learned uncertainty,
+Fig. 8 integrates each gyroscope stream in open loop from the
+ground truth initial attitude. The comparison uses Raw IMU
+measurements and streams corrected by the Linear baseline
+and Proposed bias model. The Linear baseline computes the
+calibrated angular velocity as ¯ωk = Ag ˜ωk + cg at each IMU
+sample. We learn the calibration matrix Ag ∈R3×3 and offset
+cg ∈R3 on the training sequences by minimizing orientation
+error after integration. Here, Proposed denotes the learned bias
+model alone rather than the proposed method. To keep the
+Linear and Proposed traces fully visible, the vertical axis spans
+0-8◦. On room4 sequence, Proposed maintains the orientation
+error near 2◦, with a mean of 2.3◦, substantially lower than
+that of the Raw IMU. In comparison, the Linear model remains
+near 5◦. Moreover, Proposed consistently outperforms Linear
+throughout the sequence, indicating that the improvement is
+sustained rather than limited to a short interval. The same
+ordering holds on room2 and room6. It indicates that the
+learned bias model consistently suppresses orientation drift
+during open loop integration across all three test sequences.
+Having examined the learned bias model in isolation, we
+next assess its interaction with the uncertainty model under
+visual outage. Table VI summarizes the separate and joint
+evaluations of the learned bias model and uncertainty model
+under a 3 s visual outage on the five EuRoC test sequences.
+Each cell reports APE followed by RPE, both in meters. RPE
+is computed over fixed 1 m path segments, and the Mean
+column averages the five displayed sequences. The learned
+bias model propagates the filter’s bias state, which is used
+to correct IMU measurements for navigation propagation. The
+uncertainty model supplies measurement noise covariances for
+covariance propagation. The final row enables both modules
+and represents the complete proposed system.
+To isolate the contribution of learned bias dynamics under
+fixed measurement noise, we compare Raw IMU + Fixed
+Noise with Learned Bias + Fixed Noise in Table VI. Adding
+learned bias reduces the mean APE from 0.249 to 0.158 m.
+This corresponds to a reduction of 36.5%. The mean RPE de-
+creases from 0.103 to 0.069 m. This corresponds to a reduction
+of 33.0%. Across the five sequences, APE decreases in three
+cases. It remains unchanged in one case. RPE decreases in
+four cases. The largest reductions are observed on V2 02.
+Its APE decreases from 0.606 to 0.150 m, a reduction of
+75.2%. Its RPE decreases from 0.158 to 0.057 m, a reduc-
+tion of 63.9%. To isolate the contribution of the uncertainty
+model, we hold the learned bias correction fixed and compare
+Learned Bias + Fixed Noise with Learned Bias + uncertainty
+model. Adding the uncertainty model reduces mean APE from
+0.158 to 0.111 m and mean RPE from 0.069 to 0.045 m,
+corresponding to reductions of 29.7% and 34.8%, respectively.
+Both metrics decrease on all five sequences, and the complete
+configuration achieves the lowest APE and RPE in every
+reported column. By contrast, adding the uncertainty model to
+the raw IMU changes mean APE only from 0.249 to 0.240 m
+and mean RPE from 0.103 to 0.098 m. This interaction is
+consistent with AirIMU [31], where learned covariance is not
+uniformly beneficial with raw IMU inputs but performs best
+when combined with IMU correction. Together, these results
+indicate that mean correction and covariance modeling provide
+
+
+11
+0
+30
+60
+90
+120
+Time (s)
+0
+8
+16
+24
+32
+Orientation error (deg)
+room2
+Raw > 32°
+(a) 
+0
+20
+40
+60
+80
+100
+Time (s)
+0
+2
+4
+6
+8
+room4
+Raw > 8°
+(b) 
+0
+30
+60
+90
+120
+Time (s)
+0
+5
+10
+15
+20
+room6
+Raw > 22°
+(c) 
+Raw IMU
+Linear
+Proposed
+Fig. 8. Orientation errors during open loop gyroscope integration on the TUM-VI test sequences: (a) room2, (b) room4, and (c) room6. Larger Raw IMU
+errors are clipped at the upper boundary, and the upward arrow shows that this trace continues beyond the displayed range.
+TABLE VI
+COMPONENT ABLATION UNDER A THREE-SECOND VISUAL OUTAGE ON THE EUROC TEST SEQUENCES. VALUES ARE REPORTED AS APE/RPE IN
+METERS. LOWER VALUES INDICATE BETTER ACCURACY, AND THE BEST RESULTS ARE SHOWN IN BOLD.
+Method
+MH02
+MH04
+V103
+V202
+V101
+Mean
+APE / RPE (m)
+Raw IMU + Fixed Noise
+0.153 / 0.087
+0.306 / 0.104
+0.085 / 0.075
+0.606 / 0.158
+0.097 / 0.093
+0.249 / 0.103
+Learned Bias + Fixed Noise
+0.145 / 0.055
+0.284 / 0.078
+0.085 / 0.059
+0.150 / 0.057
+0.127 / 0.094
+0.158 / 0.069
+Raw IMU + uncertainty model
+0.160 / 0.088
+0.296 / 0.107
+0.095 / 0.074
+0.557 / 0.133
+0.090 / 0.089
+0.240 / 0.098
+Learned Bias + uncertainty model
+0.107 / 0.050
+0.227 / 0.060
+0.077 / 0.050
+0.088 / 0.039
+0.054 / 0.024
+0.111 / 0.045
+complementary benefits.
+VI. CONCLUSION
+In this paper, we present LBDU-VIO, a tightly coupled VIO
+framework that augments MSCKF with learned continuous
+time IMU bias dynamics and adaptive IMU uncertainty model.
+The bias model corrects IMU rate state propagation, while the
+uncertainty model supplies measurement noise covariances at
+every IMU sample between visual updates. The two modules
+are trained hierarchically without direct ground truth labels.
+Experiments on the real world EuRoC and TUM-VI bench-
+marks show consistent accuracy gains over representative
+baselines, especially during visual outages when the estimator
+relies mainly on IMU measurements. These results suggest
+that learning to refine inertial propagation offers a practical
+path toward robust VIO. Future work focuses on generalization
+across longer outages and less structured visual degradation.
+REFERENCES
+[1] C. Xue, Y. Huang, C. Zhao, X. Li, L. Mihaylova, Y. Li, and J. A.
+Chambers, “A Gaussian-generalized-inverse-Gaussian joint-distribution-
+based adaptive MSCKF for visual-inertial odometry navigation,” IEEE
+Trans. Aerosp. Electron. Syst., vol. 59, no. 3, pp. 2307–2328, 2022.
+[2] T. Qin, P. Li, and S. Shen, “VINS-Mono: A robust and versatile
+monocular visual-inertial state estimator,” IEEE Trans. Robot., vol. 34,
+no. 4, pp. 1004–1020, 2018.
+[3] Y. Lyu, S. Yuan, and L. Xie, “Structure priors aided visual-inertial
+navigation in building inspection tasks with auxiliary line features,”
+IEEE Trans. Aerosp. Electron. Syst., vol. 58, no. 4, pp. 3037–3048,
+2022.
+[4] C. Zheng, W. Xu, Z. Zou, T. Hua, C. Yuan, D. He, B. Zhou, Z. Liu,
+J. Lin, F. Zhu et al., “FAST-LIVO2: Fast, direct LiDAR-inertial-visual
+odometry,” IEEE Trans. Robot., vol. 41, pp. 326–346, 2024.
+[5] Q. Guo, S. Yang, J. Lyu, J. Sun, D. Lin, and S. He, “AMO-HEAD:
+Adaptive MARG-only heading estimation for UAVs under magnetic
+disturbances,” IEEE Trans. Instrum. Meas., vol. 74, pp. 1–16, 2025.
+[6] C. E. Hutchinson and J. H. Fagan, “Kalman filter design considerations
+for space-stable inertial navigation systems,” IEEE Trans. Aerosp. Elec-
+tron. Syst., vol. AES-9, no. 2, pp. 306–319, 1973.
+[7] F. Huang, Z. Wang, L. Xing, and C. Gao, “A MEMS IMU gyroscope
+calibration method based on deep learning,” IEEE Trans. Instrum. Meas.,
+vol. 71, pp. 1–9, 2022.
+[8] Z. Ma, T. Li, X. Gao, D. He, Y. Wang, W. Yu, and T.-K. Truong, “Small-
+error linearized S-MSCKF with loop-closure-triggered global reference
+frame redefinition,” IEEE Trans. Aerosp. Electron. Syst., 2026.
+[9] C. Li, J. Wang, J. Liu, and J. Shan, “Cooperative visual-range-inertial
+navigation for multiple unmanned aerial vehicles,” IEEE Trans. Aerosp.
+Electron. Syst., vol. 59, no. 6, pp. 7851–7865, 2023.
+[10] X. Zhang, C. Zhou, F. Chao, C.-M. Lin, L. Yang, C. Shang, and Q. Shen,
+“Low-cost inertial measurement unit calibration with nonlinear scale
+factors,” IEEE Trans. Ind. Inform., vol. 18, no. 2, pp. 1028–1038, 2021.
+[11] M. Brossard, S. Bonnabel, and A. Barrau, “Denoising IMU gyroscopes
+with deep learning for open-loop attitude estimation,” IEEE Robot.
+Autom. Lett., vol. 5, no. 3, pp. 4796–4803, 2020.
+[12] R. Buchanan, V. Agrawal, M. Camurri, F. Dellaert, and M. Fallon,
+“Deep imu bias inference for robust visual-inertial odometry with factor
+graphs,” IEEE Robot. Autom. Lett., vol. 8, no. 1, pp. 41–48, 2022.
+[13] C. Chen, X. Lu, A. Markham, and N. Trigoni, “IONet: Learning to cure
+the curse of drift in inertial odometry,” in Proc. of the AAAI Conf. on
+Artif. Intell., 2018, pp. 6468–6476.
+[14] S. Herath, H. Yan, and Y. Furukawa, “RoNIN: Robust neural inertial
+navigation in the wild: Benchmark, evaluations, and new methods,” in
+Proc. of the IEEE Intl. Conf. on Robot. and Autom., 2020, pp. 3146–
+3152.
+[15] W. Liu, D. Caruso, E. Ilg, J. Dong, A. I. Mourikis, K. Daniilidis,
+V. Kumar, and J. Engel, “TLIO: Tight learned inertial odometry,” IEEE
+Robot. Autom. Lett., vol. 5, no. 4, pp. 5653–5660, 2020.
+[16] Y. Qiu, C. Xu, Y. Chen, S. Zhao, J. Geng, and S. Scherer, “AirIO:
+Learning inertial odometry with enhanced IMU feature observability,”
+IEEE Robot. Autom. Lett., vol. 10, no. 9, pp. 9368–9375, 2025.
+[17] M. A. Esfahani, H. Wang, K. Wu, and S. Yuan, “OriNet: Robust 3-
+D orientation estimation with a single particular IMU,” IEEE Robot.
+Autom. Lett., vol. 5, no. 2, pp. 399–406, 2019.
+[18] D. Chen, N. Wang, R. Xu, W. Xie, H. Bao, and G. Zhang, “RNIN-
+VIO: Robust neural inertial navigation aided visual-inertial odometry in
+challenging scenes,” in ISMAR, 2021, pp. 275–283.
+[19] G. Cioffi, L. Bauersfeld, E. Kaufmann, and D. Scaramuzza, “Learned
+inertial odometry for autonomous drone racing,” IEEE Robot. Autom.
+Lett., vol. 8, no. 5, pp. 2990–2997, 2023.
+[20] C. Forster, L. Carlone, F. Dellaert, and D. Scaramuzza, “On-manifold
+preintegration for real-time visual-inertial odometry,” IEEE Trans.
+Robot., vol. 33, no. 1, pp. 1–21, 2017.
+[21] S. Li, M. Mikhaylov, T. Pany, and N. Mikhaylov, “Exploring the poten-
+tial of the deep-learning-aided Kalman filter for GNSS/INS integration:
+
+
+12
+A study on 2-D simulation datasets,” IEEE Trans. Aerosp. Electron.
+Syst., vol. 60, no. 3, pp. 2683–2691, 2023.
+[22] Z. Gao, J. Jiang, C. Li, J. Liu, J. Wang, and J. Shan, “LM-VINS: A
+robust and computationally efficient visual-inertial navigation system for
+loitering munitions,” IEEE Trans. Aerosp. Electron. Syst., 2025.
+[23] M. A. Gomaa, O. De Silva, G. K. I. Mann, and R. G. Gosine,
+“Observability-constrained VINS for MAVs using interacting multiple
+model algorithm,” IEEE Trans. Aerosp. Electron. Syst., vol. 57, no. 3,
+pp. 1423–1442, 2021.
+[24] M. Zhang, M. Zhang, Y. Chen, and M. Li, “IMU data processing for
+inertial aided navigation: A recurrent neural network based approach,”
+in Proc. of the IEEE Intl. Conf. on Robot. and Autom., 2021, pp. 3992–
+3998.
+[25] J. Steinbrener, C. Brommer, T. Jantos, A. Fornasier, and S. Weiss,
+“Improved state propagation through AI-based pre-processing and down-
+sampling of high-speed inertial data,” in Proc. of the IEEE Intl. Conf.
+on Robot. and Autom., 2022, pp. 891–897.
+[26] K. Yuan and Z. J. Wang, “A simple self-supervised IMU denoising
+method for inertial aided navigation,” IEEE Robot. Autom. Lett., vol. 8,
+no. 3, pp. 1558–1565, 2023.
+[27] A. Altawaitan, J. Stanley, S. Ghosal, T. Duong, and N. Atanasov,
+“Learned IMU bias prediction for invariant visual inertial odometry,”
+IEEE Robot. Autom. Lett., vol. 10, no. 11, pp. 11 872–11 879, 2025.
+[28] Y. Yi, K. Wang, J. Zhang, Z. Tan, X. Wang, H. Shen, and D. Hu, “A
+plug-and-play learning-based IMU bias factor for robust visual-inertial
+odometry,” IEEE Trans. Instrum. Meas., vol. 75, pp. 1–12, 2026.
+[29] R. Buchanan, M. Camurri, V. Agrawal, M. Fallon, and F. Dellaert,
+“Deep IMU bias inference for robust visual-inertial odometry with factor
+graphs,” IEEE Robot. Autom. Lett., vol. 8, no. 1, pp. 41–48, 2023.
+[30] B. Liu, T.-Y. Lin, W. Zhang, and M. Ghaffari, “Debiasing 6-DOF IMU
+via hierarchical learning of continuous bias dynamics,” in Proc. Robot.:
+Sci. Syst., 2025.
+[31] Y. Qiu, C. Wang, C. Xu, Y. Chen, X. Zhou, Y. Xia, and S. Scherer,
+“AirIMU: Learning uncertainty propagation for inertial odometry,” arXiv
+preprint arXiv:2310.04874, 2024.
+[32] H. Liu, X. Wei, M. Perusqu´ıa-Hern´andez, N. Isoyama, H. Uchiyama,
+and K. Kiyokawa, “DUET: Improving inertial-based odometry via deep
+IMU online calibration,” IEEE Trans. Instrum. Meas., vol. 72, pp. 1–13,
+2023.
+[33] P. Geneva, K. Eckenhoff, W. Lee, Y. Yang, and G. Huang, “OpenVINS:
+A research platform for visual-inertial state estimation,” in Proc. of the
+IEEE Intl. Conf. on Robot. and Autom., 2020, pp. 4666–4672.
+[34] J. Jiang, J. Yuan, X. Zhang, and X. Zhang, “DVIO: An optimization-
+based tightly coupled direct visual-inertial odometry,” IEEE Trans. Ind.
+Electron., vol. 68, no. 11, pp. 11 212–11 222, 2020.
+[35] S. Lin, X. Zhang, Y. Liu, H. Wang, X. Zhang, and Y. Zhuang, “FLM
+PL-VIO: A robust monocular point-line visual-inertial odometry based
+on fast line matching,” IEEE Trans. Ind. Electron., vol. 71, no. 12, pp.
+16 026–16 036, 2024.
+[36] M.-J. Yu, “INS/GPS integration system using adaptive filter for estimat-
+ing measurement noise variance,” IEEE Trans. Aerosp. Electron. Syst.,
+vol. 48, no. 2, pp. 1786–1792, 2012.
+[37] J. Lyu, T. Song, and S. He, “Range-only UWB 6-D pose estimator
+for micro UAVs: Performance analysis,” IEEE Trans. Aerosp. Electron.
+Syst., vol. 61, no. 2, pp. 5284–5301, 2025.
+[38] M. Burri, J. Nikolic, P. Gohl, T. Schneider, J. Rehder, S. Omari, M. W.
+Achtelik, and R. Siegwart, “The EuRoC micro aerial vehicle datasets,”
+Intl. J. Robot. Research, vol. 35, no. 10, pp. 1157–1163, 2016.
+[39] D. Schubert, T. Goll, N. Demmel, V. Usenko, J. St¨uckler, and D. Cre-
+mers, “The TUM VI benchmark for evaluating visual-inertial odometry,”
+in Proc. of the IEEE/RSJ Intl. Conf. on Intell. Robots and Syst., 2018,
+pp. 1680–1687.
+[40] K. Sun, K. Mohta, B. Pfrommer, M. Watterson, S. Liu, Y. Mulgaonkar,
+C. J. Taylor, and V. Kumar, “Robust stereo visual inertial odometry for
+fast autonomous flight,” IEEE Robot. Autom. Lett., vol. 3, no. 2, pp.
+965–972, 2018.
+[41] A. Fornasier, P. van Goor, E. Allak, R. Mahony, and S. Weiss, “MSCEqF:
+A multi state constraint equivariant filter for vision-aided inertial navi-
+gation,” IEEE Robot. Autom. Lett., vol. 9, no. 1, pp. 731–738, 2023.
+[42] J. Sol`a, J. Deray, and D. Atchuthan, “A micro Lie theory for state
+estimation in robotics,” arXiv preprint arXiv:1812.01537, 2018.
